@@ -5,8 +5,10 @@ import { ToastContainer } from 'react-toastify';
 import { Suspense, lazy } from 'react';
 import LoadingFallback from './components/LoadingFallback';
 
+// Lazy load main pages
 const Home = lazy(() => import('./pages/Home'));
 const Login = lazy(() => import('./pages/Auth/Login'));
+const Register = lazy(() => import('./pages/Auth/Register'));
 const PageNotFound = lazy(() => import('./components/PageNotFound'));
 
 function App() {
@@ -23,7 +25,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Login />} />
+              <Route path="/register" element={<Register/>} />
               <Route path="*" element={<PageNotFound />} />
             </Routes>
           </Suspense>

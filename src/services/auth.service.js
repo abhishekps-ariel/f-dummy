@@ -10,3 +10,14 @@ export const login = async (data) => {
     return res.json();
 }
 
+export const register = async (data) => {
+    const res = await fetch(`${AUTH_API_URL}/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", },
+        credentials: "include",
+        body: JSON.stringify(data),
+    });
+    return res.json();
+}
+
+

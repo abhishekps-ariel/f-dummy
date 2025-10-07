@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { login } from "../../services/auth.service";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import loginImg from "../../assets/logo-sample.png";
 import "../../styles/custom.css"
@@ -99,10 +99,10 @@ function Login() {
                 </div>
                 <h2 className="font-xl-med fw-bold">Login</h2>
                 <p className="font-base">
-                  Don’t have an account?{" "}
-                  <a href="#!" className="text-dark-black fw-semibold">
+                  Don't have an account?{" "}
+                  <Link to="/register" className="text-dark-black fw-semibold">
                     Sign up{" "}
-                  </a>
+                  </Link>
                 </p>
               </div>
 
@@ -160,10 +160,14 @@ function Login() {
                     </div>
                   )}
                 </div>
-                <div className="form-group text-end" onClick={handleForgetPassword}>
-                  <a href="#" className="font-base text-dark-black fw-medium">
+                <div className="form-group text-end">
+                  <button 
+                    type="button"
+                    onClick={handleForgetPassword}
+                    className="btn btn-link font-base text-dark-black fw-medium p-0"
+                  >
                     Forgot Password ?
-                  </a>
+                  </button>
                 </div>
 
                 <button
@@ -186,12 +190,12 @@ function Login() {
                 <p className="orlogin-text mb-0">Or</p>
               </div>
               <div className="d-flex flex-column align-items-center gap-2">
-                <a href="#!" className="font-base fw-medium">
+                <button type="button" className="btn btn-link font-base fw-medium p-0">
                   Login as a Safety Organization
-                </a>
-                <a href="#!" className="font-base fw-medium">
+                </button>
+                <button type="button" className="btn btn-link font-base fw-medium p-0">
                   View Public FP Report
-                </a>
+                </button>
               </div>
               <div className="d-flex flex-column important-notice mt-4">
                 <strong>Important Notice:</strong>

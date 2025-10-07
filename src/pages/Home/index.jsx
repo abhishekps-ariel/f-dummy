@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import logo from "../../assets/logo-index.png";
 import img1 from "../../assets/loan.jpg";
 import img2 from "../../assets/moneytab.jpg";
@@ -111,20 +112,20 @@ function Home() {
               </ul>
             </div>
             <div>
-              <a
-                className="btn btn-sm btn-outline-light me-1"
-                href="/register"
-                role="button"
-              >
-                <i className="fa-solid fa-user"></i> Register
-              </a>
-              <a
-                className="btn btn-sm btn-outline-light"
-                href="/login"
-                role="button"
-              >
-                <i className="fa-solid fa-user"></i> Sign in
-              </a>
+            <Link
+              className="btn btn-sm btn-outline-light me-1"
+              to="/register"
+              role="button"
+            >
+              <i className="fa-solid fa-user"></i> Register
+            </Link>
+            <Link
+              className="btn btn-sm btn-outline-light"
+              to="/login"
+              role="button"
+            >
+              <i className="fa-solid fa-user"></i> Sign in
+            </Link>
             </div>
           </div>
         </div>
