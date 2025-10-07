@@ -3,7 +3,7 @@ import { login } from "../../services/auth.service";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import loginImg from "../../assets/logo-sample.png";
-import "../../styles/custom.css"
+import "../../styles/custom.css";
 
 function Login() {
   const [formData, setFormData] = useState({
@@ -41,7 +41,7 @@ function Login() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
-    
+
     // remove error when user types
     if (errors[name]) {
       setErrors({ ...errors, [name]: "" });
@@ -54,17 +54,17 @@ function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Validate form before submission
     if (!validateForm()) {
       toast.error("Invalid email or password");
       return;
     }
 
-    if (isSubmitting) return; 
-    
+    if (isSubmitting) return;
+
     setIsSubmitting(true);
-    
+
     try {
       const response = await login(formData);
       if (response.isSuccess) {
@@ -95,7 +95,9 @@ function Login() {
             <div className="w-100">
               <div className="login-header mb-5 text-center">
                 <div className="login-logo">
-                  <img src={loginImg} alt="logo" className="w-100" />
+                  <Link to="/">
+                    <img src={loginImg} alt="logo" className="w-100" />
+                  </Link>
                 </div>
                 <h2 className="font-xl-med fw-bold">Login</h2>
                 <p className="font-base">
@@ -116,7 +118,9 @@ function Login() {
                     <input
                       name="email"
                       type="email"
-                      className={`form-control ${errors.email ? 'is-invalid' : ''}`}
+                      className={`form-control ${
+                        errors.email ? "is-invalid" : ""
+                      }`}
                       placeholder="hello@example.com"
                       value={formData.email}
                       onChange={handleChange}
@@ -129,7 +133,7 @@ function Login() {
                     </div>
                   )}
                 </div>
-                
+
                 <div className="form-group">
                   <label className="label-text">Password</label>
                   <div className="input-group position-relative">
@@ -139,19 +143,25 @@ function Login() {
                     <input
                       name="password"
                       type={showPassword ? "text" : "password"}
-                      className={`form-control ${errors.password ? 'is-invalid' : ''}`}
+                      className={`form-control ${
+                        errors.password ? "is-invalid" : ""
+                      }`}
                       placeholder="Password"
                       value={formData.password}
                       onChange={handleChange}
                       required
                     />
-                    <span 
-                      className="password-eye" 
+                    <span
+                      className="password-eye"
                       onClick={togglePasswordVisibility}
-                      style={{ cursor: 'pointer' }}
-                      title={showPassword ? 'Hide password' : 'Show password'}
+                      style={{ cursor: "pointer" }}
+                      title={showPassword ? "Hide password" : "Show password"}
                     >
-                      <i className={`fa-solid ${showPassword ? 'fa-eye' : 'fa-eye-slash'}`}></i>
+                      <i
+                        className={`fa-solid ${
+                          showPassword ? "fa-eye" : "fa-eye-slash"
+                        }`}
+                      ></i>
                     </span>
                   </div>
                   {errors.password && (
@@ -161,7 +171,7 @@ function Login() {
                   )}
                 </div>
                 <div className="form-group text-end">
-                  <button 
+                  <button
                     type="button"
                     onClick={handleForgetPassword}
                     className="btn btn-link font-base text-dark-black fw-medium p-0"
@@ -177,11 +187,15 @@ function Login() {
                 >
                   {isSubmitting ? (
                     <>
-                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                      <span
+                        className="spinner-border spinner-border-sm me-2"
+                        role="status"
+                        aria-hidden="true"
+                      ></span>
                       Logging in...
                     </>
                   ) : (
-                    'Login'
+                    "Login"
                   )}
                 </button>
               </form>
@@ -190,22 +204,27 @@ function Login() {
                 <p className="orlogin-text mb-0">Or</p>
               </div>
               <div className="d-flex flex-column align-items-center gap-2">
-                <button type="button" className="btn btn-link font-base fw-medium p-0">
+                <button
+                  type="button"
+                  className="btn btn-link font-base fw-medium p-0"
+                >
                   Login as a Safety Organization
                 </button>
-                <button type="button" className="btn btn-link font-base fw-medium p-0">
+                <button
+                  type="button"
+                  className="btn btn-link font-base fw-medium p-0"
+                >
                   View Public FP Report
                 </button>
               </div>
               <div className="d-flex flex-column important-notice mt-4">
                 <strong>Important Notice:</strong>
-                The filer/mortgagee/loan holder can only initiate the
-                Division's online registration filing process after a
-                foreclosure petition (or action) has been brought by the
-                mortgagee under the Soldiers' and Sailors' Civil Relief Act.
-                Foreclosure petition information must be entered in this
-                Online Foreclosure Database within five business days after
-                being filed with the Land Court.
+                The filer/mortgagee/loan holder can only initiate the Division's
+                online registration filing process after a foreclosure petition
+                (or action) has been brought by the mortgagee under the
+                Soldiers' and Sailors' Civil Relief Act. Foreclosure petition
+                information must be entered in this Online Foreclosure Database
+                within five business days after being filed with the Land Court.
               </div>
             </div>
           </div>

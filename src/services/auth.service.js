@@ -1,5 +1,7 @@
 const AUTH_API_URL = "/api/Account";
 
+
+//login method
 export const login = async (data) => {
     const res = await fetch(`${AUTH_API_URL}/login`, {
         method: "POST",
@@ -10,6 +12,7 @@ export const login = async (data) => {
     return res.json();
 }
 
+//register method
 export const register = async (data) => {
     const res = await fetch(`${AUTH_API_URL}/register`, {
         method: "POST",
