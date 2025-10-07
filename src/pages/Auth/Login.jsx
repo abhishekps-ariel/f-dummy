@@ -30,8 +30,8 @@ function Login() {
     //password validation
     if (!formData.password.trim()) {
       newErrors.password = "Password is required";
-    } else if (formData.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters long";
+    } else if (formData.password.length < 8) {
+      newErrors.password = "Password must be at least 8 characters long";
     }
 
     setErrors(newErrors);
