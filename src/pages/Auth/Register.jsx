@@ -13,8 +13,28 @@ function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPasswordGuidelines, setShowPasswordGuidelines] = useState(false);
+  const [passwordGuidelines, setPasswordGuidelines] = useState({
+    minLength: false,
+    hasUppercase: false,
+    hasLowercase: false,
+    hasNumber: false,
+    hasSpecialChar: false
+  });
 
   const navigate = useNavigate();
+
+  // Password guidelines validation
+  const checkPasswordGuidelines = (password) => {
+    const guidelines = {
+      minLength: password.length >= 8,
+      hasUppercase: /[A-Z]/.test(password),
+      hasLowercase: /[a-z]/.test(password),
+      hasNumber: /\d/.test(password),
+      hasSpecialChar: /[@#$%^&*]/.test(password)
+    };
+    setPasswordGuidelines(guidelines);
+  };
 
   // Form validation rules
   const validateForm = () => {
@@ -30,8 +50,19 @@ function Register() {
     // Password validation
     if (!formData.password.trim()) {
       newErrors.password = "Password is required";
-    } else if (formData.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters long";
+    } else {
+      // Check all password guidelines
+      if (formData.password.length < 8) {
+        newErrors.password = "Password must be at least 8 characters long";
+      } else if (!/[A-Z]/.test(formData.password)) {
+        newErrors.password = "Password must contain at least one uppercase letter";
+      } else if (!/[a-z]/.test(formData.password)) {
+        newErrors.password = "Password must contain at least one lowercase letter";
+      } else if (!/\d/.test(formData.password)) {
+        newErrors.password = "Password must contain at least one number";
+      } else if (!/[@#$%^&*]/.test(formData.password)) {
+        newErrors.password = "Password must contain at least one special character (@#$%^&*)";
+      }
     }
 
     // Confirm Password validation
@@ -52,6 +83,14 @@ function Register() {
     // Clear error when user typing
     if (errors[name]) {
       setErrors({ ...errors, [name]: "" });
+    }
+
+    // Show password guidelines and check validation when password field changes
+    if (name === 'password') {
+      if (value.length > 0) {
+        setShowPasswordGuidelines(true);
+      }
+      checkPasswordGuidelines(value);
     }
   };
 
@@ -164,7 +203,82 @@ function Register() {
                       <small className="text-danger">{errors.password}</small>
                     </div>
                   )}
+                  
                 </div>
+                
+                {/* Password Guidelines Modal */}
+                {showPasswordGuidelines && (
+                  <div style={{
+                    background: 'white',
+                    border: '1px solid #ccc',
+                    borderRadius: '8px',
+                    padding: '15px',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                    marginBottom: '15px',
+                    minWidth: '280px'
+                  }}>
+                    <div style={{ 
+                      fontWeight: 'bold', 
+                      marginBottom: '12px',
+                      color: '#28a745',
+                      fontSize: '14px'
+                    }}>
+                      Password Guidelines
+                    </div>
+                    <div style={{ fontSize: '13px', lineHeight: '1.6' }}>
+                      <div style={{ marginBottom: '6px' }}>
+                        <span style={{ 
+                          color: passwordGuidelines.minLength ? '#28a745' : '#dc3545',
+                          fontWeight: 'bold',
+                          marginRight: '8px'
+                        }}>
+                          {passwordGuidelines.minLength ? '✓' : '✗'}
+                        </span>
+                        At least 8 Characters
+                      </div>
+                      <div style={{ marginBottom: '6px' }}>
+                        <span style={{ 
+                          color: passwordGuidelines.hasUppercase ? '#28a745' : '#dc3545',
+                          fontWeight: 'bold',
+                          marginRight: '8px'
+                        }}>
+                          {passwordGuidelines.hasUppercase ? '✓' : '✗'}
+                        </span>
+                        One uppercase letter
+                      </div>
+                      <div style={{ marginBottom: '6px' }}>
+                        <span style={{ 
+                          color: passwordGuidelines.hasLowercase ? '#28a745' : '#dc3545',
+                          fontWeight: 'bold',
+                          marginRight: '8px'
+                        }}>
+                          {passwordGuidelines.hasLowercase ? '✓' : '✗'}
+                        </span>
+                        One lowercase letter
+                      </div>
+                      <div style={{ marginBottom: '6px' }}>
+                        <span style={{ 
+                          color: passwordGuidelines.hasNumber ? '#28a745' : '#dc3545',
+                          fontWeight: 'bold',
+                          marginRight: '8px'
+                        }}>
+                          {passwordGuidelines.hasNumber ? '✓' : '✗'}
+                        </span>
+                        One Numeric value
+                      </div>
+                      <div>
+                        <span style={{ 
+                          color: passwordGuidelines.hasSpecialChar ? '#28a745' : '#dc3545',
+                          fontWeight: 'bold',
+                          marginRight: '8px'
+                        }}>
+                          {passwordGuidelines.hasSpecialChar ? '✓' : '✗'}
+                        </span>
+                        One Special Character (@#$%^&*)
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <div className="form-group">
                   <label className="label-text">Confirm Password</label>
