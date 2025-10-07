@@ -5,13 +5,18 @@ const PasswordGuidelines = ({ showGuidelines, passwordGuidelines }) => {
 
   return (
     <div style={{
+      position: 'absolute',
+      top: '100%',
+      left: 0,
+      zIndex: 1000,
+      marginTop: '8px',
       background: 'white',
       border: '1px solid #ccc',
       borderRadius: '8px',
-      padding: '15px',
+      padding: '12px',
       boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-      marginBottom: '15px',
-      minWidth: '280px'
+      minWidth: '280px',
+      maxWidth: '360px'
     }}>
       <div style={{ 
         fontWeight: 'bold', 

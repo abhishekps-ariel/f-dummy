@@ -188,6 +188,8 @@ function Register() {
                       placeholder="Password"
                       value={formData.password}
                       onChange={handleChange}
+                      onFocus={() => setShowPasswordGuidelines(true)}
+                      onBlur={() => setShowPasswordGuidelines(false)}
                       required
                     />
                     <span 
@@ -198,6 +200,11 @@ function Register() {
                     >
                       <i className={`fa-solid ${showPassword ? 'fa-eye' : 'fa-eye-slash'}`}></i>
                     </span>
+                    {/* Password Guidelines Tooltip */}
+                    <PasswordGuidelines 
+                      showGuidelines={showPasswordGuidelines}
+                      passwordGuidelines={passwordGuidelines}
+                    />
                   </div>
                   {errors.password && (
                     <div className="invalid-feedback d-block">
@@ -207,11 +214,7 @@ function Register() {
                   
                 </div>
                 
-                {/* Password Guidelines Component */}
-                <PasswordGuidelines 
-                  showGuidelines={showPasswordGuidelines}
-                  passwordGuidelines={passwordGuidelines}
-                />
+                
 
                 <div className="form-group">
                   <label className="label-text">Confirm Password</label>
