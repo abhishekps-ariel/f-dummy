@@ -49,7 +49,7 @@ function Login() {
   };
 
   const handleForgetPassword = () => {
-    navigate("/forget-password");
+    navigate("/forgot-password");
   };
 
   const handleSubmit = async (e) => {

@@ -9,6 +9,11 @@ import LoadingFallback from './components/LoadingFallback';
 const Home = lazy(() => import('./pages/Home'));
 const Login = lazy(() => import('./pages/Auth/Login'));
 const Register = lazy(() => import('./pages/Auth/Register'));
+const ForgotPassword = lazy(() => import('./pages/Auth/ForgotPassword'));
+const PasswordEmailSent = lazy(() => import('./pages/Auth/PasswordEmailSent'));
+const ResetPassword = lazy(() => import('./pages/Auth/ResetPassword'));
+const PasswordChanged = lazy(() => import('./pages/Auth/PasswordChanged'));
+const TwoFactorAuth = lazy(() => import('./pages/Auth/TwoFactorAuth'));
 const PageNotFound = lazy(() => import('./components/PageNotFound'));
 
 function App() {
@@ -25,7 +30,12 @@ function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register/>} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/password-email-sent" element={<PasswordEmailSent />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/password-changed" element={<PasswordChanged />} />
+              <Route path="/two-factor-auth" element={<TwoFactorAuth />} />
               <Route path="*" element={<PageNotFound />} />
             </Routes>
           </Suspense>

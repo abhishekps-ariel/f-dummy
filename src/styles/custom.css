@@ -8,6 +8,12 @@ html {
     min-height: 100vh;
     overflow: auto;
 }
+.login-inner form {
+	max-width: 520px;
+    margin: 0 auto;
+	height: 100%;
+	padding: 50px 15px;
+}
 .login-inner>div {
 	max-width: 520px;
     margin: 0 auto;
@@ -88,6 +94,28 @@ html {
 .spinner-border-sm {
     width: 1rem;
     height: 1rem;
+}
+
+/*---- Auth screen css ----*/
+.auth-columns input {
+    width: 50px;
+    height: 55px;
+    text-align: center;
+    border: 1px solid rgb(102 102 102 / 35%);
+    border-radius: 12px;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.auth-columns input:focus {
+    border-color: var(--theme-color);
+    box-shadow: 0 0 0 0.2rem rgba(2, 101, 163, 0.25);
+    outline: none;
+}
+
+/*---- Register page specific ----*/
+.register-inner {
+    justify-content: center;
 }
 
 .loginwith:before, .loginwith:after {
