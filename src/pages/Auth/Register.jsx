@@ -11,7 +11,6 @@ function Register() {
     confirmPassword: "",
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -83,12 +82,8 @@ function Register() {
     }
   };
 
-  const togglePasswordVisibility = (field) => {
-    if (field === 'password') {
-      setShowPassword(!showPassword);
-    } else {
-      setShowConfirmPassword(!showConfirmPassword);
-    }
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
   };
 
   return (
@@ -157,7 +152,7 @@ function Register() {
                     />
                     <span 
                       className="password-eye" 
-                      onClick={() => togglePasswordVisibility('password')}
+                      onClick={togglePasswordVisibility}
                       style={{ cursor: 'pointer' }}
                       title={showPassword ? 'Hide password' : 'Show password'}
                     >
@@ -179,7 +174,7 @@ function Register() {
                     </div>
                     <input
                       name="confirmPassword"
-                      type={showConfirmPassword ? "text" : "password"}
+                      type={showPassword ? "text" : "password"}
                       className={`form-control ${errors.confirmPassword ? 'is-invalid' : ''}`}
                       placeholder="Confirm Password"
                       value={formData.confirmPassword}
@@ -188,11 +183,11 @@ function Register() {
                     />
                     <span 
                       className="password-eye" 
-                      onClick={() => togglePasswordVisibility('confirmPassword')}
+                      onClick={togglePasswordVisibility}
                       style={{ cursor: 'pointer' }}
-                      title={showConfirmPassword ? 'Hide password' : 'Show password'}
+                      title={showPassword ? 'Hide password' : 'Show password'}
                     >
-                      <i className={`fa-solid ${showConfirmPassword ? 'fa-eye' : 'fa-eye-slash'}`}></i>
+                      <i className={`fa-solid ${showPassword ? 'fa-eye' : 'fa-eye-slash'}`}></i>
                     </span>
                   </div>
                   {errors.confirmPassword && (
