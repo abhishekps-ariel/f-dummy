@@ -92,7 +92,7 @@ function Login() {
         </div>
         <div className="col-lg-7 col-md-8">
           <div className="login-inner d-flex flex-column align-items-center justify-content-center">
-            <div className="w-100">
+            <form className="w-100" onSubmit={handleSubmit}>
               <div className="login-header mb-5 text-center">
                 <div className="login-logo">
                   <Link to="/">
@@ -107,13 +107,11 @@ function Login() {
                   </Link>
                 </p>
               </div>
-
-              <form onSubmit={handleSubmit}>
                 <div className="form-group">
                   <label className="label-text">Email</label>
                   <div className="input-group">
                     <div className="user-icon">
-                      <i className="fa-solid fa-user"></i>
+                      <i className="fa-solid fa-envelope"></i>
                     </div>
                     <input
                       name="email"
@@ -198,26 +196,7 @@ function Login() {
                     "Login"
                   )}
                 </button>
-              </form>
-
-              <div className="loginwith w-100 text-center position-relative my-4">
-                <p className="orlogin-text mb-0">Or</p>
-              </div>
-              <div className="d-flex flex-column align-items-center gap-2">
-                <button
-                  type="button"
-                  className="btn btn-link font-base fw-medium p-0"
-                >
-                  Login as a Safety Organization
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-link font-base fw-medium p-0"
-                >
-                  View Public FP Report
-                </button>
-              </div>
-              <div className="d-flex flex-column important-notice mt-4">
+                <div className="d-flex flex-column important-notice mt-5">
                 <strong>Important Notice:</strong>
                 The filer/mortgagee/loan holder can only initiate the Division's
                 online registration filing process after a foreclosure petition
@@ -225,8 +204,8 @@ function Login() {
                 Soldiers' and Sailors' Civil Relief Act. Foreclosure petition
                 information must be entered in this Online Foreclosure Database
                 within five business days after being filed with the Land Court.
-              </div>
-            </div>
+                </div>
+            </form>
           </div>
         </div>
       </div>
