@@ -1,0 +1,89 @@
+@import url('https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,100..900;1,100..900&display=swap');
+
+:root {
+    --primary-color: #3498db;
+    --secondary-color: #2ecc71;
+	--text-xl: 36px;
+	--text-xl-med: 32px;
+	--text-lg: 28px;
+    --text-lg-med: 24px;
+	--text-med: 20px;
+	--text-base: 16px;
+	--text-sm: 14px;
+	--text-xs: 12px;
+    --font-family: "Raleway", sans-serif; 
+	--dark-color: #222222;
+	--theme-color: #0265A3;
+	--white-color: #ffffff;
+	--mass-green: #006d44;
+	--portal-blue: #0a5fa8;
+	--mass-gray: #f5f7f8;
+}
+
+
+
+body {
+	 margin: 0;
+	 padding: 0;
+	 font-family: var(--font-family);
+	 color: var(--dark-color);
+    }
+    
+/*--- fonts ----*/	
+
+.font-xl {
+	font-size: var(--text-xl);
+}
+.font-xl-med {
+	font-size: var(--text-xl-med);
+}
+.font-lg {
+	font-size: var(--text-lg);
+}
+.font-lg-med {
+	font-size: var(--text-lg-med);
+}
+.font-med {
+	font-size: var(--text-med);
+}
+.font-base {
+	font-size: var(--text-base);
+}
+.font-sm {
+	font-size: var(--text-sm);
+}
+.font-xs {
+	font-size: var(--text-xs);
+}
+
+
+/*--- colors ----*/
+.theme-bg {
+	background: var(--theme-color);
+}
+
+.text-dark-black {
+	color: var(--dark-color);
+}
+.bg-mesgray{
+	background: var(--mass-gray);
+}
+
+/*------ Custom button css ----*/
+.custom-btn {
+	font-size: var(--text-med);
+	border: 1px solid transparent;
+	padding: 16px 10px;
+	font-weight: 600;
+	border-radius: 32px;
+}
+
+.theme-btn {
+	background: var(--theme-color);
+	color: var(--white-color);
+}
+.theme-btn:hover {
+	background: transparent;
+	color: var(--theme-color);
+	border-color: var(--theme-color);
+}

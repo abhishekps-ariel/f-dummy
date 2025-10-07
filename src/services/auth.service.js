@@ -1,0 +1,12 @@
+const AUTH_API_URL = "/api/Account";
+
+export const login = async (data) => {
+    const res = await fetch(`${AUTH_API_URL}/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", },
+        credentials: "include",
+        body: JSON.stringify(data),
+    });
+    return res.json();
+}
+

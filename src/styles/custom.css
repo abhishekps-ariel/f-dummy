@@ -1,0 +1,222 @@
+html {
+	scroll-behaviour: smooth;
+	scroll-padding-top: 44px;
+}
+
+/*---- Login page css start ----*/
+.login-inner {
+    min-height: 100vh;
+    overflow: auto;
+}
+.login-inner>div {
+	max-width: 520px;
+    margin: 0 auto;
+	height: 100%;
+	padding: 50px 15px;
+}
+
+.form-group .input-group {
+    border: 1px solid rgb(102 102 102 / 35%);
+    padding: 6px 0;
+	border-radius: 12px;
+}
+
+.login .form-group {
+    margin-bottom: 24px;
+}
+
+.login input.form-control, .login select.form-control {
+    font-size: var(--text-base);
+    background: transparent;
+    border: none;
+    box-shadow: none !important;
+}
+
+.label-text {
+    color: #666666;
+    font-size: var(--text-base);
+    margin-bottom: 5px;
+}
+
+.input-group .user-icon {
+    padding: 0 10px 0 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+	color: #666666;
+}
+.password-eye {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #666666;
+    opacity: .7;
+    transition: opacity 0.2s ease;
+    z-index: 10;
+}
+
+.password-eye:hover {
+    opacity: 1;
+}
+
+.form-group .input-group input[type="password"],
+.form-group .input-group input[type="text"] {
+    padding-right: 45px;
+}
+
+/* Form validation styles */
+.form-control.is-invalid {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+.invalid-feedback {
+    margin-top: 5px;
+}
+
+.text-danger {
+    color: #dc3545 !important;
+}
+
+/* Button loading state */
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+}
+
+.loginwith:before, .loginwith:after {
+    content: "";
+    background: #e0e0e0;
+    position: absolute;
+    width: 100%;
+    height: 1px;
+    left: 0;
+    top: 10px;
+}
+
+.orlogin-text {
+    background: #ffffff;
+    position: relative;
+    display: inline-block;
+    padding: 0 15px;
+    color: #222222;
+    letter-spacing: 0.5px;
+    z-index: 9;
+}
+.login-logo {
+    max-width: 300px;
+    margin: 0 auto 50px;
+}
+.important-notice {
+    background: rgb(255 0 0 / 8%);
+    color: red;
+    border: 1px solid red;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 13px;
+}
+
+/*---- Landing page -----*/
+.official-banner {
+      background-color: #357a5b;
+      color: #fff;
+      font-size: 0.95rem;
+    }
+
+.official-banner button {
+  color: #fff;
+  font-weight: 600;
+}
+
+.official-banner button:hover {
+  text-decoration: underline;
+}
+
+.official-banner button[aria-expanded="true"] .fa-chevron-down {
+  transform: rotate(180deg);
+  transition: transform 0.2s;
+}
+
+.official-banner .fa-chevron-down {
+  transition: transform 0.2s;
+}
+
+.official-banner small {
+  color: #e6f2ed;
+}
+.gov-logo {
+    color: #388557;
+    -webkit-text-stroke-width: 1px;
+    -webkit-text-stroke-color: #388557;
+    font-size: 1.625rem;
+}
+ .portal-banner{
+      background: var(--portal-blue);
+      color: #fff;
+      padding: 0.6rem 1rem;
+    }
+	.massgov-banner {
+    background: #ffffff;
+    border-bottom: 1px solid #e6e9eb;
+    padding: 26px 16px;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.featured-items .item p {
+    background-color: rgb(56 133 87);
+    font-size: var(--text-base);
+    color: var(--white-color);
+    padding: 12px 10px;
+    text-align: center;
+    font-weight: 500;
+}
+.tabs-link-featured {
+	background-color: #f2f2f2;
+	-webkit-box-shadow: 0 .25rem .5rem rgb(0 0 0 / 25%);
+	box-shadow: 0 .25rem .5rem rgb(0 0 0 / 25%);
+	padding: 10px 0;
+	position: sticky;
+}
+.tabs-link-featured a {
+    font-size: var(--text-base);
+    color: var(--dark-color);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.tabs-link-featured a:not(:last-child) {
+    margin-right: 36px;
+}
+
+/*--- copyright footer ----*/
+.copyright {
+    border-top: 1px solid #393939;
+    padding: 10px 0;
+}
+
+.copyright-links a {
+	color: #222222;
+	text-decoration: none;
+	position:relative;
+}
+.copyright-links a:not(:last-child):before {
+	content:"";
+	position: absolute;
+	width:2px;
+	height: 5px;
+}
+
+.login-right-image {
+    background-image: url('../assets/login-right-bg.svg');
+    background-size: cover;
+    background-position: center;
+    min-height: 100vh;
+}
