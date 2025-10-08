@@ -137,11 +137,7 @@ function Register() {
 
   try {
     const response = await register(formData);
-
     if (response.isSuccess) {
-      toast.success(response.msg || "Please check your email to verify your account.");
-      // Redirect to "check your email" page instead of login
-      // User must verify email before they can login
       navigate("/verification-email-sent");
     } else {
       toast.error(response.msg || "Registration failed!");
@@ -153,7 +149,6 @@ function Register() {
     setIsSubmitting(false);
   }
 };
-
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);

@@ -13,6 +13,8 @@ function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showMfaSelection, setShowMfaSelection] = useState(false);
+  const [selectedMfaMethod, setSelectedMfaMethod] = useState("");
 
   const navigate = useNavigate();
 
@@ -67,8 +69,8 @@ function Login() {
     try {
       const response = await login(formData);
       if (response.isSuccess) {
-        // Navigate to Two Factor Auth page after successful login
-        navigate("/two-factor-auth");
+        // Show MFA selection instead of navigating directly to 2FA page
+        setShowMfaSelection(true);
       } else {
         toast.error("The email or password you entered is incorrect. Please try again.");
       }
@@ -82,6 +84,15 @@ function Login() {
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
+  };
+
+  const handleMfaProceed = () => {
+    if (!selectedMfaMethod) {
+      toast.error("Please select an MFA method to proceed");
+      return;
+    }
+    // Navigate to Two Factor Auth page with selected method
+    navigate("/two-factor-auth", { state: { mfaMethod: selectedMfaMethod } });
   };
 
   return (
@@ -99,14 +110,87 @@ function Login() {
                     <img src={loginImg} alt="logo" className="w-100" />
                   </Link>
                 </div>
-                <h2 className="font-xl-med fw-bold">Login</h2>
-                <p className="font-base">
-                  Don't have an account?{" "}
-                  <Link to="/register" className="text-dark-black fw-semibold">
-                    Sign up{" "}
-                  </Link>
-                </p>
+                
+                {showMfaSelection ? (
+                  // MFA Setup Selection Header
+                  <>
+                    <h2 className="font-xl-med fw-bold">Two-Factor Authentication Setup</h2>
+                    <p className="font-base text-muted">
+                      Please select your preferred authentication method
+                    </p>
+                  </>
+                ) : (
+                  // Login Header
+                  <>
+                    <h2 className="font-xl-med fw-bold">Login</h2>
+                    <p className="font-base">
+                      Don't have an account?{" "}
+                      <Link to="/register" className="text-dark-black fw-semibold">
+                        Sign up{" "}
+                      </Link>
+                    </p>
+                  </>
+                )}
               </div>
+
+              {showMfaSelection ? (
+                // MFA Method Selection UI
+                <>
+                  <div className="mb-4">
+                    <p className="font-base text-center mb-4">
+                      <i className="fa-solid fa-shield-halved me-2 text-primary"></i>
+                      Two-Factor Authentication is required for your account
+                    </p>
+                    
+                    <div className="row g-3 justify-content-center">
+                      {/* Authenticator App Option
+                      <div className="col-md-6">
+                        <div 
+                          className={`mfa-option-card p-4 text-center ${selectedMfaMethod === 'authenticator' ? 'selected' : ''}`}
+                          onClick={() => setSelectedMfaMethod('authenticator')}
+                          style={{ cursor: 'pointer' }}
+                        >
+                          <div className="mb-3">
+                            <i className="fa-solid fa-mobile-screen-button" style={{ fontSize: '3rem', color: '#4285f4' }}></i>
+                          </div>
+                          <h5 className="fw-bold mb-2">Authenticator App</h5>
+                          <p className="font-sm text-muted mb-0">
+                            Use an app like Google Authenticator or Microsoft Authenticator
+                          </p>
+                        </div>
+                      </div> */}
+
+                      {/* SMS Option */}
+                      <div className="col-md-8 col-lg-6">
+                        <div 
+                          className={`mfa-option-card p-4 text-center ${selectedMfaMethod === 'sms' ? 'selected' : ''}`}
+                          onClick={() => setSelectedMfaMethod('sms')}
+                          style={{ cursor: 'pointer' }}
+                        >
+                          <div className="mb-3">
+                            <i className="fa-solid fa-message" style={{ fontSize: '3rem', color: '#34a853' }}></i>
+                          </div>
+                          <h5 className="fw-bold mb-2">SMS</h5>
+                          <p className="font-sm text-muted mb-0">
+                            Receive verification codes via text message
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="btn custom-btn theme-btn text-center w-100"
+                    onClick={handleMfaProceed}
+                  >
+                    <i className="fa-solid fa-arrow-right me-2"></i>
+                    Proceed
+                  </button>
+                </>
+              ) : (
+                // Login Form
+                <>
                 <div className="form-group">
                   <label className="label-text">Email</label>
                   <div className="input-group">
@@ -211,6 +295,8 @@ function Login() {
                 information must be entered in this Online Foreclosure Database
                 within five business days after being filed with the Land Court.
                 </div>
+                </>
+              )}
             </form>
           </div>
         </div>
