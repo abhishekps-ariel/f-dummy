@@ -15,6 +15,7 @@ const ResetPassword = lazy(() => import('./pages/Auth/ResetPassword'));
 const PasswordChanged = lazy(() => import('./pages/Auth/PasswordChanged'));
 const TwoFactorAuth = lazy(() => import('./pages/Auth/TwoFactorAuth'));
 const VerificationPage = lazy(() => import('./pages/Auth/VerificationPage'));
+const VerificationEmailSent = lazy(() => import('./pages/Auth/VerificationEmailSent'));
 const PageNotFound = lazy(() => import('./components/PageNotFound'));
 
 function App() {
@@ -38,6 +39,7 @@ function App() {
               <Route path="/password-changed" element={<PasswordChanged />} />
               <Route path="/two-factor-auth" element={<TwoFactorAuth />} />
               <Route path="/verification-page" element={<VerificationPage />} />
+              <Route path="/verification-email-sent" element={<VerificationEmailSent />} />
               <Route path="*" element={<PageNotFound />} />
             </Routes>
           </Suspense>

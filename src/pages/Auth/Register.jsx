@@ -123,33 +123,37 @@ function Register() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    // Validate form before submission
-    if (!validateForm()) {
-      toast.error("Please fix the errors below");
-      return;
-    }
+  e.preventDefault();
 
-    if (isSubmitting) return; 
-    
-    setIsSubmitting(true);
-    
-    try {
-      const response = await register(formData);
-      if (response.isSuccess) {
-        toast.success(response.msg);
-        navigate("/login");
-      } else {
-        toast.error(response.msg);
-      }
-    } catch (error) {
-      toast.error("Registration failed! Please try again.");
-      console.error("Registration error:", error);
-    } finally {
-      setIsSubmitting(false);
+  // Validate form
+  if (!validateForm()) {
+    toast.error("Please fix the errors below");
+    return;
+  }
+
+  if (isSubmitting) return;
+
+  setIsSubmitting(true);
+
+  try {
+    const response = await register(formData);
+
+    if (response.isSuccess) {
+      toast.success(response.msg || "Registration successful! Please check your email to verify your account.");
+      // Redirect to "check your email" page instead of login
+      // User must verify email before they can login
+      navigate("/verification-email-sent");
+    } else {
+      toast.error(response.msg || "Registration failed!");
     }
-  };
+  } catch (err) {
+    toast.error(err.message || "Registration failed!");
+    console.error("Registration error:", err);
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -233,7 +237,7 @@ function Register() {
                     country={'us'}
                     value={formData.phoneNumber}
                     onChange={(phone) => {
-                      setFormData({ ...formData, phoneNumber: phone });
+                      setFormData({ ...formData, phoneNumber: `+${phone}` }); //add + as it returns raw number 1232213
                       if (errors.phoneNumber) {
                         setErrors({ ...errors, phoneNumber: "" });
                       }

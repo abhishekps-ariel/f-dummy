@@ -1,149 +1,33 @@
-const AUTH_API_URL = "/api/Account";
+import axios from "axios";
 
-// Mock data
-const MOCK_USERS = [
-    {
-        id: 1,
-        email: "admin@filir.com",
-        password: "Admin@123",
-        firstName: "Admin",
-        lastName: "User",
-        role: "admin",
-        isEmailVerified: true,
-        createdAt: "2024-01-01T00:00:00Z"
-    },
-    {
-        id: 2,
-        email: "user@filir.com", 
-        password: "User@123",
-        firstName: "John",
-        lastName: "Doe",
-        role: "user",
-        isEmailVerified: true,
-        createdAt: "2024-01-15T00:00:00Z"
-    }
-];
+// ========== Authentication APIs ==========
 
-// Helper function to generate mock JWT token   
-const generateMockToken = (user) => {
-    const header = btoa(JSON.stringify({ alg: "HS256", typ: "JWT" }));
-    const payload = btoa(JSON.stringify({
-        sub: user.id,
-        email: user.email,
-        role: user.role,
-        iat: Math.floor(Date.now() / 1000),
-        exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24 hours
-    }));
-    const signature = btoa("mock-signature");
-    return `${header}.${payload}.${signature}`;
-};
-
-// Helper function to simulate API delay
-const simulateApiDelay = () => new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 400));
-
-// Helper function to check if email exists
-const findUserByEmail = (email) => MOCK_USERS.find(user => user.email.toLowerCase() === email.toLowerCase());
-
-// Helper function to store auth data in localStorage
-const storeAuthData = (token, user) => {
-    localStorage.setItem('authToken', token);
-    localStorage.setItem('userData', JSON.stringify(user));
-    localStorage.setItem('tokenExpiry', (Date.now() + 24 * 60 * 60 * 1000).toString());
-};
-
-// Helper function to clear auth data from localStorage
-const clearAuthData = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('userData');
-    localStorage.removeItem('tokenExpiry');
-};
-
-// Helper function to get stored auth data
-export const getStoredAuthData = () => {
-    const token = localStorage.getItem('authToken');
-    const userData = localStorage.getItem('userData');
-    const tokenExpiry = localStorage.getItem('tokenExpiry');
-    
-    if (!token || !userData || !tokenExpiry) {
-        return null;
-    }
-    
-    // Check if token is expired
-    if (Date.now() > parseInt(tokenExpiry)) {
-        clearAuthData();
-        return null;
-    }
-    
-    return {
-        token,
-        user: JSON.parse(userData)
-    };
-};
-
-// Login method with mock implementation
+/**
+ * LOGIN - Dummy implementation (waiting for real API)
+ * TODO: Replace with real login API when backend provides endpoint
+ * 
+ * @param {Object} data - { email, password }
+ * @returns {Promise} - success response to allow navigation to 2FA page
+ */
 export const login = async (data) => {
     try {
-        await simulateApiDelay();
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 500));
         
-        const { email, password } = data;
+        const { email } = data;
         
-        // Find user by email
-        const user = findUserByEmail(email);
-        
-        if (!user) {
-            return {
-                isSuccess: false,
-                msg: "Invalid email or password",
-                statusCode: 401,
-                data: null
-            };
-        }
-        
-        // Check password (in real app, this would be hashed)
-        if (user.password !== password) {
-            return {
-                isSuccess: false,
-                msg: "Invalid email or password", 
-                statusCode: 401,
-                data: null
-            };
-        }
-        
-        // Check if email is verified
-        if (!user.isEmailVerified) {
-            return {
-                isSuccess: false,
-                msg: "Please verify your email before logging in",
-                statusCode: 403,
-                data: null
-            };
-        }
-        
-        // Generate token
-        const token = generateMockToken(user);
-        
-        // Prepare user data (exclude password)
-        const userData = {
-            id: user.id,
-            email: user.email,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            role: user.role,
-            isEmailVerified: user.isEmailVerified,
-            createdAt: user.createdAt
-        };
-        
-        // Store auth data
-        storeAuthData(token, userData);
-        
+        // Dummy success response - allows testing the UI flow
         return {
             isSuccess: true,
-            msg: "Login successful",
+            msg: "Login successful (dummy mode)",
             statusCode: 200,
             data: {
-                token,
-                user: userData,
-                expiresIn: 86400 // 24 hours in seconds
+                token: "dummy-token",
+                user: {
+                    email: email,
+                    firstName: "Test",
+                    lastName: "User"
+                }
             }
         };
         
@@ -157,12 +41,134 @@ export const login = async (data) => {
     }
 };
 
-export const register = async (data) => {
-    const res = await fetch(`${AUTH_API_URL}/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", },
-        credentials: "include",
-        body: JSON.stringify(data),
-    });
-    return res.json();
-}
+/**
+ * REGISTER - Real API integration ✅
+ * Endpoint: POST http://filir.arielsoftwares.in/api/Auth/register
+ * 
+ * @param {Object} formData - { firstName, lastName, email, password, phoneNumber }
+ * @returns {Promise} - { isSuccess, msg, data }
+ */
+export const register = async (formData) => {
+  try {
+    // backend expects these fields: firstName, lastName, email, password, role, phone
+    const requestBody = {
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      email: formData.email,
+      password: formData.password,
+      role: "Normal User", 
+      phone: formData.phoneNumber, // ensure +123456789 format
+    };
+
+    const response = await axios.post(
+      "http://filir.arielsoftwares.in/api/Auth/register",
+      requestBody,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "text/plain",
+        },
+      }
+    );
+
+    // backend response schema: { success, message, data }
+    return {
+      isSuccess: response.data.success,
+      msg: response.data.message,
+      data: response.data.data,
+    };
+  } catch (error) {
+    // handle errors
+    if (error.response && error.response.data) {
+      throw new Error(error.response.data.message || "Registration failed");
+    } else {
+      throw new Error("Network error");
+    }
+  }
+};
+
+/**
+ * VERIFY EMAIL - Real API integration ✅
+ * Endpoint: GET http://filir.arielsoftwares.in/api/Auth/verify-email?token=<token>
+ * 
+ * @param {string} token - Verification token from URL query parameter
+ * @returns {Promise} - { isSuccess, msg, data }
+ */
+export const verifyEmail = async (token) => {
+  try {
+    const response = await axios.get(
+      `http://filir.arielsoftwares.in/api/Auth/verify-email?token=${token}`,
+      {
+        headers: {
+          Accept: "text/plain",
+        },
+      }
+    );
+
+    // backend response schema: { success, message, data }
+    return {
+      isSuccess: response.data.success,
+      msg: response.data.message,
+      data: response.data.data,
+    };
+  } catch (error) {
+    // handle errors
+    if (error.response && error.response.data) {
+      return {
+        isSuccess: false,
+        msg: error.response.data.message || "Verification failed",
+        data: null,
+      };
+    } else {
+      return {
+        isSuccess: false,
+        msg: "Network error. Please try again.",
+        data: null,
+      };
+    }
+  }
+};
+
+/**
+ * RESEND VERIFICATION EMAIL - Real API integration ✅
+ * Endpoint: POST http://filir.arielsoftwares.in/api/Auth/resend-verification
+ * 
+ * @param {string} email - User's email address
+ * @returns {Promise} - { isSuccess, msg, data }
+ */
+export const resendVerification = async (email) => {
+  try {
+    const response = await axios.post(
+      "http://filir.arielsoftwares.in/api/Auth/resend-verification",
+      JSON.stringify(email), // Send email as JSON string in body
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "text/plain",
+        },
+      }
+    );
+
+    // backend response schema: { success, message, data }
+    return {
+      isSuccess: response.data.success,
+      msg: response.data.message,
+      data: response.data.data,
+    };
+  } catch (error) {
+    // handle errors
+    if (error.response && error.response.data) {
+      return {
+        isSuccess: false,
+        msg: error.response.data.message || "Failed to resend verification email",
+        data: null,
+      };
+    } else {
+      return {
+        isSuccess: false,
+        msg: "Network error. Please try again.",
+        data: null,
+      };
+    }
+  }
+};

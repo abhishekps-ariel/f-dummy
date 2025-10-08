@@ -1,18 +1,88 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
+import { verifyEmail, resendVerification } from "../../services/auth.service";
 import loginImg from "../../assets/logo-sample.png";
 import "../../styles/custom.css";
 
 function VerificationPage() {
-  const [linkExpired] = useState(true);
+  // Get token from URL query parameters (?token=abc123)
+  const [searchParams] = useSearchParams();
+  
+  // State management
+  const [isLoading, setIsLoading] = useState(true);
+  const [isVerified, setIsVerified] = useState(false);
+  const [verificationMessage, setVerificationMessage] = useState("");
   const [isResending, setIsResending] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
 
+  // Extract token from URL and verify email on component mount
+  useEffect(() => {
+    const verifyUserEmail = async () => {
+      // Extract token from URL query parameter
+      const token = searchParams.get("token");
+
+      if (!token) {
+        // No token in URL - show error
+        setIsLoading(false);
+        setIsVerified(false);
+        setVerificationMessage("Invalid verification link. Token not found.");
+        return;
+      }
+
+      try {
+        // Call verify email API with token
+        const response = await verifyEmail(token);
+
+        if (response.isSuccess) {
+          // Verification successful
+          setIsVerified(true);
+          setVerificationMessage(response.msg || "Your account has been verified successfully.");
+        } else {
+          // Verification failed (expired, invalid, etc.)
+          setIsVerified(false);
+          setVerificationMessage(response.msg || "Verification link expired or invalid.");
+        }
+      } catch {
+        // Handle unexpected errors
+        setIsVerified(false);
+        setVerificationMessage("An error occurred during verification. Please try again.");
+        toast.error("Verification failed. Please try again.");
+      } finally {
+        // Hide loading screen after API call completes
+        setIsLoading(false);
+      }
+    };
+
+    verifyUserEmail();
+  }, [searchParams]);
+
+  // Handle resend verification email
   const handleResendLink = async () => {
+    // Check if user has entered email
+    if (!userEmail.trim()) {
+      toast.error("Please enter your email address");
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(userEmail)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
     setIsResending(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 500));
-      toast.success("Verification link sent to your email!");
+      // Call resend verification API with email
+      const response = await resendVerification(userEmail);
+
+      if (response.isSuccess) {
+        toast.success(response.msg || "Verification link sent to your email!");
+        setUserEmail(""); // Clear email input after successful send
+      } else {
+        toast.error(response.msg || "Failed to send verification link. Please try again.");
+      }
     } catch {
       toast.error("Failed to send verification link. Please try again.");
     } finally {
@@ -29,7 +99,7 @@ function VerificationPage() {
           </div>
           <div className="col-lg-7 col-md-8">
             <div className="login-inner d-flex flex-column align-items-center justify-content-center">
-              <div className="w-100">
+              <form className="w-100">
                 <div className="login-header mb-5 text-center">
                   <div className="login-logo">
                     <Link to="/">
@@ -37,23 +107,36 @@ function VerificationPage() {
                     </Link>
                   </div>
                   
-                  {!linkExpired ? (
-                    // Account Verified State
+                  {/* Loading State - Show while verifying email */}
+                  {isLoading ? (
+                    <div className="mb-4">
+                      <div className="verification-icon d-inline-flex align-items-center justify-content-center mb-3">
+                        <div className="spinner-border text-primary" role="status" style={{ width: '4rem', height: '4rem' }}>
+                          <span className="visually-hidden">Loading...</span>
+                        </div>
+                      </div>
+                      <h2 className="font-xl-med fw-bold">Verifying Email...</h2>
+                      <p className="font-base text-muted">
+                        Please wait while we verify your email address.
+                      </p>
+                    </div>
+                  ) : isVerified ? (
+                    /* Success State - Email verified successfully */
                     <>
                       <div className="mb-4">
                         <div className="verification-icon d-inline-flex align-items-center justify-content-center mb-3">
                           <i className="fa-solid fa-check-circle text-success" style={{ fontSize: '4rem' }}></i>
                         </div>
-                        <h2 className="font-xl-med fw-bold text-success">Account Verified</h2>
+                        <h2 className="font-xl-med fw-bold text-success">Account Verified!</h2>
                         <p className="font-base text-muted">
-                          Your email has been successfully verified. You can now log in to your account.
+                          {verificationMessage}
                         </p>
                       </div>
                       
                       <div className="d-flex flex-column gap-3">
                         <Link
                           to="/login"
-                          className="btn custom-btn theme-btn text-center"
+                          className="btn custom-btn theme-btn text-center w-100"
                         >
                           <i className="fa-solid fa-sign-in-alt me-2"></i>
                           Login to Your Account
@@ -61,22 +144,40 @@ function VerificationPage() {
                       </div>
                     </>
                   ) : (
-                    // Link Expired State
+                    /* Error State - Verification failed/expired */
                     <>
                       <div className="mb-4">
                         <div className="verification-icon d-inline-flex align-items-center justify-content-center mb-3">
                           <i className="fa-solid fa-exclamation-triangle text-warning" style={{ fontSize: '4rem' }}></i>
                         </div>
-                        <h2 className="font-xl-med fw-bold text-warning">Verification Link Expired</h2>
+                        <h2 className="font-xl-med fw-bold text-warning">Verification Failed</h2>
                         <p className="font-base text-muted">
-                          Your verification link has expired. Please request a new one to complete your account verification.
+                          {verificationMessage}
                         </p>
                       </div>
                       
                       <div className="d-flex flex-column gap-3">
+                        {/* Email input for resending verification */}
+                        <div className="form-group text-start">
+                          <label className="label-text">Enter your email address</label>
+                          <div className="input-group">
+                            <div className="user-icon">
+                              <i className="fa-solid fa-envelope"></i>
+                            </div>
+                            <input
+                              type="email"
+                              className="form-control"
+                              placeholder="your@email.com"
+                              value={userEmail}
+                              onChange={(e) => setUserEmail(e.target.value)}
+                              disabled={isResending}
+                            />
+                          </div>
+                        </div>
+                        
                         <button
                           onClick={handleResendLink}
-                          className="btn custom-btn theme-btn text-center"
+                          className="btn custom-btn theme-btn text-center w-100"
                           disabled={isResending}
                         >
                           {isResending ? (
@@ -91,11 +192,18 @@ function VerificationPage() {
                             </>
                           )}
                         </button>
+                        
+                        <Link
+                          to="/login"
+                          className="btn btn-link text-dark-black fw-medium"
+                        >
+                          Back to Login
+                        </Link>
                       </div>
                     </>
                   )}
                 </div>
-              </div>
+              </form>
             </div>
           </div>
         </div>
