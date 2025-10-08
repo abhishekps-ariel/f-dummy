@@ -67,9 +67,8 @@ function Login() {
     try {
       const response = await login(formData);
       if (response.isSuccess) {
-        toast.success(response.msg);
-        // Navigate to home page after successful login
-        navigate("/");
+        // Navigate to Two Factor Auth page after successful login
+        navigate("/two-factor-auth");
       } else {
         toast.error("The email or password you entered is incorrect. Please try again.");
       }

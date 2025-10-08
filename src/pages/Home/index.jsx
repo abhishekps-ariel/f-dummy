@@ -1,10 +1,35 @@
 import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
 import logo from "../../assets/logo-index.png";
 import img1 from "../../assets/loan.jpg";
 import img2 from "../../assets/moneytab.jpg";
 import img3 from "../../assets/flag.jpg"
 
 function Home() {
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Show loading for a brief moment when page loads
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
+        <div className="text-center">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+          <p className="mt-3">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
       {/* Official Banner */}

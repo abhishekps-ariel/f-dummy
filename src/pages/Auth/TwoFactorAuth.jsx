@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import loginImg from "../../assets/logo-sample.png";
 import "../../styles/custom.css";
@@ -8,6 +8,7 @@ function TwoFactorAuth() {
   const [codes, setCodes] = useState(["", "", "", "", "", ""]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const inputRefs = useRef([]);
+  const navigate = useNavigate();
 
   const handleCodeChange = (index, value) => {
     // Only allow single digit
@@ -56,15 +57,18 @@ function TwoFactorAuth() {
     
     try {
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 500));
       
-      toast.success("Authentication successful!");
-      // Navigate to dashboard or home
-      window.location.href = "/";
+      toast.success("Login successful!");
+      
+      // Wait a moment for toast to show, then navigate
+      setTimeout(() => {
+        navigate("/");
+        setIsSubmitting(false);
+      }, 800);
     } catch (error) {
       toast.error("Invalid authentication code. Please try again.");
       console.error("2FA error:", error);
-    } finally {
       setIsSubmitting(false);
     }
   };
