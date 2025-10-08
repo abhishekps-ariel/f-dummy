@@ -20,7 +20,10 @@ function Home() {
 
   if (isLoading) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
+      <div
+        className="d-flex justify-content-center align-items-center"
+        style={{ height: "100vh" }}
+      >
         <div className="text-center">
           <div className="spinner-border text-primary" role="status">
             <span className="visually-hidden">Loading...</span>
@@ -104,8 +107,7 @@ function Home() {
                   <span className="fw-semibold">
                     Official websites use .mass.gov
                   </span>
-                  <br />
-                  A .mass.gov website belongs to an official government
+                  <br />A .mass.gov website belongs to an official government
                   organization in Massachusetts.
                 </p>
               </div>
@@ -117,11 +119,10 @@ function Home() {
                   <span className="fw-semibold">
                     Secure websites use HTTPS certificate
                   </span>
-                  <br />
-                  A lock icon (<i className="fa-solid fa-lock"></i>) or{" "}
+                  <br />A lock icon (<i className="fa-solid fa-lock"></i>) or{" "}
                   <code>https://</code> means you've safely connected to the
-                  official website.
-                  Share sensitive information only on official, secure websites.
+                  official website. Share sensitive information only on
+                  official, secure websites.
                 </p>
               </div>
             </div>
@@ -161,14 +162,14 @@ function Home() {
                 aria-labelledby="signInDropdown"
               >
                 <li>
-                  <a className="dropdown-item" href="#">
+                  <Link className="dropdown-item" to="/login">
                     User
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a className="dropdown-item" href="#">
+                  <Link className="dropdown-item" to="/login">
                     Agency Workbench
-                  </a>
+            </Link>
                 </li>
               </ul>
             </div>
@@ -227,7 +228,9 @@ function Home() {
       {/* Featured Items Section */}
       <section className="featured-items py-5" id="feature-tab">
         <div className="container">
-          <h2 className="font-xl-med mb-4 fw-medium heading-divider">Featured Items</h2>
+          <h2 className="font-xl-med mb-4 fw-medium heading-divider">
+            Featured Items
+          </h2>
           <div className="row">
             <div className="col-md-6 col-lg-4">
               <div className="item">
@@ -241,19 +244,11 @@ function Home() {
             </div>
             <div className="col-md-6 col-lg-4">
               <div className="item">
-                <img
-                  src={img1}
-                  alt="Student Loan Info"
-                  className="w-100"
-                />
+                <img src={img1} alt="Student Loan Info" className="w-100" />
                 <p>Student Loan Information for Consumers</p>
               </div>
               <div className="item">
-                <img
-                  src={img2}
-                  alt="Enforcement"
-                  className="w-100"
-                />
+                <img src={img2} alt="Enforcement" className="w-100" />
                 <p>Enforcement actions</p>
               </div>
             </div>
@@ -267,11 +262,7 @@ function Home() {
                 <p>New Money Transmission Law</p>
               </div>
               <div className="item">
-                <img
-                  src={img3}
-                  alt="Cybersecurity"
-                  className="w-100"
-                />
+                <img src={img3} alt="Cybersecurity" className="w-100" />
                 <p>Cybersecurity for the financial services industry</p>
               </div>
             </div>
@@ -281,14 +272,17 @@ function Home() {
 
       <section className="contact-info py-5" id="contact-info-tab">
         <div className="container">
-          <h2 className="font-xl-med mb-4 fw-medium heading-divider">Contact Us</h2>
+          <h2 className="font-xl-med mb-4 fw-medium heading-divider">
+            Contact Us
+          </h2>
           <div className="row g-5">
             {/* Left Column: Online and Phone */}
             <div className="col-12 col-md-4 vr-border-right position-relative">
               {/* Online Section */}
               <div className="mb-5">
                 <h3 className="fs-5 fw-semibold icon-header mb-3">
-                  <i className="fa-solid fa-desktop me-2 ms-primary-green"></i> Online
+                  <i className="fa-solid fa-desktop me-2 ms-primary-green"></i>{" "}
+                  Online
                 </h3>
                 <p className="mb-1 fw-medium">Contact us</p>
                 <a href="#" className="text-decoration-hover fw-medium">
@@ -298,16 +292,48 @@ function Home() {
               {/* Phone Section */}
               <div>
                 <h3 className="fs-5 fw-semibold icon-header mb-3">
-                  <i className="fa-solid fa-phone me-2 ms-primary-green"></i> Phone
+                  <i className="fa-solid fa-phone me-2 ms-primary-green"></i>{" "}
+                  Phone
                 </h3>
-                <p className="mb-1 fw-medium">Main <a href="tel:+16179561500" className="fw-medium text-decoration-hover">(617) 956-1500</a></p>
-                <p className="font-sm mb-3">Open Monday through Friday 9:00 am - 4:00 pm.</p>
+                <p className="mb-1 fw-medium">
+                  Main{" "}
+                  <a
+                    href="tel:+16179561500"
+                    className="fw-medium text-decoration-hover"
+                  >
+                    (617) 956-1500
+                  </a>
+                </p>
+                <p className="font-sm mb-3">
+                  Open Monday through Friday 9:00 am - 4:00 pm.
+                </p>
 
-                <p className="mb-1 fw-medium">Toll-Free <a href="tel:+18004952265" className="fw-medium text-decoration-hover">(800) 495-BANK (2265)</a></p>
-                <p className="font-sm mb-3">Open Monday through Friday 9:00 am - 4:00 pm.</p>
+                <p className="mb-1 fw-medium">
+                  Toll-Free{" "}
+                  <a
+                    href="tel:+18004952265"
+                    className="fw-medium text-decoration-hover"
+                  >
+                    (800) 495-BANK (2265)
+                  </a>
+                </p>
+                <p className="font-sm mb-3">
+                  Open Monday through Friday 9:00 am - 4:00 pm.
+                </p>
 
-                <p className="mb-1 fw-medium">TDD <a href="tel:+16179561577" className="fw-medium text-decoration-hover">(617) 956-1577</a></p>
-                <p className="font-sm mb-0">Open Monday through Friday 9:00 am - 4:00 pm. Use this number if you are hearing impaired.</p>
+                <p className="mb-1 fw-medium">
+                  TDD{" "}
+                  <a
+                    href="tel:+16179561577"
+                    className="fw-medium text-decoration-hover"
+                  >
+                    (617) 956-1577
+                  </a>
+                </p>
+                <p className="font-sm mb-0">
+                  Open Monday through Friday 9:00 am - 4:00 pm. Use this number
+                  if you are hearing impaired.
+                </p>
               </div>
             </div>
 
@@ -315,7 +341,8 @@ function Home() {
             <div className="col-12 col-md-4">
               <div className="ps-md-3">
                 <h3 className="fs-5 fw-semibold icon-header mb-3">
-                  <i className="fa-solid fa-map-marker-alt me-2 ms-primary-green"></i> Address
+                  <i className="fa-solid fa-map-marker-alt me-2 ms-primary-green"></i>{" "}
+                  Address
                 </h3>
                 <p className="mb-1 fw-medium">Main Office</p>
                 <p className="mb-1">One Federal Street</p>
@@ -333,9 +360,21 @@ function Home() {
       {/* Who We Serve Section */}
       <section className="who-we-serve py-5" id="who-we-serve-tab">
         <div className="container">
-          <h2 className="font-xl-med mb-4 fw-medium heading-divider">Who We Serve</h2>
-          <p className="font-base-med">The DOB supervises nearly 140 state-chartered banks and credit unions and over 14,500 non-depository licensees doing business in Massachusetts. The supervision of these entities allow us to implement and enforce consumer protection laws while providing consumers the information needed to make informed financial decisions.</p>
-          <p className="font-base-med">Non-depository institutions doing business in Massachusetts supervised by the DOB include:</p>
+          <h2 className="font-xl-med mb-4 fw-medium heading-divider">
+            Who We Serve
+          </h2>
+          <p className="font-base-med">
+            The DOB supervises nearly 140 state-chartered banks and credit
+            unions and over 14,500 non-depository licensees doing business in
+            Massachusetts. The supervision of these entities allow us to
+            implement and enforce consumer protection laws while providing
+            consumers the information needed to make informed financial
+            decisions.
+          </p>
+          <p className="font-base-med">
+            Non-depository institutions doing business in Massachusetts
+            supervised by the DOB include:
+          </p>
           <ul className="font-base-med d-flex flex-column gap-2">
             <li>Mortgage lenders</li>
             <li>Mortgage brokers</li>
@@ -347,55 +386,100 @@ function Home() {
             <li>Student Loan servicers</li>
           </ul>
           <div className="d-flex flex-column gap-4">
-            <a href="#!" className="font-base-med fw-medium">Learn more about the DOB, the departmental units, and the Commissioner of Banks.</a>
-            <h4><i className="font-lg-med fa-brands fa-linkedin-in me-2 ms-primary-green"></i> <a href="#!" className="font-base-med fw-medium">DOB LinkedIn </a></h4>
+            <a href="#!" className="font-base-med fw-medium">
+              Learn more about the DOB, the departmental units, and the
+              Commissioner of Banks.
+            </a>
+            <h4>
+              <i className="font-lg-med fa-brands fa-linkedin-in me-2 ms-primary-green"></i>{" "}
+              <a href="#!" className="font-base-med fw-medium">
+                DOB LinkedIn{" "}
+              </a>
+            </h4>
           </div>
         </div>
       </section>
 
       <section className="actions py-5 bg-mesgray" id="i-like-info-tab">
         <div className="container">
-          <h2 className="font-xl-med mb-4 fw-medium heading-divider">What would you like to do?</h2>
+          <h2 className="font-xl-med mb-4 fw-medium heading-divider">
+            What would you like to do?
+          </h2>
 
           <div className="row justify-content-center mb-5">
             <div className="col-md-4">
               <div className="link-box-theme">
-                <a href="#" className="text-decoration-hover">Submit a complaint to the DOB &rarr;</a>
+                <a href="#" className="text-decoration-hover">
+                  Submit a complaint to the DOB &rarr;
+                </a>
               </div>
             </div>
             <div className="col-md-4">
               <div className="link-box-theme">
-                <a href="#" className="text-decoration-hover">Public Records Request &rarr;</a>
+                <a href="#" className="text-decoration-hover">
+                  Public Records Request &rarr;
+                </a>
               </div>
             </div>
             <div className="col-md-4">
               <div className="link-box-theme">
-                <a href="#" className="text-decoration-hover">Find state-chartered banks and credit unions &rarr;</a>
+                <a href="#" className="text-decoration-hover">
+                  Find state-chartered banks and credit unions &rarr;
+                </a>
               </div>
             </div>
           </div>
 
           <div className="more-actions-card">
-            <div className="d-flex justify-content-between align-items-center mb-0" type="button" data-bs-toggle="collapse" data-bs-target=".more-actions-collapse">
+            <div
+              className="d-flex justify-content-between align-items-center mb-0"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target=".more-actions-collapse"
+            >
               <h5 className="mb-0">More actions & services</h5>
               <span className="badge bg-success rounded-pill">4</span>
             </div>
 
             <div className="accordion" id="moreActionsAccordion">
               <div className="accordion-item rounded-0 border-0 pt-3">
-                <div id="moreActionsList" className="collapse show more-actions-collapse border-0" data-bs-parent="#moreActionsAccordion">
+                <div
+                  id="moreActionsList"
+                  className="collapse show more-actions-collapse border-0"
+                  data-bs-parent="#moreActionsAccordion"
+                >
                   <ul className="row related-organizations-list g-2 mt-2">
                     <li className="col-12">
-                      <a href="#" className="font-base-med fw-medium text-decoration-hover">Cybersecurity for Consumers and the Financial Industry</a>
+                      <a
+                        href="#"
+                        className="font-base-med fw-medium text-decoration-hover"
+                      >
+                        Cybersecurity for Consumers and the Financial Industry
+                      </a>
                     </li>
                     <li className="col-12">
-                      <a href="#" className="font-base-med fw-medium text-decoration-hover">Protecting Older Adults from Abuse</a>
+                      <a
+                        href="#"
+                        className="font-base-med fw-medium text-decoration-hover"
+                      >
+                        Protecting Older Adults from Abuse
+                      </a>
             </li>
                     <li className="col-12">
-                      <a href="#" className="font-base-med fw-medium text-decoration-hover">Division of Banks Licenses</a>
+                      <a
+                        href="#"
+                        className="font-base-med fw-medium text-decoration-hover"
+                      >
+                        Division of Banks Licenses
+                      </a>
             </li>
                     <li className="col-12">
-                      <a href="#" className="font-base-med fw-medium text-decoration-hover">DOB Connects</a>
+                      <a
+                        href="#"
+                        className="font-base-med fw-medium text-decoration-hover"
+                      >
+                        DOB Connects
+                      </a>
             </li>
           </ul>
                 </div>
@@ -407,54 +491,145 @@ function Home() {
 
       <section className="news-announcements py-5" id="news-tab">
         <div className="container">
-          <h2 className="font-xl-med mb-4 fw-medium heading-divider">Recent News & Announcements</h2>
+          <h2 className="font-xl-med mb-4 fw-medium heading-divider">
+            Recent News & Announcements
+          </h2>
           <div className="row g-5">
             <div className="col-md-6 col-lg-4">
               <div className="news-item">
-                <span className="news-tag font-xs text-uppercase fw-medium">News</span>
-                <h4 className="mt-2"><a href="#!" className="font-med theme-color text-decoration-hover">2025 Cybersecurity Awareness Month: Update Software</a></h4>
-                <p className="timestamp font-sm fw-semibold text-dark-black"><i>10/06/2025</i> <span>|</span> <i>Division of Banks</i></p>
-                <p className="font-base">Cybersecurity Awareness Month 2025: Update Software to enhance protection.</p>
+                <span className="news-tag font-xs text-uppercase fw-medium">
+                  News
+                </span>
+                <h4 className="mt-2">
+                  <a
+                    href="#!"
+                    className="font-med theme-color text-decoration-hover"
+                  >
+                    2025 Cybersecurity Awareness Month: Update Software
+                  </a>
+                </h4>
+                <p className="timestamp font-sm fw-semibold text-dark-black">
+                  <i>10/06/2025</i> <span>|</span> <i>Division of Banks</i>
+                </p>
+                <p className="font-base">
+                  Cybersecurity Awareness Month 2025: Update Software to enhance
+                  protection.
+                </p>
               </div>
             </div>
             <div className="col-md-6 col-lg-4">
               <div className="news-item">
-                <span className="news-tag font-xs text-uppercase fw-medium">Press Release</span>
-                <h4 className="mt-2"><a href="#!" className="font-med theme-color text-decoration-hover">Treasurer's Office of Economic Empowerment, Division of Banks Announce 2026 Funding for High School Financial Education Fairs</a></h4>
-                <p className="timestamp font-sm fw-semibold text-dark-black"><i>10/06/2025</i> <span>|</span> <i>Office of State Treasurer and Receiver General Deborah B. Goldberg</i></p>
-                <p className="font-base">Massachusetts high schools can apply to receive a grant to host a financial education fair for their students.</p>
+                <span className="news-tag font-xs text-uppercase fw-medium">
+                  Press Release
+                </span>
+                <h4 className="mt-2">
+                  <a
+                    href="#!"
+                    className="font-med theme-color text-decoration-hover"
+                  >
+                    Treasurer's Office of Economic Empowerment, Division of
+                    Banks Announce 2026 Funding for High School Financial
+                    Education Fairs
+                  </a>
+                </h4>
+                <p className="timestamp font-sm fw-semibold text-dark-black">
+                  <i>10/06/2025</i> <span>|</span>{" "}
+                  <i>
+                    Office of State Treasurer and Receiver General Deborah B.
+                    Goldberg
+                  </i>
+                </p>
+                <p className="font-base">
+                  Massachusetts high schools can apply to receive a grant to
+                  host a financial education fair for their students.
+                </p>
               </div>
             </div>
             <div className="col-md-6 col-lg-4">
               <div className="news-item">
-                <span className="news-tag font-xs text-uppercase fw-medium">News</span>
-                <h4 className="mt-2"><a href="#!" className="font-med theme-color text-decoration-hover">Juma Financial Services, LLC d/b/a Juma Grocery and Check Services, Marlborough - Permission to operate as a check casher</a></h4>
-                <p className="timestamp font-sm fw-semibold text-dark-black"><i>10/06/2025</i> <span>|</span> <i>Division of Banks</i></p>
-                <p className="font-base">Comment period from October 17, 2025, through October 31, 2025.</p>
+                <span className="news-tag font-xs text-uppercase fw-medium">
+                  News
+                </span>
+                <h4 className="mt-2">
+                  <a
+                    href="#!"
+                    className="font-med theme-color text-decoration-hover"
+                  >
+                    Juma Financial Services, LLC d/b/a Juma Grocery and Check
+                    Services, Marlborough - Permission to operate as a check
+                    casher
+                  </a>
+                </h4>
+                <p className="timestamp font-sm fw-semibold text-dark-black">
+                  <i>10/06/2025</i> <span>|</span> <i>Division of Banks</i>
+                </p>
+                <p className="font-base">
+                  Comment period from October 17, 2025, through October 31,
+                  2025.
+                </p>
               </div>
             </div>
             <div className="col-md-6 col-lg-4">
               <div className="news-item">
-                <span className="news-tag font-xs text-uppercase fw-medium">News</span>
-                <h4 className="mt-2"><a href="#!" className="font-med theme-color text-decoration-hover">2025 Cybersecurity Month</a></h4>
-                <p className="timestamp font-sm fw-semibold text-dark-black"><i>10/01/2025</i> <span>|</span> <i>Division of Banks</i></p>
-                <p className="font-base">October is Cybersecurity Awareness Month.</p>
+                <span className="news-tag font-xs text-uppercase fw-medium">
+                  News
+                </span>
+                <h4 className="mt-2">
+                  <a
+                    href="#!"
+                    className="font-med theme-color text-decoration-hover"
+                  >
+                    2025 Cybersecurity Month
+                  </a>
+                </h4>
+                <p className="timestamp font-sm fw-semibold text-dark-black">
+                  <i>10/01/2025</i> <span>|</span> <i>Division of Banks</i>
+                </p>
+                <p className="font-base">
+                  October is Cybersecurity Awareness Month.
+                </p>
               </div>
             </div>
             <div className="col-md-6 col-lg-4">
               <div className="news-item font-sm">
-                <span className="news-tag font-xs text-uppercase fw-medium">News</span>
-                <h4 className="mt-2"><a href="#!" className="font-med theme-color text-decoration-hover">209 CMR 20.00, 209 CMR 32.00, and 209 CMR 42.00: Final Amendments</a></h4>
-                <p className="timestamp font-sm fw-semibold text-dark-black"><i>9/23/2025</i> <span>|</span> <i>Division of Banks</i></p>
+                <span className="news-tag font-xs text-uppercase fw-medium">
+                  News
+                </span>
+                <h4 className="mt-2">
+                  <a
+                    href="#!"
+                    className="font-med theme-color text-decoration-hover"
+                  >
+                    209 CMR 20.00, 209 CMR 32.00, and 209 CMR 42.00: Final
+                    Amendments
+                  </a>
+                </h4>
+                <p className="timestamp font-sm fw-semibold text-dark-black">
+                  <i>9/23/2025</i> <span>|</span> <i>Division of Banks</i>
+                </p>
                 <p className="font-base">Effective October 10, 2025.</p>
               </div>
             </div>
             <div className="col-md-6 col-lg-4">
               <div className="news-item">
-                <span className="news-tag font-xs text-uppercase fw-medium">News</span>
-                <h4 className="mt-2"><a href="#!" className="font-med theme-color text-decoration-hover">Public Hearing Relative to 801 CMR 4.02: Rates</a></h4>
-                <p className="timestamp font-sm fw-semibold text-dark-black"><i>9/12/2025</i> <span>|</span> <i>Division of Banks</i></p>
-                <p className="font-base">Hybrid public hearing to be held on October 7, 2025, at 10:00 am at One Federal Street, Boston, MA 02110.</p>
+                <span className="news-tag font-xs text-uppercase fw-medium">
+                  News
+                </span>
+                <h4 className="mt-2">
+                  <a
+                    href="#!"
+                    className="font-med theme-color text-decoration-hover"
+                  >
+                    Public Hearing Relative to 801 CMR 4.02: Rates
+                  </a>
+                </h4>
+                <p className="timestamp font-sm fw-semibold text-dark-black">
+                  <i>9/12/2025</i> <span>|</span> <i>Division of Banks</i>
+                </p>
+                <p className="font-base">
+                  Hybrid public hearing to be held on October 7, 2025, at 10:00
+                  am at One Federal Street, Boston, MA 02110.
+                </p>
               </div>
             </div>
           </div>
@@ -469,7 +644,9 @@ function Home() {
       {/* Upcoming Events Section */}
       <section className="upcoming-events py-5" id="events-tab">
         <div className="container">
-          <h2 className="font-xl-med mb-4 fw-medium heading-divider">Upcoming Events</h2>
+          <h2 className="font-xl-med mb-4 fw-medium heading-divider">
+            Upcoming Events
+          </h2>
           <div className="row g-4 g-md-5">
             {/* Event Card 1 */}
             <div className="col-12 col-md-6">
@@ -482,12 +659,23 @@ function Home() {
 
                 {/* Event Details */}
                 <div className="flex-grow-1">
-                  <a href="#" className="font-med theme-color text-decoration-hover">
-                    Public hearing relative to proposed amendments to <span className="fw-bold">801 CMR 4.02: Rates</span>
+                  <a
+                    href="#"
+                    className="font-med theme-color text-decoration-hover"
+                  >
+                    Public hearing relative to proposed amendments to{" "}
+                    <span className="fw-bold">801 CMR 4.02: Rates</span>
                   </a>
-                  <p className="font-sm fw-semibold text-dark-black fst-italic">One Federal Street, Gold Room (Room 6017), Boston, MA 02110</p>
-                  <p className="font-sm fw-semibold text-dark-black fst-italic">10 a.m. - 10:15 a.m.</p>
-                  <p className="font-base mt-3 mb-0">Public hearing relative to proposed amendments to 801 CMR 4.02: Rates</p>
+                  <p className="font-sm fw-semibold text-dark-black fst-italic">
+                    One Federal Street, Gold Room (Room 6017), Boston, MA 02110
+                  </p>
+                  <p className="font-sm fw-semibold text-dark-black fst-italic">
+                    10 a.m. - 10:15 a.m.
+                  </p>
+                  <p className="font-base mt-3 mb-0">
+                    Public hearing relative to proposed amendments to 801 CMR
+                    4.02: Rates
+                  </p>
                 </div>
               </div>
             </div>
@@ -503,12 +691,24 @@ function Home() {
 
                 {/* Event Details */}
                 <div className="flex-grow-1">
-                  <a href="#" className="font-med theme-color text-decoration-hover">
-                    Public hearing relative to <span className="fw-bold">209 CMR 44.00, 45.00, and 48.00</span>
+                  <a
+                    href="#"
+                    className="font-med theme-color text-decoration-hover"
+                  >
+                    Public hearing relative to{" "}
+                    <span className="fw-bold">
+                      209 CMR 44.00, 45.00, and 48.00
+                    </span>
                   </a>
-                  <p className="font-sm fw-semibold text-dark-black fst-italic">One Federal Street, Gold Room (Room 6017), Boston, MA 02110</p>
-                  <p className="font-sm fw-semibold text-dark-black fst-italic">10:30 a.m. - 11:30 a.m.</p>
-                  <p className="font-base mt-3 mb-0">Public hearing relative to 209 CMR 44.00, 45.00, and 48.00</p>
+                  <p className="font-sm fw-semibold text-dark-black fst-italic">
+                    One Federal Street, Gold Room (Room 6017), Boston, MA 02110
+                  </p>
+                  <p className="font-sm fw-semibold text-dark-black fst-italic">
+                    10:30 a.m. - 11:30 a.m.
+                  </p>
+                  <p className="font-base mt-3 mb-0">
+                    Public hearing relative to 209 CMR 44.00, 45.00, and 48.00
+                  </p>
                 </div>
               </div>
             </div>
@@ -525,21 +725,44 @@ function Home() {
 
       <section className="related-organisation py-5">
         <div className="container">
-          <h2 className="font-xl-med mb-4 fw-medium heading-divider">Related organizations</h2>
+          <h2 className="font-xl-med mb-4 fw-medium heading-divider">
+            Related organizations
+          </h2>
 
           {/* Organization List */}
           <ul className="row related-organizations-list g-2 mt-2">
             <li className="col-12 col-md-6">
-              <a href="#" className="font-base-med fw-medium text-decoration-hover">Office of Consumer Affairs and Business Regulation</a>
+              <a
+                href="#"
+                className="font-base-med fw-medium text-decoration-hover"
+              >
+                Office of Consumer Affairs and Business Regulation
+              </a>
             </li>
             <li className="col-12 col-md-6">
-              <a href="#" className="font-base-med fw-medium text-decoration-hover">Executive Office of Economic Development</a>
+              <a
+                href="#"
+                className="font-base-med fw-medium text-decoration-hover"
+              >
+                Executive Office of Economic Development
+              </a>
             </li>
             <li className="col-12 col-md-6">
-              <a href="#" className="font-base-med fw-medium text-decoration-hover">Office of the Attorney General</a>
+              <a
+                href="#"
+                className="font-base-med fw-medium text-decoration-hover"
+              >
+                Office of the Attorney General
+              </a>
             </li>
             <li className="col-12 col-md-6">
-              <a href="#" className="font-base-med fw-medium text-decoration-hover">Office of State Treasurer and Receiver General Deborah B. Goldberg</a>
+              <a
+                href="#"
+                className="font-base-med fw-medium text-decoration-hover"
+              >
+                Office of State Treasurer and Receiver General Deborah B.
+                Goldberg
+              </a>
             </li>
           </ul>
         </div>
@@ -547,24 +770,51 @@ function Home() {
 
       <section className="related-organisation py-5">
         <div className="container">
-          <h2 className="font-xl-med mb-4 fw-medium heading-divider">Division of Banks information</h2>
+          <h2 className="font-xl-med mb-4 fw-medium heading-divider">
+            Division of Banks information
+          </h2>
 
           {/* Organization List */}
           <ul className="row related-organizations-list g-2 mt-2">
             <li className="col-12">
-              <a href="#" className="font-base-med fw-medium text-decoration-hover">Agency overview</a>
+              <a
+                href="#"
+                className="font-base-med fw-medium text-decoration-hover"
+              >
+                Agency overview
+              </a>
             </li>
             <li className="col-12">
-              <a href="#" className="font-base-med fw-medium text-decoration-hover">Staff directory by unit</a>
+              <a
+                href="#"
+                className="font-base-med fw-medium text-decoration-hover"
+              >
+                Staff directory by unit
+              </a>
             </li>
             <li className="col-12">
-              <a href="#" className="font-base-med fw-medium text-decoration-hover">Employment</a>
+              <a
+                href="#"
+                className="font-base-med fw-medium text-decoration-hover"
+              >
+                Employment
+              </a>
             </li>
             <li className="col-12">
-              <a href="#" className="font-base-med fw-medium text-decoration-hover">Register for the DOB listserv e-mail delivery</a>
+              <a
+                href="#"
+                className="font-base-med fw-medium text-decoration-hover"
+              >
+                Register for the DOB listserv e-mail delivery
+              </a>
             </li>
             <li className="col-12">
-              <a href="#" className="font-base-med fw-medium text-decoration-hover">DOB Public Records Request</a>
+              <a
+                href="#"
+                className="font-base-med fw-medium text-decoration-hover"
+              >
+                DOB Public Records Request
+              </a>
             </li>
           </ul>
         </div>
@@ -575,14 +825,28 @@ function Home() {
           <div className="row align-items-center">
             {/* Left Column: Seal/Logo */}
             <div className="col-12 col-md-2 text-center text-md-start mb-3 mb-md-0">
-              <div className="footer-logo"><img src={logo} alt="logo" className="w-100" /></div>
+              <div className="footer-logo">
+                <img src={logo} alt="logo" className="w-100" />
+              </div>
             </div>
 
             <div className="col-12 col-md-10 text-center text-md-start">
               <ul className="footer-links d-flex justify-content-center justify-content-md-start font-base-med fw-medium mb-4 list-unstyled gap-4">
-                <li><a href="#" className="text-dark text-decoration-none">All Topics</a></li>
-                <li><a href="#" className="text-dark text-decoration-none">Site Policies</a></li>
-                <li><a href="#" className="text-dark text-decoration-none">Public Records Requests</a></li>
+                <li>
+                  <a href="#" className="text-dark text-decoration-none">
+                    All Topics
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="text-dark text-decoration-none">
+                    Site Policies
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="text-dark text-decoration-none">
+                    Public Records Requests
+                  </a>
+                </li>
               </ul>
 
               {/* Copyright Information */}
@@ -590,9 +854,14 @@ function Home() {
                 &copy; 2025 Commonwealth of Massachusetts.
               </p>
               <p className="mb-0 font-sm text-gray-dark">
-                Mass.gov® is a registered service mark of the Commonwealth of Massachusetts.
-                <a href="#" className="text-decoration-underline">Mass.gov</a>
-                <a href="#" className="text-decoration-underline">Privacy Policy</a>
+                Mass.gov® is a registered service mark of the Commonwealth of
+                Massachusetts.
+                <a href="#" className="text-decoration-underline  mx-2">
+                  Mass.gov
+                </a>
+                <a href="#" className="text-decoration-underline">
+                  Privacy Policy
+                </a>
               </p>
             </div>
           </div>

@@ -8,6 +8,9 @@ import "../../styles/custom.css";
 
 function Register() {
   const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    phoneNumber: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -41,6 +44,27 @@ function Register() {
   // Form validation rules
   const validateForm = () => {
     const newErrors = {};
+
+    // First Name validation
+    if (!formData.firstName.trim()) {
+      newErrors.firstName = "First name is required";
+    } else if (formData.firstName.trim().length < 2) {
+      newErrors.firstName = "First name must be at least 2 characters";
+    }
+
+    // Last Name validation
+    if (!formData.lastName.trim()) {
+      newErrors.lastName = "Last name is required";
+    } else if (formData.lastName.trim().length < 2) {
+      newErrors.lastName = "Last name must be at least 2 characters";
+    }
+
+    // Phone Number validation
+    if (!formData.phoneNumber.trim()) {
+      newErrors.phoneNumber = "Phone number is required";
+    } else if (!/^\+?[\d\s\-()]{10,}$/.test(formData.phoneNumber)) {
+      newErrors.phoneNumber = "Please enter a valid phone number";
+    }
 
     // Email validation
     if (!formData.email.trim()) {
@@ -153,6 +177,75 @@ function Register() {
                       Login{" "}
                     </Link>
                   </p>
+                </div>
+
+                <div className="form-group">
+                  <label className="label-text">First Name</label>
+                  <div className="input-group">
+                    <div className="user-icon">
+                      <i className="fa-solid fa-user"></i>
+                    </div>
+                    <input
+                      name="firstName"
+                      type="text"
+                      className={`form-control ${errors.firstName ? 'is-invalid' : ''}`}
+                      placeholder="John"
+                      value={formData.firstName}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                  {errors.firstName && (
+                    <div className="invalid-feedback d-block">
+                      <small className="text-danger">{errors.firstName}</small>
+                    </div>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label className="label-text">Last Name</label>
+                  <div className="input-group">
+                    <div className="user-icon">
+                      <i className="fa-solid fa-user"></i>
+                    </div>
+                    <input
+                      name="lastName"
+                      type="text"
+                      className={`form-control ${errors.lastName ? 'is-invalid' : ''}`}
+                      placeholder="Doe"
+                      value={formData.lastName}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                  {errors.lastName && (
+                    <div className="invalid-feedback d-block">
+                      <small className="text-danger">{errors.lastName}</small>
+                    </div>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label className="label-text">Phone Number</label>
+                  <div className="input-group">
+                    <div className="user-icon">
+                      <i className="fa-solid fa-phone"></i>
+                    </div>
+                    <input
+                      name="phoneNumber"
+                      type="tel"
+                      className={`form-control ${errors.phoneNumber ? 'is-invalid' : ''}`}
+                      placeholder="+1 (555) 123-4567"
+                      value={formData.phoneNumber}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                  {errors.phoneNumber && (
+                    <div className="invalid-feedback d-block">
+                      <small className="text-danger">{errors.phoneNumber}</small>
+                    </div>
+                  )}
                 </div>
 
                 <div className="form-group">
