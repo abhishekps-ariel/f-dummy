@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import loginImg from "../../assets/logo-sample.png";
@@ -7,8 +7,23 @@ import "../../styles/custom.css";
 function TwoFactorAuth() {
   const [codes, setCodes] = useState(["", "", "", "", "", ""]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [resendTimer, setResendTimer] = useState(0);
+  const [isResending, setIsResending] = useState(false);
   const inputRefs = useRef([]);
   const navigate = useNavigate();
+
+  // Timer countdown effect
+  useEffect(() => {
+    let interval = null;
+    if (resendTimer > 0) {
+      interval = setInterval(() => {
+        setResendTimer(timer => timer - 1);
+      }, 1000);
+    } else if (resendTimer === 0) {
+      clearInterval(interval);
+    }
+    return () => clearInterval(interval);
+  }, [resendTimer]);
 
   const handleCodeChange = (index, value) => {
     // Only allow single digit
@@ -73,8 +88,22 @@ function TwoFactorAuth() {
     }
   };
 
-  const handleResendCode = () => {
-    toast.info("New code sent to your authentication app");
+  const handleResendCode = async () => {
+    if (resendTimer > 0 || isResending) return;
+    
+    setIsResending(true);
+    
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      toast.info("New code sent to your authentication app");
+      setResendTimer(30); // Start 30-second timer
+    } catch {
+      toast.error("Failed to send new code. Please try again.");
+    } finally {
+      setIsResending(false);
+    }
   };
 
   return (
@@ -130,14 +159,26 @@ function TwoFactorAuth() {
                   )}
                 </button>
 
-                <div className="text-center mt-4">
+                <div className="text-center mt-3">
                   Haven't received it?{" "}
                   <button 
                     type="button"
                     onClick={handleResendCode}
-                    className="btn btn-link font-base fw-medium text-decoration-none p-0"
+                    disabled={resendTimer > 0 || isResending}
+                    className={`btn btn-link font-base fw-medium text-decoration-none p-0 ${
+                      resendTimer > 0 || isResending ? 'text-muted' : ''
+                    }`}
                   >
-                    Resend a new Code
+                    {isResending ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                        Sending...
+                      </>
+                    ) : resendTimer > 0 ? (
+                      `Resend in ${resendTimer}s`
+                    ) : (
+                      'Resend a new Code'
+                    )}
                   </button>
                 </div>
               </form>

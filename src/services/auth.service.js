@@ -1,6 +1,6 @@
 const AUTH_API_URL = "/api/Account";
 
-// Mock data for simulation
+// Mock data
 const MOCK_USERS = [
     {
         id: 1,
@@ -24,7 +24,7 @@ const MOCK_USERS = [
     }
 ];
 
-// Helper function to generate mock JWT token
+// Helper function to generate mock JWT token   
 const generateMockToken = (user) => {
     const header = btoa(JSON.stringify({ alg: "HS256", typ: "JWT" }));
     const payload = btoa(JSON.stringify({
