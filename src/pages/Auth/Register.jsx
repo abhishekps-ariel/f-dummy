@@ -4,6 +4,8 @@ import { toast } from "react-toastify";
 import { register } from "../../services/auth.service";
 import loginImg from "../../assets/logo-sample.png";
 import PasswordGuidelines from "../../components/PasswordGuidelines";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
 import "../../styles/custom.css";
 
 function Register() {
@@ -60,9 +62,9 @@ function Register() {
     }
 
     // Phone Number validation
-    if (!formData.phoneNumber.trim()) {
+    if (!formData.phoneNumber) {
       newErrors.phoneNumber = "Phone number is required";
-    } else if (!/^\+?[\d\s\-()]{10,}$/.test(formData.phoneNumber)) {
+    } else if (formData.phoneNumber.length < 10) {
       newErrors.phoneNumber = "Please enter a valid phone number";
     }
 
@@ -227,20 +229,37 @@ function Register() {
 
                 <div className="form-group">
                   <label className="label-text">Phone Number</label>
-                  <div className="input-group">
-                    <div className="user-icon">
-                      <i className="fa-solid fa-phone"></i>
-                    </div>
-                    <input
-                      name="phoneNumber"
-                      type="tel"
-                      className={`form-control ${errors.phoneNumber ? 'is-invalid' : ''}`}
-                      placeholder="+1 (555) 123-4567"
-                      value={formData.phoneNumber}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
+                  <PhoneInput
+                    country={'us'}
+                    value={formData.phoneNumber}
+                    onChange={(phone) => {
+                      setFormData({ ...formData, phoneNumber: phone });
+                      if (errors.phoneNumber) {
+                        setErrors({ ...errors, phoneNumber: "" });
+                      }
+                    }}
+                    inputClass={`form-control ${errors.phoneNumber ? 'is-invalid' : ''}`}
+                    containerClass="phone-input-container"
+                    buttonClass="phone-input-button"
+                    dropdownClass="phone-input-dropdown"
+                    inputStyle={{
+                      width: '100%',
+                      height: '48px',
+                      fontSize: '16px',
+                      paddingLeft: '48px',
+                      borderRadius: '8px',
+                      border: errors.phoneNumber ? '1px solid #dc3545' : '1px solid #ced4da'
+                    }}
+                    buttonStyle={{
+                      borderRadius: '8px 0 0 8px',
+                      border: errors.phoneNumber ? '1px solid #dc3545' : '1px solid #ced4da',
+                      borderRight: 'none',
+                      backgroundColor: '#fff'
+                    }}
+                    containerStyle={{
+                      width: '100%'
+                    }}
+                  />
                   {errors.phoneNumber && (
                     <div className="invalid-feedback d-block">
                       <small className="text-danger">{errors.phoneNumber}</small>
