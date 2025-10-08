@@ -3,6 +3,14 @@ html {
     scroll-padding-top: 44px;
 }
 
+/* Auth: right-side background image */
+.login-right-image {
+    background-image: url('../assets/login-right-bg.svg');
+    background-size: cover;
+    background-position: center;
+    min-height: 100vh;
+}
+
 /*---- Login page css start ----*/
 .login-inner {
     min-height: 100vh;
