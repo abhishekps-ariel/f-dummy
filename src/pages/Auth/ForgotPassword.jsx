@@ -117,7 +117,6 @@ function ForgotPassword() {
                     'Send Email'
                   )}
                 </button>
-
                 <div className="text-center mt-4">
                   <Link to="/login" className="font-base fw-medium text-decoration-none">
                     <i className="fa-solid fa-chevron-left me-1"></i> Back to Login
@@ -127,7 +126,7 @@ function ForgotPassword() {
             </div>
           </div>
         </div>
-      </div>
+      </div> 
     </div>
   );
 }

@@ -20,18 +20,14 @@ function Login() {
   const validateForm = () => {
     const newErrors = {};
 
-    //email validation
+    //email validation - only check if email is provided
     if (!formData.email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = "Please enter a valid email address";
+      newErrors.email = "This field can't be empty";
     }
 
-    //password validation
+    //password validation - only check if password is provided
     if (!formData.password.trim()) {
-      newErrors.password = "Password is required";
-    } else if (formData.password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters long";
+      newErrors.password = "This field can't be empty";
     }
 
     setErrors(newErrors);
@@ -54,10 +50,13 @@ function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    e.stopPropagation();
+
+    // Clear previous errors
+    setErrors({});
 
     // Validate form before submission
     if (!validateForm()) {
-      toast.error("Invalid email or password");
       return;
     }
 
@@ -69,11 +68,13 @@ function Login() {
       const response = await login(formData);
       if (response.isSuccess) {
         toast.success(response.msg);
+        // Navigate to home page after successful login
+        navigate("/");
       } else {
-        toast.error(response.msg);
+        toast.error("The email or password you entered is incorrect. Please try again.");
       }
     } catch (error) {
-      toast.error("Login failed! Please try again.");
+      toast.error("The email or password you entered is incorrect. Please try again.");
       console.error("Login error:", error);
     } finally {
       setIsSubmitting(false);
@@ -115,14 +116,13 @@ function Login() {
                     </div>
                     <input
                       name="email"
-                      type="email"
+                      type="text"
                       className={`form-control ${
                         errors.email ? "is-invalid" : ""
                       }`}
-                      placeholder="hello@example.com"
+                      placeholder="Email"
                       value={formData.email}
                       onChange={handleChange}
-                      required
                     />
                   </div>
                   {errors.email && (
@@ -147,7 +147,6 @@ function Login() {
                       placeholder="Password"
                       value={formData.password}
                       onChange={handleChange}
-                      required
                     />
                     <span
                       className="password-eye"

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
+import { register } from "../../services/auth.service";
 import loginImg from "../../assets/logo-sample.png";
 import PasswordGuidelines from "../../components/PasswordGuidelines";
 import "../../styles/custom.css";
@@ -109,11 +110,13 @@ function Register() {
     setIsSubmitting(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast.success("Registration successful! Please check your email to verify your account.");
-      navigate("/login");
+      const response = await register(formData);
+      if (response.isSuccess) {
+        toast.success(response.msg);
+        navigate("/login");
+      } else {
+        toast.error(response.msg);
+      }
     } catch (error) {
       toast.error("Registration failed! Please try again.");
       console.error("Registration error:", error);
