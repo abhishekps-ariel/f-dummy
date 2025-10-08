@@ -316,3 +316,55 @@ select.form-control {
 .footer-logo {
     max-width: 100px;
 }
+
+/* Phone Input Styling */
+.react-tel-input .form-control {
+    border-color: rgb(102 102 102 / 35%) !important;
+}
+
+.react-tel-input .form-control:focus {
+    outline: none !important;
+    box-shadow: none !important;
+    border-color: rgb(102 102 102 / 35%) !important;
+}
+
+.react-tel-input .form-control.is-invalid:focus {
+    border-color: #dc3545 !important;
+}
+
+.react-tel-input .flag-dropdown {
+    border-color: rgb(102 102 102 / 35%) !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.react-tel-input .flag-dropdown:focus,
+.react-tel-input .flag-dropdown:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+    border-color: rgb(102 102 102 / 35%) !important;
+}
+
+.react-tel-input .selected-flag:focus,
+.react-tel-input .selected-flag:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* Remove all focus highlights from phone input */
+.react-tel-input input:focus,
+.react-tel-input input:focus-visible,
+.react-tel-input .form-control:focus,
+.react-tel-input .form-control:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+    border-color: rgb(102 102 102 / 35%) !important;
+}
+
+.react-tel-input .flag-dropdown:focus,
+.react-tel-input .flag-dropdown:focus-visible,
+.react-tel-input .flag-dropdown:active {
+    outline: none !important;
+    box-shadow: none !important;
+    border-color: rgb(102 102 102 / 35%) !important;
+}
