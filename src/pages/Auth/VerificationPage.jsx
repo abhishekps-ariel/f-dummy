@@ -11,7 +11,6 @@ function VerificationPage() {
   const handleResendLink = async () => {
     setIsResending(true);
     try {
-      // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 500));
       toast.success("Verification link sent to your email!");
     } catch {
@@ -20,7 +19,7 @@ function VerificationPage() {
       setIsResending(false);
     }
   };
-
+  
   return (
     <div className="login">
       <div className="container container-md-auto">
