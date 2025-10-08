@@ -38,6 +38,7 @@ function App() {
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/password-changed" element={<PasswordChanged />} />
               <Route path="/two-factor-auth" element={<TwoFactorAuth />} />
+              <Route path="/verification-page/:token" element={<VerificationPage />} />
               <Route path="/verification-page" element={<VerificationPage />} />
               <Route path="/verification-email-sent" element={<VerificationEmailSent />} />
               <Route path="*" element={<PageNotFound />} />

@@ -1,13 +1,14 @@
-import React, { useState, useEffect } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import React, { useState, useEffect, useRef } from "react";
+import { Link, useSearchParams, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { verifyEmail, resendVerification } from "../../services/auth.service";
 import loginImg from "../../assets/logo-sample.png";
 import "../../styles/custom.css";
 
 function VerificationPage() {
-  // Get token from URL query parameters (?token=abc123)
+  // Get token from URL - supports both path param (/verification-page/token) and query param (?token=abc)
   const [searchParams] = useSearchParams();
+  const { token: pathToken } = useParams();
   
   // State management
   const [isLoading, setIsLoading] = useState(true);
@@ -16,11 +17,15 @@ function VerificationPage() {
   const [isResending, setIsResending] = useState(false);
   const [userEmail, setUserEmail] = useState("");
 
+  // Prevent double API calls (React 18 Strict Mode runs useEffect twice in dev)
+  const hasVerified = useRef(false);
+
   // Extract token from URL and verify email on component mount
   useEffect(() => {
     const verifyUserEmail = async () => {
-      // Extract token from URL query parameter
-      const token = searchParams.get("token");
+      // Extract token from URL - check path parameter first, then query parameter
+      // Supports: /verification-page/abc123 OR /verification-page?token=abc123
+      const token = pathToken || searchParams.get("token");
 
       if (!token) {
         // No token in URL - show error
@@ -30,9 +35,20 @@ function VerificationPage() {
         return;
       }
 
+      // Prevent double API call - only verify once
+      if (hasVerified.current) {
+        console.log("Already verified, skipping duplicate call");
+        return;
+      }
+      hasVerified.current = true;
+
+      console.log("Calling verify email API with token:", token);
+
       try {
         // Call verify email API with token
         const response = await verifyEmail(token);
+
+        console.log("Verify email response:", response);
 
         if (response.isSuccess) {
           // Verification successful
@@ -43,8 +59,9 @@ function VerificationPage() {
           setIsVerified(false);
           setVerificationMessage(response.msg || "Verification link expired or invalid.");
         }
-      } catch {
+      } catch (error) {
         // Handle unexpected errors
+        console.log("Verify email exception:", error);
         setIsVerified(false);
         setVerificationMessage("An error occurred during verification. Please try again.");
         toast.error("Verification failed. Please try again.");
@@ -55,7 +72,7 @@ function VerificationPage() {
     };
 
     verifyUserEmail();
-  }, [searchParams]);
+  }, [searchParams, pathToken]);
 
   // Handle resend verification email
   const handleResendLink = async () => {

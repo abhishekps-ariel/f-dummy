@@ -43,7 +43,7 @@ export const login = async (data) => {
 
 /**
  * REGISTER - Real API integration ✅
- * Endpoint: POST http://filir.arielsoftwares.in/api/Auth/register
+ * Endpoint: POST https://filir.arielsoftwares.in/api/Auth/register
  * 
  * @param {Object} formData - { firstName, lastName, email, password, phoneNumber }
  * @returns {Promise} - { isSuccess, msg, data }
@@ -89,13 +89,14 @@ export const register = async (formData) => {
 
 /**
  * VERIFY EMAIL - Real API integration ✅
- * Endpoint: GET http://filir.arielsoftwares.in/api/Auth/verify-email?token=<token>
+ * Endpoint: GET https://filir.arielsoftwares.in/api/Auth/verify-email?token=<token>
  * 
  * @param {string} token - Verification token from URL query parameter
  * @returns {Promise} - { isSuccess, msg, data }
  */
 export const verifyEmail = async (token) => {
   try {
+    // Query parameter format: /verify-email?token={token}
     const response = await axios.get(
       `http://filir.arielsoftwares.in/api/Auth/verify-email?token=${token}`,
       {
@@ -105,6 +106,9 @@ export const verifyEmail = async (token) => {
       }
     );
 
+    // Debug: Log the response to see what we get
+    console.log("Verify Email Response:", response.data);
+
     // backend response schema: { success, message, data }
     return {
       isSuccess: response.data.success,
@@ -112,10 +116,13 @@ export const verifyEmail = async (token) => {
       data: response.data.data,
     };
   } catch (error) {
-    // handle errors
+    // Debug: Log the error to see what failed
+    console.log("Verify Email Error:", error.response?.data);
+    
+    // handle errors - 400 status code with error message
     if (error.response && error.response.data) {
       return {
-        isSuccess: false,
+        isSuccess: error.response.data.success || false,
         msg: error.response.data.message || "Verification failed",
         data: null,
       };
@@ -131,7 +138,7 @@ export const verifyEmail = async (token) => {
 
 /**
  * RESEND VERIFICATION EMAIL - Real API integration ✅
- * Endpoint: POST http://filir.arielsoftwares.in/api/Auth/resend-verification
+ * Endpoint: POST https://filir.arielsoftwares.in/api/Auth/resend-verification
  * 
  * @param {string} email - User's email address
  * @returns {Promise} - { isSuccess, msg, data }
