@@ -201,7 +201,7 @@ function Home() {
                 alt="icon"
                 width="50"
                 height="50"
-                className="me-2"
+                className="me-3"
               />
               <span aria-hidden="true">Mass.gov</span>
             </a>
