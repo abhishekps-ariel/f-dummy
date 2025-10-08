@@ -191,7 +191,7 @@ function Register() {
                       name="firstName"
                       type="text"
                       className={`form-control ${errors.firstName ? 'is-invalid' : ''}`}
-                      placeholder="John"
+                      placeholder="First Name"
                       value={formData.firstName}
                       onChange={handleChange}
                       required
@@ -214,7 +214,7 @@ function Register() {
                       name="lastName"
                       type="text"
                       className={`form-control ${errors.lastName ? 'is-invalid' : ''}`}
-                      placeholder="Doe"
+                      placeholder="Last Name"
                       value={formData.lastName}
                       onChange={handleChange}
                       required
