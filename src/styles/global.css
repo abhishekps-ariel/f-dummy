@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,100..900;1,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600;1,800&display=swap');
 
 :root {
     --primary-color: #3498db;
@@ -8,16 +8,19 @@
 	--text-lg: 28px;
     --text-lg-med: 24px;
 	--text-med: 20px;
+	--text-base-med: 18px;
 	--text-base: 16px;
 	--text-sm: 14px;
 	--text-xs: 12px;
-    --font-family: "Raleway", sans-serif; 
+    --font-family: "Poppins", sans-serif; 
 	--dark-color: #222222;
 	--theme-color: #0265A3;
 	--white-color: #ffffff;
 	--mass-green: #006d44;
 	--portal-blue: #0a5fa8;
 	--mass-gray: #f5f7f8;
+	--mass-primary-green: #388557;
+	--ms-gray-dark:#535353;
 }
 
 
@@ -27,8 +30,19 @@ body {
 	 padding: 0;
 	 font-family: var(--font-family);
 	 color: var(--dark-color);
+	 font-size: var(--text-base);
     }
     
+
+a {
+	color: var(--theme-color);
+}	
+.text-decoration-hover {
+	text-decoration: none;
+}
+.text-decoration-hover:hover {
+text-decoration: underline;
+}
 /*--- fonts ----*/	
 
 .font-xl {
@@ -46,6 +60,10 @@ body {
 .font-med {
 	font-size: var(--text-med);
 }
+.font-base-med {
+	font-size: var(--text-base-med);
+}
+
 .font-base {
 	font-size: var(--text-base);
 }
@@ -69,6 +87,19 @@ body {
 	background: var(--mass-gray);
 }
 
+.theme-color {
+	color: var(--theme-color);
+}
+
+.ms-green {
+	color: var(--mass-green);
+}
+.ms-primary-green {
+	color: var(--mass-primary-green);
+}
+.text-gray-dark {
+	color: var(--ms-gray-dark);
+}
 /*------ Custom button css ----*/
 .custom-btn {
 	font-size: var(--text-med);
@@ -86,4 +117,48 @@ body {
 	background: transparent;
 	color: var(--theme-color);
 	border-color: var(--theme-color);
+}
+
+
+.dropdown-toggle::after {
+    content: "\f078";
+    font-family: 'FontAwesome';
+    border: none;
+    vertical-align: middle;
+    margin-top: -2px;
+    font-size: var(--text-sm);
+}
+.theme-dropdown {
+    background: var(--white-color);
+    border: none;
+    box-shadow: 0px 6px 10px rgb(0 0 0 / 15%);
+	padding: 0;
+	overflow: hidden;
+}
+.theme-dropdown a.dropdown-item {
+    font-size: 15px;
+    padding: 10px 15px;
+}
+
+.theme-dropdown a.dropdown-item:hover, .theme-dropdown a.dropdown-item:focus {
+    background: var(--theme-color);
+    color: var(--white-color);
+}
+
+.heading-divider {
+    position: relative;
+    padding-bottom: 10px;
+}
+
+.heading-divider:before {
+	content: "";
+    height: 3px;
+    position: absolute;
+    bottom: 0;
+    left: .075em;
+    -webkit-transform: skew(-30deg);
+    -ms-transform: skew(-30deg);
+    transform: skew(-30deg);
+    width: 66px;
+	background-color: rgba(56, 133, 87, .5);
 }
