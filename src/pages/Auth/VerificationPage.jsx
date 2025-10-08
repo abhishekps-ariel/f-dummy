@@ -16,6 +16,7 @@ function VerificationPage() {
   const [verificationMessage, setVerificationMessage] = useState("");
   const [isResending, setIsResending] = useState(false);
   const [userEmail, setUserEmail] = useState("");
+  const [showResendForm, setShowResendForm] = useState(false);
 
   // Prevent double API calls (React 18 Strict Mode runs useEffect twice in dev)
   const hasVerified = useRef(false);
@@ -32,6 +33,18 @@ function VerificationPage() {
         setIsLoading(false);
         setIsVerified(false);
         setVerificationMessage("Invalid verification link. Token not found.");
+        return;
+      }
+
+      // Check if we already verified this token (stored in sessionStorage)
+      const cachedResult = sessionStorage.getItem(`verify_${token}`);
+      if (cachedResult) {
+        console.log("Using cached verification result (page reload)");
+        const cached = JSON.parse(cachedResult);
+        setIsVerified(cached.isVerified);
+        setVerificationMessage(cached.message);
+        setShowResendForm(cached.showResend || false);
+        setIsLoading(false);
         return;
       }
 
@@ -54,10 +67,45 @@ function VerificationPage() {
           // Verification successful
           setIsVerified(true);
           setVerificationMessage(response.msg || "Your account has been verified successfully.");
+          
+          // Cache the success result so page reload doesn't re-call API
+          sessionStorage.setItem(`verify_${token}`, JSON.stringify({
+            isVerified: true,
+            message: response.msg || "Your account has been verified successfully."
+          }));
         } else {
-          // Verification failed (expired, invalid, etc.)
-          setIsVerified(false);
-          setVerificationMessage(response.msg || "Verification link expired or invalid.");
+          // Verification failed - check the specific error message from backend
+          const backendMessage = response.msg || "Verification link expired or invalid.";
+          
+          // Check if token is expired - backend returns exact message: "Verification token has expired. Please request a new one."
+          const isExpired = backendMessage === "Verification token has expired. Please request a new one.";
+          
+          // Determine user-friendly message based on backend response
+          let userMessage;
+          let showAsVerified = false;
+          
+          if (isExpired) {
+            // Token expired - show resend form
+            userMessage = "Your verification link has expired. Please request a new one to complete verification.";
+          } else if (backendMessage.includes("Invalid or unknown verification token")) {
+            // Token already used or user already verified - show as success
+            userMessage = "Your account has already been verified. You can now log in!";
+            showAsVerified = true; // Treat as verified for better UX
+          } else {
+            // Other errors
+            userMessage = "Unable to verify your account. Please try again or contact support.";
+          }
+          
+          setIsVerified(showAsVerified);
+          setVerificationMessage(userMessage);
+          setShowResendForm(isExpired); // Only show resend form if token expired
+          
+          // Cache the result so page reload shows same message
+          sessionStorage.setItem(`verify_${token}`, JSON.stringify({
+            isVerified: showAsVerified,
+            message: userMessage,
+            showResend: isExpired
+          }));
         }
       } catch (error) {
         // Handle unexpected errors
@@ -138,7 +186,7 @@ function VerificationPage() {
                       </p>
                     </div>
                   ) : isVerified ? (
-                    /* Success State - Email verified successfully */
+                    /* Success State - Email verified successfully OR already verified */
                     <>
                       <div className="mb-4">
                         <div className="verification-icon d-inline-flex align-items-center justify-content-center mb-3">
@@ -150,72 +198,86 @@ function VerificationPage() {
                         </p>
                       </div>
                       
-                      <div className="d-flex flex-column gap-3">
-                        <Link
-                          to="/login"
-                          className="btn custom-btn theme-btn text-center w-100"
-                        >
-                          <i className="fa-solid fa-sign-in-alt me-2"></i>
-                          Login to Your Account
-                        </Link>
-                      </div>
+                      <Link
+                        to="/login"
+                        className="btn custom-btn theme-btn text-center w-100"
+                      >
+                        <i className="fa-solid fa-sign-in-alt me-2"></i>
+                        Login to Your Account
+                      </Link>
                     </>
                   ) : (
-                    /* Error State - Verification failed/expired */
+                    /* Error State - Token Expired or Other Errors */
                     <>
                       <div className="mb-4">
                         <div className="verification-icon d-inline-flex align-items-center justify-content-center mb-3">
-                          <i className="fa-solid fa-exclamation-triangle text-warning" style={{ fontSize: '4rem' }}></i>
+                          <i className={`fa-solid ${showResendForm ? 'fa-clock' : 'fa-exclamation-circle'} text-warning`} style={{ fontSize: '4rem' }}></i>
                         </div>
-                        <h2 className="font-xl-med fw-bold text-warning">Verification Failed</h2>
+                        <h2 className="font-xl-med fw-bold text-warning">
+                          {showResendForm ? 'Link Expired' : 'Verification Error'}
+                        </h2>
                         <p className="font-base text-muted">
                           {verificationMessage}
                         </p>
                       </div>
                       
                       <div className="d-flex flex-column gap-3">
-                        {/* Email input for resending verification */}
-                        <div className="form-group text-start">
-                          <label className="label-text">Enter your email address</label>
-                          <div className="input-group">
-                            <div className="user-icon">
-                              <i className="fa-solid fa-envelope"></i>
+                        {/* Only show resend form if token is expired */}
+                        {showResendForm ? (
+                          <>
+                            {/* Email input for resending verification */}
+                            <div className="form-group text-start">
+                              <label className="label-text">Enter your email address</label>
+                              <div className="input-group">
+                                <div className="user-icon">
+                                  <i className="fa-solid fa-envelope"></i>
+                                </div>
+                                <input
+                                  type="email"
+                                  className="form-control"
+                                  placeholder="your@email.com"
+                                  value={userEmail}
+                                  onChange={(e) => setUserEmail(e.target.value)}
+                                  disabled={isResending}
+                                />
+                              </div>
                             </div>
-                            <input
-                              type="email"
-                              className="form-control"
-                              placeholder="your@email.com"
-                              value={userEmail}
-                              onChange={(e) => setUserEmail(e.target.value)}
+                            
+                            <button
+                              onClick={handleResendLink}
+                              className="btn custom-btn theme-btn text-center w-100"
                               disabled={isResending}
-                            />
-                          </div>
-                        </div>
-                        
-                        <button
-                          onClick={handleResendLink}
-                          className="btn custom-btn theme-btn text-center w-100"
-                          disabled={isResending}
-                        >
-                          {isResending ? (
-                            <>
-                              <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                              Sending...
-                            </>
-                          ) : (
-                            <>
-                              <i className="fa-solid fa-paper-plane me-2"></i>
-                              Resend Verification Link
-                            </>
-                          )}
-                        </button>
-                        
-                        <Link
-                          to="/login"
-                          className="btn btn-link text-dark-black fw-medium"
-                        >
-                          Back to Login
-                        </Link>
+                            >
+                              {isResending ? (
+                                <>
+                                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                  Sending...
+                                </>
+                              ) : (
+                                <>
+                                  <i className="fa-solid fa-paper-plane me-2"></i>
+                                  Resend Verification Link
+                                </>
+                              )}
+                            </button>
+                            
+                            <Link
+                              to="/login"
+                              className="btn btn-link text-dark-black fw-medium"
+                            >
+                              Back to Login
+                            </Link>
+                          </>
+                        ) : (
+                          /* Show login button if token is already used/invalid (not expired) */
+                          <Link
+                            to="/login"
+                            className="btn custom-btn theme-btn text-center w-100"
+                          >
+                            <i className="fa-solid fa-sign-in-alt me-2"></i>
+                            Go to Login
+                          </Link>
+                        )}
                       </div>
                     </>
                   )}
