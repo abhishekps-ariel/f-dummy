@@ -12,6 +12,11 @@ function TwoFactorAuth() {
   const inputRefs = useRef([]);
   const navigate = useNavigate();
 
+  // Start timer when component mounts (OTP sent on login)
+  useEffect(() => {
+    setResendTimer(30); // Start 30-second timer immediately
+  }, []);
+
   // Timer countdown effect
   useEffect(() => {
     let interval = null;
