@@ -18,6 +18,17 @@ function Home() {
     return () => clearTimeout(timer);
   }, []);
 
+  // Smooth scroll function
+  const scrollToSection = (sectionId) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      });
+    }
+  };
+
   if (isLoading) {
     return (
       <div
@@ -205,12 +216,42 @@ function Home() {
       <div className="tabs-link-featured positive-sticky top-0">
         <div className="container">
           <div className="d-flex align-items-center">
-            <a href="#feature-tab">Featured</a>
-            <a href="#contact-info-tab">Contact Us</a>
-            <a href="#who-we-serve-tab">Who we serve</a>
-            <a href="#i-like-info-tab">I want to…</a>
-            <a href="#news-tab">News</a>
-            <a href="#events-tab">Events</a>
+            <button 
+              className="nav-link-btn" 
+              onClick={() => scrollToSection('feature-tab')}
+            >
+              Featured
+            </button>
+            <button 
+              className="nav-link-btn" 
+              onClick={() => scrollToSection('contact-info-tab')}
+            >
+              Contact Us
+            </button>
+            <button 
+              className="nav-link-btn" 
+              onClick={() => scrollToSection('who-we-serve-tab')}
+            >
+              Who we serve
+            </button>
+            <button 
+              className="nav-link-btn" 
+              onClick={() => scrollToSection('i-like-info-tab')}
+            >
+              I want to…
+            </button>
+            <button 
+              className="nav-link-btn" 
+              onClick={() => scrollToSection('news-tab')}
+            >
+              News
+            </button>
+            <button 
+              className="nav-link-btn" 
+              onClick={() => scrollToSection('events-tab')}
+            >
+              Events
+            </button>
           </div>
         </div>
       </div>

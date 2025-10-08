@@ -368,3 +368,27 @@ select.form-control {
     box-shadow: none !important;
     border-color: rgb(102 102 102 / 35%) !important;
 }
+
+/* Navigation Button Styling */
+.nav-link-btn {
+    background: none;
+    border: none;
+    font-size: var(--text-base);
+    color: var(--dark-color);
+    text-decoration: none;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+    margin-right: 36px;
+    transition: color 0.2s ease;
+}
+
+.nav-link-btn:hover {
+    color: var(--theme-color);
+    text-decoration: none;
+}
+
+.nav-link-btn:focus {
+    outline: none;
+    color: var(--theme-color);
+}
