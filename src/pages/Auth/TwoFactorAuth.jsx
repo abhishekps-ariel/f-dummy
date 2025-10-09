@@ -19,7 +19,7 @@ function TwoFactorAuth() {
   const phoneNumberMasked = location.state?.phoneNumberMasked;
 
   useEffect(() => {
-    // Redirect to login if no email in location state (not coming from login flow)
+    // Redirect to login if no email in location state 
     if (!email) {
       toast.error("Access denied. Please login first.");
       navigate("/login", { replace: true });

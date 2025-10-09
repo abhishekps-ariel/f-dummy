@@ -8,6 +8,7 @@ import LoadingFallback from './components/LoadingFallback';
 // Lazy load main pages
 const Home = lazy(() => import('./pages/Home'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Profile = lazy(() => import('./pages/Profile'));
 const Login = lazy(() => import('./pages/Auth/Login'));
 const Register = lazy(() => import('./pages/Auth/Register'));
 const ForgotPassword = lazy(() => import('./pages/Auth/ForgotPassword'));
@@ -33,6 +34,7 @@ function App() {
              <Routes>
                <Route path="/" element={<Home />} />
                <Route path="/dashboard" element={<Dashboard />} />
+               <Route path="/profile" element={<Profile />} />
                <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
