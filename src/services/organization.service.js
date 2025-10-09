@@ -71,6 +71,39 @@ export const searchOrganizations = async (query) => {
   }
 };
 
+// Submit join request for an organization
+export const submitJoinRequest = async (organizationId) => {
+  try {
+    const response = await axios.post(
+      "http://filir.arielsoftwares.in/api/OrganizationJoinRequest/request",
+      { organizationId },
+      {
+        headers: getAuthHeaders(),
+      }
+    );
+
+    return {
+      isSuccess: response.data.success || true,
+      msg: response.data.message || "Join request submitted successfully",
+      data: response.data.data || response.data,
+    };
+  } catch (error) {
+    if (error.response && error.response.data) {
+      return {
+        isSuccess: false,
+        msg: error.response.data.message || "Failed to submit join request",
+        data: null,
+      };
+    } else {
+      return {
+        isSuccess: false,
+        msg: "Network error. Please try again.",
+        data: null,
+      };
+    }
+  }
+};
+
 // Create organization (for future use)
 export const createOrganization = async (organizationData) => {
   try {

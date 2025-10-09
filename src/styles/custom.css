@@ -1064,3 +1064,98 @@ form.form-select {
 .org-search-dropdown::-webkit-scrollbar-thumb:hover {
     background: #a8a8a8;
 }
+
+/* Selected Organization Badge Styles */
+.selected-org-container {
+    margin-top: 8px;
+    margin-bottom: 8px;
+}
+
+.selected-org-badge {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.selected-org-badge:hover {
+    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+    transform: translateY(-2px);
+}
+
+.selected-org-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    color: white;
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.selected-org-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.selected-org-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: white;
+    margin-bottom: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.selected-org-details {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.85);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.selected-org-type {
+    font-weight: 500;
+}
+
+.selected-org-address {
+    opacity: 0.9;
+}
+
+.selected-org-remove {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.selected-org-remove:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+.selected-org-remove:active {
+    transform: scale(0.95);
+}

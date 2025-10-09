@@ -87,7 +87,7 @@ export const sendOtp = async (email, password) => {
       AUTH_ENDPOINTS.SEND_OTP,
       {
         email,
-        password
+        password,
       },
       {
         headers: {
