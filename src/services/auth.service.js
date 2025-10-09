@@ -1,10 +1,11 @@
 import axios from "axios";
+import { AUTH_ENDPOINTS } from "../constants/apiEndpoints";
 
 // Check MFA status for user
 export const checkMfa = async (email, password) => {
   try {
     const response = await axios.post(
-      "http://filir.arielsoftwares.in/api/Auth/check-mfa",
+      AUTH_ENDPOINTS.CHECK_MFA,
       {
         email,
         password
@@ -43,7 +44,7 @@ export const checkMfa = async (email, password) => {
 export const login = async (email, password, rememberMe = true) => {
   try {
     const response = await axios.post(
-      "http://filir.arielsoftwares.in/api/Auth/login",
+      AUTH_ENDPOINTS.LOGIN,
       {
         email,
         password,
@@ -83,7 +84,7 @@ export const login = async (email, password, rememberMe = true) => {
 export const sendOtp = async (email, password) => {
   try {
     const response = await axios.post(
-      "http://filir.arielsoftwares.in/api/Auth/login/send-otp",
+      AUTH_ENDPOINTS.SEND_OTP,
       {
         email,
         password
@@ -122,7 +123,7 @@ export const sendOtp = async (email, password) => {
 export const verifyOtp = async (email, otpCode) => {
   try {
     const response = await axios.post(
-      "http://filir.arielsoftwares.in/api/Auth/login/verify-otp",
+      AUTH_ENDPOINTS.VERIFY_OTP,
       {
         email,
         otpCode
@@ -170,7 +171,7 @@ export const register = async (formData) => {
     };
 
     const response = await axios.post(
-      "http://filir.arielsoftwares.in/api/Auth/register",
+      AUTH_ENDPOINTS.REGISTER,
       requestBody,
       {
         headers: {
@@ -198,7 +199,7 @@ export const register = async (formData) => {
 export const verifyEmail = async (token) => {
   try {
     const response = await axios.get(
-      `http://filir.arielsoftwares.in/api/Auth/verify-email?token=${token}`,
+      AUTH_ENDPOINTS.VERIFY_EMAIL(token),
       {
         headers: { Accept: "text/plain" },
       }
@@ -234,7 +235,7 @@ export const verifyEmail = async (token) => {
 export const resendVerification = async (email) => {
   try {
     const response = await axios.post(
-      "http://filir.arielsoftwares.in/api/Auth/resend-verification",
+      AUTH_ENDPOINTS.RESEND_VERIFICATION,
       JSON.stringify(email),
       {
         headers: {
