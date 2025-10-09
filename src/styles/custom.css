@@ -1075,29 +1075,29 @@ form.form-select {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 16px 20px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    padding: 14px 16px;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
     position: relative;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
 }
 
 .selected-org-badge:hover {
-    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
-    transform: translateY(-2px);
+    border-color: #adb5bd;
+    background: #f1f3f5;
 }
 
 .selected-org-icon {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 48px;
-    height: 48px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 10px;
-    color: white;
-    font-size: 20px;
+    width: 40px;
+    height: 40px;
+    background: #e9ecef;
+    border-radius: 8px;
+    color: var(--theme-color);
+    font-size: 18px;
     flex-shrink: 0;
 }
 
@@ -1107,9 +1107,9 @@ form.form-select {
 }
 
 .selected-org-name {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 600;
-    color: white;
+    color: #212529;
     margin-bottom: 4px;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1118,7 +1118,7 @@ form.form-select {
 
 .selected-org-details {
     font-size: 13px;
-    color: rgba(255, 255, 255, 0.85);
+    color: #6c757d;
     display: flex;
     align-items: center;
     gap: 4px;
@@ -1139,12 +1139,12 @@ form.form-select {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
-    background: rgba(255, 255, 255, 0.2);
+    width: 28px;
+    height: 28px;
+    background: transparent;
     border: none;
-    border-radius: 8px;
-    color: white;
+    border-radius: 6px;
+    color: #6c757d;
     font-size: 16px;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -1152,8 +1152,8 @@ form.form-select {
 }
 
 .selected-org-remove:hover {
-    background: rgba(255, 255, 255, 0.3);
-    transform: scale(1.1);
+    background: #e9ecef;
+    color: #495057;
 }
 
 .selected-org-remove:active {
