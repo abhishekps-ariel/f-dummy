@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
-import { verifyOtp, sendOtp, storeAuthData, getAuthData } from "../../services/auth.service";
+import { verifyOtp, sendOtp, storeAuthData } from "../../services/auth.service";
 import loginImg from "../../assets/logo-sample.png";
 import "../../styles/custom.css";
 
@@ -19,14 +19,8 @@ function TwoFactorAuth() {
   const phoneNumberMasked = location.state?.phoneNumberMasked;
 
   useEffect(() => {
-    // Enhanced security check
-    const authData = getAuthData();
-    
-    // Redirect to login if:
-    // 1. No email in location state (not coming from login flow)
-    // 2. User is already authenticated (shouldn't be on 2FA page)
-    // 3. No proper navigation state
-    if (!email || authData.token) {
+    // Redirect to login if no email in location state (not coming from login flow)
+    if (!email) {
       toast.error("Access denied. Please login first.");
       navigate("/login", { replace: true });
       return;
@@ -133,16 +127,8 @@ function TwoFactorAuth() {
     setIsResending(true);
     
     try {
-      // Enhanced security check before resending
-      const authData = getAuthData();
+      // Get password from location state
       const password = location.state?.password;
-      
-      // Double-check authentication state
-      if (authData.token) {
-        toast.error("Already authenticated. Redirecting to profile.");
-        navigate("/profile", { replace: true });
-        return;
-      }
       
       if (!password || !email) {
         toast.error("Session expired. Please login again.");
