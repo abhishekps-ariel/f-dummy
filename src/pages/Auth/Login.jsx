@@ -18,16 +18,13 @@ function Login() {
 
   const navigate = useNavigate();
 
-  // Form validation
   const validateForm = () => {
     const newErrors = {};
 
-    //email validation - only check if email is provided
     if (!formData.email.trim()) {
       newErrors.email = "This field can't be empty";
     }
 
-    //password validation - only check if password is provided
     if (!formData.password.trim()) {
       newErrors.password = "This field can't be empty";
     }
@@ -40,7 +37,6 @@ function Login() {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
 
-    // remove error when user types
     if (errors[name]) {
       setErrors({ ...errors, [name]: "" });
     }
@@ -54,10 +50,8 @@ function Login() {
     e.preventDefault();
     e.stopPropagation();
 
-    // Clear previous errors
     setErrors({});
 
-    // Validate form before submission
     if (!validateForm()) {
       return;
     }
@@ -69,7 +63,6 @@ function Login() {
     try {
       const response = await login(formData);
       if (response.isSuccess) {
-        // Show MFA selection instead of navigating directly to 2FA page
         setShowMfaSelection(true);
       } else {
         toast.error("The email or password you entered is incorrect. Please try again.");
@@ -91,7 +84,6 @@ function Login() {
       toast.error("Please select an MFA method to proceed");
       return;
     }
-    // Navigate to Two Factor Auth page with selected method
     navigate("/two-factor-auth", { state: { mfaMethod: selectedMfaMethod } });
   };
 
@@ -112,7 +104,6 @@ function Login() {
                 </div>
                 
                 {showMfaSelection ? (
-                  // MFA Setup Selection Header
                   <>
                     <h2 className="font-xl-med fw-bold">Two-Factor Authentication Setup</h2>
                     <p className="font-base text-muted">
@@ -120,7 +111,6 @@ function Login() {
                     </p>
                   </>
                 ) : (
-                  // Login Header
                   <>
                     <h2 className="font-xl-med fw-bold">Login</h2>
                     <p className="font-base">
@@ -134,7 +124,6 @@ function Login() {
               </div>
 
               {showMfaSelection ? (
-                // MFA Method Selection UI
                 <>
                   <div className="mb-4">
                     <p className="font-base text-center mb-4">
@@ -160,7 +149,6 @@ function Login() {
                         </div>
                       </div> */}
 
-                      {/* SMS Option */}
                       <div className="col-md-8 col-lg-6">
                         <div 
                           className={`mfa-option-card p-4 text-center ${selectedMfaMethod === 'sms' ? 'selected' : ''}`}
@@ -189,7 +177,6 @@ function Login() {
                   </button>
                 </>
               ) : (
-                // Login Form
                 <>
                 <div className="form-group">
                   <label className="label-text">Email</label>

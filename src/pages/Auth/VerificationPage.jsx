@@ -6,11 +6,9 @@ import loginImg from "../../assets/logo-sample.png";
 import "../../styles/custom.css";
 
 function VerificationPage() {
-  // Get token from URL - supports both path param (/verification-page/token) and query param (?token=abc)
   const [searchParams] = useSearchParams();
   const { token: pathToken } = useParams();
   
-  // State management
   const [isLoading, setIsLoading] = useState(true);
   const [isVerified, setIsVerified] = useState(false);
   const [verificationMessage, setVerificationMessage] = useState("");
@@ -18,28 +16,22 @@ function VerificationPage() {
   const [userEmail, setUserEmail] = useState("");
   const [showResendForm, setShowResendForm] = useState(false);
 
-  // Prevent double API calls (React 18 Strict Mode runs useEffect twice in dev)
   const hasVerified = useRef(false);
 
-  // Extract token from URL and verify email on component mount
   useEffect(() => {
     const verifyUserEmail = async () => {
-      // Extract token from URL - check path parameter first, then query parameter
-      // Supports: /verification-page/abc123 OR /verification-page?token=abc123
       const token = pathToken || searchParams.get("token");
 
       if (!token) {
-        // No token in URL - show error
         setIsLoading(false);
         setIsVerified(false);
         setVerificationMessage("Invalid verification link. Token not found.");
         return;
       }
 
-      // Check if we already verified this token (stored in sessionStorage)
+      // Check cache to avoid re-calling API on page reload
       const cachedResult = sessionStorage.getItem(`verify_${token}`);
       if (cachedResult) {
-        console.log("Using cached verification result (page reload)");
         const cached = JSON.parse(cachedResult);
         setIsVerified(cached.isVerified);
         setVerificationMessage(cached.message);
@@ -48,73 +40,52 @@ function VerificationPage() {
         return;
       }
 
-      // Prevent double API call - only verify once
-      if (hasVerified.current) {
-        console.log("Already verified, skipping duplicate call");
-        return;
-      }
+      // Prevent double API call
+      if (hasVerified.current) return;
       hasVerified.current = true;
 
-      console.log("Calling verify email API with token:", token);
-
       try {
-        // Call verify email API with token
         const response = await verifyEmail(token);
 
-        console.log("Verify email response:", response);
-
         if (response.isSuccess) {
-          // Verification successful
           setIsVerified(true);
           setVerificationMessage(response.msg || "Your account has been verified successfully.");
           
-          // Cache the success result so page reload doesn't re-call API
           sessionStorage.setItem(`verify_${token}`, JSON.stringify({
             isVerified: true,
             message: response.msg || "Your account has been verified successfully."
           }));
         } else {
-          // Verification failed - check the specific error message from backend
           const backendMessage = response.msg || "Verification link expired or invalid.";
-          
-          // Check if token is expired - backend returns exact message: "Verification token has expired. Please request a new one."
           const isExpired = backendMessage === "Verification token has expired. Please request a new one.";
           
-          // Determine user-friendly message based on backend response
           let userMessage;
           let showAsVerified = false;
           
           if (isExpired) {
-            // Token expired - show resend form
             userMessage = "Your verification link has expired. Please request a new one to complete verification.";
           } else if (backendMessage.includes("Invalid or unknown verification token")) {
-            // Token already used or user already verified - show as success
             userMessage = "Your account has already been verified. You can now log in!";
-            showAsVerified = true; // Treat as verified for better UX
+            showAsVerified = true;
           } else {
-            // Other errors
             userMessage = "Unable to verify your account. Please try again or contact support.";
           }
           
           setIsVerified(showAsVerified);
           setVerificationMessage(userMessage);
-          setShowResendForm(isExpired); // Only show resend form if token expired
+          setShowResendForm(isExpired);
           
-          // Cache the result so page reload shows same message
           sessionStorage.setItem(`verify_${token}`, JSON.stringify({
             isVerified: showAsVerified,
             message: userMessage,
             showResend: isExpired
           }));
         }
-      } catch (error) {
-        // Handle unexpected errors
-        console.log("Verify email exception:", error);
+      } catch {
         setIsVerified(false);
         setVerificationMessage("An error occurred during verification. Please try again.");
         toast.error("Verification failed. Please try again.");
       } finally {
-        // Hide loading screen after API call completes
         setIsLoading(false);
       }
     };
@@ -122,15 +93,12 @@ function VerificationPage() {
     verifyUserEmail();
   }, [searchParams, pathToken]);
 
-  // Handle resend verification email
   const handleResendLink = async () => {
-    // Check if user has entered email
     if (!userEmail.trim()) {
       toast.error("Please enter your email address");
       return;
     }
 
-    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(userEmail)) {
       toast.error("Please enter a valid email address");
@@ -139,12 +107,11 @@ function VerificationPage() {
 
     setIsResending(true);
     try {
-      // Call resend verification API with email
       const response = await resendVerification(userEmail);
 
       if (response.isSuccess) {
         toast.success(response.msg || "Verification link sent to your email!");
-        setUserEmail(""); // Clear email input after successful send
+        setUserEmail("");
       } else {
         toast.error(response.msg || "Failed to send verification link. Please try again.");
       }
@@ -172,7 +139,6 @@ function VerificationPage() {
                     </Link>
                   </div>
                   
-                  {/* Loading State - Show while verifying email */}
                   {isLoading ? (
                     <div className="mb-4">
                       <div className="verification-icon d-inline-flex align-items-center justify-content-center mb-3">
@@ -186,7 +152,6 @@ function VerificationPage() {
                       </p>
                     </div>
                   ) : isVerified ? (
-                    /* Success State - Email verified successfully OR already verified */
                     <>
                       <div className="mb-4">
                         <div className="verification-icon d-inline-flex align-items-center justify-content-center mb-3">
@@ -207,7 +172,6 @@ function VerificationPage() {
                       </Link>
                     </>
                   ) : (
-                    /* Error State - Token Expired or Other Errors */
                     <>
                       <div className="mb-4">
                         <div className="verification-icon d-inline-flex align-items-center justify-content-center mb-3">
@@ -222,10 +186,8 @@ function VerificationPage() {
                       </div>
                       
                       <div className="d-flex flex-column gap-3">
-                        {/* Only show resend form if token is expired */}
                         {showResendForm ? (
                           <>
-                            {/* Email input for resending verification */}
                             <div className="form-group text-start">
                               <label className="label-text">Enter your email address</label>
                               <div className="input-group">

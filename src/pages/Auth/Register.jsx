@@ -31,7 +31,6 @@ function Register() {
 
   const navigate = useNavigate();
 
-  // Password guidelines validation
   const checkPasswordGuidelines = (password) => {
     const guidelines = {
       minLength: password.length >= 8,
@@ -43,43 +42,36 @@ function Register() {
     setPasswordGuidelines(guidelines);
   };
 
-  // Form validation rules
   const validateForm = () => {
     const newErrors = {};
 
-    // First Name validation
     if (!formData.firstName.trim()) {
       newErrors.firstName = "First name is required";
     } else if (formData.firstName.trim().length < 2) {
       newErrors.firstName = "First name must be at least 2 characters";
     }
 
-    // Last Name validation
     if (!formData.lastName.trim()) {
       newErrors.lastName = "Last name is required";
     } else if (formData.lastName.trim().length < 2) {
       newErrors.lastName = "Last name must be at least 2 characters";
     }
 
-    // Phone Number validation
     if (!formData.phoneNumber) {
       newErrors.phoneNumber = "Phone number is required";
     } else if (formData.phoneNumber.length < 10) {
       newErrors.phoneNumber = "Please enter a valid phone number";
     }
 
-    // Email validation
     if (!formData.email.trim()) {
       newErrors.email = "Email is required";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = "Please enter a valid email address";
     }
 
-    // Password validation
     if (!formData.password.trim()) {
       newErrors.password = "Password is required";
     } else {
-      // Check all password guidelines
       if (formData.password.length < 8) {
         newErrors.password = "Password must be at least 8 characters long";
       } else if (!/[A-Z]/.test(formData.password)) {
@@ -93,7 +85,6 @@ function Register() {
       }
     }
 
-    // Confirm Password validation
     if (!formData.confirmPassword.trim()) {
       newErrors.confirmPassword = "Please confirm your password";
     } else if (formData.password !== formData.confirmPassword) {
@@ -108,12 +99,10 @@ function Register() {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
     
-    // Clear error when user typing
     if (errors[name]) {
       setErrors({ ...errors, [name]: "" });
     }
 
-    // Show password guidelines and check validation when password field changes
     if (name === 'password') {
       if (value.length > 0) {
         setShowPasswordGuidelines(true);
@@ -122,10 +111,9 @@ function Register() {
     }
   };
 
-  const handleSubmit = async (e) => {
+const handleSubmit = async (e) => {
   e.preventDefault();
 
-  // Validate form
   if (!validateForm()) {
     toast.error("Please fix the errors below");
     return;
@@ -232,7 +220,7 @@ function Register() {
                     country={'us'}
                     value={formData.phoneNumber}
                     onChange={(phone) => {
-                      setFormData({ ...formData, phoneNumber: `+${phone}` }); //add + as it returns raw number 1232213
+                      setFormData({ ...formData, phoneNumber: `+${phone}` });
                       if (errors.phoneNumber) {
                         setErrors({ ...errors, phoneNumber: "" });
                       }
