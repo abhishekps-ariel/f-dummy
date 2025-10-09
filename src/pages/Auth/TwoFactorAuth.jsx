@@ -34,7 +34,7 @@ function TwoFactorAuth() {
     }
     
     // Start 30-second timer when component mounts
-    setResendTimer(30);
+    setResendTimer(60);
   }, [email, navigate, location.state]);
 
   // Timer countdown effect
@@ -109,7 +109,7 @@ function TwoFactorAuth() {
       if (response.isSuccess) {
         storeAuthData(response.data);
         toast.success("Login successful!");
-        navigate("/dashboard");
+        navigate("/profile");
       } else {
         toast.error(response.msg || "Invalid authentication code. Please try again.");
       }
@@ -140,7 +140,7 @@ function TwoFactorAuth() {
       
       if (response.isSuccess) {
         toast.success(response.msg || "New code sent successfully!");
-        setResendTimer(30); // Restart 30-second timer
+        setResendTimer(60); // Restart 60-second timer
       } else {
         toast.error(response.msg || "Failed to send new code. Please try again.");
       }
