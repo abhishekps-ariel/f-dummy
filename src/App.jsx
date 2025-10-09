@@ -7,7 +7,7 @@ import LoadingFallback from './components/LoadingFallback';
 
 // Lazy load main pages
 const Home = lazy(() => import('./pages/Home'));
-const Profile = lazy(() => import('./pages/Profile'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Login = lazy(() => import('./pages/Auth/Login'));
 const Register = lazy(() => import('./pages/Auth/Register'));
 const ForgotPassword = lazy(() => import('./pages/Auth/ForgotPassword'));
@@ -30,10 +30,10 @@ function App() {
         <div className="main-content">
           <ToastContainer position="top-right" autoClose={3000} />
           <Suspense fallback={<LoadingFallback />}>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/login" element={<Login />} />
+             <Routes>
+               <Route path="/" element={<Home />} />
+               <Route path="/dashboard" element={<Dashboard />} />
+               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/password-email-sent" element={<PasswordEmailSent />} />

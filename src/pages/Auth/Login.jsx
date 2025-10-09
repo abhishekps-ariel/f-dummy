@@ -94,7 +94,7 @@ function Login() {
       if (response.isSuccess) {
         storeAuthData(response.data);
         toast.success("Login successful!");
-        navigate("/profile");
+        navigate("/dashboard");
       } else {
         toast.error(response.msg || "Login failed");
       }

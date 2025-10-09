@@ -339,6 +339,17 @@
     display: none;
 }
 
+/* Dashboard responsive - hide sidebar on mobile (Unique class names) */
+.dashboard-main-area {
+    margin-left: 0;
+    width: 100%;
+}
+
+.dashboard-header {
+    width: 100%;
+    left: 0;
+}
+
 }
 
 /* ----- Small Screens (576px to 767px) ----- */

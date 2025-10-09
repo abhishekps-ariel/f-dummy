@@ -440,6 +440,93 @@ select.form-control {
     max-width: 100px;
 }
 
+/*------ Dashboard css start here (Unique class names to avoid conflicts) ----*/
+.dashboard-wrapper {
+    display: flex;
+    min-height: 100vh;
+}
+
+.dashboard-logo {
+    max-width: 200px;
+}
+
+.dashboard-sidebar {
+    width: 250px;
+    min-height: 100vh;
+    border-right: 1px solid #eee;
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 1030;
+}
+
+.dashboard-nav-link {
+    text-decoration: none;
+    border-radius: 14px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    color: var(--ms-gray-dark);
+}
+
+.dashboard-active-link, .dashboard-nav-link:hover {
+    background-color: var(--theme-color);
+    color: var(--white-color) !important;
+    box-shadow: 0 4px 10px rgba(124, 58, 237, 0.4);
+}
+
+.dashboard-active-link i, 
+.dashboard-nav-link:hover i{
+    color: var(--white-color);
+}
+
+.dashboard-main-area {
+    margin-left: 250px;
+    width: calc(100% - 250px);
+    background: #f2f2f2;
+    min-height: 100vh;
+}
+
+.dashboard-shadow { 
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.05);
+}               
+
+.dashboard-header {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.05);
+    background: var(--white-color);
+    position: fixed;
+    width: calc(100% - 250px);
+    left: 250px;
+    top: 0;
+    padding: 12px 20px;
+    z-index: 1020;
+}
+
+.dashboard-notification-btn {
+    font-size: var(--text-lg-med);
+    color: #de923e !important;
+    background: #de923e1c !important;
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    position: relative;
+}
+
+.dashboard-notif-circle {
+    background: #EB5757;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    position: absolute;
+    right: 8px;
+    top: 7px;
+}
+
+.dashboard-content-section {
+    margin-top: 80px;
+    padding: 20px;
+}
+
 /* Phone Input Styling */
 .react-tel-input .form-control {
     border-color: rgb(102 102 102 / 35%) !important;
@@ -739,4 +826,27 @@ select.form-control {
     .input-group .form-control[type="text"] {
         padding-right: 44px !important;
     }
+}
+
+.contact-info {
+  scroll-margin-top: 30px; /* Modern CSS way */
+}
+
+.featured-items{
+    scroll-margin-top: 30px;
+}
+
+.who-we-serve{
+    scroll-margin-top: 30px;
+}
+
+.actions{
+        scroll-margin-top: 90px;
+}
+
+.news-announcements{
+    scroll-margin-top: 30px;
+}
+.upcoming-events {
+    scroll-margin-top: 30px;
 }
