@@ -109,7 +109,7 @@ function TwoFactorAuth() {
       if (response.isSuccess) {
         storeAuthData(response.data);
         toast.success("Login successful!");
-        navigate("/profile");
+        navigate("/dashboard");
       } else {
         toast.error(response.msg || "Invalid authentication code. Please try again.");
       }
