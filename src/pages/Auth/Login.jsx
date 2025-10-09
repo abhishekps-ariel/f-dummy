@@ -142,12 +142,13 @@ function Login() {
 
   return (
     <div className="login">
-      <div className="row m-0">
-        <div className="col-lg-5 col-md-4 px-0">
-          <div className="login-right-image"></div>
-        </div>
-        <div className="col-lg-7 col-md-8">
-          <div className="login-inner d-flex flex-column align-items-center justify-content-center">
+      <div className="container container-md-auto">
+        <div className="row m-0">
+          <div className="col-lg-5 col-md-4 px-0">
+            <div className="login-right-image"></div>
+          </div>
+          <div className="col-lg-7 col-md-8">
+            <div className="login-inner d-flex flex-column align-items-center justify-content-center">
             <form className="w-100" onSubmit={handleSubmit}>
               <div className="login-header mb-5 text-center">
                 <div className="login-logo">
@@ -325,6 +326,7 @@ function Login() {
                 </>
               )}
             </form>
+            </div>
           </div>
         </div>
       </div>

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { useState, useEffect, useRef } from "react";
+import { useRef } from "react";
 import logo from "../../assets/logo-index.png";
 import img1 from "../../assets/loan.jpg";
 import img2 from "../../assets/moneytab.jpg";
@@ -7,8 +7,6 @@ import img3 from "../../assets/flag.jpg";
 import coinsImg from "../../assets/coins.png";
 
 function Home() {
-  const [isLoading, setIsLoading] = useState(true);
-  
   // Create refs for each section
   const featureRef = useRef(null);
   const contactRef = useRef(null);
@@ -16,85 +14,6 @@ function Home() {
   const actionsRef = useRef(null);
   const newsRef = useRef(null);
   const eventsRef = useRef(null);
-
-  useEffect(() => {
-    // Show loading for a brief moment when page loads
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Smooth scroll function using refs
-  const scrollToSection = (ref) => {
-    if (ref && ref.current) {
-      console.log('Scrolling to section:', ref.current);
-      
-      // Use scrollIntoView with block start and smooth behavior
-      ref.current.scrollIntoView({ 
-        behavior: 'smooth', 
-        block: 'start',
-        inline: 'nearest'
-      });
-    } else {
-      console.error('Ref is null or ref.current is null');
-    }
-  };
-
-  // Handle navigation click with mobile menu functionality
-  const handleNavClick = (targetRef, text) => {
-    console.log('handleNavClick called with:', text, targetRef);
-    
-    // Scroll to section
-    scrollToSection(targetRef);
-    
-    // Update active class
-    const links = document.querySelectorAll(".navbar-nav .nav-link");
-    links.forEach((l) => l.classList.remove("active"));
-    
-    // Find and set active class for the clicked link
-    const clickedLink = Array.from(links).find(link => link.textContent.trim() === text);
-    if (clickedLink) {
-      clickedLink.classList.add("active");
-    }
-    
-    // Mobile menu functionality
-    const isMobile = () => window.innerWidth < 991;
-    const nav = document.getElementById("navbarNav");
-    const appName = document.getElementById("mobileAppName");
-    const activeText = document.getElementById("activeLinkText");
-    
-    if (isMobile() && nav && appName && activeText) {
-      // Initialize Bootstrap Collapse
-      let bsCollapse;
-      if (window.bootstrap) {
-        bsCollapse = new window.bootstrap.Collapse(nav, { toggle: false });
-        bsCollapse.hide();
-      }
-      
-      // Update mobile title
-      activeText.textContent = text;
-      activeText.classList.remove("d-none");
-      appName.classList.add("d-none");
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <div
-        className="d-flex justify-content-center align-items-center"
-        style={{ height: "100vh" }}
-      >
-        <div className="text-center">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </div>
-          <p className="mt-3">Loading...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div>
@@ -142,22 +61,27 @@ function Home() {
               </div>
             </div>
             <div className="col-md-6">
-              <div className="d-flex flex-wrap align-items-center gap-2 font-sm">
+              <div className="d-flex align-items-center gap-2 font-sm">
                 <i className="fa-solid fa-shield"></i>
                 <span className="flex-grow-1">
-                  An official website of the Commonwealth of Massachusetts
+                  An official website of the Commonwealth of Massachusetts{" "}
+                  <button
+                    className="btn btn-link text-white p-0 font-sm fw-semibold text-nowrap ms-1 align-baseline"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#officialInfo"
+                    aria-expanded="false"
+                    aria-controls="officialInfo"
+                    style={{
+                      display: "inline",
+                      verticalAlign: "baseline",
+                      lineHeight: "1.2",
+                    }}
+                  >
+                    Here's how you know{" "}
+                    <i className="fa-solid fa-chevron-down small"></i>
+                  </button>
                 </span>
-                <button
-                  className="btn btn-link text-white p-0 font-sm fw-semibold text-nowrap"
-                  type="button"
-                  data-bs-toggle="collapse"
-                  data-bs-target="#officialInfo"
-                  aria-expanded="false"
-                  aria-controls="officialInfo"
-                >
-                  Here's how you know{" "}
-                  <i className="fa-solid fa-chevron-down small"></i>
-                </button>
               </div>
             </div>
           </div>
@@ -300,114 +224,144 @@ function Home() {
           <div className="collapse navbar-collapse" id="navbarNav">
             <div className="navbar-nav d-flex flex-column flex-lg-row">
               {/* Links */}
-              <a 
-                className="nav-link" 
-                href="#" 
+              <a
+                className="nav-link"
+                href="#"
                 onClick={(e) => {
                   e.preventDefault();
-                  console.log('Featured clicked, ref:', featureRef);
+                  console.log("Featured clicked, ref:", featureRef);
                   if (featureRef.current) {
-                    featureRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    featureRef.current.scrollIntoView({
+                      behavior: "smooth",
+                      block: "start",
+                    });
                   }
                   // Close mobile menu
                   const nav = document.getElementById("navbarNav");
                   if (nav && window.innerWidth < 991) {
-                    const bsCollapse = new window.bootstrap.Collapse(nav, { toggle: false });
+                    const bsCollapse = new window.bootstrap.Collapse(nav, {
+                      toggle: false,
+                    });
                     bsCollapse.hide();
                   }
                 }}
               >
                 Featured
               </a>
-              <a 
-                className="nav-link" 
-                href="#" 
+              <a
+                className="nav-link"
+                href="#"
                 onClick={(e) => {
                   e.preventDefault();
-                  console.log('Contact Us clicked, ref:', contactRef);
+                  console.log("Contact Us clicked, ref:", contactRef);
                   if (contactRef.current) {
-                    contactRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    contactRef.current.scrollIntoView({
+                      behavior: "smooth",
+                      block: "start",
+                    });
                   }
                   // Close mobile menu
                   const nav = document.getElementById("navbarNav");
                   if (nav && window.innerWidth < 991) {
-                    const bsCollapse = new window.bootstrap.Collapse(nav, { toggle: false });
+                    const bsCollapse = new window.bootstrap.Collapse(nav, {
+                      toggle: false,
+                    });
                     bsCollapse.hide();
                   }
                 }}
               >
                 Contact Us
               </a>
-              <a 
-                className="nav-link" 
-                href="#" 
+              <a
+                className="nav-link"
+                href="#"
                 onClick={(e) => {
                   e.preventDefault();
-                  console.log('Who we serve clicked, ref:', whoWeServeRef);
+                  console.log("Who we serve clicked, ref:", whoWeServeRef);
                   if (whoWeServeRef.current) {
-                    whoWeServeRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    whoWeServeRef.current.scrollIntoView({
+                      behavior: "smooth",
+                      block: "start",
+                    });
                   }
                   // Close mobile menu
                   const nav = document.getElementById("navbarNav");
                   if (nav && window.innerWidth < 991) {
-                    const bsCollapse = new window.bootstrap.Collapse(nav, { toggle: false });
+                    const bsCollapse = new window.bootstrap.Collapse(nav, {
+                      toggle: false,
+                    });
                     bsCollapse.hide();
                   }
                 }}
               >
                 Who we serve
               </a>
-              <a 
-                className="nav-link" 
-                href="#" 
+              <a
+                className="nav-link"
+                href="#"
                 onClick={(e) => {
                   e.preventDefault();
-                  console.log('I want to clicked, ref:', actionsRef);
+                  console.log("I want to clicked, ref:", actionsRef);
                   if (actionsRef.current) {
-                    actionsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    actionsRef.current.scrollIntoView({
+                      behavior: "smooth",
+                      block: "start",
+                    });
                   }
                   // Close mobile menu
                   const nav = document.getElementById("navbarNav");
                   if (nav && window.innerWidth < 991) {
-                    const bsCollapse = new window.bootstrap.Collapse(nav, { toggle: false });
+                    const bsCollapse = new window.bootstrap.Collapse(nav, {
+                      toggle: false,
+                    });
                     bsCollapse.hide();
                   }
                 }}
               >
                 I want to…
               </a>
-              <a 
-                className="nav-link" 
-                href="#" 
+              <a
+                className="nav-link"
+                href="#"
                 onClick={(e) => {
                   e.preventDefault();
-                  console.log('News clicked, ref:', newsRef);
+                  console.log("News clicked, ref:", newsRef);
                   if (newsRef.current) {
-                    newsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    newsRef.current.scrollIntoView({
+                      behavior: "smooth",
+                      block: "start",
+                    });
                   }
                   // Close mobile menu
                   const nav = document.getElementById("navbarNav");
                   if (nav && window.innerWidth < 991) {
-                    const bsCollapse = new window.bootstrap.Collapse(nav, { toggle: false });
+                    const bsCollapse = new window.bootstrap.Collapse(nav, {
+                      toggle: false,
+                    });
                     bsCollapse.hide();
                   }
                 }}
               >
                 News
               </a>
-              <a 
-                className="nav-link" 
-                href="#" 
+              <a
+                className="nav-link"
+                href="#"
                 onClick={(e) => {
                   e.preventDefault();
-                  console.log('Events clicked, ref:', eventsRef);
+                  console.log("Events clicked, ref:", eventsRef);
                   if (eventsRef.current) {
-                    eventsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    eventsRef.current.scrollIntoView({
+                      behavior: "smooth",
+                      block: "start",
+                    });
                   }
                   // Close mobile menu
                   const nav = document.getElementById("navbarNav");
                   if (nav && window.innerWidth < 991) {
-                    const bsCollapse = new window.bootstrap.Collapse(nav, { toggle: false });
+                    const bsCollapse = new window.bootstrap.Collapse(nav, {
+                      toggle: false,
+                    });
                     bsCollapse.hide();
                   }
                 }}
@@ -430,7 +384,11 @@ function Home() {
       </div>
 
       {/* Featured Items Section */}
-      <section className="featured-items py-4 py-lg-5" id="feature-tab" ref={featureRef}>
+      <section
+        className="featured-items py-4 py-lg-5"
+        id="feature-tab"
+        ref={featureRef}
+      >
         <div className="container">
           <h2 className="font-xl-med mb-4 fw-medium heading-divider">
             Featured Items
@@ -438,11 +396,7 @@ function Home() {
           <div className="row">
             <div className="col-md-6 col-lg-4">
               <div className="item">
-                <img
-                  src={coinsImg}
-                  alt="Student Loan Info"
-                  className="w-100"
-                />
+                <img src={coinsImg} alt="Student Loan Info" className="w-100" />
                 <p>Financial and Climate-Related Risk Resources</p>
               </div>
             </div>
@@ -480,7 +434,11 @@ function Home() {
         </div>
       </section>
 
-      <section className="contact-info py-4 py-lg-5" id="contact-info-tab" ref={contactRef}>
+      <section
+        className="contact-info py-4 py-lg-5"
+        id="contact-info-tab"
+        ref={contactRef}
+      >
         <div className="container">
           <h2 className="font-xl-med mb-4 fw-medium heading-divider">
             Contact Us
@@ -568,7 +526,11 @@ function Home() {
       </section>
 
       {/* Who We Serve Section */}
-      <section className="who-we-serve pt-5" id="who-we-serve-tab" ref={whoWeServeRef}>
+      <section
+        className="who-we-serve pt-5"
+        id="who-we-serve-tab"
+        ref={whoWeServeRef}
+      >
         <div className="container">
           <h2 className="font-xl-med mb-4 fw-medium heading-divider">
             Who We Serve
@@ -610,7 +572,11 @@ function Home() {
         </div>
       </section>
 
-      <section className="actions py-4 py-lg-5 bg-mesgray" id="i-like-info-tab" ref={actionsRef}>
+      <section
+        className="actions py-4 py-lg-5 bg-mesgray"
+        id="i-like-info-tab"
+        ref={actionsRef}
+      >
         <div className="container">
           <div className="green-title-box position-relative">
             <h2 className="font-xl-med mb-4 fw-medium">
@@ -701,7 +667,11 @@ function Home() {
         </div>
       </section>
 
-      <section className="news-announcements py-4 py-lg-5" id="news-tab" ref={newsRef}>
+      <section
+        className="news-announcements py-4 py-lg-5"
+        id="news-tab"
+        ref={newsRef}
+      >
         <div className="container">
           <h2 className="font-xl-med mb-4 fw-medium heading-divider">
             Recent News & Announcements
@@ -854,7 +824,11 @@ function Home() {
       </section>
 
       {/* Upcoming Events Section */}
-      <section className="upcoming-events py-4 py-lg-5" id="events-tab" ref={eventsRef}>
+      <section
+        className="upcoming-events py-4 py-lg-5"
+        id="events-tab"
+        ref={eventsRef}
+      >
         <div className="container">
           <h2 className="font-xl-med mb-4 fw-medium heading-divider">
             Upcoming Events
@@ -1067,10 +1041,13 @@ function Home() {
               </p>
               <p className="mb-0 font-sm text-gray-dark">
                 Mass.gov® is a registered service mark of the Commonwealth of
-                Massachusetts.
+                Massachusetts. 
+                <br></br>
                 <a href="#" className="text-decoration-underline">
-                  {" "}
-                  Mass.gov Privacy Policy
+                  Mass.gov 
+                </a>
+                <a href="#" className="text-decoration-underline  ms-2">
+                 Privacy Policy
                 </a>
               </p>
             </div>

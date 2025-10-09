@@ -536,3 +536,122 @@ select.form-control {
     background-color: rgba(66, 133, 244, 0.05);
     box-shadow: 0 4px 12px rgba(66, 133, 244, 0.2);
 }
+
+/* Auth pages responsive improvements */
+@media (max-width: 767.98px) {
+    .login {
+        min-height: 100vh;
+        background: #fff;
+    }
+    
+    .login .container {
+        padding: 0;
+        max-width: 100%;
+    }
+    
+    .login .row {
+        margin: 0;
+        min-height: 100vh;
+    }
+    
+    .login-inner form {
+        max-width: 100%;
+        padding: 20px 15px;
+    }
+    
+    .login-header h2 {
+        font-size: 1.5rem !important;
+    }
+    
+    .login-header p {
+        font-size: 0.9rem !important;
+    }
+    
+    .input-group {
+        border-radius: 8px !important;
+    }
+    
+    .input-group .user-icon {
+        padding: 0 8px 0 16px !important;
+    }
+    
+    .form-control {
+        font-size: 14px !important;
+        padding: 12px 12px !important;
+        height: 44px !important;
+        border-radius: 8px !important;
+        line-height: 1.2 !important;
+        box-sizing: border-box !important;
+        width: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+    
+    .btn-link {
+        font-size: 0.9rem !important;
+    }
+    
+    /* Fix input group alignment on mobile */
+    .input-group {
+        position: relative !important;
+        display: flex !important;
+        align-items: stretch !important;
+        border-radius: 8px !important;
+        overflow: hidden !important;
+        border: 1px solid #ced4da !important;
+    }
+    
+    .input-group .form-control {
+        border: none !important;
+        border-radius: 0 !important;
+        padding: 12px 12px !important;
+        flex: 1 !important;
+        height: 44px !important;
+        font-size: 14px !important;
+        line-height: 1.2 !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+    
+    .input-group .user-icon {
+        border: none !important;
+        border-right: 1px solid #ced4da !important;
+        background: #f8f9fa !important;
+        padding: 0 12px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        flex-shrink: 0 !important;
+    }
+    
+    /* Password eye icon positioning */
+    .password-eye {
+        position: absolute !important;
+        right: 0 !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        z-index: 10 !important;
+        background: transparent !important;
+        border: none !important;
+        color: #6c757d !important;
+        height: 44px !important;
+        width: 44px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    
+    .password-eye i {
+        font-size: 16px !important;
+        line-height: 1 !important;
+        vertical-align: middle !important;
+    }
+    
+    /* Ensure password input has proper padding for eye icon */
+    .input-group .form-control[type="password"],
+    .input-group .form-control[type="text"] {
+        padding-right: 44px !important;
+    }
+}

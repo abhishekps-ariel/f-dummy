@@ -24,6 +24,86 @@
     }
 }
 
+/* Hide login image on mobile and make auth pages responsive */
+@media (max-width: 767.98px) {
+    .login .col-lg-5,
+    .login .col-md-4 {
+        display: none !important;
+    }
+    
+    .login .col-lg-7,
+    .login .col-md-8 {
+        flex: 0 0 100%;
+        max-width: 100%;
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+    
+    .login-inner {
+        padding: 30px 15px !important;
+        min-height: 100vh;
+    }
+    
+    .login-header {
+        margin-bottom: 2rem !important;
+    }
+    
+    .login-logo {
+        max-width: 250px !important;
+        margin: 0 auto 2rem !important;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem !important;
+    }
+    
+    .custom-btn {
+        padding: 14px 20px !important;
+        font-size: 16px !important;
+    }
+    
+    .loginwith {
+        margin: 1.5rem 0 !important;
+    }
+    
+    .important-notice {
+        margin-top: 2rem !important;
+        font-size: 12px !important;
+        line-height: 1.4 !important;
+    }
+    
+    /* Remove input group padding on mobile */
+    .form-group .input-group {
+        padding: 0 !important;
+        border: 1px solid #ced4da !important;
+        border-radius: 8px !important;
+    }
+    
+    /* Phone input responsive */
+    .react-tel-input .form-control {
+        font-size: 16px !important;
+        height: 48px !important;
+    }
+    
+    .react-tel-input .flag-dropdown {
+        height: 48px !important;
+    }
+    
+    /* MFA option cards responsive */
+    .mfa-option-card {
+        padding: 1.5rem !important;
+    }
+    
+    .mfa-option-card i {
+        font-size: 2.5rem !important;
+    }
+    
+    /* Password guidelines responsive */
+    .password-guidelines {
+        font-size: 13px !important;
+    }
+}
+
 
 @media (min-width:992px) {
 
