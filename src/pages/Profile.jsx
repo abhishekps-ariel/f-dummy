@@ -43,11 +43,11 @@ function Profile() {
   }
 
   return (
-    <div className="login">
-      <div className="container container-md-auto">
-        <div className="row m-0">
-          <div className="col-lg-7 col-md-8 mx-auto">
-            <div className="login-inner d-flex flex-column align-items-center justify-content-center">
+    <div className="d-flex align-items-center justify-content-center" style={{ minHeight: "100vh", background: "#f8f9fa" }}>
+      <div className="container">
+        <div className="row justify-content-center">
+          <div className="col-lg-8 col-md-10">
+            <div className="py-4">
               <div className="w-100">
                 <div className="login-header mb-5 text-center">
                   <div className="login-logo">
@@ -116,12 +116,6 @@ function Profile() {
                               {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
                             </p>
                           </div>
-                          <div className="col-md-6">
-                            <label className="form-label fw-medium">Last Login</label>
-                            <p className="form-control-plaintext">
-                              {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString() : 'N/A'}
-                            </p>
-                          </div>
                           {tokenExpiration && (
                             <div className="col-md-6">
                               <label className="form-label fw-medium">Token Expires</label>
@@ -142,13 +136,6 @@ function Profile() {
                     >
                       <i className="fa-solid fa-sign-out-alt me-2"></i>
                       Logout
-                    </button>
-                    <button
-                      onClick={() => navigate("/")}
-                      className="btn btn-primary"
-                    >
-                      <i className="fa-solid fa-home me-2"></i>
-                      Back to Home
                     </button>
                   </div>
                 </div>
