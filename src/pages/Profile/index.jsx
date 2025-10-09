@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { getAuthData, clearAuthData } from "../../services/auth.service";
-import logo from "../../assets/logo-sample.png";
 import "../../styles/custom.css";
 
 function Profile() {
@@ -39,8 +38,8 @@ function Profile() {
       {/* Sidebar - Desktop Only */}
       <aside className="dashboard-sidebar bg-white d-none d-lg-flex flex-column p-4 dashboard-shadow">
         {/* Logo */}
-        <div className="mb-4 dashboard-logo mx-auto">
-          <img src={logo} className="w-100" alt="logo" />
+        <div className="mb-4 dashboard-logo mx-auto text-center">
+          <span className="filir-logo-badge">FILIR</span>
         </div>
 
         {/* Navigation Links */}
@@ -68,7 +67,7 @@ function Profile() {
       <div className="offcanvas offcanvas-start" tabIndex="-1" id="mobileSidebar" aria-labelledby="mobileSidebarLabel">
         <div className="offcanvas-header">
           <div className="dashboard-logo mx-auto">
-            <img src={logo} className="w-100" alt="logo" style={{ maxWidth: '150px' }} />
+            <span className="filir-logo-badge">FILIR</span>
           </div>
           <button type="button" className="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
