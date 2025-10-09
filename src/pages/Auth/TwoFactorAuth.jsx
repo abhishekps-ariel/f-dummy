@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
+import { verifyOtp, sendOtp, storeAuthData } from "../../services/auth.service";
 import loginImg from "../../assets/logo-sample.png";
 import "../../styles/custom.css";
 
@@ -11,11 +12,22 @@ function TwoFactorAuth() {
   const [isResending, setIsResending] = useState(false);
   const inputRefs = useRef([]);
   const navigate = useNavigate();
+  const location = useLocation();
 
-  // Start timer when component mounts (OTP sent on login)
+  // Get email and phone from navigation state
+  const email = location.state?.email;
+  const phoneNumberMasked = location.state?.phoneNumberMasked;
+
   useEffect(() => {
-    setResendTimer(30); // Start 30-second timer immediately
-  }, []);
+    // Redirect to login if no email
+    if (!email) {
+      navigate("/login");
+      return;
+    }
+    
+    // Start 30-second timer when component mounts
+    setResendTimer(30);
+  }, [email, navigate]);
 
   // Timer countdown effect
   useEffect(() => {
@@ -76,19 +88,19 @@ function TwoFactorAuth() {
     setIsSubmitting(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const response = await verifyOtp(email, fullCode);
       
-      toast.success("Login successful!");
-      
-      // Wait a moment for toast to show, then navigate
-      setTimeout(() => {
-        navigate("/");
-        setIsSubmitting(false);
-      }, 800);
+      if (response.isSuccess) {
+        storeAuthData(response.data);
+        toast.success("Login successful!");
+        navigate("/profile");
+      } else {
+        toast.error(response.msg || "Invalid authentication code. Please try again.");
+      }
     } catch (error) {
       toast.error("Invalid authentication code. Please try again.");
       console.error("2FA error:", error);
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -99,11 +111,23 @@ function TwoFactorAuth() {
     setIsResending(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Get password from location state if available, otherwise we need to handle this
+      const password = location.state?.password;
       
-      toast.info("New code sent to your authentication app");
-      setResendTimer(30); // Start 30-second timer
+      if (!password) {
+        toast.error("Session expired. Please login again.");
+        navigate("/login");
+        return;
+      }
+
+      const response = await sendOtp(email, password);
+      
+      if (response.isSuccess) {
+        toast.success(response.msg || "New code sent successfully!");
+        setResendTimer(30); // Restart 30-second timer
+      } else {
+        toast.error(response.msg || "Failed to send new code. Please try again.");
+      }
     } catch {
       toast.error("Failed to send new code. Please try again.");
     } finally {
@@ -116,8 +140,7 @@ function TwoFactorAuth() {
       <div className="container container-md-auto">
         <div className="row m-0">
           <div className="col-lg-5 col-md-4 px-0">
-            <div className="login-right-image">
-            </div>
+            <div className="login-right-image"></div>
           </div>
           <div className="col-lg-7 col-md-8">
             <div className="login-inner d-flex flex-column align-items-center justify-content-center">
@@ -129,7 +152,9 @@ function TwoFactorAuth() {
                     </Link>
                   </div>
                   <h2 className="font-xl-med fw-bold">Two Factor Authentication</h2>
-                  <p className="font-base">Enter the six-digit code from your authentication app</p>
+                  <p className="font-base">
+                    Enter the six-digit code sent to {phoneNumberMasked || "your device"}
+                  </p>
                 </div>
 
                 <div className="auth-columns d-flex gap-3 justify-content-center mb-5">
@@ -149,42 +174,43 @@ function TwoFactorAuth() {
                   ))}
                 </div>
 
-                <button 
-                  className="btn custom-btn theme-btn text-center w-100" 
+                <button
+                  className="btn custom-btn theme-btn text-center w-100"
                   type="submit"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? (
                     <>
-                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                      <span
+                        className="spinner-border spinner-border-sm me-2"
+                        role="status"
+                        aria-hidden="true"
+                      ></span>
                       Verifying...
                     </>
                   ) : (
-                    'Verify'
+                    "Verify"
                   )}
                 </button>
 
-                <div className="text-center mt-3">
-                  Haven't received it?{" "}
-                  <button 
-                    type="button"
-                    onClick={handleResendCode}
-                    disabled={resendTimer > 0 || isResending}
-                    className={`btn btn-link font-base fw-medium text-decoration-none p-0 ${
-                      resendTimer > 0 || isResending ? 'text-muted' : ''
-                    }`}
-                  >
-                    {isResending ? (
-                      <>
-                        <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-                        Sending...
-                      </>
-                    ) : resendTimer > 0 ? (
-                      `Resend in ${resendTimer}s`
-                    ) : (
-                      'Resend a new Code'
-                    )}
-                  </button>
+                <div className="text-center mt-4">
+                  <p className="font-base mb-2">
+                    Didn't receive the code?
+                  </p>
+                  {resendTimer > 0 ? (
+                    <p className="font-sm text-muted">
+                      Resend code in {resendTimer}s
+                    </p>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleResendCode}
+                      className="btn btn-link font-base fw-medium p-0"
+                      disabled={isResending}
+                    >
+                      {isResending ? "Sending..." : "Resend Code"}
+                    </button>
+                  )}
                 </div>
               </form>
             </div>

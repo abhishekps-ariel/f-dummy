@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { login } from "../../services/auth.service";
+import { checkMfa, login, sendOtp, storeAuthData } from "../../services/auth.service";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import loginImg from "../../assets/logo-sample.png";
@@ -46,6 +46,7 @@ function Login() {
     navigate("/forgot-password");
   };
 
+  // Initial login - check MFA requirement
   const handleSubmit = async (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -57,19 +58,79 @@ function Login() {
     }
 
     if (isSubmitting) return;
-
     setIsSubmitting(true);
 
     try {
-      const response = await login(formData);
-      if (response.isSuccess) {
-        setShowMfaSelection(true);
+      // Check MFA requirement
+      const mfaResponse = await checkMfa(formData.email, formData.password);
+      
+      if (!mfaResponse.isSuccess) {
+        toast.error(mfaResponse.msg || "Login failed");
+        return;
+      }
+
+      const { isMfaSetupRequired } = mfaResponse.data;
+
+      if (!isMfaSetupRequired) {
+        // No MFA required - directly login
+        await handleDirectLogin();
       } else {
-        toast.error("The email or password you entered is incorrect. Please try again.");
+        // MFA required - show setup screen
+        setShowMfaSelection(true);
       }
     } catch (error) {
-      toast.error("The email or password you entered is incorrect. Please try again.");
+      toast.error("Login failed. Please try again.");
       console.error("Login error:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Direct login when MFA not required
+  const handleDirectLogin = async () => {
+    try {
+      const response = await login(formData.email, formData.password);
+      
+      if (response.isSuccess) {
+        storeAuthData(response.data);
+        toast.success("Login successful!");
+        navigate("/profile");
+      } else {
+        toast.error(response.msg || "Login failed");
+      }
+    } catch (error) {
+      toast.error("Login failed. Please try again.");
+      console.error("Direct login error:", error);
+    }
+  };
+
+  // MFA Setup - send OTP and navigate to TwoFactorAuth page
+  const handleMfaProceed = async () => {
+    if (!selectedMfaMethod) {
+      toast.error("Please select an MFA method to proceed");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const response = await sendOtp(formData.email, formData.password);
+      
+      if (response.isSuccess) {
+        toast.success(response.msg || "OTP sent successfully!");
+        // Navigate to TwoFactorAuth page with email and password
+        navigate("/two-factor-auth", { 
+          state: { 
+            email: formData.email,
+            password: formData.password,
+            phoneNumberMasked: response.data.phoneNumberMasked 
+          } 
+        });
+      } else {
+        toast.error(response.msg || "Failed to send OTP");
+      }
+    } catch (error) {
+      toast.error("Failed to send OTP. Please try again.");
+      console.error("Send OTP error:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -77,14 +138,6 @@ function Login() {
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
-  };
-
-  const handleMfaProceed = () => {
-    if (!selectedMfaMethod) {
-      toast.error("Please select an MFA method to proceed");
-      return;
-    }
-    navigate("/two-factor-auth", { state: { mfaMethod: selectedMfaMethod } });
   };
 
   return (
@@ -132,23 +185,6 @@ function Login() {
                     </p>
                     
                     <div className="row g-3 justify-content-center">
-                      {/* Authenticator App Option
-                      <div className="col-md-6">
-                        <div 
-                          className={`mfa-option-card p-4 text-center ${selectedMfaMethod === 'authenticator' ? 'selected' : ''}`}
-                          onClick={() => setSelectedMfaMethod('authenticator')}
-                          style={{ cursor: 'pointer' }}
-                        >
-                          <div className="mb-3">
-                            <i className="fa-solid fa-mobile-screen-button" style={{ fontSize: '3rem', color: '#4285f4' }}></i>
-                          </div>
-                          <h5 className="fw-bold mb-2">Authenticator App</h5>
-                          <p className="font-sm text-muted mb-0">
-                            Use an app like Google Authenticator or Microsoft Authenticator
-                          </p>
-                        </div>
-                      </div> */}
-
                       <div className="col-md-8 col-lg-6">
                         <div 
                           className={`mfa-option-card p-4 text-center ${selectedMfaMethod === 'sms' ? 'selected' : ''}`}
@@ -171,117 +207,121 @@ function Login() {
                     type="button"
                     className="btn custom-btn theme-btn text-center w-100"
                     onClick={handleMfaProceed}
+                    disabled={isSubmitting || !selectedMfaMethod}
                   >
-                    <i className="fa-solid fa-arrow-right me-2"></i>
-                    Proceed
+                    {isSubmitting ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        Sending OTP...
+                      </>
+                    ) : (
+                      <>
+                        <i className="fa-solid fa-arrow-right me-2"></i>
+                        Proceed
+                      </>
+                    )}
                   </button>
                 </>
               ) : (
                 <>
-                <div className="form-group">
-                  <label className="label-text">Email</label>
-                  <div className="input-group">
-                    <div className="user-icon">
-                      <i className="fa-solid fa-envelope"></i>
+                  <div className="form-group">
+                    <label className="label-text">Email</label>
+                    <div className="input-group">
+                      <div className="user-icon">
+                        <i className="fa-solid fa-envelope"></i>
+                      </div>
+                      <input
+                        name="email"
+                        type="text"
+                        className={`form-control ${errors.email ? "is-invalid" : ""}`}
+                        placeholder="Email"
+                        value={formData.email}
+                        onChange={handleChange}
+                      />
                     </div>
-                    <input
-                      name="email"
-                      type="text"
-                      className={`form-control ${
-                        errors.email ? "is-invalid" : ""
-                      }`}
-                      placeholder="Email"
-                      value={formData.email}
-                      onChange={handleChange}
-                    />
+                    {errors.email && (
+                      <div className="invalid-feedback d-block">
+                        <small className="text-danger">{errors.email}</small>
+                      </div>
+                    )}
                   </div>
-                  {errors.email && (
-                    <div className="invalid-feedback d-block">
-                      <small className="text-danger">{errors.email}</small>
-                    </div>
-                  )}
-                </div>
 
-                <div className="form-group">
-                  <label className="label-text">Password</label>
-                  <div className="input-group position-relative">
-                    <div className="user-icon">
-                      <i className="fa-solid fa-lock"></i>
-                    </div>
-                    <input
-                      name="password"
-                      type={showPassword ? "text" : "password"}
-                      className={`form-control ${
-                        errors.password ? "is-invalid" : ""
-                      }`}
-                      placeholder="Password"
-                      value={formData.password}
-                      onChange={handleChange}
-                    />
-                    <span
-                      className="password-eye"
-                      onClick={togglePasswordVisibility}
-                      style={{ cursor: "pointer" }}
-                      title={showPassword ? "Hide password" : "Show password"}
-                    >
-                      <i
-                        className={`fa-solid ${
-                          showPassword ? "fa-eye" : "fa-eye-slash"
-                        }`}
-                      ></i>
-                    </span>
-                  </div>
-                  {errors.password && (
-                    <div className="invalid-feedback d-block">
-                      <small className="text-danger">{errors.password}</small>
-                    </div>
-                  )}
-                </div>
-                <div className="form-group text-end">
-                  <button
-                    type="button"
-                    onClick={handleForgetPassword}
-                    className="btn btn-link font-base text-dark-black fw-medium p-0"
-                  >
-                    Forgot Password ?
-                  </button>
-                </div>
-
-                <button
-                  className="btn custom-btn theme-btn text-center w-100"
-                  type="submit"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? (
-                    <>
+                  <div className="form-group">
+                    <label className="label-text">Password</label>
+                    <div className="input-group position-relative">
+                      <div className="user-icon">
+                        <i className="fa-solid fa-lock"></i>
+                      </div>
+                      <input
+                        name="password"
+                        type={showPassword ? "text" : "password"}
+                        className={`form-control ${errors.password ? "is-invalid" : ""}`}
+                        placeholder="Password"
+                        value={formData.password}
+                        onChange={handleChange}
+                      />
                       <span
-                        className="spinner-border spinner-border-sm me-2"
-                        role="status"
-                        aria-hidden="true"
-                      ></span>
-                      Logging in...
-                    </>
-                  ) : (
-                    "Login"
-                  )}
-                </button>
+                        className="password-eye"
+                        onClick={togglePasswordVisibility}
+                        style={{ cursor: "pointer" }}
+                        title={showPassword ? "Hide password" : "Show password"}
+                      >
+                        <i
+                          className={`fa-solid ${showPassword ? "fa-eye" : "fa-eye-slash"}`}
+                        ></i>
+                      </span>
+                    </div>
+                    {errors.password && (
+                      <div className="invalid-feedback d-block">
+                        <small className="text-danger">{errors.password}</small>
+                      </div>
+                    )}
+                  </div>
+                  <div className="form-group text-end">
+                    <button
+                      type="button"
+                      onClick={handleForgetPassword}
+                      className="btn btn-link font-base text-dark-black fw-medium p-0"
+                    >
+                      Forgot Password ?
+                    </button>
+                  </div>
 
-                <div className="loginwith w-100 text-center position-relative my-4">
-                  <p className="orlogin-text mb-0">Or</p>
-                </div>
-                <div className="d-flex flex-column align-items-center gap-2">
-                  <a href="#!" className="font-base fw-medium">Login with MyMass.Gov</a>
-                </div>
+                  <button
+                    className="btn custom-btn theme-btn text-center w-100"
+                    type="submit"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <span
+                          className="spinner-border spinner-border-sm me-2"
+                          role="status"
+                          aria-hidden="true"
+                        ></span>
+                        Logging in...
+                      </>
+                    ) : (
+                      "Login"
+                    )}
+                  </button>
 
-                <div className="d-flex flex-column important-notice mt-5">
-                <strong>Important Notice:</strong>
-                The filer/mortgagee/loan holder can only initiate the Division's
-                online registration filing process after a foreclosure petition
-                (or action) has been brought by the mortgagee under the
-                Soldiers' and Sailors' Civil Relief Act. Foreclosure petition
-                information must be entered in this Online Foreclosure Database
-                within five business days after being filed with the Land Court.
-                </div>
+                  <div className="loginwith w-100 text-center position-relative my-4">
+                    <p className="orlogin-text mb-0">Or</p>
+                  </div>
+                  <div className="d-flex flex-column align-items-center gap-2">
+                    <a href="#!" className="font-base fw-medium">Login with MyMass.Gov</a>
+                  </div>
+
+                  <div className="d-flex flex-column important-notice mt-5">
+                    <strong>Important Notice:</strong>
+                    The filer/mortgagee/loan holder can only initiate the Division's
+                    online registration filing process after a foreclosure petition
+                    (or action) has been brought by the mortgagee under the
+                    Soldiers' and Sailors' Civil Relief Act. Foreclosure petition
+                    information must be entered in this Online Foreclosure Database
+                    within five business days after being filed with the Land Court.
+                  </div>
                 </>
               )}
             </form>
