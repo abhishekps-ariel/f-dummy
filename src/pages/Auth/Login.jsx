@@ -185,7 +185,7 @@ function Login() {
                       Two-Factor Authentication is required for your account
                     </p>
                     
-                    <div className="row g-3 justify-content-center">
+                    <div className="mfa-card-area row g-3 justify-content-center">
                       <div className="col-md-8 col-lg-6">
                         <div 
                           className={`mfa-option-card p-4 text-center ${selectedMfaMethod === 'sms' ? 'selected' : ''}`}
@@ -196,7 +196,7 @@ function Login() {
                             <i className="fa-solid fa-message" style={{ fontSize: '3rem', color: '#34a853' }}></i>
                           </div>
                           <h5 className="fw-bold mb-2">SMS</h5>
-                          <p className="font-sm text-muted mb-0">
+                          <p className="font-sm text-muted  mb-0">
                             Receive verification codes via text message
                           </p>
                         </div>

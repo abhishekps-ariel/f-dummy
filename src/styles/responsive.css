@@ -102,8 +102,209 @@
     .password-guidelines {
         font-size: 13px !important;
     }
+    
+    /* ===== MOBILE-SPECIFIC MFA CARD HEIGHT FIX ===== */
+    
+    /* Target the exact Bootstrap classes causing issues - MOBILE ONLY */
+    .col-md-8.col-lg-6 {
+        height: auto !important;
+        min-height: auto !important;
+        max-height: none !important;
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
+        padding: 0 15px !important;
+        margin: 0 !important;
+    }
+    
+    /* Fix MFA card area spacing issues - MOBILE ONLY */
+    .mfa-card-area {
+        margin: 0 !important;
+        height: auto !important;
+        min-height: auto !important;
+    }
+    
+    .mfa-card-area .row {
+        margin: 0 !important;
+        height: auto !important;
+        min-height: auto !important;
+        --bs-gutter-y: 0 !important;
+        --bs-gutter-x: 0 !important;
+    }
+    
+    .mfa-card-area .col-md-8,
+    .mfa-card-area .col-lg-6 {
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
+        padding: 0 15px !important;
+        height: auto !important;
+        min-height: auto !important;
+        margin: 0 !important;
+    }
+    
+    /* MOBILE-SPECIFIC MFA card height control */
+    .mfa-option-card {
+        margin-bottom: 0 !important;
+        padding: 0.75rem !important;
+        min-height: auto !important;
+        height: auto !important;
+        max-height: 120px !important;
+        overflow: hidden !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    
+    /* Override Bootstrap margin classes in MFA card - MOBILE ONLY */
+    .mfa-option-card .mb-3,
+    .mfa-option-card .mb-2,
+    .mfa-option-card .mb-4,
+    .mfa-option-card .mb-5 {
+        margin-bottom: 0.25rem !important;
+    }
+    
+    .mfa-option-card h5 {
+        font-size: 1rem !important;
+        margin-bottom: 0.125rem !important;
+    }
+    
+    .mfa-option-card p {
+        font-size: 0.8rem !important;
+        line-height: 1.2 !important;
+        margin-bottom: 0 !important;
+    }
+    
+    /* Override inline font-size for icon - MOBILE ONLY */
+    .mfa-option-card i[style*="fontSize"],
+    .mfa-option-card i {
+        font-size: 1.75rem !important;
+        margin-bottom: 0.25rem !important;
+    }
+    
+    /* Override inline padding - MOBILE ONLY */
+    .mfa-option-card[style*="padding"],
+    .mfa-option-card.p-4 {
+        padding: 0.75rem !important;
+    }
+    
+    /* Force compact spacing - MOBILE ONLY */
+    .mfa-option-card * {
+        margin-bottom: 0.125rem !important;
+    }
+    
+    /* Reduce spacing between card and button - MOBILE ONLY */
+    .mfa-card-area {
+        margin-bottom: 0.25rem !important;
+    }
+    
+    /* Two-Factor Authentication OTP Input Boxes - MOBILE */
+    .auth-columns {
+        gap: 6px !important;
+        max-width: 100%;
+        overflow-x: auto;
+        justify-content: center !important;
+        margin: 1.5rem 0 !important;
+    }
+    
+    .auth-columns input {
+        width: 35px !important;
+        height: 35px !important;
+        font-size: 16px !important;
+        border: 2px solid #ced4da !important;
+        border-radius: 6px !important;
+        text-align: center !important;
+        font-weight: 600 !important;
+        background: #fff !important;
+        color: #000 !important;
+        padding: 0 !important;
+    }
+    
+    .auth-columns input:focus {
+        border-color: #007bff !important;
+        outline: none !important;
+        box-shadow: 0 0 0 0.15rem rgba(0, 123, 255, 0.25) !important;
+    }
+    
+    /* Ensure OTP inputs fit on very small screens */
+    @media (max-width: 375px) {
+        .auth-columns {
+            gap: 4px !important;
+        }
+        
+        .auth-columns input {
+            width: 32px !important;
+            height: 32px !important;
+            font-size: 14px !important;
+            color: #000 !important;
+        }
+    }
 }
 
+
+/* Desktop styles - ensure MFA card looks good on larger screens */
+@media (min-width: 768px) {
+    /* Reset mobile constraints for desktop */
+    .mfa-option-card {
+        max-height: none !important;
+        overflow: visible !important;
+        padding: 1.5rem !important;
+    }
+    
+    .mfa-option-card i {
+        font-size: 3rem !important;
+        margin-bottom: 1rem !important;
+    }
+    
+    .mfa-option-card h5 {
+        font-size: 1.5rem !important;
+        margin-bottom: 0.75rem !important;
+    }
+    
+    .mfa-option-card p {
+        font-size: 1rem !important;
+        line-height: 1.4 !important;
+    }
+    
+    .mfa-option-card .mb-3 {
+        margin-bottom: 1rem !important;
+    }
+    
+    .mfa-option-card .mb-2 {
+        margin-bottom: 0.5rem !important;
+    }
+    
+    /* Allow proper Bootstrap grid behavior on desktop */
+    .mfa-card-area .col-md-8,
+    .mfa-card-area .col-lg-6 {
+        flex: 0 0 auto !important;
+        max-width: 66.666667% !important;
+        padding: 0 15px !important;
+    }
+    
+    .mfa-card-area .row {
+        --bs-gutter-y: 1rem !important;
+        --bs-gutter-x: 1rem !important;
+    }
+    
+    /* Desktop OTP Input Styling */
+    .auth-columns {
+        gap: 12px !important;
+        margin: 2rem 0 !important;
+    }
+    
+    .auth-columns input {
+        width: 50px !important;
+        height: 50px !important;
+        font-size: 20px !important;
+        border-radius: 8px !important;
+        border-width: 2px !important;
+        color: #000 !important;
+    }
+    
+    .auth-columns input:focus {
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25) !important;
+    }
+}
 
 @media (min-width:992px) {
 
