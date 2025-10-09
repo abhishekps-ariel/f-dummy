@@ -9,7 +9,6 @@ import "../../styles/custom.css";
 
 function Dashboard() {
   const [user, setUser] = useState(null);
-  const [showModal, setShowModal] = useState(false);
   const [orgFormData, setOrgFormData] = useState({
     orgName: "",
     orgType: "",
@@ -117,7 +116,14 @@ function Dashboard() {
     e.preventDefault();
     // TODO: Add organization creation logic here
     console.log("Organization form data:", orgFormData);
-    setShowModal(false);
+    
+    // Close the modal using Bootstrap's modal instance
+    const modalElement = document.getElementById('createorganizationModal');
+    const modal = window.bootstrap.Modal.getInstance(modalElement);
+    if (modal) {
+      modal.hide();
+    }
+    
     // Reset form
     setOrgFormData({
       orgName: "",
