@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
-import { verifyOtp, sendOtp, storeAuthData } from "../../services/auth.service";
+import { verifyOtp, sendOtp, storeAuthData, getAuthData } from "../../services/auth.service";
 import loginImg from "../../assets/logo-sample.png";
 import "../../styles/custom.css";
 
@@ -19,15 +19,29 @@ function TwoFactorAuth() {
   const phoneNumberMasked = location.state?.phoneNumberMasked;
 
   useEffect(() => {
-    // Redirect to login if no email
-    if (!email) {
-      navigate("/login");
+    // Enhanced security check
+    const authData = getAuthData();
+    
+    // Redirect to login if:
+    // 1. No email in location state (not coming from login flow)
+    // 2. User is already authenticated (shouldn't be on 2FA page)
+    // 3. No proper navigation state
+    if (!email || authData.token) {
+      toast.error("Access denied. Please login first.");
+      navigate("/login", { replace: true });
+      return;
+    }
+    
+    // Additional check: ensure we have required data for 2FA
+    if (!location.state?.password) {
+      toast.error("Session expired. Please login again.");
+      navigate("/login", { replace: true });
       return;
     }
     
     // Start 30-second timer when component mounts
     setResendTimer(30);
-  }, [email, navigate]);
+  }, [email, navigate, location.state]);
 
   // Timer countdown effect
   useEffect(() => {
@@ -41,6 +55,14 @@ function TwoFactorAuth() {
     }
     return () => clearInterval(interval);
   }, [resendTimer]);
+
+  // Cleanup effect to clear sensitive data when component unmounts
+  useEffect(() => {
+    return () => {
+      // Clear any sensitive data when leaving the page
+      setCodes(["", "", "", "", "", ""]);
+    };
+  }, []);
 
   const handleCodeChange = (index, value) => {
     // Only allow single digit
@@ -111,12 +133,20 @@ function TwoFactorAuth() {
     setIsResending(true);
     
     try {
-      // Get password from location state if available, otherwise we need to handle this
+      // Enhanced security check before resending
+      const authData = getAuthData();
       const password = location.state?.password;
       
-      if (!password) {
+      // Double-check authentication state
+      if (authData.token) {
+        toast.error("Already authenticated. Redirecting to profile.");
+        navigate("/profile", { replace: true });
+        return;
+      }
+      
+      if (!password || !email) {
         toast.error("Session expired. Please login again.");
-        navigate("/login");
+        navigate("/login", { replace: true });
         return;
       }
 
