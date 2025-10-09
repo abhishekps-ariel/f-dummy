@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import logo from "../../assets/logo-index.png";
 import img1 from "../../assets/loan.jpg";
 import img2 from "../../assets/moneytab.jpg";
@@ -8,6 +8,14 @@ import coinsImg from "../../assets/coins.png";
 
 function Home() {
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Create refs for each section
+  const featureRef = useRef(null);
+  const contactRef = useRef(null);
+  const whoWeServeRef = useRef(null);
+  const actionsRef = useRef(null);
+  const newsRef = useRef(null);
+  const eventsRef = useRef(null);
 
   useEffect(() => {
     // Show loading for a brief moment when page loads
@@ -18,14 +26,57 @@ function Home() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Smooth scroll function
-  const scrollToSection = (sectionId) => {
-    const element = document.getElementById(sectionId);
-    if (element) {
-      element.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start'
+  // Smooth scroll function using refs
+  const scrollToSection = (ref) => {
+    if (ref && ref.current) {
+      console.log('Scrolling to section:', ref.current);
+      
+      // Use scrollIntoView with block start and smooth behavior
+      ref.current.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start',
+        inline: 'nearest'
       });
+    } else {
+      console.error('Ref is null or ref.current is null');
+    }
+  };
+
+  // Handle navigation click with mobile menu functionality
+  const handleNavClick = (targetRef, text) => {
+    console.log('handleNavClick called with:', text, targetRef);
+    
+    // Scroll to section
+    scrollToSection(targetRef);
+    
+    // Update active class
+    const links = document.querySelectorAll(".navbar-nav .nav-link");
+    links.forEach((l) => l.classList.remove("active"));
+    
+    // Find and set active class for the clicked link
+    const clickedLink = Array.from(links).find(link => link.textContent.trim() === text);
+    if (clickedLink) {
+      clickedLink.classList.add("active");
+    }
+    
+    // Mobile menu functionality
+    const isMobile = () => window.innerWidth < 991;
+    const nav = document.getElementById("navbarNav");
+    const appName = document.getElementById("mobileAppName");
+    const activeText = document.getElementById("activeLinkText");
+    
+    if (isMobile() && nav && appName && activeText) {
+      // Initialize Bootstrap Collapse
+      let bsCollapse;
+      if (window.bootstrap) {
+        bsCollapse = new window.bootstrap.Collapse(nav, { toggle: false });
+        bsCollapse.hide();
+      }
+      
+      // Update mobile title
+      activeText.textContent = text;
+      activeText.classList.remove("d-none");
+      appName.classList.add("d-none");
     }
   };
 
@@ -50,61 +101,64 @@ function Home() {
       {/* Official Banner */}
       <section className="official-banner text-white">
         <div className="container py-1">
-          <div className="d-flex justify-content-between flex-wrap">
-          <div className="d-flex flex-wrap align-items-center">
-            <div className="d-flex align-items-center gap-2 font-sm">
-              <i className="fa-solid fa-shield"></i>
-              An official website of the Commonwealth of Massachusetts
+          <div className="row align-items-center">
+            <div className="col-md-6 order-md-2">
+              {/* Language selector */}
+              <div className="dropdown font-base text-white text-md-end mb-2 mb-md-0">
+                <button
+                  className="btn btn-sm dropdown-toggle font-sm fw-medium text-white border-0 text-decoration-none p-0"
+                  type="button"
+                  id="langDropdown"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false"
+                >
+                  <i className="fa-solid fa-globe me-1"></i> Select Language
+                </button>
+                <ul
+                  className="dropdown-menu dropdown-menu-end"
+                  aria-labelledby="langDropdown"
+                >
+                  <li>
+                    <a className="dropdown-item" href="#" hreflang="en">
+                      English
+                    </a>
+                  </li>
+                  <li>
+                    <a className="dropdown-item" href="#" hreflang="es">
+                      Español
+                    </a>
+                  </li>
+                  <li>
+                    <a className="dropdown-item" href="#" hreflang="zh">
+                      中文
+                    </a>
+                  </li>
+                  <li>
+                    <a className="dropdown-item" href="#" hreflang="pt">
+                      Português
+                    </a>
+                  </li>
+                </ul>
+              </div>
             </div>
-            <button
-              className="btn btn-link text-white p-0 ms-1 font-sm fw-semibold"
-              type="button"
-              data-bs-toggle="collapse"
-              data-bs-target="#officialInfo"
-              aria-expanded="false"
-              aria-controls="officialInfo"
-            >
-              Here's how you know{" "}
-              <i className="fa-solid fa-chevron-down small"></i>
-            </button>
-          </div>
-
-            {/* Language selector */}
-            <div className="dropdown font-base text-white">
-              <button
-                className="btn btn-sm dropdown-toggle font-sm fw-medium text-white border-0 text-decoration-none"
-                type="button"
-                id="langDropdown"
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
-              >
-                <i className="fa-solid fa-globe me-1"></i> Select Language
-              </button>
-              <ul
-                className="dropdown-menu dropdown-menu-end"
-                aria-labelledby="langDropdown"
-              >
-                <li>
-                  <a className="dropdown-item" href="#" hreflang="en">
-                    English
-                  </a>
-                </li>
-                <li>
-                  <a className="dropdown-item" href="#" hreflang="es">
-                    Español
-                  </a>
-                </li>
-                <li>
-                  <a className="dropdown-item" href="#" hreflang="zh">
-                    中文
-                  </a>
-                </li>
-                <li>
-                  <a className="dropdown-item" href="#" hreflang="pt">
-                    Português
-                  </a>
-                </li>
-              </ul>
+            <div className="col-md-6">
+              <div className="d-flex flex-wrap align-items-center gap-2 font-sm">
+                <i className="fa-solid fa-shield"></i>
+                <span className="flex-grow-1">
+                  An official website of the Commonwealth of Massachusetts
+                </span>
+                <button
+                  className="btn btn-link text-white p-0 font-sm fw-semibold text-nowrap"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#officialInfo"
+                  aria-expanded="false"
+                  aria-controls="officialInfo"
+                >
+                  Here's how you know{" "}
+                  <i className="fa-solid fa-chevron-down small"></i>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -143,46 +197,50 @@ function Home() {
 
       {/* Blue Portal Banner */}
       <div className="portal-banner">
-        <div className="container d-flex align-items-center justify-content-between">
-          <div className="d-flex align-items-center gap-3">
-            <span className="font-med fw-bold">FILIR</span>
-            <small>Foreclosure Intake & Loan Information Resource</small>
-          </div>
+        <div className="container">
+          <div className="d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <div className="d-flex flex-wrap align-items-center gap-2 gap-md-3">
+              <span className="font-med fw-bold">FILIR</span>
+              <small className="d-none d-md-block">
+                Foreclosure Intake & Loan Information Resource
+              </small>
+            </div>
 
-          <div className="d-flex gap-2 align-items-center">
-            <Link
-              className="font-base fw-medium sign-in-btn text-decoration-none"
-              to="/register"
-              role="button"
-              aria-label="Register"
-            >
-              <i className="fa-solid fa-user me-1"></i> Register
-            </Link>
-            <div className="dropdown">
-              <button
-                className="font-base fw-medium sign-in-btn dropdown-toggle"
-                type="button"
-                id="signInDropdown"
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
+            <div className="d-flex gap-2 align-items-center flex-wrap">
+              <Link
+                className="font-base fw-medium sign-in-btn text-decoration-none"
+                to="/register"
+                role="button"
+                aria-label="Register"
               >
-                <i className="fa-solid fa-user me-1"></i> Sign in
-              </button>
-              <ul
-                className="dropdown-menu dropdown-menu-end theme-dropdown"
-                aria-labelledby="signInDropdown"
-              >
-                <li>
-                  <Link className="dropdown-item" to="/login">
-                    User
-                  </Link>
-                </li>
-                <li>
-                  <Link className="dropdown-item" to="/login">
-                    Agency Workbench
-            </Link>
-                </li>
-              </ul>
+                <i className="fa-solid fa-user me-1"></i> Register
+              </Link>
+              <div className="dropdown">
+                <button
+                  className="font-base fw-medium sign-in-btn dropdown-toggle"
+                  type="button"
+                  id="signInDropdown"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false"
+                >
+                  <i className="fa-solid fa-user me-1"></i> Sign in
+                </button>
+                <ul
+                  className="dropdown-menu dropdown-menu-end theme-dropdown"
+                  aria-labelledby="signInDropdown"
+                >
+                  <li>
+                    <Link className="dropdown-item" to="/login">
+                      User
+                    </Link>
+                  </li>
+                  <li>
+                    <a className="dropdown-item" href="#">
+                      Agency Workbench
+                    </a>
+                  </li>
+                </ul>
+              </div>
             </div>
           </div>
         </div>
@@ -190,7 +248,7 @@ function Home() {
 
       {/* Mass.gov Banner */}
       <header className="massgov-banner">
-        <div className="container d-flex align-items-center justify-content-between">
+        <div className="container d-flex flex-wrap gap-2 align-items-center justify-content-between">
           <div className="d-flex align-items-center gap-3">
             <a
               href="#!"
@@ -201,7 +259,7 @@ function Home() {
                 alt="icon"
                 width="50"
                 height="50"
-                className="me-3"
+                className="me-2"
               />
               <span aria-hidden="true">Mass.gov</span>
             </a>
@@ -213,45 +271,150 @@ function Home() {
       </header>
 
       {/* Sticky Tabs (Featured links) */}
-      <div className="tabs-link-featured positive-sticky top-0">
+      <div className="tabs-link-featured navbar navbar-expand-lg positive-sticky top-0">
         <div className="container">
-          <div className="d-flex align-items-center">
-            <button 
-              className="nav-link-btn" 
-              onClick={() => scrollToSection('feature-tab')}
-            >
+          <div className="d-lg-none"></div>
+          <div className="d-flex align-items-center me-auto d-lg-none">
+            <a className="font-base opacity-75" href="#" id="mobileAppName">
+              Table of Contents
+            </a>
+            <span className="active-text d-none" id="activeLinkText">
               Featured
-            </button>
-            <button 
-              className="nav-link-btn" 
-              onClick={() => scrollToSection('contact-info-tab')}
-            >
-              Contact Us
-            </button>
-            <button 
-              className="nav-link-btn" 
-              onClick={() => scrollToSection('who-we-serve-tab')}
-            >
-              Who we serve
-            </button>
-            <button 
-              className="nav-link-btn" 
-              onClick={() => scrollToSection('i-like-info-tab')}
-            >
-              I want to…
-            </button>
-            <button 
-              className="nav-link-btn" 
-              onClick={() => scrollToSection('news-tab')}
-            >
-              News
-            </button>
-            <button 
-              className="nav-link-btn" 
-              onClick={() => scrollToSection('events-tab')}
-            >
-              Events
-            </button>
+            </span>
+          </div>
+
+          {/* Hamburger Toggler (Visible ONLY on mobile/small screens) */}
+          <button
+            className="navbar-toggler shadow-none font-lg ms-primary-green featured-collapse-icon border-0"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navbarNav"
+            aria-controls="navbarNav"
+            aria-expanded="false"
+            aria-label="Toggle navigation"
+          >
+            +
+          </button>
+
+          {/* Collapsible Menu Content */}
+          <div className="collapse navbar-collapse" id="navbarNav">
+            <div className="navbar-nav d-flex flex-column flex-lg-row">
+              {/* Links */}
+              <a 
+                className="nav-link" 
+                href="#" 
+                onClick={(e) => {
+                  e.preventDefault();
+                  console.log('Featured clicked, ref:', featureRef);
+                  if (featureRef.current) {
+                    featureRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }
+                  // Close mobile menu
+                  const nav = document.getElementById("navbarNav");
+                  if (nav && window.innerWidth < 991) {
+                    const bsCollapse = new window.bootstrap.Collapse(nav, { toggle: false });
+                    bsCollapse.hide();
+                  }
+                }}
+              >
+                Featured
+              </a>
+              <a 
+                className="nav-link" 
+                href="#" 
+                onClick={(e) => {
+                  e.preventDefault();
+                  console.log('Contact Us clicked, ref:', contactRef);
+                  if (contactRef.current) {
+                    contactRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }
+                  // Close mobile menu
+                  const nav = document.getElementById("navbarNav");
+                  if (nav && window.innerWidth < 991) {
+                    const bsCollapse = new window.bootstrap.Collapse(nav, { toggle: false });
+                    bsCollapse.hide();
+                  }
+                }}
+              >
+                Contact Us
+              </a>
+              <a 
+                className="nav-link" 
+                href="#" 
+                onClick={(e) => {
+                  e.preventDefault();
+                  console.log('Who we serve clicked, ref:', whoWeServeRef);
+                  if (whoWeServeRef.current) {
+                    whoWeServeRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }
+                  // Close mobile menu
+                  const nav = document.getElementById("navbarNav");
+                  if (nav && window.innerWidth < 991) {
+                    const bsCollapse = new window.bootstrap.Collapse(nav, { toggle: false });
+                    bsCollapse.hide();
+                  }
+                }}
+              >
+                Who we serve
+              </a>
+              <a 
+                className="nav-link" 
+                href="#" 
+                onClick={(e) => {
+                  e.preventDefault();
+                  console.log('I want to clicked, ref:', actionsRef);
+                  if (actionsRef.current) {
+                    actionsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }
+                  // Close mobile menu
+                  const nav = document.getElementById("navbarNav");
+                  if (nav && window.innerWidth < 991) {
+                    const bsCollapse = new window.bootstrap.Collapse(nav, { toggle: false });
+                    bsCollapse.hide();
+                  }
+                }}
+              >
+                I want to…
+              </a>
+              <a 
+                className="nav-link" 
+                href="#" 
+                onClick={(e) => {
+                  e.preventDefault();
+                  console.log('News clicked, ref:', newsRef);
+                  if (newsRef.current) {
+                    newsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }
+                  // Close mobile menu
+                  const nav = document.getElementById("navbarNav");
+                  if (nav && window.innerWidth < 991) {
+                    const bsCollapse = new window.bootstrap.Collapse(nav, { toggle: false });
+                    bsCollapse.hide();
+                  }
+                }}
+              >
+                News
+              </a>
+              <a 
+                className="nav-link" 
+                href="#" 
+                onClick={(e) => {
+                  e.preventDefault();
+                  console.log('Events clicked, ref:', eventsRef);
+                  if (eventsRef.current) {
+                    eventsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }
+                  // Close mobile menu
+                  const nav = document.getElementById("navbarNav");
+                  if (nav && window.innerWidth < 991) {
+                    const bsCollapse = new window.bootstrap.Collapse(nav, { toggle: false });
+                    bsCollapse.hide();
+                  }
+                }}
+              >
+                Events
+              </a>
+            </div>
           </div>
         </div>
       </div>
@@ -267,7 +430,7 @@ function Home() {
       </div>
 
       {/* Featured Items Section */}
-      <section className="featured-items py-5" id="feature-tab">
+      <section className="featured-items py-4 py-lg-5" id="feature-tab" ref={featureRef}>
         <div className="container">
           <h2 className="font-xl-med mb-4 fw-medium heading-divider">
             Featured Items
@@ -277,7 +440,7 @@ function Home() {
               <div className="item">
                 <img
                   src={coinsImg}
-                  alt="Financial and Climate-Related Risk Resources"
+                  alt="Student Loan Info"
                   className="w-100"
                 />
                 <p>Financial and Climate-Related Risk Resources</p>
@@ -289,36 +452,42 @@ function Home() {
                 <p>Student Loan Information for Consumers</p>
               </div>
               <div className="item">
-                <img src={img2} alt="Enforcement" className="w-100" />
+                <img src={img3} alt="Student Loan Info" className="w-100" />
                 <p>Enforcement actions</p>
               </div>
             </div>
-            <div className="col-md-6 col-lg-4">
-              <div className="item">
-                <img
-                  src={img3}
-                  alt="New Money Transmission Law"
-                  className="w-100"
-                />
-                <p>New Money Transmission Law</p>
-              </div>
-              <div className="item">
-                <img src={img3} alt="Cybersecurity" className="w-100" />
-                <p>Cybersecurity for the financial services industry</p>
+            <div className="col-md-12 col-lg-4">
+              <div className="row">
+                <div className="col-md-6 col-lg-12">
+                  <div className="item">
+                    <img src={img2} alt="Student Loan Info" className="w-100" />
+                    <p>New Money Transmission Law</p>
+                  </div>
+                </div>
+                <div className="col-md-6 col-lg-12">
+                  <div className="item">
+                    <img
+                      src={img2}
+                      alt="New Transmission Law"
+                      className="w-100"
+                    />
+                    <p>Cybersecurity for the financial services industry</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="contact-info py-5" id="contact-info-tab">
+      <section className="contact-info py-4 py-lg-5" id="contact-info-tab" ref={contactRef}>
         <div className="container">
           <h2 className="font-xl-med mb-4 fw-medium heading-divider">
             Contact Us
           </h2>
           <div className="row g-5">
             {/* Left Column: Online and Phone */}
-            <div className="col-12 col-md-4 vr-border-right position-relative">
+            <div className="col-12 col-md-6 col-lg-4 vr-border-right position-relative">
               {/* Online Section */}
               <div className="mb-5">
                 <h3 className="fs-5 fw-semibold icon-header mb-3">
@@ -379,7 +548,7 @@ function Home() {
             </div>
 
             {/* Right Column: Address */}
-            <div className="col-12 col-md-4">
+            <div className="col-12 col-md-6 col-lg-4">
               <div className="ps-md-3">
                 <h3 className="fs-5 fw-semibold icon-header mb-3">
                   <i className="fa-solid fa-map-marker-alt me-2 ms-primary-green"></i>{" "}
@@ -399,7 +568,7 @@ function Home() {
       </section>
 
       {/* Who We Serve Section */}
-      <section className="who-we-serve py-5" id="who-we-serve-tab">
+      <section className="who-we-serve pt-5" id="who-we-serve-tab" ref={whoWeServeRef}>
         <div className="container">
           <h2 className="font-xl-med mb-4 fw-medium heading-divider">
             Who We Serve
@@ -441,28 +610,30 @@ function Home() {
         </div>
       </section>
 
-      <section className="actions py-5 bg-mesgray" id="i-like-info-tab">
+      <section className="actions py-4 py-lg-5 bg-mesgray" id="i-like-info-tab" ref={actionsRef}>
         <div className="container">
-          <h2 className="font-xl-med mb-4 fw-medium heading-divider">
-            What would you like to do?
-          </h2>
+          <div className="green-title-box position-relative">
+            <h2 className="font-xl-med mb-4 fw-medium">
+              What would you like to do?
+            </h2>
+          </div>
 
-          <div className="row justify-content-center mb-5">
-            <div className="col-md-4">
+          <div className="row mb-5 g-2 g-md-4">
+            <div className="col-md-6 col-lg-4">
               <div className="link-box-theme">
                 <a href="#" className="text-decoration-hover">
                   Submit a complaint to the DOB &rarr;
                 </a>
               </div>
             </div>
-            <div className="col-md-4">
+            <div className="col-md-6 col-lg-4">
               <div className="link-box-theme">
                 <a href="#" className="text-decoration-hover">
                   Public Records Request &rarr;
                 </a>
               </div>
             </div>
-            <div className="col-md-4">
+            <div className="col-md-6 col-lg-4">
               <div className="link-box-theme">
                 <a href="#" className="text-decoration-hover">
                   Find state-chartered banks and credit unions &rarr;
@@ -482,7 +653,7 @@ function Home() {
               <span className="badge bg-success rounded-pill">4</span>
             </div>
 
-            <div className="accordion" id="moreActionsAccordion">
+            <div className="accordion " id="moreActionsAccordion">
               <div className="accordion-item rounded-0 border-0 pt-3">
                 <div
                   id="moreActionsList"
@@ -505,15 +676,15 @@ function Home() {
                       >
                         Protecting Older Adults from Abuse
                       </a>
-            </li>
+                    </li>
                     <li className="col-12">
                       <a
                         href="#"
                         className="font-base-med fw-medium text-decoration-hover"
                       >
-                        Division of Banks Licenses
+                        Division of Banks Licenses{" "}
                       </a>
-            </li>
+                    </li>
                     <li className="col-12">
                       <a
                         href="#"
@@ -521,8 +692,8 @@ function Home() {
                       >
                         DOB Connects
                       </a>
-            </li>
-          </ul>
+                    </li>
+                  </ul>
                 </div>
               </div>
             </div>
@@ -530,13 +701,13 @@ function Home() {
         </div>
       </section>
 
-      <section className="news-announcements py-5" id="news-tab">
+      <section className="news-announcements py-4 py-lg-5" id="news-tab" ref={newsRef}>
         <div className="container">
           <h2 className="font-xl-med mb-4 fw-medium heading-divider">
             Recent News & Announcements
           </h2>
           <div className="row g-5">
-            <div className="col-md-6 col-lg-4">
+            <div className="col-lg-4">
               <div className="news-item">
                 <span className="news-tag font-xs text-uppercase fw-medium">
                   News
@@ -558,7 +729,7 @@ function Home() {
                 </p>
               </div>
             </div>
-            <div className="col-md-6 col-lg-4">
+            <div className="col-lg-4">
               <div className="news-item">
                 <span className="news-tag font-xs text-uppercase fw-medium">
                   Press Release
@@ -586,7 +757,7 @@ function Home() {
                 </p>
               </div>
             </div>
-            <div className="col-md-6 col-lg-4">
+            <div className="col-lg-4">
               <div className="news-item">
                 <span className="news-tag font-xs text-uppercase fw-medium">
                   News
@@ -610,7 +781,7 @@ function Home() {
                 </p>
               </div>
             </div>
-            <div className="col-md-6 col-lg-4">
+            <div className="col-lg-4">
               <div className="news-item">
                 <span className="news-tag font-xs text-uppercase fw-medium">
                   News
@@ -631,7 +802,7 @@ function Home() {
                 </p>
               </div>
             </div>
-            <div className="col-md-6 col-lg-4">
+            <div className="col-lg-4">
               <div className="news-item font-sm">
                 <span className="news-tag font-xs text-uppercase fw-medium">
                   News
@@ -651,7 +822,7 @@ function Home() {
                 <p className="font-base">Effective October 10, 2025.</p>
               </div>
             </div>
-            <div className="col-md-6 col-lg-4">
+            <div className="col-lg-4">
               <div className="news-item">
                 <span className="news-tag font-xs text-uppercase fw-medium">
                   News
@@ -683,14 +854,14 @@ function Home() {
       </section>
 
       {/* Upcoming Events Section */}
-      <section className="upcoming-events py-5" id="events-tab">
+      <section className="upcoming-events py-4 py-lg-5" id="events-tab" ref={eventsRef}>
         <div className="container">
           <h2 className="font-xl-med mb-4 fw-medium heading-divider">
             Upcoming Events
           </h2>
           <div className="row g-4 g-md-5">
             {/* Event Card 1 */}
-            <div className="col-12 col-md-6">
+            <div className="col-12 col-lg-6">
               <div className="d-flex align-items-start">
                 {/* Date Block */}
                 <div className="date-block-container me-3 me-md-4">
@@ -722,7 +893,7 @@ function Home() {
             </div>
 
             {/* Event Card 2 */}
-            <div className="col-12 col-md-6">
+            <div className="col-12 col-lg-6">
               <div className="d-flex align-items-start">
                 {/* Date Block */}
                 <div className="date-block-container me-3 me-md-4">
@@ -764,15 +935,15 @@ function Home() {
         </div>
       </section>
 
-      <section className="related-organisation py-5">
+      <section className="related-organisation py-4 py-lg-5">
         <div className="container">
           <h2 className="font-xl-med mb-4 fw-medium heading-divider">
             Related organizations
           </h2>
 
-          {/* Organization List */}
+          {/* Organization List (ul.grid md:grid-cols-2 gap-4) */}
           <ul className="row related-organizations-list g-2 mt-2">
-            <li className="col-12 col-md-6">
+            <li className="col-12 col-lg-6">
               <a
                 href="#"
                 className="font-base-med fw-medium text-decoration-hover"
@@ -780,7 +951,7 @@ function Home() {
                 Office of Consumer Affairs and Business Regulation
               </a>
             </li>
-            <li className="col-12 col-md-6">
+            <li className="col-12 col-lg-6">
               <a
                 href="#"
                 className="font-base-med fw-medium text-decoration-hover"
@@ -788,7 +959,7 @@ function Home() {
                 Executive Office of Economic Development
               </a>
             </li>
-            <li className="col-12 col-md-6">
+            <li className="col-12 col-lg-6">
               <a
                 href="#"
                 className="font-base-med fw-medium text-decoration-hover"
@@ -796,26 +967,26 @@ function Home() {
                 Office of the Attorney General
               </a>
             </li>
-            <li className="col-12 col-md-6">
+            <li className="col-12 col-lg-6">
               <a
                 href="#"
                 className="font-base-med fw-medium text-decoration-hover"
               >
                 Office of State Treasurer and Receiver General Deborah B.
-                Goldberg
+                Goldberg{" "}
               </a>
             </li>
           </ul>
         </div>
       </section>
 
-      <section className="related-organisation py-5">
+      <section className="related-organisation py-4 py-lg-5">
         <div className="container">
           <h2 className="font-xl-med mb-4 fw-medium heading-divider">
             Division of Banks information
           </h2>
 
-          {/* Organization List */}
+          {/* Organization List (ul.grid md:grid-cols-2 gap-4) */}
           <ul className="row related-organizations-list g-2 mt-2">
             <li className="col-12">
               <a
@@ -830,7 +1001,7 @@ function Home() {
                 href="#"
                 className="font-base-med fw-medium text-decoration-hover"
               >
-                Staff directory by unit
+                Staff directory by unit{" "}
               </a>
             </li>
             <li className="col-12">
@@ -838,7 +1009,7 @@ function Home() {
                 href="#"
                 className="font-base-med fw-medium text-decoration-hover"
               >
-                Employment
+                Employment{" "}
               </a>
             </li>
             <li className="col-12">
@@ -865,14 +1036,14 @@ function Home() {
         <div className="container">
           <div className="row align-items-center">
             {/* Left Column: Seal/Logo */}
-            <div className="col-12 col-md-2 text-center text-md-start mb-3 mb-md-0">
+            <div className="col-12 col-md-2 text-start mb-3 mb-md-0">
               <div className="footer-logo">
                 <img src={logo} alt="logo" className="w-100" />
               </div>
             </div>
 
-            <div className="col-12 col-md-10 text-center text-md-start">
-              <ul className="footer-links d-flex justify-content-center justify-content-md-start font-base-med fw-medium mb-4 list-unstyled gap-4">
+            <div className="col-12 col-md-10 ">
+              <ul className="footer-links d-flex flex-column flex-md-row justify-content-start font-base-med fw-medium mb-4 list-unstyled gap-2 gap-md-4">
                 <li>
                   <a href="#" className="text-dark text-decoration-none">
                     All Topics
@@ -897,11 +1068,9 @@ function Home() {
               <p className="mb-0 font-sm text-gray-dark">
                 Mass.gov® is a registered service mark of the Commonwealth of
                 Massachusetts.
-                <a href="#" className="text-decoration-underline  mx-2">
-                  Mass.gov
-                </a>
                 <a href="#" className="text-decoration-underline">
-                  Privacy Policy
+                  {" "}
+                  Mass.gov Privacy Policy
                 </a>
               </p>
             </div>

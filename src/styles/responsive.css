@@ -12,6 +12,25 @@
         max-width: 100%;
         padding: 0;
     }
+    .featured-items .item p {
+        min-height: 72px;
+    }
+    .featured-items .row > div:first-child .item {
+        height: 100%;
+    }
+    .featured-items .row > div:first-child .item img {
+        height: calc(100% - 88px);
+        object-fit: cover;
+    }
+}
+
+
+@media (min-width:992px) {
+
+    .news-announcements .row>div:nth-child(3) .news-item:after,
+    .news-announcements .row>div:nth-child(6) .news-item:after {
+        display: none;
+    }
 }
 
 /* ----- Extra Large Screens (1200px and above) ----- */
@@ -26,12 +45,78 @@
 
 /* ----- Medium Screens (768px to 991px) ----- */
 @media (max-width: 991.98px) {
-  
+  .news-announcements .row>div .news-item:after {
+    width: 100%;
+    height: 1px;
+    position: absolute;
+    bottom: -10px;
+    top: auto;
+    right: 0;
+}
+.news-announcements .row>div:last-child .news-item:after, 
+.vr-border-right:after {
+    display: none;
+}
+
 }
 
 /* ----- Small Screens (576px to 767px) ----- */
 @media (max-width: 767.98px) {
-  
+:root {
+	--text-xl: 30px;
+	--text-xl-med: 26px;
+	--text-lg: 24px;
+    --text-lg-med: 20px;
+	--text-med: 18px;
+	--text-base-med: 16px;
+	--text-base: 15px;
+	--text-sm: 13px;
+	--text-xs: 11px;
+}
+
+  .date-block-container {
+    display: none;
+  }
+  .featured-items .item img {
+    max-height: 300px;
+    object-fit: cover;
+    object-position: top;
+}
+
+/* Ensure proper responsive behavior for all banners */
+.official-banner .row {
+    margin: 0;
+}
+
+.official-banner .col-md-6 {
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.portal-banner .d-flex {
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.massgov-banner .d-flex {
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+/* Fix text wrapping issues */
+.text-nowrap {
+    white-space: nowrap;
+}
+
+/* Improve mobile navigation */
+.tabs-link-featured .navbar-nav {
+    flex-direction: column;
+}
+
+.tabs-link-featured .nav-link {
+    padding: 8px 0;
+    margin-right: 0;
+}
 }
 
 /* ----- Extra Small Screens (below 576px) ----- */
