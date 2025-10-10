@@ -442,17 +442,19 @@ function Dashboard() {
 
         {/* Main Dashboard Content */}
         <div className="dashboard-content-section">
-          <div className="org-search-box">
-            <div className="d-flex align-items-center justify-content-between mb-3">
-              <h2 className="h5 mb-0">Organizations</h2>
-              <button 
-                className="dashboard-btn-create" 
-                data-bs-toggle="modal" 
-                data-bs-target="#createorganizationModal"
-              >
-                <i className="fa-solid fa-plus me-1"></i> Create an Organization
-              </button>
-            </div>
+          {/* Show organization search only if user has no join requests */}
+          {joinRequests.length === 0 && (
+            <div className="org-search-box">
+              <div className="d-flex align-items-center justify-content-between mb-3">
+                <h2 className="h5 mb-0">Organizations</h2>
+                <button 
+                  className="dashboard-btn-create" 
+                  data-bs-toggle="modal" 
+                  data-bs-target="#createorganizationModal"
+                >
+                  <i className="fa-solid fa-plus me-1"></i> Create an Organization
+                </button>
+              </div>
 
             <div className="search-form-wrapper" ref={searchRef}>
               <form className="search-form" role="search" onSubmit={handleJoinRequest}>
@@ -567,13 +569,13 @@ function Dashboard() {
               </form>
             </div>
           </div>
-        </div>
+          )}
 
-        {/* My Join Requests Section */}
-        <div className="join-requests-section">
-          <div className="org-search-box">
-            <div className="d-flex align-items-center justify-content-between mb-3">
-              <h2 className="h5 mb-0">My Join Requests</h2>
+          {/* Show join request status only if user has submitted a request */}
+          {joinRequests.length > 0 && (
+            <div className="org-search-box">
+              <div className="d-flex align-items-center justify-content-between mb-3">
+                <h2 className="h5 mb-0">Request Status</h2>
               <button 
                 className="dashboard-btn-refresh" 
                 onClick={loadJoinRequests}
@@ -648,6 +650,7 @@ function Dashboard() {
               </div>
             )}
           </div>
+          )}
         </div>
 
         {/* Create Organization Modal */}
