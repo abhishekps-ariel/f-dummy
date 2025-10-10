@@ -1,22 +1,22 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { getAuthData, clearAuthData } from "../../services/auth.service";
-import { 
-  getAllOrganizations, 
-  searchOrganizations, 
-  submitJoinRequest, 
+import {
+  getAllOrganizations,
+  searchOrganizations,
+  submitJoinRequest,
   getUserJoinRequests,
   createOrganization,
   // getOrganizationById,
   updateOrganization,
-  deleteOrganization
+  deleteOrganization,
 } from "../../services/organization.service";
 import { useDebounce } from "../../hooks/useDebounce";
 import { toast } from "react-toastify";
 import "../../styles/custom.css";
 
 function Dashboard() {
-  const [user, setUser] = useState(null); 
+  const [user, setUser] = useState(null);
   const [orgFormData, setOrgFormData] = useState({
     orgName: "",
     orgType: "",
@@ -26,9 +26,9 @@ function Dashboard() {
     addressZip: "",
     contactName: "",
     contactEmail: "",
-    contactPhone: ""
+    contactPhone: "",
   });
-  
+
   // Search functionality state
   const [searchQuery, setSearchQuery] = useState("");
   const [organizations, setOrganizations] = useState([]);
@@ -37,26 +37,26 @@ function Dashboard() {
   const [hasSearched, setHasSearched] = useState(false);
   const [selectedOrganization, setSelectedOrganization] = useState(null);
   const [isSubmittingJoinRequest, setIsSubmittingJoinRequest] = useState(false);
-  
+
   // Join requests state
   const [joinRequests, setJoinRequests] = useState([]);
   const [isLoadingJoinRequests, setIsLoadingJoinRequests] = useState(false);
-  
+
   // My Organization state
   const [myOrganization, setMyOrganization] = useState(null);
   const [isLoadingMyOrg, setIsLoadingMyOrg] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isCreatingOrg, setIsCreatingOrg] = useState(false);
-  
+
   const searchRef = useRef(null);
   const navigate = useNavigate();
-  
+
   // Debounce search query
   const debouncedSearchQuery = useDebounce(searchQuery, 400);
 
   useEffect(() => {
     const { user: userData, token } = getAuthData();
-    
+
     if (!userData || !token) {
       navigate("/login");
       return;
@@ -71,7 +71,7 @@ function Dashboard() {
   useEffect(() => {
     const performSearch = async () => {
       if (!hasSearched) return;
-      
+
       if (debouncedSearchQuery.trim() === "") {
         // If search is empty, fetch all organizations
         setIsLoadingOrgs(true);
@@ -126,8 +126,8 @@ function Dashboard() {
 
   // Reset edit mode when modal is closed
   useEffect(() => {
-    const modalElement = document.getElementById('createorganizationModal');
-    
+    const modalElement = document.getElementById("createorganizationModal");
+
     const handleModalHidden = () => {
       setIsEditMode(false);
       setOrgFormData({
@@ -139,17 +139,17 @@ function Dashboard() {
         addressZip: "",
         contactName: "",
         contactEmail: "",
-        contactPhone: ""
+        contactPhone: "",
       });
     };
 
     if (modalElement) {
-      modalElement.addEventListener('hidden.bs.modal', handleModalHidden);
+      modalElement.addEventListener("hidden.bs.modal", handleModalHidden);
     }
 
     return () => {
       if (modalElement) {
-        modalElement.removeEventListener('hidden.bs.modal', handleModalHidden);
+        modalElement.removeEventListener("hidden.bs.modal", handleModalHidden);
       }
     };
   }, []);
@@ -166,12 +166,12 @@ function Dashboard() {
       const response = await getUserJoinRequests();
       if (response.isSuccess) {
         const requests = response.data || [];
-        
+
         // Sort requests by date (latest first)
         const sortedRequests = requests.sort((a, b) => {
           return new Date(b.requestedOn) - new Date(a.requestedOn);
         });
-        
+
         // Fetch organization names for each request
         const requestsWithOrgNames = await Promise.all(
           sortedRequests.map(async (request) => {
@@ -179,24 +179,29 @@ function Dashboard() {
               // Get organization details to fetch the name
               const orgResponse = await getAllOrganizations();
               if (orgResponse.isSuccess && orgResponse.data) {
-                const organization = orgResponse.data.find(org => org.id === request.organizationId);
+                const organization = orgResponse.data.find(
+                  (org) => org.id === request.organizationId
+                );
                 if (organization) {
                   return {
                     ...request,
                     organizationName: organization.name,
                     organizationType: organization.type,
-                    organizationAddress: organization.address
+                    organizationAddress: organization.address,
                   };
                 }
               }
               return request;
             } catch (error) {
-              console.error(`Error fetching organization ${request.organizationId}:`, error);
+              console.error(
+                `Error fetching organization ${request.organizationId}:`,
+                error
+              );
               return request;
             }
           })
         );
-        
+
         setJoinRequests(requestsWithOrgNames);
       } else {
         console.error("Failed to load join requests:", response.msg);
@@ -218,22 +223,34 @@ function Dashboard() {
       case 0:
         return { text: "Pending", class: "status-pending", icon: "fa-clock" };
       case 1:
-        return { text: "Approved", class: "status-approved", icon: "fa-check-circle" };
+        return {
+          text: "Approved",
+          class: "status-approved",
+          icon: "fa-check-circle",
+        };
       case 2:
-        return { text: "Rejected", class: "status-rejected", icon: "fa-times-circle" };
+        return {
+          text: "Rejected",
+          class: "status-rejected",
+          icon: "fa-times-circle",
+        };
       default:
-        return { text: "Unknown", class: "status-unknown", icon: "fa-question-circle" };
+        return {
+          text: "Unknown",
+          class: "status-unknown",
+          icon: "fa-question-circle",
+        };
     }
   };
 
   // Format date
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -244,54 +261,64 @@ function Dashboard() {
 
   const handleEditOrganization = () => {
     if (!myOrganization) return;
-    
+
     // Parse the address back into components (simple split)
-    const addressParts = myOrganization.address.split(',').map(part => part.trim());
-    const street = addressParts[0] || '';
-    const city = addressParts[1] || '';
-    const stateZip = addressParts[2] || '';
-    const [state, ...zipParts] = stateZip.split(' ');
-    const zip = zipParts.join(' ');
-    
+    const addressParts = myOrganization.address
+      .split(",")
+      .map((part) => part.trim());
+    const street = addressParts[0] || "";
+    const city = addressParts[1] || "";
+    const stateZip = addressParts[2] || "";
+    const [state, ...zipParts] = stateZip.split(" ");
+    const zip = zipParts.join(" ");
+
     // Parse primary contact
-    const contactMatch = myOrganization.primaryContact.match(/^(.*?)\s*\((.*?),\s*(.*?)\)$/);
-    const contactName = contactMatch ? contactMatch[1] : myOrganization.primaryContact;
-    const contactEmail = contactMatch ? contactMatch[2] : '';
-    const contactPhone = contactMatch ? contactMatch[3] : '';
-    
+    const contactMatch = myOrganization.primaryContact.match(
+      /^(.*?)\s*\((.*?),\s*(.*?)\)$/
+    );
+    const contactName = contactMatch
+      ? contactMatch[1]
+      : myOrganization.primaryContact;
+    const contactEmail = contactMatch ? contactMatch[2] : "";
+    const contactPhone = contactMatch ? contactMatch[3] : "";
+
     // Populate form with existing data
     setOrgFormData({
       orgName: myOrganization.name,
       orgType: myOrganization.type,
       addressStreet: street,
       addressCity: city,
-      addressState: state || '',
-      addressZip: zip || '',
+      addressState: state || "",
+      addressZip: zip || "",
       contactName: contactName,
       contactEmail: contactEmail,
-      contactPhone: contactPhone
+      contactPhone: contactPhone,
     });
-    
+
     setIsEditMode(true);
-    
+
     // Open modal
-    const modalElement = document.getElementById('createorganizationModal');
+    const modalElement = document.getElementById("createorganizationModal");
     const modal = new window.bootstrap.Modal(modalElement);
     modal.show();
   };
 
   const handleDeleteOrganization = async () => {
     if (!myOrganization) return;
-    
+
     // Confirm deletion
-    if (!window.confirm(`Are you sure you want to delete "${myOrganization.name}"? This action cannot be undone.`)) {
+    if (
+      !window.confirm(
+        `Are you sure you want to delete "${myOrganization.name}"? This action cannot be undone.`
+      )
+    ) {
       return;
     }
-    
+
     setIsLoadingMyOrg(true);
     try {
       const response = await deleteOrganization(myOrganization.id);
-      
+
       if (response.isSuccess) {
         toast.success(response.msg || "Organization deleted successfully");
         setMyOrganization(null);
@@ -316,32 +343,40 @@ function Dashboard() {
         name: orgFormData.orgName,
         type: orgFormData.orgType,
         address: `${orgFormData.addressStreet}, ${orgFormData.addressCity}, ${orgFormData.addressState} ${orgFormData.addressZip}`,
-        primaryContact: `${orgFormData.contactName} (${orgFormData.contactEmail}, ${orgFormData.contactPhone})`
+        primaryContact: `${orgFormData.contactName} (${orgFormData.contactEmail}, ${orgFormData.contactPhone})`,
       };
 
       let response;
       if (isEditMode && myOrganization) {
         // Update existing organization
-        response = await updateOrganization(myOrganization.id, organizationData);
+        response = await updateOrganization(
+          myOrganization.id,
+          organizationData
+        );
       } else {
         // Create new organization
         response = await createOrganization(organizationData);
       }
 
       if (response.isSuccess) {
-        toast.success(response.msg || (isEditMode ? "Organization updated successfully" : "Organization created successfully"));
-        
+        toast.success(
+          response.msg ||
+            (isEditMode
+              ? "Organization updated successfully"
+              : "Organization created successfully")
+        );
+
         // Update myOrganization state
         setMyOrganization(response.data);
         setIsEditMode(false);
-        
+
         // Close the modal
-        const modalElement = document.getElementById('createorganizationModal');
+        const modalElement = document.getElementById("createorganizationModal");
         const modal = window.bootstrap.Modal.getInstance(modalElement);
         if (modal) {
           modal.hide();
         }
-        
+
         // Reset form
         setOrgFormData({
           orgName: "",
@@ -352,10 +387,15 @@ function Dashboard() {
           addressZip: "",
           contactName: "",
           contactEmail: "",
-          contactPhone: ""
+          contactPhone: "",
         });
       } else {
-        toast.error(response.msg || (isEditMode ? "Failed to update organization" : "Failed to create organization"));
+        toast.error(
+          response.msg ||
+            (isEditMode
+              ? "Failed to update organization"
+              : "Failed to create organization")
+        );
       }
     } catch (error) {
       console.error("Error submitting organization:", error);
@@ -414,7 +454,7 @@ function Dashboard() {
   // Handle join request submission
   const handleJoinRequest = async (e) => {
     e.preventDefault();
-    
+
     if (!selectedOrganization) {
       toast.error("Please select an organization first");
       return;
@@ -423,14 +463,14 @@ function Dashboard() {
     setIsSubmittingJoinRequest(true);
     try {
       const response = await submitJoinRequest(selectedOrganization.id);
-      
+
       if (response.isSuccess) {
         toast.success(response.msg || "Join request submitted successfully!");
         console.log("Join request response:", response.data);
-        
+
         // Reload join requests from API to get the complete data
         loadJoinRequests();
-        
+
         // Clear the selection after successful submission
         setSelectedOrganization(null);
       } else {
@@ -446,7 +486,10 @@ function Dashboard() {
 
   if (!user) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ height: "100vh" }}>
+      <div
+        className="d-flex justify-content-center align-items-center"
+        style={{ height: "100vh" }}
+      >
         <div className="spinner-border text-primary" role="status">
           <span className="visually-hidden">Loading...</span>
         </div>
@@ -458,10 +501,20 @@ function Dashboard() {
     <div className="dashboard-wrapper">
       {/* Sidebar - Desktop Only */}
       <aside className="dashboard-sidebar d-none d-lg-flex flex-column">
+      <div className="logo-box">
+         <div> <h3 class="fw-bold theme-color text-center logo-text-one">FILIR</h3>
+        <h4 class="logo-text-two theme-color text-center mb-3">
+          Foreclosure Intake & Loan Information Resource
+        </h4></div>
         {/* Logo */}
         <div className="dashboard-logo">
-          <img src="/src/assets/logo-sample.png" alt="FILIR Logo" className="dashboard-logo-img" />
+          <img
+            src="/src/assets/logo-sample.png"
+            alt="FILIR Logo"
+            className="dashboard-logo-img"
+          />
         </div>
+      </div>
 
         {/* Navigation Links */}
         <nav className="flex-grow-1">
@@ -477,7 +530,14 @@ function Dashboard() {
 
         {/* Sign Out Link */}
         <div className="dashboard-sidebar-footer">
-          <a href="#" className="dashboard-nav-link" onClick={(e) => { e.preventDefault(); handleLogout(); }}>
+          <a
+            href="#"
+            className="dashboard-nav-link"
+            onClick={(e) => {
+              e.preventDefault();
+              handleLogout();
+            }}
+          >
             <i className="fas fa-sign-out-alt me-2"></i>
             <span>Sign Out</span>
           </a>
@@ -485,10 +545,24 @@ function Dashboard() {
       </aside>
 
       {/* Mobile Sidebar (Offcanvas) */}
-      <div className="offcanvas offcanvas-start" tabIndex="-1" id="mobileSidebar" aria-labelledby="mobileSidebarLabel">
+      <div
+        className="offcanvas offcanvas-start"
+        tabIndex="-1"
+        id="mobileSidebar"
+        aria-labelledby="mobileSidebarLabel"
+      >
         <div className="offcanvas-header">
-          <img src="/src/assets/logo-sample.png" alt="FILIR Logo" className="dashboard-logo-img" />
-          <button type="button" className="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+          <img
+            src="/src/assets/logo-sample.png"
+            alt="FILIR Logo"
+            className="dashboard-logo-img"
+          />
+          <button
+            type="button"
+            className="btn-close"
+            data-bs-dismiss="offcanvas"
+            aria-label="Close"
+          ></button>
         </div>
         <div className="offcanvas-body">
           <ul className="dashboard-nav list-unstyled">
@@ -499,9 +573,16 @@ function Dashboard() {
               </a>
             </li>
           </ul>
-          
+
           <div className="mt-auto pt-4 border-top">
-            <a href="#" className="dashboard-nav-link" onClick={(e) => { e.preventDefault(); handleLogout(); }}>
+            <a
+              href="#"
+              className="dashboard-nav-link"
+              onClick={(e) => {
+                e.preventDefault();
+                handleLogout();
+              }}
+            >
               <i className="fas fa-sign-out-alt me-2"></i>
               <span>Sign Out</span>
             </a>
@@ -551,8 +632,12 @@ function Dashboard() {
                   style={{ width: "36px", height: "36px" }}
                 />
                 <div className="text-start d-none d-lg-block">
-                  <p className="font-base mb-0 fw-medium">{user.firstName} {user.lastName}</p>
-                  <p className="font-sm mb-0 text-gray-dark">{user.role || 'User'}</p>
+                  <p className="font-base mb-0 fw-medium">
+                    {user.firstName} {user.lastName}
+                  </p>
+                  <p className="font-sm mb-0 text-gray-dark">
+                    {user.role || "User"}
+                  </p>
                 </div>
                 <i className="fas fa-chevron-down small ms-2 text-secondary d-none d-lg-block"></i>
               </button>
@@ -573,7 +658,14 @@ function Dashboard() {
                   <hr className="dropdown-divider" />
                 </li>
                 <li>
-                  <a className="dropdown-item" href="#" onClick={(e) => { e.preventDefault(); handleLogout(); }}>
+                  <a
+                    className="dropdown-item"
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleLogout();
+                    }}
+                  >
                     <i className="fas fa-sign-out-alt me-2"></i> Sign out
                   </a>
                 </li>
@@ -589,128 +681,152 @@ function Dashboard() {
             <div className="org-search-box">
               <div className="d-flex align-items-center justify-content-between mb-3">
                 <h2 className="h5 mb-0">Organizations</h2>
-                <button 
-                  className="dashboard-btn-create" 
-                  data-bs-toggle="modal" 
+                <button
+                  className="dashboard-btn-create"
+                  data-bs-toggle="modal"
                   data-bs-target="#createorganizationModal"
                 >
-                  <i className="fa-solid fa-plus me-1"></i> Create an Organization
+                  <i className="fa-solid fa-plus me-1"></i> Create an
+                  Organization
                 </button>
               </div>
 
-            <div className="search-form-wrapper" ref={searchRef}>
-              <form className="search-form" role="search" onSubmit={handleJoinRequest}>
-                
-                {/* Selected Organization Display */}
-                {selectedOrganization ? (
-                  <div className="selected-org-container">
-                    <div className="selected-org-badge">
-                      <div className="selected-org-icon">
-                        <i className="fa-solid fa-building"></i>
-                      </div>
-                      <div className="selected-org-info">
-                        <div className="selected-org-name">{selectedOrganization.name}</div>
-                        <div className="selected-org-details">
-                          {selectedOrganization.type && (
-                            <span className="selected-org-type">{selectedOrganization.type}</span>
-                          )}
-                          {selectedOrganization.address && (
-                            <span className="selected-org-address"> • {selectedOrganization.address}</span>
-                          )}
+              <div className="search-form-wrapper" ref={searchRef}>
+                <form
+                  className="search-form"
+                  role="search"
+                  onSubmit={handleJoinRequest}
+                >
+                  {/* Selected Organization Display */}
+                  {selectedOrganization ? (
+                    <div className="selected-org-container">
+                      <div className="selected-org-badge">
+                        <div className="selected-org-icon">
+                          <i className="fa-solid fa-building"></i>
                         </div>
-                      </div>
-                      <button 
-                        type="button" 
-                        className="selected-org-remove"
-                        onClick={handleRemoveOrganization}
-                        title="Remove selection"
-                      >
-                        <i className="fa-solid fa-times"></i>
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="search-input-container">
-                    <input 
-                      className="form-control" 
-                      type="search" 
-                      placeholder="Search by organization name or EIN" 
-                      aria-label="Search"
-                      value={searchQuery}
-                      onChange={handleSearchInputChange}
-                      onFocus={handleSearchFocus}
-                    />
-                  
-                    {/* Search Dropdown */}
-                    {showDropdown && (
-                      <div className="org-search-dropdown">
-                        {isLoadingOrgs ? (
-                          <div className="org-search-loading">
-                            <div className="spinner-border spinner-border-sm text-primary me-2" role="status">
-                              <span className="visually-hidden">Loading...</span>
-                            </div>
-                            <span>Loading organizations...</span>
+                        <div className="selected-org-info">
+                          <div className="selected-org-name">
+                            {selectedOrganization.name}
                           </div>
-                        ) : organizations.length > 0 ? (
-                          <div className="org-search-results">
-                            {organizations.map((org) => (
+                          <div className="selected-org-details">
+                            {selectedOrganization.type && (
+                              <span className="selected-org-type">
+                                {selectedOrganization.type}
+                              </span>
+                            )}
+                            {selectedOrganization.address && (
+                              <span className="selected-org-address">
+                                {" "}
+                                • {selectedOrganization.address}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          className="selected-org-remove"
+                          onClick={handleRemoveOrganization}
+                          title="Remove selection"
+                        >
+                          <i className="fa-solid fa-times"></i>
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="search-input-container">
+                      <input
+                        className="form-control"
+                        type="search"
+                        placeholder="Search by organization name or EIN"
+                        aria-label="Search"
+                        value={searchQuery}
+                        onChange={handleSearchInputChange}
+                        onFocus={handleSearchFocus}
+                      />
+
+                      {/* Search Dropdown */}
+                      {showDropdown && (
+                        <div className="org-search-dropdown">
+                          {isLoadingOrgs ? (
+                            <div className="org-search-loading">
                               <div
-                                key={org.id}
-                                className="org-search-item"
-                                onClick={() => handleOrganizationSelect(org)}
+                                className="spinner-border spinner-border-sm text-primary me-2"
+                                role="status"
                               >
-                                <div className="org-item-name">{org.name}</div>
-                                <div className="org-item-details">
-                                  <span className="org-item-type">
-                                    <i className="fa-solid fa-building me-1"></i>
-                                    {org.type || 'N/A'}
-                                  </span>
-                                  {org.address && (
-                                    <span className="org-item-address ms-3">
-                                      <i className="fa-solid fa-location-dot me-1"></i>
-                                      {org.address}
+                                <span className="visually-hidden">
+                                  Loading...
+                                </span>
+                              </div>
+                              <span>Loading organizations...</span>
+                            </div>
+                          ) : organizations.length > 0 ? (
+                            <div className="org-search-results">
+                              {organizations.map((org) => (
+                                <div
+                                  key={org.id}
+                                  className="org-search-item"
+                                  onClick={() => handleOrganizationSelect(org)}
+                                >
+                                  <div className="org-item-name">
+                                    {org.name}
+                                  </div>
+                                  <div className="org-item-details">
+                                    <span className="org-item-type">
+                                      <i className="fa-solid fa-building me-1"></i>
+                                      {org.type || "N/A"}
                                     </span>
+                                    {org.address && (
+                                      <span className="org-item-address ms-3">
+                                        <i className="fa-solid fa-location-dot me-1"></i>
+                                        {org.address}
+                                      </span>
+                                    )}
+                                  </div>
+                                  {org.primaryContact && (
+                                    <div className="org-item-contact">
+                                      <i className="fa-solid fa-user me-1"></i>
+                                      {org.primaryContact}
+                                    </div>
                                   )}
                                 </div>
-                                {org.primaryContact && (
-                                  <div className="org-item-contact">
-                                    <i className="fa-solid fa-user me-1"></i>
-                                    {org.primaryContact}
-                                  </div>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="org-search-no-results">
-                            <i className="fa-solid fa-search me-2"></i>
-                            No organizations found.
-                          </div>
-                        )}
-                      </div>
-                    )}
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="org-search-no-results">
+                              <i className="fa-solid fa-search me-2"></i>
+                              No organizations found.
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <div>
+                    <button
+                      className="dashboard-btn-submit"
+                      type="submit"
+                      disabled={
+                        !selectedOrganization || isSubmittingJoinRequest
+                      }
+                    >
+                      {isSubmittingJoinRequest ? (
+                        <>
+                          <span
+                            className="spinner-border spinner-border-sm me-2"
+                            role="status"
+                            aria-hidden="true"
+                          ></span>
+                          Submitting...
+                        </>
+                      ) : (
+                        "Submit Join Request"
+                      )}
+                    </button>
                   </div>
-                )}
-                
-                <div>
-                  <button 
-                    className="dashboard-btn-submit" 
-                    type="submit"
-                    disabled={!selectedOrganization || isSubmittingJoinRequest}
-                  >
-                    {isSubmittingJoinRequest ? (
-                      <>
-                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                        Submitting...
-                      </>
-                    ) : (
-                      "Submit Join Request"
-                    )}
-                  </button>
-                </div>
-              </form>
+                </form>
+              </div>
             </div>
-          </div>
           )}
 
           {/* Show join request status only if user has submitted a request */}
@@ -718,80 +834,96 @@ function Dashboard() {
             <div className="org-search-box">
               <div className="d-flex align-items-center justify-content-between mb-3">
                 <h2 className="h5 mb-0">Request Status</h2>
-              <button 
-                className="dashboard-btn-refresh" 
-                onClick={loadJoinRequests}
-                disabled={isLoadingJoinRequests}
-              >
-                <i className={`fa-solid fa-refresh ${isLoadingJoinRequests ? 'fa-spin' : ''}`}></i>
-              </button>
-            </div>
+                <button
+                  className="dashboard-btn-refresh"
+                  onClick={loadJoinRequests}
+                  disabled={isLoadingJoinRequests}
+                >
+                  <i
+                    className={`fa-solid fa-refresh ${
+                      isLoadingJoinRequests ? "fa-spin" : ""
+                    }`}
+                  ></i>
+                </button>
+              </div>
 
-            {isLoadingJoinRequests ? (
-              <div className="text-center py-4">
-                <div className="spinner-border text-primary" role="status">
-                  <span className="visually-hidden">Loading...</span>
+              {isLoadingJoinRequests ? (
+                <div className="text-center py-4">
+                  <div className="spinner-border text-primary" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                  </div>
+                  <p className="mt-2 text-muted">Loading join requests...</p>
                 </div>
-                <p className="mt-2 text-muted">Loading join requests...</p>
-              </div>
-            ) : joinRequests.length > 0 ? (
-              <div className="join-requests-list">
-                {joinRequests.map((request) => {
-                  const statusInfo = getStatusInfo(request.status);
-                  return (
-                    <div key={request.id} className="join-request-item">
-                      <div className="join-request-header">
-                        <div className="join-request-org">
-                          <i className="fa-solid fa-building me-2"></i>
-                          <span className="org-name">{request.organizationName || 'Organization'}</span>
+              ) : joinRequests.length > 0 ? (
+                <div className="join-requests-list">
+                  {joinRequests.map((request) => {
+                    const statusInfo = getStatusInfo(request.status);
+                    return (
+                      <div key={request.id} className="join-request-item">
+                        <div className="join-request-header">
+                          <div className="join-request-org">
+                            <i className="fa-solid fa-building me-2"></i>
+                            <span className="org-name">
+                              {request.organizationName || "Organization"}
+                            </span>
+                          </div>
+                          <div
+                            className={`join-request-status ${statusInfo.class}`}
+                          >
+                            <i
+                              className={`fa-solid ${statusInfo.icon} me-1`}
+                            ></i>
+                            {statusInfo.text}
+                          </div>
                         </div>
-                        <div className={`join-request-status ${statusInfo.class}`}>
-                          <i className={`fa-solid ${statusInfo.icon} me-1`}></i>
-                          {statusInfo.text}
+                        <div className="join-request-details">
+                          {request.organizationType && (
+                            <div className="join-request-org-details">
+                              <i className="fa-solid fa-tag me-1"></i>
+                              Type: {request.organizationType}
+                            </div>
+                          )}
+                          {request.organizationAddress && (
+                            <div className="join-request-org-details">
+                              <i className="fa-solid fa-location-dot me-1"></i>
+                              {request.organizationAddress}
+                            </div>
+                          )}
+                          <div className="join-request-date">
+                            <i className="fa-solid fa-calendar me-1"></i>
+                            Requested: {formatDate(request.requestedOn)}
+                          </div>
+                          {request.respondedOn && (
+                            <div className="join-request-response-date">
+                              <i className="fa-solid fa-check me-1"></i>
+                              Responded: {formatDate(request.respondedOn)}
+                            </div>
+                          )}
+                          {request.adminComment && (
+                            <div className="join-request-comment">
+                              <i className="fa-solid fa-comment me-1"></i>
+                              <strong>Admin Comment:</strong>{" "}
+                              {request.adminComment}
+                            </div>
+                          )}
                         </div>
                       </div>
-                      <div className="join-request-details">
-                        {request.organizationType && (
-                          <div className="join-request-org-details">
-                            <i className="fa-solid fa-tag me-1"></i>
-                            Type: {request.organizationType}
-                          </div>
-                        )}
-                        {request.organizationAddress && (
-                          <div className="join-request-org-details">
-                            <i className="fa-solid fa-location-dot me-1"></i>
-                            {request.organizationAddress}
-                          </div>
-                        )}
-                        <div className="join-request-date">
-                          <i className="fa-solid fa-calendar me-1"></i>
-                          Requested: {formatDate(request.requestedOn)}
-                        </div>
-                        {request.respondedOn && (
-                          <div className="join-request-response-date">
-                            <i className="fa-solid fa-check me-1"></i>
-                            Responded: {formatDate(request.respondedOn)}
-                          </div>
-                        )}
-                        {request.adminComment && (
-                          <div className="join-request-comment">
-                            <i className="fa-solid fa-comment me-1"></i>
-                            <strong>Admin Comment:</strong> {request.adminComment}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="text-center py-4">
-                <i className="fa-solid fa-inbox text-muted mb-3" style={{ fontSize: '2rem' }}></i>
-                <p className="text-muted mb-0">No join requests yet</p>
-                <small className="text-muted">Submit a join request above to see it here</small>
-              </div>
-            )}
-          </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-4">
+                  <i
+                    className="fa-solid fa-inbox text-muted mb-3"
+                    style={{ fontSize: "2rem" }}
+                  ></i>
+                  <p className="text-muted mb-0">No join requests yet</p>
+                  <small className="text-muted">
+                    Submit a join request above to see it here
+                  </small>
+                </div>
+              )}
+            </div>
           )}
 
           {/* My Organization Section */}
@@ -800,16 +932,16 @@ function Dashboard() {
               <div className="d-flex align-items-center justify-content-between mb-3">
                 <h2 className="h5 mb-0">My Organization</h2>
                 <div className="d-flex gap-2">
-                  <button 
-                    className="dashboard-btn-refresh" 
+                  <button
+                    className="dashboard-btn-refresh"
                     onClick={handleEditOrganization}
                     disabled={isLoadingMyOrg}
                     title="Edit Organization"
                   >
                     <i className="fa-solid fa-edit"></i>
                   </button>
-                  <button 
-                    className="dashboard-btn-refresh text-danger" 
+                  <button
+                    className="dashboard-btn-refresh text-danger"
                     onClick={handleDeleteOrganization}
                     disabled={isLoadingMyOrg}
                     title="Delete Organization"
@@ -865,34 +997,49 @@ function Dashboard() {
         </div>
 
         {/* Create Organization Modal */}
-        <div className="modal fade" id="createorganizationModal" tabIndex="-1" aria-labelledby="organizationModalLabel" aria-hidden="true">
+        <div
+          className="modal fade"
+          id="createorganizationModal"
+          tabIndex="-1"
+          aria-labelledby="organizationModalLabel"
+          aria-hidden="true"
+        >
           <div className="modal-dialog modal-lg modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title" id="organizationModalLabel">
                   {isEditMode ? "Edit Organization" : "Create Organization"}
                 </h5>
-                <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button
+                  type="button"
+                  className="btn-close"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                ></button>
               </div>
               <div className="modal-body p-4">
                 <form id="organizationForm" onSubmit={handleOrgSubmit}>
                   <div className="row g-3">
                     <div className="col-12">
-                      <label htmlFor="orgName" className="form-label">Organization Name</label>
-                      <input 
-                        type="text" 
-                        className="form-control" 
-                        id="orgName" 
-                        required 
+                      <label htmlFor="orgName" className="form-label">
+                        Organization Name
+                      </label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="orgName"
+                        required
                         value={orgFormData.orgName}
                         onChange={handleOrgFormChange}
                       />
                     </div>
                     <div className="col-12">
-                      <label htmlFor="orgType" className="form-label">Type</label>
-                      <select 
-                        className="form-select" 
-                        id="orgType" 
+                      <label htmlFor="orgType" className="form-label">
+                        Type
+                      </label>
+                      <select
+                        className="form-select"
+                        id="orgType"
                         required
                         value={orgFormData.orgType}
                         onChange={handleOrgFormChange}
@@ -906,78 +1053,92 @@ function Dashboard() {
                       </select>
                     </div>
                     <div className="col-12">
-                      <label htmlFor="addressStreet" className="form-label">Street Address</label>
-                      <input 
-                        type="text" 
-                        className="form-control" 
-                        id="addressStreet" 
-                        required 
+                      <label htmlFor="addressStreet" className="form-label">
+                        Street Address
+                      </label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="addressStreet"
+                        required
                         value={orgFormData.addressStreet}
                         onChange={handleOrgFormChange}
                       />
                     </div>
                     <div className="col-md-6">
-                      <label htmlFor="addressCity" className="form-label">City</label>
-                      <input 
-                        type="text" 
-                        className="form-control" 
-                        id="addressCity" 
+                      <label htmlFor="addressCity" className="form-label">
+                        City
+                      </label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="addressCity"
                         required
                         value={orgFormData.addressCity}
                         onChange={handleOrgFormChange}
                       />
                     </div>
                     <div className="col-md-3">
-                      <label htmlFor="addressState" className="form-label">State</label>
-                      <input 
-                        type="text" 
-                        className="form-control" 
-                        id="addressState" 
+                      <label htmlFor="addressState" className="form-label">
+                        State
+                      </label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="addressState"
                         required
                         value={orgFormData.addressState}
                         onChange={handleOrgFormChange}
                       />
                     </div>
                     <div className="col-md-3">
-                      <label htmlFor="addressZip" className="form-label">Zip Code</label>
-                      <input 
-                        type="text" 
-                        className="form-control" 
-                        id="addressZip" 
+                      <label htmlFor="addressZip" className="form-label">
+                        Zip Code
+                      </label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="addressZip"
                         required
                         value={orgFormData.addressZip}
                         onChange={handleOrgFormChange}
                       />
                     </div>
                     <div className="col-12">
-                      <label htmlFor="contactName" className="form-label">Contact Name</label>
-                      <input 
-                        type="text" 
-                        className="form-control" 
-                        id="contactName" 
-                        required 
+                      <label htmlFor="contactName" className="form-label">
+                        Contact Name
+                      </label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="contactName"
+                        required
                         value={orgFormData.contactName}
                         onChange={handleOrgFormChange}
                       />
                     </div>
                     <div className="col-md-6">
-                      <label htmlFor="contactEmail" className="form-label">Email</label>
-                      <input 
-                        type="email" 
-                        className="form-control" 
-                        id="contactEmail" 
-                        required 
+                      <label htmlFor="contactEmail" className="form-label">
+                        Email
+                      </label>
+                      <input
+                        type="email"
+                        className="form-control"
+                        id="contactEmail"
+                        required
                         value={orgFormData.contactEmail}
                         onChange={handleOrgFormChange}
                       />
                     </div>
                     <div className="col-md-6">
-                      <label htmlFor="contactPhone" className="form-label">Phone</label>
-                      <input 
-                        type="tel" 
-                        className="form-control" 
-                        id="contactPhone" 
-                        required 
+                      <label htmlFor="contactPhone" className="form-label">
+                        Phone
+                      </label>
+                      <input
+                        type="tel"
+                        className="form-control"
+                        id="contactPhone"
+                        required
                         value={orgFormData.contactPhone}
                         onChange={handleOrgFormChange}
                       />
@@ -985,14 +1146,24 @@ function Dashboard() {
                   </div>
 
                   <div className="mt-4">
-                    <button className="dashboard-btn-submit w-100" type="submit" disabled={isCreatingOrg}>
+                    <button
+                      className="dashboard-btn-submit w-100"
+                      type="submit"
+                      disabled={isCreatingOrg}
+                    >
                       {isCreatingOrg ? (
                         <>
-                          <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                          <span
+                            className="spinner-border spinner-border-sm me-2"
+                            role="status"
+                            aria-hidden="true"
+                          ></span>
                           {isEditMode ? "Updating..." : "Creating..."}
                         </>
+                      ) : isEditMode ? (
+                        "Update Organization"
                       ) : (
-                        isEditMode ? "Update Organization" : "Create Organization"
+                        "Create Organization"
                       )}
                     </button>
                   </div>
@@ -1007,4 +1178,3 @@ function Dashboard() {
 }
 
 export default Dashboard;
-

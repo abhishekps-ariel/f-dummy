@@ -447,22 +447,25 @@ select.form-control {
 }
 
 .dashboard-logo {
-    height: 74px;
-    border-bottom: 1px solid #e8e8e8;
+    height: 5px;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 12px 20px;
+    margin-top: 20px;
 }
 
 .dashboard-logo-img {
-    max-height: 50px;
-    max-width: 100%;
+        height: 25px;
     object-fit: contain;
 }
 
+.logo-box{
+    border-bottom: 1px solid #e8e8e8;
+    padding-bottom: 20px;
+}
+
 .dashboard-sidebar {
-    width: 220px;
+    width: 240px;
     min-height: 100vh;
     border-right: 1px solid #e8e8e8;
     position: fixed;
@@ -470,6 +473,7 @@ select.form-control {
     top: 0;
     z-index: 1030;
     background: #fff;
+    padding:8px
 }
 
 .dashboard-sidebar nav {
@@ -503,8 +507,8 @@ select.form-control {
 }
 
 .dashboard-main-area {
-    margin-left: 220px;
-    width: calc(100% - 220px);
+    margin-left: 240px;
+    width: calc(100% - 240px);
     background: #fafafa;
     min-height: 100vh;
     padding: 64px 24px 24px;
@@ -513,8 +517,8 @@ select.form-control {
 .dashboard-header {
     background: #fff;
     position: fixed;
-    width: calc(100% - 220px);
-    left: 220px;
+       width: calc(100% - 240px);
+    left: 240px;
     top: 0;
     padding: 14px 24px;
     border-bottom: 1px solid #e8e8e8;
@@ -1354,3 +1358,13 @@ form.search-form input:focus {
     transform: scale(0.95);
 }
 
+.logo-text-one{
+    margin-top: 10px;
+    letter-spacing: 3px;
+    font-size: 27px;
+    margin-bottom: 0;
+}
+
+.logo-text-two{
+        font-size: 9px;
+}
