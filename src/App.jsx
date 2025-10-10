@@ -14,6 +14,7 @@ const Register = lazy(() => import('./pages/Auth/Register'));
 const ForgotPassword = lazy(() => import('./pages/Auth/ForgotPassword'));
 const PasswordEmailSent = lazy(() => import('./pages/Auth/PasswordEmailSent'));
 const ResetPassword = lazy(() => import('./pages/Auth/ResetPassword'));
+const SetNewPassword = lazy(() => import('./pages/Auth/SetNewPassword'));
 const PasswordChanged = lazy(() => import('./pages/Auth/PasswordChanged'));
 const TwoFactorAuth = lazy(() => import('./pages/Auth/TwoFactorAuth'));
 const VerificationPage = lazy(() => import('./pages/Auth/VerificationPage'));
@@ -40,6 +41,8 @@ function App() {
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/password-email-sent" element={<PasswordEmailSent />} />
               <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/set-new-password/:token" element={<SetNewPassword />} />
+              <Route path="/set-new-password" element={<SetNewPassword />} />
               <Route path="/password-changed" element={<PasswordChanged />} />
               <Route path="/two-factor-auth" element={<TwoFactorAuth />} />
               <Route path="/verification-page/:token" element={<VerificationPage />} />
