@@ -7,7 +7,7 @@ import {
   submitJoinRequest,
   getUserJoinRequests,
   createOrganization,
-  // getOrganizationById,
+  getOrganizationById,
   updateOrganization,
   deleteOrganization,
 } from "../../services/organization.service";
@@ -173,24 +173,20 @@ function Dashboard() {
           return new Date(b.requestedOn) - new Date(a.requestedOn);
         });
 
-        // Fetch organization names for each request
+        // Fetch organization details for each request using specific org ID
+        // This is much more efficient than fetching all organizations multiple times
         const requestsWithOrgNames = await Promise.all(
           sortedRequests.map(async (request) => {
             try {
-              // Get organization details to fetch the name
-              const orgResponse = await getAllOrganizations();
+              // Use getOrganizationById for efficient lookup
+              const orgResponse = await getOrganizationById(request.organizationId);
               if (orgResponse.isSuccess && orgResponse.data) {
-                const organization = orgResponse.data.find(
-                  (org) => org.id === request.organizationId
-                );
-                if (organization) {
-                  return {
-                    ...request,
-                    organizationName: organization.name,
-                    organizationType: organization.type,
-                    organizationAddress: organization.address,
-                  };
-                }
+                return {
+                  ...request,
+                  organizationName: orgResponse.data.name,
+                  organizationType: orgResponse.data.type,
+                  organizationAddress: orgResponse.data.address,
+                };
               }
               return request;
             } catch (error) {
