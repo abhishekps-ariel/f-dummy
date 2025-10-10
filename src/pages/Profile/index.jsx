@@ -36,55 +36,93 @@ function Profile() {
   return (
     <div className="dashboard-wrapper">
       {/* Sidebar - Desktop Only */}
-      <aside className="dashboard-sidebar bg-white d-none d-lg-flex flex-column p-4 dashboard-shadow">
-        {/* Logo */}
-        <div className="mb-4 dashboard-logo mx-auto text-center">
-          <span className="filir-logo-badge">FILIR</span>
+      <aside className="dashboard-sidebar d-none d-lg-flex flex-column">
+        <div className="logo-box">
+          <div>
+            <h3 className="fw-bold theme-color text-center logo-text-one">FILIR</h3>
+            <h4 className="logo-text-two theme-color text-center mb-3">
+              Foreclosure Intake & Loan Information Resource
+            </h4>
+          </div>
+          {/* Logo */}
+          <div className="dashboard-logo">
+            <img
+              src="/src/assets/logo-sample.png"
+              alt="FILIR Logo"
+              className="dashboard-logo-img"
+            />
+          </div>
         </div>
 
         {/* Navigation Links */}
-        <div className="flex-grow-1">
-          <ul className="dashboard-nav d-flex flex-column gap-2 list-unstyled">
+        <nav className="flex-grow-1">
+          <ul className="dashboard-nav list-unstyled">
             <li className="dashboard-nav-item">
               <Link to="/dashboard" className="dashboard-nav-link">
-                <i className="fa-solid fa-building fs-5 me-3"></i>
-                <span className="fw-medium">Organization</span>
+                <i className="fa-solid fa-building me-2"></i>
+                <span>Organizations</span>
               </Link>
             </li>
           </ul>
-        </div>
+        </nav>
 
         {/* Sign Out Link */}
-        <div className="mt-auto pt-4 border-top border-gray-100">
-          <a href="#" className="dashboard-nav-link" onClick={(e) => { e.preventDefault(); handleLogout(); }}>
-            <i className="fas fa-sign-out-alt me-3 fs-5"></i>
-            <span className="fw-medium">Sign Out</span>
+        <div className="dashboard-sidebar-footer">
+          <a
+            href="#"
+            className="dashboard-nav-link"
+            onClick={(e) => {
+              e.preventDefault();
+              handleLogout();
+            }}
+          >
+            <i className="fas fa-sign-out-alt me-2"></i>
+            <span>Sign Out</span>
           </a>
         </div>
       </aside>
 
       {/* Mobile Sidebar (Offcanvas) */}
-      <div className="offcanvas offcanvas-start" tabIndex="-1" id="mobileSidebar" aria-labelledby="mobileSidebarLabel">
+      <div
+        className="offcanvas offcanvas-start"
+        tabIndex="-1"
+        id="mobileSidebar"
+        aria-labelledby="mobileSidebarLabel"
+      >
         <div className="offcanvas-header">
-          <div className="dashboard-logo mx-auto">
-            <span className="filir-logo-badge">FILIR</span>
-          </div>
-          <button type="button" className="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+          <img
+            src="/src/assets/logo-sample.png"
+            alt="FILIR Logo"
+            className="dashboard-logo-img"
+          />
+          <button
+            type="button"
+            className="btn-close"
+            data-bs-dismiss="offcanvas"
+            aria-label="Close"
+          ></button>
         </div>
         <div className="offcanvas-body">
-          <ul className="dashboard-nav d-flex flex-column gap-2 list-unstyled">
+          <ul className="dashboard-nav list-unstyled">
             <li className="dashboard-nav-item">
               <Link to="/dashboard" className="dashboard-nav-link">
-                <i className="fa-solid fa-building fs-5 me-3"></i>
-                <span className="fw-medium">Organization</span>
+                <i className="fa-solid fa-building me-2"></i>
+                <span>Organizations</span>
               </Link>
             </li>
           </ul>
-          
+
           <div className="mt-auto pt-4 border-top">
-            <a href="#" className="dashboard-nav-link" onClick={(e) => { e.preventDefault(); handleLogout(); }}>
-              <i className="fas fa-sign-out-alt me-3 fs-5"></i>
-              <span className="fw-medium">Sign Out</span>
+            <a
+              href="#"
+              className="dashboard-nav-link"
+              onClick={(e) => {
+                e.preventDefault();
+                handleLogout();
+              }}
+            >
+              <i className="fas fa-sign-out-alt me-2"></i>
+              <span>Sign Out</span>
             </a>
           </div>
         </div>
