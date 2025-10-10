@@ -465,7 +465,7 @@ select.form-control {
 }
 
 .dashboard-sidebar {
-    width: 240px;
+    width: 260px;
     min-height: 100vh;
     border-right: 1px solid #e8e8e8;
     position: fixed;
@@ -507,8 +507,8 @@ select.form-control {
 }
 
 .dashboard-main-area {
-    margin-left: 240px;
-    width: calc(100% - 240px);
+    margin-left: 260px;
+    width: calc(100% - 260px);
     background: #fafafa;
     min-height: 100vh;
     padding: 64px 24px 24px;
@@ -517,8 +517,8 @@ select.form-control {
 .dashboard-header {
     background: #fff;
     position: fixed;
-       width: calc(100% - 240px);
-    left: 240px;
+       width: calc(100% - 260px);
+    left: 260px;
     top: 0;
     padding: 14px 24px;
     border-bottom: 1px solid #e8e8e8;
@@ -1366,5 +1366,5 @@ form.search-form input:focus {
 }
 
 .logo-text-two{
-        font-size: 9px;
+        font-size: 10px;
 }
