@@ -124,22 +124,9 @@ function Dashboard() {
       //   setJoinRequests(response.data || []);
       // }
       
-      // For now, we'll use mock data to test the UI
-      // This simulates the API response structure you provided
-      const mockJoinRequests = [
-        {
-          id: "46b8f845-0f85-48d8-b23c-65b59375e613",
-          organizationId: "5b257876-faf9-4730-8af6-882944deb56f",
-          organizationName: "Sample Organization",
-          userId: "fe4f57a3-23e1-4a08-8458-b52a835ae4cd",
-          status: 0, // 0 = Pending, 1 = Approved, 2 = Rejected
-          adminComment: null,
-          requestedOn: "2025-01-10T03:48:06.0969256Z",
-          respondedOn: null
-        }
-      ];
-      
-      setJoinRequests(mockJoinRequests);
+      // For now, we'll use empty array - only real join requests will be shown
+      // TODO: Replace with actual API call when available
+      setJoinRequests([]);
     } catch (error) {
       console.error("Error loading join requests:", error);
       setJoinRequests([]);
