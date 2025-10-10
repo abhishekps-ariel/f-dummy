@@ -1,6 +1,5 @@
 import axios from "axios";
-
-const BASE_URL = "http://filir.arielsoftwares.in/Organization";
+import { ORGANIZATION_ENDPOINTS } from "../constants/apiEndpoints";
 
 // Helper function to get auth headers
 const getAuthHeaders = () => {
@@ -15,7 +14,7 @@ const getAuthHeaders = () => {
 // Get all organizations
 export const getAllOrganizations = async () => {
   try {
-    const response = await axios.get(BASE_URL, {
+    const response = await axios.get(ORGANIZATION_ENDPOINTS.GET_ALL, {
       headers: getAuthHeaders(),
     });
 
@@ -44,7 +43,7 @@ export const getAllOrganizations = async () => {
 // Search organizations by query
 export const searchOrganizations = async (query) => {
   try {
-    const response = await axios.get(`${BASE_URL}/search`, {
+    const response = await axios.get(ORGANIZATION_ENDPOINTS.SEARCH, {
       params: { query },
       headers: getAuthHeaders(),
     });
@@ -75,7 +74,7 @@ export const searchOrganizations = async (query) => {
 export const submitJoinRequest = async (organizationId) => {
   try {
     const response = await axios.post(
-      "http://filir.arielsoftwares.in/api/OrganizationJoinRequest/request",
+      ORGANIZATION_ENDPOINTS.SUBMIT_JOIN_REQUEST,
       { organizationId },
       {
         headers: getAuthHeaders(),
@@ -108,7 +107,7 @@ export const submitJoinRequest = async (organizationId) => {
 export const getUserJoinRequests = async () => {
   try {
     const response = await axios.get(
-      "http://filir.arielsoftwares.in/api/OrganizationJoinRequest/my-requests",
+      ORGANIZATION_ENDPOINTS.GET_MY_REQUESTS,
       {
         headers: getAuthHeaders(),
       }
@@ -139,7 +138,7 @@ export const getUserJoinRequests = async () => {
 // Create organization (for future use)
 export const createOrganization = async (organizationData) => {
   try {
-    const response = await axios.post(BASE_URL, organizationData, {
+    const response = await axios.post(ORGANIZATION_ENDPOINTS.CREATE, organizationData, {
       headers: getAuthHeaders(),
     });
 

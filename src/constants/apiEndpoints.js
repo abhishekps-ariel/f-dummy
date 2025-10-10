@@ -17,3 +17,15 @@ export const AUTH_ENDPOINTS = {
   RESEND_VERIFICATION: `${API_URL}/api/Auth/resend-verification`,
 };
 
+// Organization endpoints
+export const ORGANIZATION_ENDPOINTS = {
+  // Organization CRUD
+  GET_ALL: `${API_URL}/Organization`,
+  SEARCH: `${API_URL}/Organization/search`,
+  CREATE: `${API_URL}/Organization`,
+  
+  // Join requests
+  SUBMIT_JOIN_REQUEST: `${API_URL}/api/OrganizationJoinRequest/request`,
+  GET_MY_REQUESTS: `${API_URL}/api/OrganizationJoinRequest/my-requests`,
+};
+
