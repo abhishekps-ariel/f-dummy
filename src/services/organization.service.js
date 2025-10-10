@@ -135,7 +135,7 @@ export const getUserJoinRequests = async () => {
   }
 };
 
-// Create organization (for future use)
+// Create organization
 export const createOrganization = async (organizationData) => {
   try {
     const response = await axios.post(ORGANIZATION_ENDPOINTS.CREATE, organizationData, {
@@ -152,6 +152,97 @@ export const createOrganization = async (organizationData) => {
       return {
         isSuccess: false,
         msg: error.response.data.message || "Failed to create organization",
+        data: null,
+      };
+    } else {
+      return {
+        isSuccess: false,
+        msg: "Network error. Please try again.",
+        data: null,
+      };
+    }
+  }
+};
+
+// Get organization by ID
+export const getOrganizationById = async (id) => {
+  try {
+    const response = await axios.get(ORGANIZATION_ENDPOINTS.GET_BY_ID(id), {
+      headers: getAuthHeaders(),
+    });
+
+    return {
+      isSuccess: response.data.success || true,
+      msg: response.data.message || "Organization fetched successfully",
+      data: response.data.data || response.data,
+    };
+  } catch (error) {
+    if (error.response && error.response.data) {
+      return {
+        isSuccess: false,
+        msg: error.response.data.message || "Failed to fetch organization",
+        data: null,
+      };
+    } else {
+      return {
+        isSuccess: false,
+        msg: "Network error. Please try again.",
+        data: null,
+      };
+    }
+  }
+};
+
+// Update organization
+export const updateOrganization = async (id, organizationData) => {
+  try {
+    const response = await axios.put(
+      ORGANIZATION_ENDPOINTS.UPDATE(id),
+      { ...organizationData, id },
+      {
+        headers: getAuthHeaders(),
+      }
+    );
+
+    return {
+      isSuccess: response.data.success || true,
+      msg: response.data.message || "Organization updated successfully",
+      data: response.data.data || response.data,
+    };
+  } catch (error) {
+    if (error.response && error.response.data) {
+      return {
+        isSuccess: false,
+        msg: error.response.data.message || "Failed to update organization",
+        data: null,
+      };
+    } else {
+      return {
+        isSuccess: false,
+        msg: "Network error. Please try again.",
+        data: null,
+      };
+    }
+  }
+};
+
+// Delete organization
+export const deleteOrganization = async (id) => {
+  try {
+    const response = await axios.delete(ORGANIZATION_ENDPOINTS.DELETE(id), {
+      headers: getAuthHeaders(),
+    });
+
+    return {
+      isSuccess: response.data.success || true,
+      msg: response.data.message || "Organization deleted successfully",
+      data: response.data.data || response.data,
+    };
+  } catch (error) {
+    if (error.response && error.response.data) {
+      return {
+        isSuccess: false,
+        msg: error.response.data.message || "Failed to delete organization",
         data: null,
       };
     } else {

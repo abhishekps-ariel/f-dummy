@@ -21,8 +21,11 @@ export const AUTH_ENDPOINTS = {
 export const ORGANIZATION_ENDPOINTS = {
   // Organization CRUD
   GET_ALL: `${API_URL}/Organization`,
+  GET_BY_ID: (id) => `${API_URL}/Organization/${id}`,
   SEARCH: `${API_URL}/Organization/search`,
   CREATE: `${API_URL}/Organization`,
+  UPDATE: (id) => `${API_URL}/Organization/${id}`,
+  DELETE: (id) => `${API_URL}/Organization/${id}`,
   
   // Join requests
   SUBMIT_JOIN_REQUEST: `${API_URL}/api/OrganizationJoinRequest/request`,

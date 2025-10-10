@@ -953,6 +953,12 @@ form.search-form input:focus {
     cursor: not-allowed;
 }
 
+.dashboard-btn-refresh.text-danger:hover:not(:disabled) {
+    background: #fee;
+    border-color: #dc3545;
+    color: #dc3545;
+}
+
 /* Join Requests Section */
 .join-requests-section {
     margin-top: 24px;
