@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useSearchParams, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
+import PasswordGuidelines from "../../components/PasswordGuidelines";
 import loginImg from "../../assets/logo-sample.png";
 import "../../styles/custom.css";
 
@@ -17,9 +18,29 @@ function SetNewPassword() {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPasswordChanged, setIsPasswordChanged] = useState(false);
+  const [showPasswordGuidelines, setShowPasswordGuidelines] = useState(false);
+  const [passwordGuidelines, setPasswordGuidelines] = useState({
+    minLength: false,
+    hasUppercase: false,
+    hasLowercase: false,
+    hasNumber: false,
+    hasSpecialChar: false
+  });
 
   // Get token from URL
   const token = pathToken || searchParams.get("token");
+
+  // Check password guidelines
+  const checkPasswordGuidelines = (password) => {
+    const guidelines = {
+      minLength: password.length >= 8,
+      hasUppercase: /[A-Z]/.test(password),
+      hasLowercase: /[a-z]/.test(password),
+      hasNumber: /\d/.test(password),
+      hasSpecialChar: /[@#$%^&*]/.test(password)
+    };
+    setPasswordGuidelines(guidelines);
+  };
 
   // Form validation
   const validateForm = () => {
@@ -28,8 +49,18 @@ function SetNewPassword() {
     // New Password validation
     if (!formData.newPassword.trim()) {
       newErrors.newPassword = "New password is required";
-    } else if (formData.newPassword.length < 6) {
-      newErrors.newPassword = "Password must be at least 6 characters long";
+    } else {
+      if (formData.newPassword.length < 8) {
+        newErrors.newPassword = "Password must be at least 8 characters long";
+      } else if (!/[A-Z]/.test(formData.newPassword)) {
+        newErrors.newPassword = "Password must contain at least one uppercase letter";
+      } else if (!/[a-z]/.test(formData.newPassword)) {
+        newErrors.newPassword = "Password must contain at least one lowercase letter";
+      } else if (!/\d/.test(formData.newPassword)) {
+        newErrors.newPassword = "Password must contain at least one number";
+      } else if (!/[@#$%^&*]/.test(formData.newPassword)) {
+        newErrors.newPassword = "Password must contain at least one special character (@#$%^&*)";
+      }
     }
 
     // Confirm Password validation
@@ -50,6 +81,14 @@ function SetNewPassword() {
     // Clear error when user typing
     if (errors[name]) {
       setErrors({ ...errors, [name]: "" });
+    }
+
+    // Check password guidelines when password changes
+    if (name === 'newPassword') {
+      if (value.length > 0) {
+        setShowPasswordGuidelines(true);
+      }
+      checkPasswordGuidelines(value);
     }
   };
 
@@ -183,6 +222,8 @@ function SetNewPassword() {
                           placeholder="Enter new password"
                           value={formData.newPassword}
                           onChange={handleChange}
+                          onFocus={() => setShowPasswordGuidelines(true)}
+                          onBlur={() => setShowPasswordGuidelines(false)}
                           required
                         />
                         <span 
@@ -193,6 +234,11 @@ function SetNewPassword() {
                         >
                           <i className={`fa-solid ${showNewPassword ? 'fa-eye' : 'fa-eye-slash'}`}></i>
                         </span>
+                        {/* Password Guidelines Tooltip */}
+                        <PasswordGuidelines 
+                          showGuidelines={showPasswordGuidelines}
+                          passwordGuidelines={passwordGuidelines}
+                        />
                       </div>
                       {errors.newPassword && (
                         <div className="invalid-feedback d-block">
