@@ -29,6 +29,10 @@ function Dashboard() {
   const [selectedOrganization, setSelectedOrganization] = useState(null);
   const [isSubmittingJoinRequest, setIsSubmittingJoinRequest] = useState(false);
   
+  // Join requests state
+  const [joinRequests, setJoinRequests] = useState([]);
+  const [isLoadingJoinRequests, setIsLoadingJoinRequests] = useState(false);
+  
   const searchRef = useRef(null);
   const navigate = useNavigate();
   
@@ -44,6 +48,8 @@ function Dashboard() {
     }
 
     setUser(userData);
+    // Load user's join requests when component mounts
+    loadJoinRequests();
   }, [navigate]);
 
   // Effect to handle search when debounced query changes
@@ -106,6 +112,65 @@ function Dashboard() {
   const handleLogout = () => {
     clearAuthData();
     navigate("/login");
+  };
+
+  // Load user's join requests
+  const loadJoinRequests = async () => {
+    setIsLoadingJoinRequests(true);
+    try {
+      // TODO: Replace with actual API call when available
+      // const response = await getUserJoinRequests();
+      // if (response.isSuccess) {
+      //   setJoinRequests(response.data || []);
+      // }
+      
+      // For now, we'll use mock data to test the UI
+      // This simulates the API response structure you provided
+      const mockJoinRequests = [
+        {
+          id: "46b8f845-0f85-48d8-b23c-65b59375e613",
+          organizationId: "5b257876-faf9-4730-8af6-882944deb56f",
+          organizationName: "Sample Organization",
+          userId: "fe4f57a3-23e1-4a08-8458-b52a835ae4cd",
+          status: 0, // 0 = Pending, 1 = Approved, 2 = Rejected
+          adminComment: null,
+          requestedOn: "2025-01-10T03:48:06.0969256Z",
+          respondedOn: null
+        }
+      ];
+      
+      setJoinRequests(mockJoinRequests);
+    } catch (error) {
+      console.error("Error loading join requests:", error);
+      setJoinRequests([]);
+    } finally {
+      setIsLoadingJoinRequests(false);
+    }
+  };
+
+  // Get status text and styling
+  const getStatusInfo = (status) => {
+    switch (status) {
+      case 0:
+        return { text: "Pending", class: "status-pending", icon: "fa-clock" };
+      case 1:
+        return { text: "Approved", class: "status-approved", icon: "fa-check-circle" };
+      case 2:
+        return { text: "Rejected", class: "status-rejected", icon: "fa-times-circle" };
+      default:
+        return { text: "Unknown", class: "status-unknown", icon: "fa-question-circle" };
+    }
+  };
+
+  // Format date
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   const handleOrgFormChange = (e) => {
@@ -201,7 +266,18 @@ function Dashboard() {
       if (response.isSuccess) {
         toast.success(response.msg || "Join request submitted successfully!");
         console.log("Join request response:", response.data);
-        // Optionally clear the selection after successful submission
+        
+        // Add the new join request to the list with the selected organization's name
+        const newJoinRequest = {
+          ...response.data,
+          organizationName: selectedOrganization.name, // Add the organization name
+          organizationType: selectedOrganization.type,
+          organizationAddress: selectedOrganization.address
+        };
+        
+        setJoinRequests(prev => [newJoinRequest, ...prev]);
+        
+        // Clear the selection after successful submission
         setSelectedOrganization(null);
       } else {
         toast.error(response.msg || "Failed to submit join request");
@@ -227,29 +303,29 @@ function Dashboard() {
   return (
     <div className="dashboard-wrapper">
       {/* Sidebar - Desktop Only */}
-      <aside className="dashboard-sidebar bg-white d-none d-lg-flex flex-column p-4 dashboard-shadow">
+      <aside className="dashboard-sidebar d-none d-lg-flex flex-column">
         {/* Logo */}
-        <div className="mb-4 dashboard-logo mx-auto text-center">
-          <span className="filir-logo-badge">FILIR</span>
+        <div className="dashboard-logo">
+          <img src="/src/assets/logo-sample.png" alt="FILIR Logo" className="dashboard-logo-img" />
         </div>
 
         {/* Navigation Links */}
-        <div className="flex-grow-1">
-          <ul className="dashboard-nav d-flex flex-column gap-2 list-unstyled">
+        <nav className="flex-grow-1">
+          <ul className="dashboard-nav list-unstyled">
             <li className="dashboard-nav-item">
               <a href="#" className="dashboard-nav-link dashboard-active-link">
-                <i className="fa-solid fa-building fs-5 me-3"></i>
-                <span className="fw-medium">Organization</span>
+                <i className="fa-solid fa-building me-2"></i>
+                <span>Organizations</span>
               </a>
             </li>
           </ul>
-        </div>
+        </nav>
 
         {/* Sign Out Link */}
-        <div className="mt-auto pt-4 border-top border-gray-100">
+        <div className="dashboard-sidebar-footer">
           <a href="#" className="dashboard-nav-link" onClick={(e) => { e.preventDefault(); handleLogout(); }}>
-            <i className="fas fa-sign-out-alt me-3 fs-5"></i>
-            <span className="fw-medium">Sign Out</span>
+            <i className="fas fa-sign-out-alt me-2"></i>
+            <span>Sign Out</span>
           </a>
         </div>
       </aside>
@@ -257,25 +333,23 @@ function Dashboard() {
       {/* Mobile Sidebar (Offcanvas) */}
       <div className="offcanvas offcanvas-start" tabIndex="-1" id="mobileSidebar" aria-labelledby="mobileSidebarLabel">
         <div className="offcanvas-header">
-          <div className="dashboard-logo mx-auto">
-            <span className="filir-logo-badge">FILIR</span>
-          </div>
+          <img src="/src/assets/logo-sample.png" alt="FILIR Logo" className="dashboard-logo-img" />
           <button type="button" className="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
         <div className="offcanvas-body">
-          <ul className="dashboard-nav d-flex flex-column gap-2 list-unstyled">
+          <ul className="dashboard-nav list-unstyled">
             <li className="dashboard-nav-item">
               <a href="#" className="dashboard-nav-link dashboard-active-link">
-                <i className="fa-solid fa-building fs-5 me-3"></i>
-                <span className="fw-medium">Organization</span>
+                <i className="fa-solid fa-building me-2"></i>
+                <span>Organizations</span>
               </a>
             </li>
           </ul>
           
           <div className="mt-auto pt-4 border-top">
             <a href="#" className="dashboard-nav-link" onClick={(e) => { e.preventDefault(); handleLogout(); }}>
-              <i className="fas fa-sign-out-alt me-3 fs-5"></i>
-              <span className="fw-medium">Sign Out</span>
+              <i className="fas fa-sign-out-alt me-2"></i>
+              <span>Sign Out</span>
             </a>
           </div>
         </div>
@@ -284,126 +358,92 @@ function Dashboard() {
       {/* Main Content Area */}
       <main className="dashboard-main-area container-fluid">
         {/* Header / Navbar */}
-        <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-between dashboard-header">
-          <div className="d-flex align-items-center mb-3 mb-lg-0">
+        <div className="d-flex align-items-center justify-content-between dashboard-header">
+          <div className="d-flex align-items-center">
             {/* Mobile Menu Button */}
             <button
-              className="btn p-2 d-lg-none me-3 shadow-sm bg-white rounded-circle"
+              className="btn p-2 d-lg-none me-3"
               type="button"
               data-bs-toggle="offcanvas"
               data-bs-target="#mobileSidebar"
               aria-controls="mobileSidebar"
             >
-              <i className="fas fa-bars text-secondary"></i>
+              <i className="fas fa-bars"></i>
             </button>
-            <h1 className="h3 fw-bold text-dark mb-0">Dashboard</h1>
+            <h1 className="h4 mb-0">Dashboard</h1>
           </div>
 
-          <div className="d-flex align-items-center w-100 w-md-auto justify-content-md-end">
-            <div className="d-flex gap-3 align-items-center">
-              {/* Language Dropdown (Hidden on small screens) */}
-              <div className="dropdown d-none d-lg-block me-3">
-                <button
-                  className="btn btn-sm dropdown-toggle text-secondary fw-medium border-0"
-                  type="button"
-                  data-bs-toggle="dropdown"
-                  aria-expanded="false"
-                >
-                  <i className="fa-solid fa-globe me-1"></i>
-                  <span>Eng (US)</span>
-                </button>
-                <ul className="dropdown-menu dropdown-menu-end theme-dropdown">
-                  <li>
-                    <a className="dropdown-item" href="#">
-                      English (US)
-                    </a>
-                  </li>
-                  <li>
-                    <a className="dropdown-item" href="#">
-                      Español (ES)
-                    </a>
-                  </li>
-                  <li>
-                    <a className="dropdown-item" href="#">
-                      Français (FR)
-                    </a>
-                  </li>
-                </ul>
-              </div>
+          <div className="d-flex align-items-center gap-3">
+            {/* Notification Bell */}
+            <button
+              type="button"
+              className="dashboard-btn-icon dashboard-notification-btn"
+            >
+              <i className="fa-solid fa-bell"></i>
+            </button>
 
-              {/* Notification Bell */}
+            {/* Profile Dropdown */}
+            <div className="dropdown">
               <button
+                className="btn p-0 d-flex align-items-center border-0"
                 type="button"
-                className="btn bg-none border-0 shadow-none dashboard-notification-btn dashboard-new-alert"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
               >
-                <i className="fa-solid fa-bell"></i>
-                <span className="dashboard-notif-circle"></span>
+                <img
+                  className="rounded-circle object-fit-cover me-3"
+                  src="https://static.vecteezy.com/system/resources/thumbnails/003/337/584/small/default-avatar-photo-placeholder-profile-icon-vector.jpg"
+                  alt="User Avatar"
+                  style={{ width: "36px", height: "36px" }}
+                />
+                <div className="text-start d-none d-lg-block">
+                  <p className="font-base mb-0 fw-medium">{user.firstName} {user.lastName}</p>
+                  <p className="font-sm mb-0 text-gray-dark">{user.role || 'User'}</p>
+                </div>
+                <i className="fas fa-chevron-down small ms-2 text-secondary d-none d-lg-block"></i>
               </button>
 
-              {/* Profile Dropdown */}
-              <div className="dropdown">
-                <button
-                  className="btn p-0 d-flex align-items-center border-0 me-2"
-                  type="button"
-                  data-bs-toggle="dropdown"
-                  aria-expanded="false"
-                >
-                  <img
-                    className="rounded-circle object-fit-cover me-3"
-                    src="https://static.vecteezy.com/system/resources/thumbnails/003/337/584/small/default-avatar-photo-placeholder-profile-icon-vector.jpg"
-                    alt="User Avatar"
-                    style={{ width: "40px", height: "40px" }}
-                  />
-                  <div className="text-start d-none d-lg-block">
-                    <p className="font-base mb-0 fw-medium">{user.firstName} {user.lastName}</p>
-                    <p className="font-sm mb-0 text-gray-dark">{user.role || 'User'}</p>
-                  </div>
-                  <i className="fas fa-chevron-down small ms-2 text-secondary d-none d-lg-block"></i>
-                </button>
-
-                {/* Dropdown Menu */}
-                <ul className="dropdown-menu dropdown-menu-end theme-dropdown">
-                  <li>
-                    <Link className="dropdown-item d-flex align-items-center" to="/profile">
-                      <i className="fas fa-user me-2"></i> Profile
-                    </Link>
-                  </li>
-                  <li>
-                    <a className="dropdown-item d-flex align-items-center" href="#">
-                      <i className="fas fa-cog me-2"></i> Settings
-                    </a>
-                  </li>
-                  <li>
-                    <hr className="dropdown-divider" />
-                  </li>
-                  <li>
-                    <a className="dropdown-item d-flex align-items-center" href="#" onClick={(e) => { e.preventDefault(); handleLogout(); }}>
-                      <i className="fas fa-sign-out-alt me-2"></i> Sign out
-                    </a>
-                  </li>
-                </ul>
-              </div>
+              {/* Dropdown Menu */}
+              <ul className="dropdown-menu dropdown-menu-end">
+                <li>
+                  <Link className="dropdown-item" to="/profile">
+                    <i className="fas fa-user me-2"></i> Profile
+                  </Link>
+                </li>
+                <li>
+                  <a className="dropdown-item" href="#">
+                    <i className="fas fa-cog me-2"></i> Settings
+                  </a>
+                </li>
+                <li>
+                  <hr className="dropdown-divider" />
+                </li>
+                <li>
+                  <a className="dropdown-item" href="#" onClick={(e) => { e.preventDefault(); handleLogout(); }}>
+                    <i className="fas fa-sign-out-alt me-2"></i> Sign out
+                  </a>
+                </li>
+              </ul>
             </div>
           </div>
         </div>
 
         {/* Main Dashboard Content */}
         <div className="dashboard-content-section">
-          <div className="shadow-custom bg-white org-search-box">
-            <div className="d-flex flex-wrap align-items-center mb-4 gap-2 gap-md-4 justify-content-between">
-              <h2 className="font-xl-med mb-0">Organizations Association</h2>
+          <div className="org-search-box">
+            <div className="d-flex align-items-center justify-content-between mb-3">
+              <h2 className="h5 mb-0">Organizations</h2>
               <button 
-                className="btn create-org-btn" 
+                className="dashboard-btn-create" 
                 data-bs-toggle="modal" 
                 data-bs-target="#createorganizationModal"
               >
-                <i className="fa-solid fa-plus me-2"></i> Create New Organization
+                <i className="fa-solid fa-plus me-1"></i> Create an Organization
               </button>
             </div>
 
             <div className="search-form-wrapper" ref={searchRef}>
-              <form className="search-form form-group" role="search" onSubmit={handleJoinRequest}>
-                <label>Search with organization name or EIN.</label>
+              <form className="search-form" role="search" onSubmit={handleJoinRequest}>
                 
                 {/* Selected Organization Display */}
                 {selectedOrganization ? (
@@ -438,7 +478,7 @@ function Dashboard() {
                     <input 
                       className="form-control" 
                       type="search" 
-                      placeholder="Search for organizations..." 
+                      placeholder="Search by organization name or EIN" 
                       aria-label="Search"
                       value={searchQuery}
                       onChange={handleSearchInputChange}
@@ -496,9 +536,9 @@ function Dashboard() {
                   </div>
                 )}
                 
-                <div className="mt-3">
+                <div>
                   <button 
-                    className="btn custom-btn theme-btn px-4" 
+                    className="dashboard-btn-submit" 
                     type="submit"
                     disabled={!selectedOrganization || isSubmittingJoinRequest}
                   >
@@ -508,10 +548,7 @@ function Dashboard() {
                         Submitting...
                       </>
                     ) : (
-                      <>
-                        <i className="fa-solid fa-paper-plane me-2"></i>
-                        Submit a Join Request
-                      </>
+                      "Submit Join Request"
                     )}
                   </button>
                 </div>
@@ -520,151 +557,208 @@ function Dashboard() {
           </div>
         </div>
 
+        {/* My Join Requests Section */}
+        <div className="join-requests-section">
+          <div className="org-search-box">
+            <div className="d-flex align-items-center justify-content-between mb-3">
+              <h2 className="h5 mb-0">My Join Requests</h2>
+              <button 
+                className="dashboard-btn-refresh" 
+                onClick={loadJoinRequests}
+                disabled={isLoadingJoinRequests}
+              >
+                <i className={`fa-solid fa-refresh ${isLoadingJoinRequests ? 'fa-spin' : ''}`}></i>
+              </button>
+            </div>
+
+            {isLoadingJoinRequests ? (
+              <div className="text-center py-4">
+                <div className="spinner-border text-primary" role="status">
+                  <span className="visually-hidden">Loading...</span>
+                </div>
+                <p className="mt-2 text-muted">Loading join requests...</p>
+              </div>
+            ) : joinRequests.length > 0 ? (
+              <div className="join-requests-list">
+                {joinRequests.map((request) => {
+                  const statusInfo = getStatusInfo(request.status);
+                  return (
+                    <div key={request.id} className="join-request-item">
+                      <div className="join-request-header">
+                        <div className="join-request-org">
+                          <i className="fa-solid fa-building me-2"></i>
+                          <span className="org-name">{request.organizationName || 'Organization'}</span>
+                        </div>
+                        <div className={`join-request-status ${statusInfo.class}`}>
+                          <i className={`fa-solid ${statusInfo.icon} me-1`}></i>
+                          {statusInfo.text}
+                        </div>
+                      </div>
+                      <div className="join-request-details">
+                        {request.organizationType && (
+                          <div className="join-request-org-details">
+                            <i className="fa-solid fa-tag me-1"></i>
+                            Type: {request.organizationType}
+                          </div>
+                        )}
+                        {request.organizationAddress && (
+                          <div className="join-request-org-details">
+                            <i className="fa-solid fa-location-dot me-1"></i>
+                            {request.organizationAddress}
+                          </div>
+                        )}
+                        <div className="join-request-date">
+                          <i className="fa-solid fa-calendar me-1"></i>
+                          Requested: {formatDate(request.requestedOn)}
+                        </div>
+                        {request.respondedOn && (
+                          <div className="join-request-response-date">
+                            <i className="fa-solid fa-check me-1"></i>
+                            Responded: {formatDate(request.respondedOn)}
+                          </div>
+                        )}
+                        {request.adminComment && (
+                          <div className="join-request-comment">
+                            <i className="fa-solid fa-comment me-1"></i>
+                            <strong>Admin Comment:</strong> {request.adminComment}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-4">
+                <i className="fa-solid fa-inbox text-muted mb-3" style={{ fontSize: '2rem' }}></i>
+                <p className="text-muted mb-0">No join requests yet</p>
+                <small className="text-muted">Submit a join request above to see it here</small>
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Create Organization Modal */}
         <div className="modal fade" id="createorganizationModal" tabIndex="-1" aria-labelledby="organizationModalLabel" aria-hidden="true">
           <div className="modal-dialog modal-lg modal-dialog-centered">
             <div className="modal-content">
-              <div className="modal-header text-white theme-bg">
-                <h5 className="modal-title" id="organizationModalLabel">Organization Registration</h5>
-                <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+              <div className="modal-header">
+                <h5 className="modal-title" id="organizationModalLabel">Create Organization</h5>
+                <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
               </div>
               <div className="modal-body p-4">
                 <form id="organizationForm" onSubmit={handleOrgSubmit}>
-                  <p className="font-xs mb-3 text-danger">All fields are required unless otherwise noted.</p>
-                  <div className="row">
+                  <div className="row g-3">
                     <div className="col-12">
-                      <div className="form-group mb-3">
-                        <label htmlFor="orgName" className="form-label">Organization Name <span className="text-danger">*</span></label>
-                        <input 
-                          type="text" 
-                          className="form-control" 
-                          id="orgName" 
-                          required 
-                          placeholder="e.g., Acme Corporation"
-                          value={orgFormData.orgName}
-                          onChange={handleOrgFormChange}
-                        />
-                      </div>
+                      <label htmlFor="orgName" className="form-label">Organization Name</label>
+                      <input 
+                        type="text" 
+                        className="form-control" 
+                        id="orgName" 
+                        required 
+                        value={orgFormData.orgName}
+                        onChange={handleOrgFormChange}
+                      />
                     </div>
                     <div className="col-12">
-                      <div className="form-group mb-3">
-                        <label htmlFor="orgType" className="form-label">Type <span className="text-danger">*</span></label>
-                        <select 
-                          className="form-select" 
-                          id="orgType" 
-                          required
-                          value={orgFormData.orgType}
-                          onChange={handleOrgFormChange}
-                        >
-                          <option value="">Select Organization Type</option>
-                          <option value="corporate">Corporate</option>
-                          <option value="nonprofit">Non-Profit</option>
-                          <option value="government">Government</option>
-                          <option value="educational">Educational</option>
-                          <option value="other">Other</option>
-                        </select>
-                      </div>
+                      <label htmlFor="orgType" className="form-label">Type</label>
+                      <select 
+                        className="form-select" 
+                        id="orgType" 
+                        required
+                        value={orgFormData.orgType}
+                        onChange={handleOrgFormChange}
+                      >
+                        <option value="">Select type</option>
+                        <option value="corporate">Corporate</option>
+                        <option value="nonprofit">Non-Profit</option>
+                        <option value="government">Government</option>
+                        <option value="educational">Educational</option>
+                        <option value="other">Other</option>
+                      </select>
                     </div>
                     <div className="col-12">
-                      <div className="form-group mb-3">
-                        <label htmlFor="addressStreet" className="form-label">Street Address <span className="text-danger">*</span></label>
-                        <input 
-                          type="text" 
-                          className="form-control" 
-                          id="addressStreet" 
-                          required 
-                          placeholder="e.g., 123 Main St"
-                          value={orgFormData.addressStreet}
-                          onChange={handleOrgFormChange}
-                        />
-                      </div>
+                      <label htmlFor="addressStreet" className="form-label">Street Address</label>
+                      <input 
+                        type="text" 
+                        className="form-control" 
+                        id="addressStreet" 
+                        required 
+                        value={orgFormData.addressStreet}
+                        onChange={handleOrgFormChange}
+                      />
                     </div>
                     <div className="col-md-6">
-                      <div className="form-group">
-                        <label htmlFor="addressCity" className="form-label">City <span className="text-danger">*</span></label>
-                        <input 
-                          type="text" 
-                          className="form-control" 
-                          id="addressCity" 
-                          required
-                          value={orgFormData.addressCity}
-                          onChange={handleOrgFormChange}
-                        />
-                      </div>
+                      <label htmlFor="addressCity" className="form-label">City</label>
+                      <input 
+                        type="text" 
+                        className="form-control" 
+                        id="addressCity" 
+                        required
+                        value={orgFormData.addressCity}
+                        onChange={handleOrgFormChange}
+                      />
                     </div>
                     <div className="col-md-3">
-                      <div className="form-group mb-4">
-                        <label htmlFor="addressState" className="form-label">State/Province <span className="text-danger">*</span></label>
-                        <input 
-                          type="text" 
-                          className="form-control" 
-                          id="addressState" 
-                          required
-                          value={orgFormData.addressState}
-                          onChange={handleOrgFormChange}
-                        />
-                      </div>
+                      <label htmlFor="addressState" className="form-label">State</label>
+                      <input 
+                        type="text" 
+                        className="form-control" 
+                        id="addressState" 
+                        required
+                        value={orgFormData.addressState}
+                        onChange={handleOrgFormChange}
+                      />
                     </div>
                     <div className="col-md-3">
-                      <div className="form-group mb-4">
-                        <label htmlFor="addressZip" className="form-label">Zip/Postal Code <span className="text-danger">*</span></label>
-                        <input 
-                          type="text" 
-                          className="form-control" 
-                          id="addressZip" 
-                          required
-                          value={orgFormData.addressZip}
-                          onChange={handleOrgFormChange}
-                        />
-                      </div>
+                      <label htmlFor="addressZip" className="form-label">Zip Code</label>
+                      <input 
+                        type="text" 
+                        className="form-control" 
+                        id="addressZip" 
+                        required
+                        value={orgFormData.addressZip}
+                        onChange={handleOrgFormChange}
+                      />
                     </div>
                     <div className="col-12">
-                      <div className="form-group mb-4">
-                        <label htmlFor="contactName" className="form-label">Primary Contact Name <span className="text-danger">*</span></label>
-                        <input 
-                          type="text" 
-                          className="form-control" 
-                          id="contactName" 
-                          required 
-                          placeholder="Full Name of Primary Contact"
-                          value={orgFormData.contactName}
-                          onChange={handleOrgFormChange}
-                        />
-                      </div>
+                      <label htmlFor="contactName" className="form-label">Contact Name</label>
+                      <input 
+                        type="text" 
+                        className="form-control" 
+                        id="contactName" 
+                        required 
+                        value={orgFormData.contactName}
+                        onChange={handleOrgFormChange}
+                      />
                     </div>
-                    <div className="col-md-6 mb-4">
-                      <div className="form-group mb-3">
-                        <label htmlFor="contactEmail" className="form-label">Email Address <span className="text-danger">*</span></label>
-                        <input 
-                          type="email" 
-                          className="form-control" 
-                          id="contactEmail" 
-                          required 
-                          placeholder="contact@example.com"
-                          value={orgFormData.contactEmail}
-                          onChange={handleOrgFormChange}
-                        />
-                      </div>
+                    <div className="col-md-6">
+                      <label htmlFor="contactEmail" className="form-label">Email</label>
+                      <input 
+                        type="email" 
+                        className="form-control" 
+                        id="contactEmail" 
+                        required 
+                        value={orgFormData.contactEmail}
+                        onChange={handleOrgFormChange}
+                      />
                     </div>
-                    <div className="col-md-6 mb-4">
-                      <div className="form-group mb-3">
-                        <label htmlFor="contactPhone" className="form-label">Phone Number <span className="text-danger">*</span></label>
-                        <input 
-                          type="tel" 
-                          className="form-control" 
-                          id="contactPhone" 
-                          required 
-                          placeholder="(123) 456-7890"
-                          value={orgFormData.contactPhone}
-                          onChange={handleOrgFormChange}
-                        />
-                      </div>
+                    <div className="col-md-6">
+                      <label htmlFor="contactPhone" className="form-label">Phone</label>
+                      <input 
+                        type="tel" 
+                        className="form-control" 
+                        id="contactPhone" 
+                        required 
+                        value={orgFormData.contactPhone}
+                        onChange={handleOrgFormChange}
+                      />
                     </div>
                   </div>
 
-                  <div className="d-grid gap-2 pt-3">
-                    <button className="btn custom-btn theme-btn mt-3 px-4 fw-medium" type="submit">
-                      Save and Submit join request
+                  <div className="mt-4">
+                    <button className="dashboard-btn-submit w-100" type="submit">
+                      Submit Request
                     </button>
                   </div>
                 </form>
