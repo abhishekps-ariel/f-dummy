@@ -23,7 +23,6 @@ export const ORGANIZATION_ENDPOINTS = {
   GET_ALL: `${API_URL}/Organization`,
   GET_BY_ID: (id) => `${API_URL}/Organization/${id}`,
   SEARCH: `${API_URL}/Organization/search`,
-  // New endpoint: Creates organization AND automatically sends join request for the user
   CREATE: `${API_URL}/Organization/create-and-request-to-join`,
   UPDATE: (id) => `${API_URL}/Organization/${id}`,
   DELETE: (id) => `${API_URL}/Organization/${id}`,

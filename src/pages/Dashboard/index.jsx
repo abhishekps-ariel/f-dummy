@@ -8,8 +8,8 @@ import {
   getUserJoinRequests,
   createOrganization,
   getOrganizationById,
-  updateOrganization,
-  deleteOrganization,
+  // updateOrganization,
+  // deleteOrganization,
 } from "../../services/organization.service";
 import { useDebounce } from "../../hooks/useDebounce";
 import { toast } from "react-toastify";
@@ -43,10 +43,7 @@ function Dashboard() {
   const [isLoadingJoinRequests, setIsLoadingJoinRequests] = useState(false);
   const [hasLoadedJoinRequests, setHasLoadedJoinRequests] = useState(false);
 
-  // My Organization state
-  const [myOrganization, setMyOrganization] = useState(null);
-  const [isLoadingMyOrg, setIsLoadingMyOrg] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
+  // Create Organization state
   const [isCreatingOrg, setIsCreatingOrg] = useState(false);
 
   const searchRef = useRef(null);
@@ -125,12 +122,11 @@ function Dashboard() {
     };
   }, []);
 
-  // Reset edit mode when modal is closed
+  // Reset form when modal is closed
   useEffect(() => {
     const modalElement = document.getElementById("createorganizationModal");
 
     const handleModalHidden = () => {
-      setIsEditMode(false);
       setOrgFormData({
         orgName: "",
         orgType: "",
@@ -257,80 +253,6 @@ function Dashboard() {
     setOrgFormData({ ...orgFormData, [id]: value });
   };
 
-  const handleEditOrganization = () => {
-    if (!myOrganization) return;
-
-    // Parse the address back into components (simple split)
-    const addressParts = myOrganization.address
-      .split(",")
-      .map((part) => part.trim());
-    const street = addressParts[0] || "";
-    const city = addressParts[1] || "";
-    const stateZip = addressParts[2] || "";
-    const [state, ...zipParts] = stateZip.split(" ");
-    const zip = zipParts.join(" ");
-
-    // Parse primary contact
-    const contactMatch = myOrganization.primaryContact.match(
-      /^(.*?)\s*\((.*?),\s*(.*?)\)$/
-    );
-    const contactName = contactMatch
-      ? contactMatch[1]
-      : myOrganization.primaryContact;
-    const contactEmail = contactMatch ? contactMatch[2] : "";
-    const contactPhone = contactMatch ? contactMatch[3] : "";
-
-    // Populate form with existing data
-    setOrgFormData({
-      orgName: myOrganization.name,
-      orgType: myOrganization.type,
-      addressStreet: street,
-      addressCity: city,
-      addressState: state || "",
-      addressZip: zip || "",
-      contactName: contactName,
-      contactEmail: contactEmail,
-      contactPhone: contactPhone,
-    });
-
-    setIsEditMode(true);
-
-    // Open modal
-    const modalElement = document.getElementById("createorganizationModal");
-    const modal = new window.bootstrap.Modal(modalElement);
-    modal.show();
-  };
-
-  const handleDeleteOrganization = async () => {
-    if (!myOrganization) return;
-
-    // Confirm deletion
-    if (
-      !window.confirm(
-        `Are you sure you want to delete "${myOrganization.name}"? This action cannot be undone.`
-      )
-    ) {
-      return;
-    }
-
-    setIsLoadingMyOrg(true);
-    try {
-      const response = await deleteOrganization(myOrganization.id);
-
-      if (response.isSuccess) {
-        toast.success(response.msg || "Organization deleted successfully");
-        setMyOrganization(null);
-      } else {
-        toast.error(response.msg || "Failed to delete organization");
-      }
-    } catch (error) {
-      console.error("Error deleting organization:", error);
-      toast.error("An error occurred while deleting the organization.");
-    } finally {
-      setIsLoadingMyOrg(false);
-    }
-  };
-
   const handleOrgSubmit = async (e) => {
     e.preventDefault();
     setIsCreatingOrg(true);
@@ -344,35 +266,15 @@ function Dashboard() {
         primaryContact: `${orgFormData.contactName} (${orgFormData.contactEmail}, ${orgFormData.contactPhone})`,
       };
 
-      let response;
-      if (isEditMode && myOrganization) {
-        // Update existing organization
-        response = await updateOrganization(
-          myOrganization.id,
-          organizationData
-        );
-      } else {
-        // Create new organization
-        response = await createOrganization(organizationData);
-      }
+      // Create new organization
+      const response = await createOrganization(organizationData);
 
       if (response.isSuccess) {
-        toast.success(
-          response.msg ||
-            (isEditMode
-              ? "Organization updated successfully"
-              : "Organization created successfully")
-        );
+        toast.success(response.msg || "Organization created successfully");
 
-        // Update myOrganization state
-        setMyOrganization(response.data);
-        setIsEditMode(false);
-
-        // If creating a new organization, the API automatically creates a join request
+        // The API automatically creates a join request
         // So we need to reload join requests to show the new request
-        if (!isEditMode) {
-          loadJoinRequests();
-        }
+        loadJoinRequests();
 
         // Close the modal
         const modalElement = document.getElementById("createorganizationModal");
@@ -394,12 +296,7 @@ function Dashboard() {
           contactPhone: "",
         });
       } else {
-        toast.error(
-          response.msg ||
-            (isEditMode
-              ? "Failed to update organization"
-              : "Failed to create organization")
-        );
+        toast.error(response.msg || "Failed to create organization");
       }
     } catch (error) {
       console.error("Error submitting organization:", error);
@@ -972,75 +869,6 @@ function Dashboard() {
               )}
             </div>
           )}
-
-          {/* My Organization Section */}
-          {myOrganization && (
-            <div className="org-search-box mt-4">
-              <div className="d-flex align-items-center justify-content-between mb-3">
-                <h2 className="h5 mb-0">My Organization</h2>
-                <div className="d-flex gap-2">
-                  <button
-                    className="dashboard-btn-refresh"
-                    onClick={handleEditOrganization}
-                    disabled={isLoadingMyOrg}
-                    title="Edit Organization"
-                  >
-                    <i className="fa-solid fa-edit"></i>
-                  </button>
-                  <button
-                    className="dashboard-btn-refresh text-danger"
-                    onClick={handleDeleteOrganization}
-                    disabled={isLoadingMyOrg}
-                    title="Delete Organization"
-                  >
-                    <i className="fa-solid fa-trash"></i>
-                  </button>
-                </div>
-              </div>
-
-              {isLoadingMyOrg ? (
-                <div className="text-center py-4">
-                  <div className="spinner-border text-primary" role="status">
-                    <span className="visually-hidden">Loading...</span>
-                  </div>
-                  <p className="mt-2 text-muted">Loading organization...</p>
-                </div>
-              ) : (
-                <div className="join-request-item">
-                  <div className="join-request-header">
-                    <div className="join-request-org">
-                      <i className="fa-solid fa-building me-2"></i>
-                      <span className="org-name">{myOrganization.name}</span>
-                    </div>
-                    <div className="join-request-status status-approved">
-                      <i className="fa-solid fa-check-circle me-1"></i>
-                      Active
-                    </div>
-                  </div>
-                  <div className="join-request-details">
-                    {myOrganization.type && (
-                      <div className="join-request-org-details">
-                        <i className="fa-solid fa-tag me-1"></i>
-                        Type: {myOrganization.type}
-                      </div>
-                    )}
-                    {myOrganization.address && (
-                      <div className="join-request-org-details">
-                        <i className="fa-solid fa-location-dot me-1"></i>
-                        {myOrganization.address}
-                      </div>
-                    )}
-                    {myOrganization.primaryContact && (
-                      <div className="join-request-org-details">
-                        <i className="fa-solid fa-user me-1"></i>
-                        Contact: {myOrganization.primaryContact}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
         </div>
 
         {/* Create Organization Modal */}
@@ -1055,7 +883,7 @@ function Dashboard() {
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title" id="organizationModalLabel">
-                  {isEditMode ? "Edit Organization" : "Create Organization"}
+                  Create Organization
                 </h5>
                 <button
                   type="button"
@@ -1205,10 +1033,8 @@ function Dashboard() {
                             role="status"
                             aria-hidden="true"
                           ></span>
-                          {isEditMode ? "Updating..." : "Creating..."}
+                          Creating...
                         </>
-                      ) : isEditMode ? (
-                        "Update Organization"
                       ) : (
                         "Create Organization"
                       )}
