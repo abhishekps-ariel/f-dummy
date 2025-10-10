@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { getAuthData, clearAuthData } from "../../services/auth.service";
-import { getAllOrganizations, searchOrganizations, submitJoinRequest } from "../../services/organization.service";
+import { getAllOrganizations, searchOrganizations, submitJoinRequest, getUserJoinRequests } from "../../services/organization.service";
 import { useDebounce } from "../../hooks/useDebounce";
 import { toast } from "react-toastify";
 import "../../styles/custom.css";
@@ -118,17 +118,49 @@ function Dashboard() {
   const loadJoinRequests = async () => {
     setIsLoadingJoinRequests(true);
     try {
-      // TODO: Replace with actual API call when available
-      // const response = await getUserJoinRequests();
-      // if (response.isSuccess) {
-      //   setJoinRequests(response.data || []);
-      // }
-      
-      // For now, we'll use empty array - only real join requests will be shown
-      // TODO: Replace with actual API call when available
-      setJoinRequests([]);
+      const response = await getUserJoinRequests();
+      if (response.isSuccess) {
+        const requests = response.data || [];
+        
+        // Sort requests by date (latest first)
+        const sortedRequests = requests.sort((a, b) => {
+          return new Date(b.requestedOn) - new Date(a.requestedOn);
+        });
+        
+        // Fetch organization names for each request
+        const requestsWithOrgNames = await Promise.all(
+          sortedRequests.map(async (request) => {
+            try {
+              // Get organization details to fetch the name
+              const orgResponse = await getAllOrganizations();
+              if (orgResponse.isSuccess && orgResponse.data) {
+                const organization = orgResponse.data.find(org => org.id === request.organizationId);
+                if (organization) {
+                  return {
+                    ...request,
+                    organizationName: organization.name,
+                    organizationType: organization.type,
+                    organizationAddress: organization.address
+                  };
+                }
+              }
+              return request;
+            } catch (error) {
+              console.error(`Error fetching organization ${request.organizationId}:`, error);
+              return request;
+            }
+          })
+        );
+        
+        setJoinRequests(requestsWithOrgNames);
+      } else {
+        console.error("Failed to load join requests:", response.msg);
+        toast.error(response.msg || "Failed to load join requests");
+        setJoinRequests([]);
+      }
     } catch (error) {
       console.error("Error loading join requests:", error);
+      toast.error("Failed to load join requests. Please try again.");
       setJoinRequests([]);
     } finally {
       setIsLoadingJoinRequests(false);
@@ -254,15 +286,8 @@ function Dashboard() {
         toast.success(response.msg || "Join request submitted successfully!");
         console.log("Join request response:", response.data);
         
-        // Add the new join request to the list with the selected organization's name
-        const newJoinRequest = {
-          ...response.data,
-          organizationName: selectedOrganization.name, // Add the organization name
-          organizationType: selectedOrganization.type,
-          organizationAddress: selectedOrganization.address
-        };
-        
-        setJoinRequests(prev => [newJoinRequest, ...prev]);
+        // Reload join requests from API to get the complete data
+        loadJoinRequests();
         
         // Clear the selection after successful submission
         setSelectedOrganization(null);

@@ -104,6 +104,38 @@ export const submitJoinRequest = async (organizationId) => {
   }
 };
 
+// Get user's join requests
+export const getUserJoinRequests = async () => {
+  try {
+    const response = await axios.get(
+      "http://filir.arielsoftwares.in/api/OrganizationJoinRequest/my-requests",
+      {
+        headers: getAuthHeaders(),
+      }
+    );
+
+    return {
+      isSuccess: response.data.success || true,
+      msg: response.data.message || "Join requests fetched successfully",
+      data: response.data.data || response.data,
+    };
+  } catch (error) {
+    if (error.response && error.response.data) {
+      return {
+        isSuccess: false,
+        msg: error.response.data.message || "Failed to fetch join requests",
+        data: null,
+      };
+    } else {
+      return {
+        isSuccess: false,
+        msg: "Network error. Please try again.",
+        data: null,
+      };
+    }
+  }
+};
+
 // Create organization (for future use)
 export const createOrganization = async (organizationData) => {
   try {
