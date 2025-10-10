@@ -609,6 +609,37 @@ function Dashboard() {
           </div>
 
           <div className="d-flex align-items-center gap-3">
+            {/* Language Dropdown (Hidden on small screens) */}
+            <div className="dropdown d-none d-lg-block">
+              <button
+                className="btn btn-sm dropdown-toggle text-secondary border-0 font-xs"
+                type="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                <i className="fa-solid fa-globe me-1"></i>
+                <span>Eng (US)</span>
+              </button>
+              {/* Dropdown Menu */}
+              <ul className="dropdown-menu dropdown-menu-end theme-dropdown">
+                <li>
+                  <a className="dropdown-item" href="#">
+                    English (US)
+                  </a>
+                </li>
+                <li>
+                  <a className="dropdown-item" href="#">
+                    Español (ES)
+                  </a>
+                </li>
+                <li>
+                  <a className="dropdown-item" href="#">
+                    Français (FR)
+                  </a>
+                </li>
+              </ul>
+            </div>
+
             {/* Notification Bell */}
             <button
               type="button"
