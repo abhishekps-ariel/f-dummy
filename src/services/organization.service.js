@@ -136,8 +136,6 @@ export const getUserJoinRequests = async () => {
 };
 
 // Create organization and automatically send join request
-// This API creates the organization and also sends a join request for the user.
-// Replaced old /Organization endpoint with /Organization/create-and-request-to-join
 export const createOrganization = async (organizationData) => {
   try {
     const response = await axios.post(ORGANIZATION_ENDPOINTS.CREATE, organizationData, {
