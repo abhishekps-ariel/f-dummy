@@ -17,6 +17,7 @@ import "../../styles/custom.css";
 
 function Dashboard() {
   const [user, setUser] = useState(null);
+  const [activeSection, setActiveSection] = useState('dashboard'); // 'dashboard' or 'organizations'
   const [orgFormData, setOrgFormData] = useState({
     orgName: "",
     orgType: "",
@@ -419,9 +420,29 @@ function Dashboard() {
 
         {/* Navigation Links */}
         <nav className="flex-grow-1">
-          <ul className="dashboard-nav list-unstyled">
+          <ul className="dashboard-nav list-unstyled" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <li className="dashboard-nav-item">
-              <a href="#" className="dashboard-nav-link dashboard-active-link">
+              <a 
+                href="#" 
+                className={`dashboard-nav-link ${activeSection === 'dashboard' ? 'dashboard-active-link' : ''}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setActiveSection('dashboard');
+                }}
+              >
+                <i className="fa-solid fa-box me-2"></i>
+                <span>Dashboard</span>
+              </a>
+            </li>
+            <li className="dashboard-nav-item">
+              <a 
+                href="#" 
+                className={`dashboard-nav-link ${activeSection === 'organizations' ? 'dashboard-active-link' : ''}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setActiveSection('organizations');
+                }}
+              >
                 <i className="fa-solid fa-building me-2"></i>
                 <span>Organizations</span>
               </a>
@@ -466,9 +487,29 @@ function Dashboard() {
           ></button>
         </div>
         <div className="offcanvas-body">
-          <ul className="dashboard-nav list-unstyled">
+          <ul className="dashboard-nav list-unstyled" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <li className="dashboard-nav-item">
-              <a href="#" className="dashboard-nav-link dashboard-active-link">
+              <a 
+                href="#" 
+                className={`dashboard-nav-link ${activeSection === 'dashboard' ? 'dashboard-active-link' : ''}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setActiveSection('dashboard');
+                }}
+              >
+                <i className="fa-solid fa-box me-2"></i>
+                <span>Dashboard</span>
+              </a>
+            </li>
+            <li className="dashboard-nav-item">
+              <a 
+                href="#" 
+                className={`dashboard-nav-link ${activeSection === 'organizations' ? 'dashboard-active-link' : ''}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setActiveSection('organizations');
+                }}
+              >
                 <i className="fa-solid fa-building me-2"></i>
                 <span>Organizations</span>
               </a>
@@ -506,7 +547,7 @@ function Dashboard() {
             >
               <i className="fas fa-bars"></i>
             </button>
-            <h1 className="h4 mb-0">Dashboard</h1>
+            <h1 className="h4 mb-0">{activeSection === 'dashboard' ? 'Dashboard' : 'Organizations'}</h1>
           </div>
 
           <div className="d-flex align-items-center gap-3">
@@ -608,8 +649,127 @@ function Dashboard() {
 
         {/* Main Dashboard Content */}
         <div className="dashboard-content-section">
+          {/* Petition Dashboard Section */}
+          {activeSection === 'dashboard' && (
+            <div className="shadow-custom bg-white org-search-box">
+              <h2 className="font-med mb-4">My Petition Dashboard</h2>
+              <div className="row mb-5">
+                <div className="col-md-4 mb-3">
+                  <div className="stat-card">
+                    <h4 className="stat-count">150</h4>
+                    <p className="stat-title">Total Active Petitions</p>
+                  </div>
+                </div>
+                <div className="col-md-4 mb-3">
+                  <div className="stat-card">
+                    <h4 className="stat-count">5</h4>
+                    <p className="stat-title">Returned Petitions</p>
+                  </div>
+                </div>
+                <div className="col-md-4 mb-3">
+                  <div className="stat-card">
+                    <h4 className="stat-count">75</h4>
+                    <p className="stat-title">Accepted Petitions</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+                <div className="col-md-4">
+                  <div className="input-group">
+                    <span className="input-group-text bg-white border-end-0">
+                      <i className="fas fa-search"></i>
+                    </span>
+                    <input
+                      type="text"
+                      className="form-control border-start-0 shadow-none"
+                      placeholder="Search Petitions"
+                    />
+                  </div>
+                </div>
+                <div className="d-flex gap-3 align-items-center">
+                  <a href="#!" className="text-decoration-hover">
+                    View all Petition
+                  </a>
+                  <button
+                    className="dashboard-btn-create"
+                    data-bs-toggle="modal"
+                    data-bs-target="#createorganizationModal"
+                  >
+                    <i className="fa-solid fa-plus me-1"></i> New Petition
+                  </button>
+                </div>
+              </div>
+
+              <div className="table-responsive">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>Petition Number</th>
+                      <th>Property Address</th>
+                      <th>Status</th>
+                      <th>Last Updated</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="petition-row" onClick={() => window.location.href='#details-1001'}>
+                      <td>
+                        <a href="#details-1001">PN-1001</a>
+                      </td>
+                      <td>123 Main St, Anytown</td>
+                      <td>
+                        <span className="status-badge status-Accepted">Accepted</span>
+                      </td>
+                      <td>2025-10-01 10:30 AM</td>
+                    </tr>
+                    <tr className="petition-row" onClick={() => window.location.href='#details-1002'}>
+                      <td>
+                        <a href="#details-1002">PN-1002</a>
+                      </td>
+                      <td>45 Baker Ln, Somewhere</td>
+                      <td>
+                        <span className="status-badge status-Submitted">Submitted</span>
+                      </td>
+                      <td>2025-10-09 03:15 PM</td>
+                    </tr>
+                    <tr className="petition-row" onClick={() => window.location.href='#details-1003'}>
+                      <td>
+                        <a href="#details-1003">PN-1003</a>
+                      </td>
+                      <td>789 Oak Ave, Cityville</td>
+                      <td>
+                        <span className="status-badge status-Returned">Returned</span>
+                      </td>
+                      <td>2025-10-10 11:00 AM</td>
+                    </tr>
+                    <tr className="petition-row" onClick={() => window.location.href='#details-1004'}>
+                      <td>
+                        <a href="#details-1004">PN-1004</a>
+                      </td>
+                      <td>32 Pine Ct, Otherplace</td>
+                      <td>
+                        <span className="status-badge status-Draft">Draft</span>
+                      </td>
+                      <td>2025-09-28 09:00 AM</td>
+                    </tr>
+                    <tr className="petition-row" onClick={() => window.location.href='#details-1005'}>
+                      <td>
+                        <a href="#details-1005">PN-1005</a>
+                      </td>
+                      <td>55 River Rd, Waterton</td>
+                      <td>
+                        <span className="status-badge status-Closed">Closed</span>
+                      </td>
+                      <td>2025-09-15 02:45 PM</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
           {/* Show loading state while fetching initial data */}
-          {!hasLoadedJoinRequests && (
+          {activeSection === 'organizations' && !hasLoadedJoinRequests && (
             <div className="org-search-box">
               <div className="text-center py-5">
                 <div className="spinner-border text-primary" role="status">
@@ -621,7 +781,7 @@ function Dashboard() {
           )}
 
           {/* Show organization search only if user has no join requests and data has loaded */}
-          {hasLoadedJoinRequests && joinRequests.length === 0 && (
+          {activeSection === 'organizations' && hasLoadedJoinRequests && joinRequests.length === 0 && (
             <div className="org-search-box">
               <div className="d-flex align-items-center justify-content-between mb-3">
                 <h2 className="h5 mb-0">Organizations</h2>
@@ -774,7 +934,7 @@ function Dashboard() {
           )}
 
           {/* Show join request status only if user has submitted a request and data has loaded */}
-          {hasLoadedJoinRequests && joinRequests.length > 0 && (
+          {activeSection === 'organizations' && hasLoadedJoinRequests && joinRequests.length > 0 && (
             <div className="org-search-box">
               <div className="d-flex align-items-center justify-content-between mb-3">
                 <h2 className="h5 mb-0">Request Status</h2>
