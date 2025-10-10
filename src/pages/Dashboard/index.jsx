@@ -41,6 +41,7 @@ function Dashboard() {
   // Join requests state
   const [joinRequests, setJoinRequests] = useState([]);
   const [isLoadingJoinRequests, setIsLoadingJoinRequests] = useState(false);
+  const [hasLoadedJoinRequests, setHasLoadedJoinRequests] = useState(false);
 
   // My Organization state
   const [myOrganization, setMyOrganization] = useState(null);
@@ -214,6 +215,7 @@ function Dashboard() {
       setJoinRequests([]);
     } finally {
       setIsLoadingJoinRequests(false);
+      setHasLoadedJoinRequests(true); // Mark as loaded to prevent UI flicker
     }
   };
 
@@ -369,6 +371,12 @@ function Dashboard() {
         // Update myOrganization state
         setMyOrganization(response.data);
         setIsEditMode(false);
+
+        // If creating a new organization, the API automatically creates a join request
+        // So we need to reload join requests to show the new request
+        if (!isEditMode) {
+          loadJoinRequests();
+        }
 
         // Close the modal
         const modalElement = document.getElementById("createorganizationModal");
@@ -707,8 +715,20 @@ function Dashboard() {
 
         {/* Main Dashboard Content */}
         <div className="dashboard-content-section">
-          {/* Show organization search only if user has no join requests */}
-          {joinRequests.length === 0 && (
+          {/* Show loading state while fetching initial data */}
+          {!hasLoadedJoinRequests && (
+            <div className="org-search-box">
+              <div className="text-center py-5">
+                <div className="spinner-border text-primary" role="status">
+                  <span className="visually-hidden">Loading...</span>
+                </div>
+                <p className="mt-3 text-muted">Loading your dashboard...</p>
+              </div>
+            </div>
+          )}
+
+          {/* Show organization search only if user has no join requests and data has loaded */}
+          {hasLoadedJoinRequests && joinRequests.length === 0 && (
             <div className="org-search-box">
               <div className="d-flex align-items-center justify-content-between mb-3">
                 <h2 className="h5 mb-0">Organizations</h2>
@@ -860,8 +880,8 @@ function Dashboard() {
             </div>
           )}
 
-          {/* Show join request status only if user has submitted a request */}
-          {joinRequests.length > 0 && (
+          {/* Show join request status only if user has submitted a request and data has loaded */}
+          {hasLoadedJoinRequests && joinRequests.length > 0 && (
             <div className="org-search-box">
               <div className="d-flex align-items-center justify-content-between mb-3">
                 <h2 className="h5 mb-0">Request Status</h2>
