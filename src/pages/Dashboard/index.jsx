@@ -7,7 +7,7 @@ import {
   submitJoinRequest, 
   getUserJoinRequests,
   createOrganization,
-  getOrganizationById,
+  // getOrganizationById,
   updateOrganization,
   deleteOrganization
 } from "../../services/organization.service";
@@ -16,7 +16,7 @@ import { toast } from "react-toastify";
 import "../../styles/custom.css";
 
 function Dashboard() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(null); 
   const [orgFormData, setOrgFormData] = useState({
     orgName: "",
     orgType: "",
