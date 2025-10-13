@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { clearAuthData } from '../utils/storage';
 
 const client = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
@@ -28,9 +29,7 @@ client.interceptors.response.use(
   },
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
+     clearAuthData();
     }
     return Promise.reject(error);
   }
