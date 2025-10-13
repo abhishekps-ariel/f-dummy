@@ -11,6 +11,7 @@ export const AUTH_ENDPOINTS = {
   CHECK_RESET_TOKEN: (userId) => `/api/Account/check-reset-token-expiry/${userId}`,
   RESET_PASSWORD: "/api/Account/reset-password",
   UPDATE_USER: "/api/Account/update-user",
+  GET_USER_BY_ID: (userId) => `/api/Account/get-user-by-id/${userId}`,
 };
 
 export const ORGANIZATION_ENDPOINTS = {

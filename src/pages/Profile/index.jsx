@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { getAuthData, clearAuthData } from "../../utils/storage";
 import { useAuth } from "../../context/AuthContext";
 import { ROUTES } from "../../constants/routerConstants";
-import { logout as logoutApi, updateUser } from "../../services/authService";
+import { logout as logoutApi, updateUser, getUserById } from "../../services/authService";
 import { getFilingEntityTypes } from "../../services/commonService";
 import { toast } from "react-toastify";
 import NotificationDropdown from "../../components/NotificationDropdown";
@@ -35,6 +35,9 @@ function Profile() {
     
     // Initialize edit form data
     if (userData) {
+      console.log("User data loaded:", userData);
+      console.log("Filing entity type ID:", userData.filingEntityTypeId);
+      
       setEditFormData({
         firstName: userData.firstName || "",
         lastName: userData.lastName || "",
@@ -43,24 +46,22 @@ function Profile() {
     }
   }, [navigate]);
 
-  // Fetch filing entity types when entering edit mode
+  // Fetch filing entity types on page load
   useEffect(() => {
     const fetchFilingEntityTypes = async () => {
-      if (!isEditMode) return;
-
       setIsLoadingEntityTypes(true);
       try {
         const response = await getFilingEntityTypes();
         
         if (response.isSuccess) {
+          console.log("Filing entity types loaded:", response.data);
           setFilingEntityTypes(response.data || []);
         } else {
-          toast.error(response.msg || "Failed to load filing entity types");
+          console.error("Failed to load filing entity types:", response.msg);
           setFilingEntityTypes([]);
         }
       } catch (error) {
         console.error("Error fetching filing entity types:", error);
-        toast.error("Failed to load filing entity types");
         setFilingEntityTypes([]);
       } finally {
         setIsLoadingEntityTypes(false);
@@ -68,7 +69,7 @@ function Profile() {
     };
 
     fetchFilingEntityTypes();
-  }, [isEditMode]);
+  }, []); // Load on page load instead of only when entering edit mode
 
   const handleLogout = async () => {
     try {
@@ -124,22 +125,60 @@ function Profile() {
       if (response.isSuccess) {
         toast.success(response.msg || "Profile updated successfully");
         
-        // Update local user data
-        const updatedUser = {
-          ...user,
-          firstName: editFormData.firstName,
-          lastName: editFormData.lastName,
-          filingEntityTypeId: selectedFilingEntityType,
-          fullName: `${editFormData.firstName} ${editFormData.lastName}`.trim(),
-        };
-        
-        setUser(updatedUser);
-        
-        // Update auth context with new user data
-        const { token } = getAuthData();
-        clearAuthData();
-        localStorage.setItem('token', token);
-        localStorage.setItem('user', JSON.stringify(updatedUser));
+        // Fetch the updated user data from the API to ensure we have the latest information
+        try {
+          const userResponse = await getUserById(user.id);
+          
+          if (userResponse.isSuccess && userResponse.data) {
+            // Update local user data with fresh data from API
+            const updatedUser = userResponse.data;
+            setUser(updatedUser);
+            
+            // Update auth context with new user data
+            const { token } = getAuthData();
+            clearAuthData();
+            localStorage.setItem('token', token);
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+            
+            // Update the form data with the fresh data
+            setEditFormData({
+              firstName: updatedUser.firstName || "",
+              lastName: updatedUser.lastName || "",
+            });
+            setSelectedFilingEntityType(updatedUser.filingEntityTypeId || "");
+          } else {
+            // Fallback: Update with the data we sent
+            const updatedUser = {
+              ...user,
+              firstName: editFormData.firstName,
+              lastName: editFormData.lastName,
+              filingEntityTypeId: selectedFilingEntityType,
+              fullName: `${editFormData.firstName} ${editFormData.lastName}`.trim(),
+            };
+            setUser(updatedUser);
+            
+            const { token } = getAuthData();
+            clearAuthData();
+            localStorage.setItem('token', token);
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+          }
+        } catch (error) {
+          console.error("Error fetching updated user data:", error);
+          // Fallback: Update with the data we sent
+          const updatedUser = {
+            ...user,
+            firstName: editFormData.firstName,
+            lastName: editFormData.lastName,
+            filingEntityTypeId: selectedFilingEntityType,
+            fullName: `${editFormData.firstName} ${editFormData.lastName}`.trim(),
+          };
+          setUser(updatedUser);
+          
+          const { token } = getAuthData();
+          clearAuthData();
+          localStorage.setItem('token', token);
+          localStorage.setItem('user', JSON.stringify(updatedUser));
+        }
         
         setIsEditMode(false);
       } else {
@@ -527,9 +566,13 @@ function Profile() {
                         )
                       ) : (
                         <p className="fw-medium mb-0">
-                          {selectedFilingEntityType 
-                            ? filingEntityTypes.find(et => et.id === selectedFilingEntityType)?.name || "Not Set"
-                            : "Not Set"}
+                          {isLoadingEntityTypes ? (
+                            <span className="text-muted">Loading...</span>
+                          ) : selectedFilingEntityType ? (
+                            filingEntityTypes.find(et => et.id === selectedFilingEntityType)?.name || "Not Set"
+                          ) : (
+                            "Not Set"
+                          )}
                         </p>
                       )}
                     </div>

@@ -241,3 +241,22 @@ export const updateUser = async (userId, filingEntityTypeId, firstName, lastName
     data: response.data.data,
   };
 };
+
+export const getUserById = async (userId) => {
+  const response = await client.post(
+    AUTH_ENDPOINTS.GET_USER_BY_ID(userId),
+    {}, // Empty body as per API spec
+    {
+      headers: {
+        Accept: "*/*",
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  return {
+    isSuccess: response.data.success,
+    msg: response.data.message,
+    data: response.data.data,
+  };
+};
