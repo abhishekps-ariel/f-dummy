@@ -23,3 +23,7 @@ export const ORGANIZATION_ENDPOINTS = {
   GET_MY_REQUESTS: "/api/OrganizationJoinRequest/my-requests",
 };
 
+export const COMMON_ENDPOINTS = {
+  GET_FILING_ENTITY_TYPES: "/Common/get-filing-entity-types",
+};
+

@@ -4,11 +4,17 @@ import { getAuthData, clearAuthData } from "../../utils/storage";
 import { useAuth } from "../../context/AuthContext";
 import { ROUTES } from "../../constants/routerConstants";
 import { logout as logoutApi } from "../../services/authService";
+import { getFilingEntityTypes } from "../../services/commonService";
+import { toast } from "react-toastify";
 import NotificationDropdown from "../../components/NotificationDropdown";
 import "../../styles/custom.css";
 
 function Profile() {
   const [user, setUser] = useState(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [filingEntityTypes, setFilingEntityTypes] = useState([]);
+  const [selectedFilingEntityType, setSelectedFilingEntityType] = useState("");
+  const [isLoadingEntityTypes, setIsLoadingEntityTypes] = useState(false);
   const navigate = useNavigate();
   const { logout: authLogout } = useAuth();
 
@@ -22,6 +28,33 @@ function Profile() {
 
     setUser(userData);
   }, [navigate]);
+
+  // Fetch filing entity types when entering edit mode
+  useEffect(() => {
+    const fetchFilingEntityTypes = async () => {
+      if (!isEditMode) return;
+
+      setIsLoadingEntityTypes(true);
+      try {
+        const response = await getFilingEntityTypes();
+        
+        if (response.isSuccess) {
+          setFilingEntityTypes(response.data || []);
+        } else {
+          toast.error(response.msg || "Failed to load filing entity types");
+          setFilingEntityTypes([]);
+        }
+      } catch (error) {
+        console.error("Error fetching filing entity types:", error);
+        toast.error("Failed to load filing entity types");
+        setFilingEntityTypes([]);
+      } finally {
+        setIsLoadingEntityTypes(false);
+      }
+    };
+
+    fetchFilingEntityTypes();
+  }, [isEditMode]);
 
   const handleLogout = async () => {
     try {
@@ -41,6 +74,30 @@ function Profile() {
       authLogout();
       navigate(ROUTES.LOGIN);
     }
+  };
+
+  const handleEditProfile = () => {
+    setIsEditMode(true);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditMode(false);
+    setSelectedFilingEntityType("");
+  };
+
+  const handleSaveProfile = async () => {
+    try {
+      // TODO: Add API call to save profile with selected filing entity type
+      toast.success("Profile updated successfully!");
+      setIsEditMode(false);
+    } catch (error) {
+      console.error("Error saving profile:", error);
+      toast.error("Failed to update profile");
+    }
+  };
+
+  const handleFilingEntityTypeChange = (e) => {
+    setSelectedFilingEntityType(e.target.value);
   };
 
   if (!user) {
@@ -338,9 +395,20 @@ function Profile() {
                       </p>
                     </div>
                     <div className="d-flex gap-2">
-                      <button className="dashboard-btn-create">
-                        <i className="fa-solid fa-edit me-1"></i> Edit Profile
-                      </button>
+                      {isEditMode ? (
+                        <>
+                          <button className="dashboard-btn-create" onClick={handleSaveProfile}>
+                            <i className="fa-solid fa-save me-1"></i> Save
+                          </button>
+                          <button className="btn btn-outline-secondary" onClick={handleCancelEdit}>
+                            <i className="fa-solid fa-times me-1"></i> Cancel
+                          </button>
+                        </>
+                      ) : (
+                        <button className="dashboard-btn-create" onClick={handleEditProfile}>
+                          <i className="fa-solid fa-edit me-1"></i> Edit Profile
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -349,6 +417,48 @@ function Profile() {
 
             {/* Profile Information Cards */}
             <div className="row mb-4">
+              {/* Filing Entity Type Card */}
+              <div className="col-12 mb-3">
+                <div className="stat-card p-4">
+                  <h4 className="fw-bold mb-4">
+                    <i className="fas fa-building me-2 text-primary"></i>
+                    Filing Entity Type
+                  </h4>
+                  <div className="row g-3">
+                    <div className="col-12">
+                      <label className="form-label text-muted small">Entity Type</label>
+                      {isEditMode ? (
+                        isLoadingEntityTypes ? (
+                          <div className="d-flex align-items-center">
+                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            <span className="text-muted">Loading entity types...</span>
+                          </div>
+                        ) : (
+                          <select
+                            className="form-select"
+                            value={selectedFilingEntityType}
+                            onChange={handleFilingEntityTypeChange}
+                          >
+                            <option value="">Select Filing Entity Type</option>
+                            {filingEntityTypes.map((entityType) => (
+                              <option key={entityType.id} value={entityType.id}>
+                                {entityType.name}
+                              </option>
+                            ))}
+                          </select>
+                        )
+                      ) : (
+                        <p className="fw-medium mb-0">
+                          {selectedFilingEntityType 
+                            ? filingEntityTypes.find(et => et.id === selectedFilingEntityType)?.name || "Not Set"
+                            : "Not Set"}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div className="col-lg-6 mb-3">
                 <div className="stat-card p-4">
                   <h4 className="fw-bold mb-4">

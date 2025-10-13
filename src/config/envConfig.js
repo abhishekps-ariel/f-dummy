@@ -7,7 +7,7 @@ const environments = {
   },
 };
 
-const ENV = import.meta.env.MODE || "development";
+const ENV = "development";
 
 
 const Config = environments[ENV];
