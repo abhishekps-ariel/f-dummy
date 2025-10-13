@@ -11,6 +11,7 @@ import {
   createOrganization,
   getOrganizationById,
 } from "../../services/organizationService";
+import { logout as logoutApi } from "../../services/authService";
 import { useDebounce } from "../../hooks/useDebounce";
 import { toast } from "react-toastify";
 import NotificationDropdown from "../../components/NotificationDropdown";
@@ -144,10 +145,24 @@ function Dashboard() {
     };
   }, []);
 
-  const handleLogout = () => {
-    clearAuthData();
-    authLogout();
-    navigate(ROUTES.LOGIN);
+  const handleLogout = async () => {
+    try {
+      // Get refresh token from storage
+      const { refreshToken } = getAuthData();
+      
+      if (refreshToken) {
+        // Call logout API
+        await logoutApi(refreshToken);
+      }
+    } catch (error) {
+      console.error("Logout API error:", error);
+      // Continue with logout even if API fails
+    } finally {
+      // Always clear local data and redirect
+      clearAuthData();
+      authLogout();
+      navigate(ROUTES.LOGIN);
+    }
   };
 
   const loadJoinRequests = async () => {

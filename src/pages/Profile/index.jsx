@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { getAuthData, clearAuthData } from "../../utils/storage";
 import { useAuth } from "../../context/AuthContext";
 import { ROUTES } from "../../constants/routerConstants";
+import { logout as logoutApi } from "../../services/authService";
 import NotificationDropdown from "../../components/NotificationDropdown";
 import "../../styles/custom.css";
 
@@ -22,10 +23,24 @@ function Profile() {
     setUser(userData);
   }, [navigate]);
 
-  const handleLogout = () => {
-    clearAuthData();
-    authLogout();
-    navigate(ROUTES.LOGIN);
+  const handleLogout = async () => {
+    try {
+      // Get refresh token from storage
+      const { refreshToken } = getAuthData();
+      
+      if (refreshToken) {
+        // Call logout API
+        await logoutApi(refreshToken);
+      }
+    } catch (error) {
+      console.error("Logout API error:", error);
+      // Continue with logout even if API fails
+    } finally {
+      // Always clear local data and redirect
+      clearAuthData();
+      authLogout();
+      navigate(ROUTES.LOGIN);
+    }
   };
 
   if (!user) {
@@ -291,11 +306,15 @@ function Profile() {
 
         {/* Main Profile Content */}
         <div className="dashboard-content-section">
-          <div className="container-fluid">
-            <div className="row">
-              {/* Profile Header Card */}
-              <div className="col-12 mb-4">
-                <div className="profile-header-card shadow-custom bg-white p-4">
+          {/* Profile Dashboard Section */}
+          <div className="shadow-custom bg-white org-search-box">
+            <h2 className="font-med mb-4">My Profile</h2>
+            
+
+            {/* Profile Header Card */}
+            <div className="row mb-4">
+              <div className="col-12">
+                <div className="stat-card p-4">
                   <div className="d-flex flex-column flex-md-row align-items-center gap-4">
                     <div className="profile-avatar-large">
                       <img
@@ -306,43 +325,52 @@ function Profile() {
                       />
                     </div>
                     <div className="text-center text-md-start flex-grow-1">
-                      <h2 className="h3 fw-bold mb-2">{user.firstName} {user.lastName}</h2>
+                      <h3 className="fw-bold mb-2">
+                        {user.firstName} {user.lastName}
+                      </h3>
                       <p className="text-muted mb-2">
                         <i className="fas fa-envelope me-2"></i>
                         {user.email}
                       </p>
                       <p className="text-muted mb-0">
                         <i className="fas fa-user-tag me-2"></i>
-                        {user.role || 'User'}
+                        {user.role || "User"}
                       </p>
+                    </div>
+                    <div className="d-flex gap-2">
+                      <button className="dashboard-btn-create">
+                        <i className="fa-solid fa-edit me-1"></i> Edit Profile
+                      </button>
                     </div>
                   </div>
                 </div>
               </div>
+            </div>
 
-              {/* Profile Information Card */}
-              <div className="col-lg-6 mb-4">
-                <div className="profile-info-card shadow-custom bg-white p-4">
+            {/* Profile Information Cards */}
+            <div className="row mb-4">
+              <div className="col-lg-6 mb-3">
+                <div className="stat-card p-4">
                   <h4 className="fw-bold mb-4">
                     <i className="fas fa-user me-2 text-primary"></i>
                     Personal Information
                   </h4>
-                  <div className="profile-info-grid">
-                    <div className="profile-info-item mb-3">
-                      <label className="text-muted small mb-1">First Name</label>
+                  <div className="row g-3">
+                    <div className="col-sm-6">
+                      <label className="form-label text-muted small">First Name</label>
                       <p className="fw-medium mb-0">{user.firstName}</p>
                     </div>
-                    <div className="profile-info-item mb-3">
-                      <label className="text-muted small mb-1">Last Name</label>
+                    <div className="col-sm-6">
+                      <label className="form-label text-muted small">Last Name</label>
                       <p className="fw-medium mb-0">{user.lastName}</p>
                     </div>
-                    <div className="profile-info-item mb-3">
-                      <label className="text-muted small mb-1">Email Address</label>
+                    <div className="col-12">
+                      <label className="form-label text-muted small">Email Address</label>
                       <p className="fw-medium mb-0">{user.email}</p>
                     </div>
                     {user.phone && (
-                      <div className="profile-info-item mb-3">
-                        <label className="text-muted small mb-1">Phone Number</label>
+                      <div className="col-12">
+                        <label className="form-label text-muted small">Phone Number</label>
                         <p className="fw-medium mb-0">{user.phone}</p>
                       </div>
                     )}
@@ -350,24 +378,34 @@ function Profile() {
                 </div>
               </div>
 
-              {/* Account Details Card */}
-              <div className="col-lg-6 mb-4">
-                <div className="profile-info-card shadow-custom bg-white p-4">
+              <div className="col-lg-6 mb-3">
+                <div className="stat-card p-4">
                   <h4 className="fw-bold mb-4">
                     <i className="fas fa-id-card me-2 text-primary"></i>
                     Account Details
                   </h4>
-                  <div className="profile-info-grid">
-                    <div className="profile-info-item mb-3">
-                      <label className="text-muted small mb-1">Role</label>
+                  <div className="row g-3">
+                    <div className="col-12">
+                      <label className="form-label text-muted small">Role</label>
                       <p className="fw-medium mb-0">
-                        <span className="badge bg-primary">{user.role || 'Normal User'}</span>
+                        <span className="badge bg-primary fs-6">{user.role || "Normal User"}</span>
                       </p>
+                    </div>
+                    <div className="col-12">
+                      <label className="form-label text-muted small">Account Status</label>
+                      <p className="fw-medium mb-0">
+                        <span className="badge bg-success fs-6">Active</span>
+                      </p>
+                    </div>
+                    <div className="col-12">
+                      <label className="form-label text-muted small">Member Since</label>
+                      <p className="fw-medium mb-0">January 2024</p>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
+
           </div>
         </div>
       </main>

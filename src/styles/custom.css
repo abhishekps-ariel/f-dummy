@@ -1496,7 +1496,7 @@ form.search-form input:focus {
     background: #cecbc81c !important;
     width: 40px;
     height: 40px;
-    border-radius: 14px;
+    border-radius: 50% !important;
     position: relative;
     display: flex;
     align-items: center;
