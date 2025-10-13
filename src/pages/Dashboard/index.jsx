@@ -14,6 +14,7 @@ import {
 import { logout as logoutApi } from "../../services/authService";
 import { useDebounce } from "../../hooks/useDebounce";
 import { toast } from "react-toastify";
+import { formatDate } from "../../utils/dateUtils";
 import NotificationDropdown from "../../components/NotificationDropdown";
 import "../../styles/custom.css";
 
@@ -243,17 +244,6 @@ function Dashboard() {
           icon: "fa-question-circle",
         };
     }
-  };
-
-  // Format date
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
   };
 
   const handleOrgFormChange = (e) => {
