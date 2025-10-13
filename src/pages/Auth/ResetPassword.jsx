@@ -184,13 +184,6 @@ function ResetPassword() {
                     <i className="fa-solid fa-chevron-left me-1"></i> Back to Login
                   </Link>
                 </div>
-                
-                {/* Temporary link for viewing the new password page - Remove in production */}
-                <div className="text-center mt-3">
-                  <Link to="/set-new-password/sample-token" className="font-sm text-muted text-decoration-none">
-                    <i className="fa-solid fa-eye me-1"></i> Preview Set New Password Page (Dev)
-                  </Link>
-                </div>
               </form>
             </div>
           </div>
