@@ -51,7 +51,7 @@ const NotificationDropdown = () => {
         <i className="fa-solid fa-bell"></i>
         {unreadCount > 0 && <span className="notif-circle"></span>}
       </button>
-      <ul className="dropdown-menu theme-dropdown notification-dropdown">
+      <ul className="dropdown-menu dropdown-menu-end theme-dropdown notification-dropdown">
         <li>
           <h6 className="dropdown-header notification-header">
             <i className="fa-solid fa-bell me-2"></i> 
