@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useSearchParams, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
+import { checkResetToken, resetPassword } from "../../services/authService";
 import PasswordGuidelines from "../../components/PasswordGuidelines";
 import loginImg from "../../assets/logo-sample.png";
 import "../../styles/custom.css";
@@ -26,9 +27,44 @@ function SetNewPassword() {
     hasNumber: false,
     hasSpecialChar: false
   });
+  const [isCheckingToken, setIsCheckingToken] = useState(true);
+  const [isTokenValid, setIsTokenValid] = useState(false);
+  const [userId, setUserId] = useState(null);
 
-  // Get token from URL
+  // Get token and userId from URL
   const token = pathToken || searchParams.get("token");
+  const userIdParam = searchParams.get("userId");
+
+  // Check token validity when component mounts
+  useEffect(() => {
+    const validateToken = async () => {
+      if (!token || !userIdParam) {
+        setIsCheckingToken(false);
+        setIsTokenValid(false);
+        return;
+      }
+
+      try {
+        const response = await checkResetToken(userIdParam);
+        
+        if (response.isSuccess) {
+          setUserId(userIdParam);
+          setIsTokenValid(true);
+        } else {
+          toast.error(response.msg || "Invalid or expired reset link");
+          setIsTokenValid(false);
+        }
+      } catch (error) {
+        console.error("Token validation error:", error);
+        toast.error("Invalid or expired reset link");
+        setIsTokenValid(false);
+      } finally {
+        setIsCheckingToken(false);
+      }
+    };
+
+    validateToken();
+  }, [token, userIdParam]);
 
   // Check password guidelines
   const checkPasswordGuidelines = (password) => {
@@ -105,13 +141,14 @@ function SetNewPassword() {
     setIsSubmitting(true);
     
     try {
-      // Simulate API call - TODO: Replace with actual API call
-      // const response = await resetPasswordWithToken(token, formData.newPassword);
+      const response = await resetPassword(userId, formData.newPassword, token);
       
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast.success("Password reset successfully!");
-      setIsPasswordChanged(true);
+      if (response.isSuccess) {
+        toast.success(response.msg || "Password reset successfully!");
+        setIsPasswordChanged(true);
+      } else {
+        toast.error(response.msg || "Failed to reset password. Please try again.");
+      }
     } catch (error) {
       toast.error("Failed to reset password. Please try again.");
       console.error("Reset password error:", error);
@@ -128,8 +165,33 @@ function SetNewPassword() {
     }
   };
 
-  // Check if token exists
-  if (!token) {
+  // Show loading while checking token
+  if (isCheckingToken) {
+    return (
+      <div className="login">
+        <div className="container container-md-auto">
+          <div className="row m-0">
+            <div className="col-lg-5 col-md-4 px-0">
+              <div className="login-right-image"></div>
+            </div>
+            <div className="col-lg-7 col-md-8">
+              <div className="login-inner d-flex flex-column align-items-center justify-content-center">
+                <div className="text-center">
+                  <div className="spinner-border text-primary mb-3" role="status" style={{ width: '3rem', height: '3rem' }}>
+                    <span className="visually-hidden">Loading...</span>
+                  </div>
+                  <p className="font-base text-muted">Validating reset link...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show invalid link if token is missing or invalid
+  if (!token || !isTokenValid) {
     return (
       <div className="login">
         <div className="container container-md-auto">
@@ -150,9 +212,9 @@ function SetNewPassword() {
                       <div className="verification-icon d-inline-flex align-items-center justify-content-center mb-3">
                         <i className="fa-solid fa-exclamation-circle text-warning" style={{ fontSize: '4rem' }}></i>
                       </div>
-                      <h2 className="font-xl-med fw-bold text-warning">Invalid Reset Link</h2>
+                      <h2 className="font-xl-med fw-bold text-warning">Invalid or Expired Link</h2>
                       <p className="font-base text-muted">
-                        The password reset link is invalid or missing. Please request a new password reset.
+                        The password reset link has expired or is invalid. Please request a new password reset.
                       </p>
                     </div>
                     

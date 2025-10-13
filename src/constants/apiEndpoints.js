@@ -9,6 +9,9 @@ export const AUTH_ENDPOINTS = {
   REGISTER: `${API_URL}/api/Auth/register`,
   VERIFY_EMAIL: (token) => `${API_URL}/api/Auth/verify-email?token=${token}`,
   RESEND_VERIFICATION: `${API_URL}/api/Auth/resend-verification`,
+  FORGOT_PASSWORD: `${API_URL}/api/Account/forget-password`,
+  CHECK_RESET_TOKEN: (userId) => `${API_URL}/api/Account/check-reset-token-expiry/${userId}`,
+  RESET_PASSWORD: `${API_URL}/api/Account/reset-password`,
 };
 
 export const ORGANIZATION_ENDPOINTS = {

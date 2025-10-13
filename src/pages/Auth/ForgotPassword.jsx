@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
+import { forgotPassword } from "../../services/authService";
 import loginImg from "../../assets/logo-sample.png";
 import "../../styles/custom.css";
 
@@ -46,12 +47,17 @@ function ForgotPassword() {
     setIsSubmitting(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await forgotPassword(email);
       
-      toast.success("Password reset email sent! Please check your inbox.");
-      // Navigate to password email sent page
-      window.location.href = "/password-email-sent";
+      if (response.isSuccess) {
+        toast.success(response.msg || "Password reset email sent! Please check your inbox.");
+        // Store email in localStorage for resend functionality
+        localStorage.setItem('resetEmail', email);
+        // Navigate to password email sent page
+        window.location.href = "/password-email-sent";
+      } else {
+        toast.error(response.msg || "Failed to send reset email. Please try again.");
+      }
     } catch (error) {
       toast.error("Failed to send reset email. Please try again.");
       console.error("Forgot password error:", error);

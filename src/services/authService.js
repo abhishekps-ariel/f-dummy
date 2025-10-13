@@ -161,3 +161,59 @@ export const logout = async (refreshToken) => {
     data: response.data.data,
   };
 };
+
+export const forgotPassword = async (email) => {
+  const response = await client.post(
+    AUTH_ENDPOINTS.FORGOT_PASSWORD,
+    email, // Send as plain string
+    {
+      headers: {
+        Accept: "*/*",
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  return {
+    isSuccess: response.data.success,
+    msg: response.data.message,
+    data: response.data.data,
+  };
+};
+
+export const checkResetToken = async (userId) => {
+  const response = await client.get(AUTH_ENDPOINTS.CHECK_RESET_TOKEN(userId), {
+    headers: {
+      Accept: "*/*",
+    },
+  });
+
+  return {
+    isSuccess: response.data.success,
+    msg: response.data.message,
+    data: response.data.data,
+  };
+};
+
+export const resetPassword = async (userId, password, token) => {
+  const response = await client.post(
+    AUTH_ENDPOINTS.RESET_PASSWORD,
+    {
+      userId: userId,
+      password: password,
+      token: token,
+    },
+    {
+      headers: {
+        Accept: "*/*",
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  return {
+    isSuccess: response.data.success,
+    msg: response.data.message,
+    data: response.data.data,
+  };
+};

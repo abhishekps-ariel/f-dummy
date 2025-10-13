@@ -1,12 +1,45 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { toast } from "react-toastify";
+import { forgotPassword } from "../../services/authService";
 import loginImg from "../../assets/logo-sample.png";
 import "../../styles/custom.css";
 
 function PasswordEmailSent() {
-  const handleResendEmail = () => {
-    // Add resend logic here
-    console.log("Resending email...");
+  const [email, setEmail] = useState("");
+  const [isResending, setIsResending] = useState(false);
+
+  useEffect(() => {
+    const storedEmail = localStorage.getItem('resetEmail');
+    if (storedEmail) {
+      setEmail(storedEmail);
+    }
+  }, []);
+
+  const handleResendEmail = async () => {
+    if (!email) {
+      toast.error("Email not found. Please try again.");
+      return;
+    }
+
+    if (isResending) return;
+    
+    setIsResending(true);
+    
+    try {
+      const response = await forgotPassword(email);
+      
+      if (response.isSuccess) {
+        toast.success(response.msg || "Reset email sent again! Please check your inbox.");
+      } else {
+        toast.error(response.msg || "Failed to resend email. Please try again.");
+      }
+    } catch (error) {
+      toast.error("Failed to resend email. Please try again.");
+      console.error("Resend email error:", error);
+    } finally {
+      setIsResending(false);
+    }
   };
 
   return (
@@ -42,8 +75,18 @@ function PasswordEmailSent() {
                     type="button"
                     onClick={handleResendEmail}
                     className="btn btn-link font-base fw-medium text-decoration-none p-0"
+                    disabled={isResending}
                   >
-                    <i className="fa-solid fa-chevron-left me-1"></i> Resend Email
+                    {isResending ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        Resending...
+                      </>
+                    ) : (
+                      <>
+                        <i className="fa-solid fa-chevron-left me-1"></i> Resend Email
+                      </>
+                    )}
                   </button>
                 </div>
               </form>
