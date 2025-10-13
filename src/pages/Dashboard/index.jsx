@@ -16,6 +16,7 @@ import { useDebounce } from "../../hooks/useDebounce";
 import { toast } from "react-toastify";
 import { formatDate } from "../../utils/dateUtils";
 import NotificationDropdown from "../../components/NotificationDropdown";
+import PetitionSteps from "../../components/PetitionSteps";
 import "../../styles/custom.css";
 
 function Dashboard() {
@@ -32,7 +33,6 @@ function Dashboard() {
     contactEmail: "",
     contactPhone: "",
   });
-
   const [searchQuery, setSearchQuery] = useState("");
   const [organizations, setOrganizations] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -46,6 +46,7 @@ function Dashboard() {
   const [hasLoadedJoinRequests, setHasLoadedJoinRequests] = useState(false);
 
   const [isCreatingOrg, setIsCreatingOrg] = useState(false);
+  const [showPetitionSteps, setShowPetitionSteps] = useState(false);
 
   const searchRef = useRef(null);
   const navigate = useNavigate();
@@ -704,8 +705,7 @@ function Dashboard() {
                   </a>
                   <button
                     className="dashboard-btn-create"
-                    data-bs-toggle="modal"
-                    data-bs-target="#createorganizationModal"
+                    onClick={() => setShowPetitionSteps(true)}
                   >
                     <i className="fa-solid fa-plus me-1"></i> Create New Petition
                   </button>
@@ -1069,6 +1069,12 @@ function Dashboard() {
               </div>
             )}
         </div>
+
+        {/* Petition Steps Modal */}
+        <PetitionSteps 
+          isOpen={showPetitionSteps} 
+          onClose={() => setShowPetitionSteps(false)} 
+        />
 
         {/* Create Organization Modal */}
         <div
