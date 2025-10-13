@@ -1,8 +1,9 @@
 import axios from 'axios';
 import { clearAuthData } from '../utils/storage';
+import Config from '../config/envConfig';
 
 const client = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: Config.API_URL,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
