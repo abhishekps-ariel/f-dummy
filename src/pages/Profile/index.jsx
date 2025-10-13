@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { getAuthData, clearAuthData } from "../../utils/storage";
 import { useAuth } from "../../context/AuthContext";
 import { ROUTES } from "../../constants/routerConstants";
-import { logout as logoutApi } from "../../services/authService";
+import { logout as logoutApi, updateUser } from "../../services/authService";
 import { getFilingEntityTypes } from "../../services/commonService";
 import { toast } from "react-toastify";
 import NotificationDropdown from "../../components/NotificationDropdown";
@@ -15,6 +15,11 @@ function Profile() {
   const [filingEntityTypes, setFilingEntityTypes] = useState([]);
   const [selectedFilingEntityType, setSelectedFilingEntityType] = useState("");
   const [isLoadingEntityTypes, setIsLoadingEntityTypes] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [editFormData, setEditFormData] = useState({
+    firstName: "",
+    lastName: "",
+  });
   const navigate = useNavigate();
   const { logout: authLogout } = useAuth();
 
@@ -27,6 +32,15 @@ function Profile() {
     }
 
     setUser(userData);
+    
+    // Initialize edit form data
+    if (userData) {
+      setEditFormData({
+        firstName: userData.firstName || "",
+        lastName: userData.lastName || "",
+      });
+      setSelectedFilingEntityType(userData.filingEntityTypeId || "");
+    }
   }, [navigate]);
 
   // Fetch filing entity types when entering edit mode
@@ -80,24 +94,75 @@ function Profile() {
     setIsEditMode(true);
   };
 
-  const handleCancelEdit = () => {
-    setIsEditMode(false);
-    setSelectedFilingEntityType("");
+  const handleFilingEntityTypeChange = (e) => {
+    setSelectedFilingEntityType(e.target.value);
   };
 
-  const handleSaveProfile = async () => {
+  const handleFormInputChange = (e) => {
+    const { name, value } = e.target;
+    setEditFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSave = async () => {
+    if (!user?.id) {
+      toast.error("User information not found");
+      return;
+    }
+
+    setIsSaving(true);
     try {
-      // TODO: Add API call to save profile with selected filing entity type
-      toast.success("Profile updated successfully!");
-      setIsEditMode(false);
+      const response = await updateUser(
+        user.id,
+        selectedFilingEntityType,
+        editFormData.firstName,
+        editFormData.lastName
+      );
+
+      if (response.isSuccess) {
+        toast.success(response.msg || "Profile updated successfully");
+        
+        // Update local user data
+        const updatedUser = {
+          ...user,
+          firstName: editFormData.firstName,
+          lastName: editFormData.lastName,
+          filingEntityTypeId: selectedFilingEntityType,
+          fullName: `${editFormData.firstName} ${editFormData.lastName}`.trim(),
+        };
+        
+        setUser(updatedUser);
+        
+        // Update auth context with new user data
+        const { token } = getAuthData();
+        clearAuthData();
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        
+        setIsEditMode(false);
+      } else {
+        toast.error(response.msg || "Failed to update profile");
+      }
     } catch (error) {
-      console.error("Error saving profile:", error);
-      toast.error("Failed to update profile");
+      console.error("Error updating profile:", error);
+      toast.error("Failed to update profile. Please try again.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  const handleFilingEntityTypeChange = (e) => {
-    setSelectedFilingEntityType(e.target.value);
+  const handleCancel = () => {
+    // Reset form data to original values
+    if (user) {
+      setEditFormData({
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
+      });
+      setSelectedFilingEntityType(user.filingEntityTypeId || "");
+    }
+    setIsEditMode(false);
   };
 
   if (!user) {
@@ -397,10 +462,23 @@ function Profile() {
                     <div className="d-flex gap-2">
                       {isEditMode ? (
                         <>
-                          <button className="dashboard-btn-create" onClick={handleSaveProfile}>
-                            <i className="fa-solid fa-save me-1"></i> Save
+                          <button 
+                            className="dashboard-btn-create" 
+                            onClick={handleSave}
+                            disabled={isSaving}
+                          >
+                            {isSaving ? (
+                              <>
+                                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                Saving...
+                              </>
+                            ) : (
+                              <>
+                                <i className="fa-solid fa-save me-1"></i> Save
+                              </>
+                            )}
                           </button>
-                          <button className="btn btn-outline-secondary" onClick={handleCancelEdit}>
+                          <button className="btn btn-outline-secondary" onClick={handleCancel}>
                             <i className="fa-solid fa-times me-1"></i> Cancel
                           </button>
                         </>
@@ -468,11 +546,33 @@ function Profile() {
                   <div className="row g-3">
                     <div className="col-sm-6">
                       <label className="form-label text-muted small">First Name</label>
-                      <p className="fw-medium mb-0">{user.firstName}</p>
+                      {isEditMode ? (
+                        <input
+                          type="text"
+                          name="firstName"
+                          className="form-control"
+                          value={editFormData.firstName}
+                          onChange={handleFormInputChange}
+                          placeholder="Enter first name"
+                        />
+                      ) : (
+                        <p className="fw-medium mb-0">{user.firstName}</p>
+                      )}
                     </div>
                     <div className="col-sm-6">
                       <label className="form-label text-muted small">Last Name</label>
-                      <p className="fw-medium mb-0">{user.lastName}</p>
+                      {isEditMode ? (
+                        <input
+                          type="text"
+                          name="lastName"
+                          className="form-control"
+                          value={editFormData.lastName}
+                          onChange={handleFormInputChange}
+                          placeholder="Enter last name"
+                        />
+                      ) : (
+                        <p className="fw-medium mb-0">{user.lastName}</p>
+                      )}
                     </div>
                     <div className="col-12">
                       <label className="form-label text-muted small">Email Address</label>

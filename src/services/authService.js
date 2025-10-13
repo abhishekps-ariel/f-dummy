@@ -217,3 +217,27 @@ export const resetPassword = async (userId, password, token) => {
     data: response.data.data,
   };
 };
+
+export const updateUser = async (userId, filingEntityTypeId, firstName, lastName) => {
+  const response = await client.post(
+    AUTH_ENDPOINTS.UPDATE_USER,
+    {
+      id: userId,
+      filingEntityTypeId,
+      firstName,
+      lastName,
+    },
+    {
+      headers: {
+        Accept: "*/*",
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  return {
+    isSuccess: response.data.success,
+    msg: response.data.message,
+    data: response.data.data,
+  };
+};

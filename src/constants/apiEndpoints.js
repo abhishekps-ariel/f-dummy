@@ -10,6 +10,7 @@ export const AUTH_ENDPOINTS = {
   FORGOT_PASSWORD: "/api/Account/forget-password",
   CHECK_RESET_TOKEN: (userId) => `/api/Account/check-reset-token-expiry/${userId}`,
   RESET_PASSWORD: "/api/Account/reset-password",
+  UPDATE_USER: "/api/Account/update-user",
 };
 
 export const ORGANIZATION_ENDPOINTS = {
