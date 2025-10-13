@@ -1488,3 +1488,94 @@ form.search-form input:focus {
 .text-decoration-hover:hover {
     text-decoration: underline;
 }
+
+/* Notification Dropdown Styles */
+.dashboard-notification {
+    font-size: var(--text-med);
+    color: #c1c2c4 !important;
+    background: #cecbc81c !important;
+    width: 40px;
+    height: 40px;
+    border-radius: 14px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.dashboard-notification:hover {
+    background: #e9ecef !important;
+    color: #6c757d !important;
+}
+
+.notif-circle {
+    background: #EB5757;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    position: absolute;
+    right: 5px;
+    top: 7px;
+}
+
+.notification-item-text small {
+    display: block;
+    font-weight: 400;
+    color: #6c757d;
+    font-size: 0.8rem;
+}
+
+.notification-dropdown li:not(:nth-last-child(3)) .dropdown-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    border-bottom: 1px solid #eee;
+    transition: background-color 0.2s;
+    cursor: pointer;
+}
+
+.notification-header {
+    background: var(--theme-color);
+    color: var(--white-color);
+    padding: 15px;
+    font-size: 16px;
+    margin: 0;
+}
+
+.notification-dropdown a.dropdown-item:hover {
+    background: #f5f5f5;
+    color: var(--dark-color);
+}
+
+.notification-dropdown.show {
+    max-width: 350px;
+}
+
+.notification-item-icon {
+    margin-right: 12px;
+    font-size: 16px;
+}
+
+.notification-item-text {
+    flex: 1;
+    line-height: 1.4;
+}
+
+.notification-item-text small {
+    display: block;
+    font-weight: 400;
+    color: #6c757d;
+    font-size: 0.8rem;
+    margin-top: 2px;
+}
+
+/* Ensure the last notification item also gets proper styling */
+.notification-dropdown li:nth-last-child(3) .dropdown-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    border-bottom: 1px solid #eee;
+    transition: background-color 0.2s;
+    cursor: pointer;
+}

@@ -13,6 +13,7 @@ import {
 } from "../../services/organization.service";
 import { useDebounce } from "../../hooks/useDebounce";
 import { toast } from "react-toastify";
+import NotificationDropdown from "../../components/NotificationDropdown";
 import "../../styles/custom.css";
 
 function Dashboard() {
@@ -582,13 +583,8 @@ function Dashboard() {
               </ul>
             </div>
 
-            {/* Notification Bell */}
-            <button
-              type="button"
-              className="dashboard-btn-icon dashboard-notification-btn"
-            >
-              <i className="fa-solid fa-bell"></i>
-            </button>
+            {/* Notification Dropdown */}
+            <NotificationDropdown />
 
             {/* Profile Dropdown */}
             <div className="dropdown">
