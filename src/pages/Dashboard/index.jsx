@@ -717,7 +717,7 @@ function Dashboard() {
                     data-bs-toggle="modal"
                     data-bs-target="#createorganizationModal"
                   >
-                    <i className="fa-solid fa-plus me-1"></i> New Petition
+                    <i className="fa-solid fa-plus me-1"></i> Create New Petition
                   </button>
                 </div>
               </div>
