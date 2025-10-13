@@ -1,7 +1,6 @@
 import client from '../api/client';
 import { ORGANIZATION_ENDPOINTS } from '../constants/apiEndpoints';
 
-// Get all organizations
 export const getAllOrganizations = async () => {
   const response = await client.get(ORGANIZATION_ENDPOINTS.GET_ALL);
 
@@ -12,7 +11,6 @@ export const getAllOrganizations = async () => {
   };
 };
 
-// Search organizations by query
 export const searchOrganizations = async (query) => {
   const response = await client.get(ORGANIZATION_ENDPOINTS.SEARCH, {
     params: { query },
@@ -25,7 +23,6 @@ export const searchOrganizations = async (query) => {
   };
 };
 
-// Submit join request for an organization
 export const submitJoinRequest = async (organizationId) => {
   const response = await client.post(ORGANIZATION_ENDPOINTS.SUBMIT_JOIN_REQUEST, {
     organizationId
@@ -38,7 +35,6 @@ export const submitJoinRequest = async (organizationId) => {
   };
 };
 
-// Get user's join requests
 export const getUserJoinRequests = async () => {
   const response = await client.get(ORGANIZATION_ENDPOINTS.GET_MY_REQUESTS);
 
@@ -49,7 +45,6 @@ export const getUserJoinRequests = async () => {
   };
 };
 
-// Create organization and automatically send join request
 export const createOrganization = async (organizationData) => {
   const response = await client.post(ORGANIZATION_ENDPOINTS.CREATE, organizationData);
 
@@ -60,7 +55,6 @@ export const createOrganization = async (organizationData) => {
   };
 };
 
-// Get organization by ID
 export const getOrganizationById = async (id) => {
   const response = await client.get(ORGANIZATION_ENDPOINTS.GET_BY_ID(id));
 
@@ -71,7 +65,6 @@ export const getOrganizationById = async (id) => {
   };
 };
 
-// Update organization
 export const updateOrganization = async (id, organizationData) => {
   const response = await client.put(ORGANIZATION_ENDPOINTS.UPDATE(id), {
     ...organizationData,
@@ -85,7 +78,6 @@ export const updateOrganization = async (id, organizationData) => {
   };
 };
 
-// Delete organization
 export const deleteOrganization = async (id) => {
   const response = await client.delete(ORGANIZATION_ENDPOINTS.DELETE(id));
 

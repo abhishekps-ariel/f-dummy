@@ -1,7 +1,6 @@
 import client from "../api/client";
 import { AUTH_ENDPOINTS } from "../constants/apiEndpoints";
 
-// Check MFA status for user
 export const checkMfa = async (email, password) => {
   const response = await client.post(
     AUTH_ENDPOINTS.CHECK_MFA,
@@ -23,7 +22,6 @@ export const checkMfa = async (email, password) => {
   };
 };
 
-// Login user (when MFA not required)
 export const login = async (email, password, rememberMe = true) => {
   const response = await client.post(
     AUTH_ENDPOINTS.LOGIN,
@@ -46,7 +44,6 @@ export const login = async (email, password, rememberMe = true) => {
   };
 };
 
-// Send OTP for MFA
 export const sendOtp = async (email, password) => {
   const response = await client.post(
     AUTH_ENDPOINTS.SEND_OTP,
@@ -68,7 +65,6 @@ export const sendOtp = async (email, password) => {
   };
 };
 
-// Verify OTP for MFA
 export const verifyOtp = async (email, otpCode) => {
   const response = await client.post(
     AUTH_ENDPOINTS.VERIFY_OTP,
@@ -90,7 +86,6 @@ export const verifyOtp = async (email, otpCode) => {
   };
 };
 
-// Register new user
 export const register = async (formData) => {
   const requestBody = {
     firstName: formData.firstName,
@@ -114,7 +109,6 @@ export const register = async (formData) => {
   };
 };
 
-// Verify email with token
 export const verifyEmail = async (token) => {
   const response = await client.get(AUTH_ENDPOINTS.VERIFY_EMAIL(token), {
     headers: { Accept: "text/plain" },
@@ -129,7 +123,6 @@ export const verifyEmail = async (token) => {
   };
 };
 
-// Resend verification email
 export const resendVerification = async (email) => {
   const response = await client.post(
     AUTH_ENDPOINTS.RESEND_VERIFICATION,
