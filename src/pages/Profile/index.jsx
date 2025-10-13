@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { getAuthData, clearAuthData } from "../../utils/storage";
 import { useAuth } from "../../context/AuthContext";
 import { ROUTES } from "../../constants/routerConstants";
+import NotificationDropdown from "../../components/NotificationDropdown";
 import "../../styles/custom.css";
 
 function Profile() {
@@ -60,12 +61,35 @@ function Profile() {
 
         {/* Navigation Links */}
         <nav className="flex-grow-1">
-          <ul className="dashboard-nav list-unstyled">
+          <ul
+            className="dashboard-nav list-unstyled"
+            style={{ display: "flex", flexDirection: "column", gap: "12px" }}
+          >
             <li className="dashboard-nav-item">
-              <Link to="/dashboard" className="dashboard-nav-link">
+              <a
+                href="#"
+                className="dashboard-nav-link"
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate(ROUTES.DASHBOARD);
+                }}
+              >
+                <i className="fa-solid fa-box me-2"></i>
+                <span>Dashboard</span>
+              </a>
+            </li>
+            <li className="dashboard-nav-item">
+              <a
+                href="#"
+                className="dashboard-nav-link"
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate(ROUTES.DASHBOARD);
+                }}
+              >
                 <i className="fa-solid fa-building me-2"></i>
                 <span>Organizations</span>
-              </Link>
+              </a>
             </li>
           </ul>
         </nav>
@@ -107,12 +131,35 @@ function Profile() {
           ></button>
         </div>
         <div className="offcanvas-body">
-          <ul className="dashboard-nav list-unstyled">
+          <ul
+            className="dashboard-nav list-unstyled"
+            style={{ display: "flex", flexDirection: "column", gap: "12px" }}
+          >
             <li className="dashboard-nav-item">
-              <Link to="/dashboard" className="dashboard-nav-link">
+              <a
+                href="#"
+                className="dashboard-nav-link"
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate(ROUTES.DASHBOARD);
+                }}
+              >
+                <i className="fa-solid fa-box me-2"></i>
+                <span>Dashboard</span>
+              </a>
+            </li>
+            <li className="dashboard-nav-item">
+              <a
+                href="#"
+                className="dashboard-nav-link"
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate(ROUTES.DASHBOARD);
+                }}
+              >
                 <i className="fa-solid fa-building me-2"></i>
                 <span>Organizations</span>
-              </Link>
+              </a>
             </li>
           </ul>
 
@@ -135,105 +182,109 @@ function Profile() {
       {/* Main Content Area */}
       <main className="dashboard-main-area container-fluid">
         {/* Header / Navbar */}
-        <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-between dashboard-header">
-          <div className="d-flex align-items-center mb-3 mb-lg-0">
+        <div className="d-flex align-items-center justify-content-between dashboard-header">
+          <div className="d-flex align-items-center">
             {/* Mobile Menu Button */}
             <button
-              className="btn p-2 d-lg-none me-3 shadow-sm bg-white rounded-circle"
+              className="btn p-2 d-lg-none me-3"
               type="button"
               data-bs-toggle="offcanvas"
               data-bs-target="#mobileSidebar"
               aria-controls="mobileSidebar"
             >
-              <i className="fas fa-bars text-secondary"></i>
+              <i className="fas fa-bars"></i>
             </button>
-            <h1 className="h3 fw-bold text-dark mb-0">Profile</h1>
+            <h1 className="h4 mb-0">Profile</h1>
           </div>
 
-          <div className="d-flex align-items-center w-100 w-md-auto justify-content-md-end">
-            <div className="d-flex gap-3 align-items-center">
-              {/* Language Dropdown (Hidden on small screens) */}
-              <div className="dropdown d-none d-lg-block me-3">
-                <button
-                  className="btn btn-sm dropdown-toggle text-secondary fw-medium border-0"
-                  type="button"
-                  data-bs-toggle="dropdown"
-                  aria-expanded="false"
-                >
-                  <i className="fa-solid fa-globe me-1"></i>
-                  <span>Eng (US)</span>
-                </button>
-                <ul className="dropdown-menu dropdown-menu-end theme-dropdown">
-                  <li>
-                    <a className="dropdown-item" href="#">
-                      English (US)
-                    </a>
-                  </li>
-                  <li>
-                    <a className="dropdown-item" href="#">
-                      Español (ES)
-                    </a>
-                  </li>
-                  <li>
-                    <a className="dropdown-item" href="#">
-                      Français (FR)
-                    </a>
-                  </li>
-                </ul>
-              </div>
-
-              {/* Notification Bell */}
+          <div className="d-flex align-items-center gap-3">
+            {/* Language Dropdown (Hidden on small screens) */}
+            <div className="dropdown d-none d-lg-block">
               <button
+                className="btn btn-sm dropdown-toggle text-secondary border-0 font-xs"
                 type="button"
-                className="btn bg-none border-0 shadow-none dashboard-notification-btn dashboard-new-alert"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
               >
-                <i className="fa-solid fa-bell"></i>
-                <span className="dashboard-notif-circle"></span>
+                <i className="fa-solid fa-globe me-1"></i>
+                <span>Eng (US)</span>
+              </button>
+              {/* Dropdown Menu */}
+              <ul className="dropdown-menu dropdown-menu-end theme-dropdown">
+                <li>
+                  <a className="dropdown-item" href="#">
+                    English (US)
+                  </a>
+                </li>
+                <li>
+                  <a className="dropdown-item" href="#">
+                    Español (ES)
+                  </a>
+                </li>
+                <li>
+                  <a className="dropdown-item" href="#">
+                    Français (FR)
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            {/* Notification Dropdown */}
+            <NotificationDropdown />
+
+            {/* Profile Dropdown */}
+            <div className="dropdown">
+              <button
+                className="btn p-0 d-flex align-items-center border-0"
+                type="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                <img
+                  className="rounded-circle object-fit-cover me-3"
+                  src="https://static.vecteezy.com/system/resources/thumbnails/003/337/584/small/default-avatar-photo-placeholder-profile-icon-vector.jpg"
+                  alt="User Avatar"
+                  style={{ width: "36px", height: "36px" }}
+                />
+                <div className="text-start d-none d-lg-block">
+                  <p className="font-base mb-0 fw-medium">
+                    {user.firstName} {user.lastName}
+                  </p>
+                  <p className="font-sm mb-0 text-gray-dark">
+                    {user.role || "User"}
+                  </p>
+                </div>
+                <i className="fas fa-chevron-down small ms-2 text-secondary d-none d-lg-block"></i>
               </button>
 
-              {/* Profile Dropdown */}
-              <div className="dropdown">
-                <button
-                  className="btn p-0 d-flex align-items-center border-0 me-2"
-                  type="button"
-                  data-bs-toggle="dropdown"
-                  aria-expanded="false"
-                >
-                  <img
-                    className="rounded-circle object-fit-cover me-3"
-                    src="https://static.vecteezy.com/system/resources/thumbnails/003/337/584/small/default-avatar-photo-placeholder-profile-icon-vector.jpg"
-                    alt="User Avatar"
-                    style={{ width: "40px", height: "40px" }}
-                  />
-                  <div className="text-start d-none d-lg-block">
-                    <p className="font-base mb-0 fw-medium">{user.firstName} {user.lastName}</p>
-                    <p className="font-sm mb-0 text-gray-dark">{user.role || 'User'}</p>
-                  </div>
-                  <i className="fas fa-chevron-down small ms-2 text-secondary d-none d-lg-block"></i>
-                </button>
-
-                {/* Dropdown Menu */}
-                <ul className="dropdown-menu dropdown-menu-end theme-dropdown">
-                  <li>
-                    <Link className="dropdown-item d-flex align-items-center" to="/profile">
-                      <i className="fas fa-user me-2"></i> Profile
-                    </Link>
-                  </li>
-                  <li>
-                    <a className="dropdown-item d-flex align-items-center" href="#">
-                      <i className="fas fa-cog me-2"></i> Settings
-                    </a>
-                  </li>
-                  <li>
-                    <hr className="dropdown-divider" />
-                  </li>
-                  <li>
-                    <a className="dropdown-item d-flex align-items-center" href="#" onClick={(e) => { e.preventDefault(); handleLogout(); }}>
-                      <i className="fas fa-sign-out-alt me-2"></i> Sign out
-                    </a>
-                  </li>
-                </ul>
-              </div>
+              {/* Dropdown Menu */}
+              <ul className="dropdown-menu dropdown-menu-end">
+                <li>
+                  <Link className="dropdown-item" to="/profile">
+                    <i className="fas fa-user me-2"></i> Profile
+                  </Link>
+                </li>
+                <li>
+                  <a className="dropdown-item" href="#">
+                    <i className="fas fa-cog me-2"></i> Settings
+                  </a>
+                </li>
+                <li>
+                  <hr className="dropdown-divider" />
+                </li>
+                <li>
+                  <a
+                    className="dropdown-item"
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleLogout();
+                    }}
+                  >
+                    <i className="fas fa-sign-out-alt me-2"></i> Sign out
+                  </a>
+                </li>
+              </ul>
             </div>
           </div>
         </div>
