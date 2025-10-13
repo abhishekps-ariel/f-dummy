@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useCookies } from 'react-cookie';
 import { getAuthData } from '../utils/storage';
 
 const AuthContext = createContext();
@@ -13,7 +12,6 @@ export const useAuth = () => {
   return context;
 };
 export const AuthProvider = ({ children }) => {
-  const [cookies] = useCookies(['FilirAuthentication']);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -21,10 +19,9 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const checkAuthStatus = () => {
       try {
-        const hasCookie = !!cookies.FilirAuthentication;
         const { token, user: userData } = getAuthData();
         
-        if (hasCookie && token && userData) {
+        if (token && userData) {
           setIsAuthenticated(true);
           setUser(userData);
         } else {
@@ -41,7 +38,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     checkAuthStatus();
-  }, [cookies.FilirAuthentication]);
+  }, []);
 
   const login = (userData) => {
     setIsAuthenticated(true);
