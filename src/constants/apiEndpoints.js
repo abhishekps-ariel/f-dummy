@@ -1,6 +1,3 @@
-// API Endpoint Constants - Relative Paths Only
-// These paths are used with the axios instance which already has the baseURL configured
-
 export const AUTH_ENDPOINTS = {
   CHECK_MFA: "/api/Auth/check-mfa",
   SEND_OTP: "/api/Auth/login/send-otp",
