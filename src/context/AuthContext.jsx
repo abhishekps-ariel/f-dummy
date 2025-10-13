@@ -11,7 +11,6 @@ export const useAuth = () => {
   }
   return context;
 };
-
 export const AuthProvider = ({ children }) => {
   const [cookies] = useCookies(['FilirAuthentication']);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -67,3 +66,4 @@ export const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   );
 };
+
