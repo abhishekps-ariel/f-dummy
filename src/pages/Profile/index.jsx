@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { getAuthData, clearAuthData } from "../../services/auth.service";
+import { getAuthData, clearAuthData } from "../../utils/storage";
 import "../../styles/custom.css";
 
 function Profile() {

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { getAuthData, clearAuthData } from "../../services/auth.service";
+import { getAuthData, clearAuthData } from "../../utils/storage";
 import {
   getAllOrganizations,
   searchOrganizations,
@@ -10,7 +10,7 @@ import {
   getOrganizationById,
   // updateOrganization,
   // deleteOrganization,
-} from "../../services/organization.service";
+} from "../../services/organizationService";
 import { useDebounce } from "../../hooks/useDebounce";
 import { toast } from "react-toastify";
 import NotificationDropdown from "../../components/NotificationDropdown";

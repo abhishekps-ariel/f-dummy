@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
-import { verifyOtp, sendOtp, storeAuthData } from "../../services/auth.service";
+import { verifyOtp, sendOtp } from "../../services/authService";
+import { storeAuthData } from "../../utils/storage";
 import loginImg from "../../assets/logo-sample.png";
 import "../../styles/custom.css";
 

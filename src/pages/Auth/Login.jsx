@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { checkMfa, login, sendOtp, storeAuthData } from "../../services/auth.service";
+import { checkMfa, login, sendOtp } from "../../services/authService";
+import { storeAuthData } from "../../utils/storage";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import loginImg from "../../assets/logo-sample.png";

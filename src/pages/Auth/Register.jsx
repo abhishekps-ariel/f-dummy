@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
-import { register } from "../../services/auth.service";
+import { register } from "../../services/authService";
 import loginImg from "../../assets/logo-sample.png";
 import PasswordGuidelines from "../../components/PasswordGuidelines";
 import PhoneInput from "react-phone-input-2";

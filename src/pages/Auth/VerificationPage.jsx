@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useSearchParams, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import { verifyEmail, resendVerification } from "../../services/auth.service";
+import { verifyEmail, resendVerification } from "../../services/authService";
 import loginImg from "../../assets/logo-sample.png";
 import "../../styles/custom.css";
 
