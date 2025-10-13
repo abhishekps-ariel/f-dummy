@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { checkMfa, login, sendOtp } from "../../services/authService";
 import { storeAuthData } from "../../utils/storage";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
+import { ROUTES } from "../../constants/routerConstants";
 import { toast } from "react-toastify";
 import loginImg from "../../assets/logo-sample.png";
 import "../../styles/custom.css";
@@ -18,6 +20,8 @@ function Login() {
   const [selectedMfaMethod, setSelectedMfaMethod] = useState("");
 
   const navigate = useNavigate();
+  const location = useLocation();
+  const { login: authLogin } = useAuth();
 
   const validateForm = () => {
     const newErrors = {};
@@ -44,7 +48,7 @@ function Login() {
   };
 
   const handleForgetPassword = () => {
-    navigate("/forgot-password");
+    navigate(ROUTES.FORGOT_PASSWORD);
   };
 
   // Initial login - check MFA requirement
@@ -94,8 +98,10 @@ function Login() {
       
       if (response.isSuccess) {
         storeAuthData(response.data);
+        authLogin(response.data.user);
         toast.success("Login successful!");
-        navigate("/dashboard");
+        const from = location.state?.from?.pathname || ROUTES.DASHBOARD;
+        navigate(from, { replace: true });
       } else {
         toast.error(response.msg || "Login failed");
       }
@@ -119,7 +125,7 @@ function Login() {
       if (response.isSuccess) {
         toast.success(response.msg || "OTP sent successfully!");
         // Navigate to TwoFactorAuth page with email and password
-        navigate("/two-factor-auth", { 
+        navigate(ROUTES.TWO_FACTOR_AUTH, { 
           state: { 
             email: formData.email,
             password: formData.password,

@@ -3,6 +3,8 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import { verifyOtp, sendOtp } from "../../services/authService";
 import { storeAuthData } from "../../utils/storage";
+import { useAuth } from "../../context/AuthContext";
+import { ROUTES } from "../../constants/routerConstants";
 import loginImg from "../../assets/logo-sample.png";
 import "../../styles/custom.css";
 
@@ -14,6 +16,7 @@ function TwoFactorAuth() {
   const inputRefs = useRef([]);
   const navigate = useNavigate();
   const location = useLocation();
+  const { login: authLogin } = useAuth();
 
   // Get email and phone from navigation state
   const email = location.state?.email;
@@ -23,14 +26,14 @@ function TwoFactorAuth() {
     // Redirect to login if no email in location state 
     if (!email) {
       toast.error("Access denied. Please login first.");
-      navigate("/login", { replace: true });
+      navigate(ROUTES.LOGIN, { replace: true });
       return;
     }
     
     // Additional check: ensure we have required data for 2FA
     if (!location.state?.password) {
       toast.error("Session expired. Please login again.");
-      navigate("/login", { replace: true });
+      navigate(ROUTES.LOGIN, { replace: true });
       return;
     }
     
@@ -109,8 +112,9 @@ function TwoFactorAuth() {
       
       if (response.isSuccess) {
         storeAuthData(response.data);
+        authLogin(response.data.user);
         toast.success("Login successful!");
-        navigate("/dashboard");
+        navigate(ROUTES.DASHBOARD);
       } else {
         toast.error(response.msg || "Invalid authentication code. Please try again.");
       }
@@ -133,7 +137,7 @@ function TwoFactorAuth() {
       
       if (!password || !email) {
         toast.error("Session expired. Please login again.");
-        navigate("/login", { replace: true });
+        navigate(ROUTES.LOGIN, { replace: true });
         return;
       }
 

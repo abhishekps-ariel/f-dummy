@@ -1,0 +1,16 @@
+export const ROUTES = {
+  HOME: '/',
+  DASHBOARD: '/dashboard',
+  PROFILE: '/profile',
+  LOGIN: '/login',
+  REGISTER: '/register',
+  FORGOT_PASSWORD: '/forgot-password',
+  PASSWORD_EMAIL_SENT: '/password-email-sent',
+  RESET_PASSWORD: '/reset-password',
+  SET_NEW_PASSWORD: '/set-new-password',
+  PASSWORD_CHANGED: '/password-changed',
+  TWO_FACTOR_AUTH: '/two-factor-auth',
+  VERIFICATION_PAGE: '/verification-page',
+  VERIFICATION_EMAIL_SENT: '/verification-email-sent',
+  NOT_FOUND: '*',
+};

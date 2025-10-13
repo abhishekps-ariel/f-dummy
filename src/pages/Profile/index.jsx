@@ -1,17 +1,20 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { getAuthData, clearAuthData } from "../../utils/storage";
+import { useAuth } from "../../context/AuthContext";
+import { ROUTES } from "../../constants/routerConstants";
 import "../../styles/custom.css";
 
 function Profile() {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
+  const { logout: authLogout } = useAuth();
 
   useEffect(() => {
     const { user: userData, token } = getAuthData();
     
     if (!userData || !token) {
-      navigate("/login");
+      navigate(ROUTES.LOGIN);
       return;
     }
 
@@ -20,7 +23,8 @@ function Profile() {
 
   const handleLogout = () => {
     clearAuthData();
-    navigate("/login");
+    authLogout();
+    navigate(ROUTES.LOGIN);
   };
 
   if (!user) {

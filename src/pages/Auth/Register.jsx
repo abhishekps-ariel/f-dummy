@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { register } from "../../services/authService";
+import { ROUTES } from "../../constants/routerConstants";
 import loginImg from "../../assets/logo-sample.png";
 import PasswordGuidelines from "../../components/PasswordGuidelines";
 import PhoneInput from "react-phone-input-2";
@@ -126,7 +127,7 @@ const handleSubmit = async (e) => {
   try {
     const response = await register(formData);
     if (response.isSuccess) {
-      navigate("/verification-email-sent");
+      navigate(ROUTES.VERIFICATION_EMAIL_SENT);
     } else {
       toast.error(response.msg || "Registration failed!");
     }

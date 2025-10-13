@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { getAuthData, clearAuthData } from "../../utils/storage";
+import { useAuth } from "../../context/AuthContext";
+import { ROUTES } from "../../constants/routerConstants";
 import {
   getAllOrganizations,
   searchOrganizations,
@@ -45,6 +47,7 @@ function Dashboard() {
 
   const searchRef = useRef(null);
   const navigate = useNavigate();
+  const { logout: authLogout } = useAuth();
 
   const debouncedSearchQuery = useDebounce(searchQuery, 400);
 
@@ -52,7 +55,7 @@ function Dashboard() {
     const { user: userData, token } = getAuthData();
 
     if (!userData || !token) {
-      navigate("/login");
+      navigate(ROUTES.LOGIN);
       return;
     }
 
@@ -143,7 +146,8 @@ function Dashboard() {
 
   const handleLogout = () => {
     clearAuthData();
-    navigate("/login");
+    authLogout();
+    navigate(ROUTES.LOGIN);
   };
 
   const loadJoinRequests = async () => {
@@ -226,6 +230,7 @@ function Dashboard() {
     }
   };
 
+  // Format date
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
@@ -393,8 +398,8 @@ function Dashboard() {
         <div className="logo-box">
           <div>
             {" "}
-            <h3 class="fw-bold theme-color text-center logo-text-one">FILIR</h3>
-            <h4 class="logo-text-two theme-color text-center mb-3">
+            <h3 className="fw-bold theme-color text-center logo-text-one">FILIR</h3>
+            <h4 className="logo-text-two theme-color text-center mb-3">
               Foreclosure Intake & Loan Information Resource
             </h4>
           </div>
