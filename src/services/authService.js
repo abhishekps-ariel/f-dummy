@@ -1,4 +1,4 @@
-import client from "../api/client";
+import client from "../api/axiosInstance";
 import { AUTH_ENDPOINTS } from "../constants/apiEndpoints";
 
 export const checkMfa = async (email, password) => {

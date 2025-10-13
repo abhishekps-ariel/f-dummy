@@ -1,4 +1,4 @@
-import client from '../api/client';
+import client from '../api/axiosInstance';
 import { ORGANIZATION_ENDPOINTS } from '../constants/apiEndpoints';
 
 export const getAllOrganizations = async () => {
