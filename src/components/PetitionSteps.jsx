@@ -196,6 +196,7 @@ const PetitionSteps = ({ isOpen, onClose }) => {
         let city = '';
         let state = '';
         let zipCode = '';
+        let county = '';
 
         addressComponents.forEach(component => {
           const types = component.types;
@@ -209,6 +210,9 @@ const PetitionSteps = ({ isOpen, onClose }) => {
             state = component.short_name;
           } else if (types.includes('postal_code')) {
             zipCode = component.long_name;
+          } else if (types.includes('administrative_area_level_2')) {
+            // County information is typically found in administrative_area_level_2
+            county = component.long_name;
           }
         });
 
@@ -219,7 +223,8 @@ const PetitionSteps = ({ isOpen, onClose }) => {
           street_address: fullAddress,
           city: city,
           state: state || 'MA',
-          zip_code: zipCode
+          zip_code: zipCode,
+          county: county
         }));
 
         // Mark address as verified and clear any validation errors
@@ -284,6 +289,7 @@ const PetitionSteps = ({ isOpen, onClose }) => {
           let foundCity = false;
           let foundState = false;
           let foundZip = false;
+          let county = '';
 
           addressComponents.forEach(component => {
             const types = component.types;
@@ -302,9 +308,20 @@ const PetitionSteps = ({ isOpen, onClose }) => {
                 foundZip = true;
               }
             }
+            if (types.includes('administrative_area_level_2')) {
+              // Extract county information for auto-filling
+              county = component.long_name;
+            }
           });
 
           if (foundCity && foundState && foundZip) {
+            // Auto-fill county if it was found and not already set
+            if (county && !formData.county) {
+              setFormData(prev => ({
+                ...prev,
+                county: county
+              }));
+            }
             setIsAddressVerified(true);
             resolve({ isValid: true, coordinates: result.geometry.location });
           } else {
@@ -374,7 +391,7 @@ const PetitionSteps = ({ isOpen, onClose }) => {
     }));
 
     // Reset address verification when manually editing address fields
-    if (['street_address', 'city', 'state', 'zip_code'].includes(name)) {
+    if (['street_address', 'city', 'state', 'zip_code', 'county'].includes(name)) {
       setIsAddressVerified(false);
       setAddressValidationError('');
     }
