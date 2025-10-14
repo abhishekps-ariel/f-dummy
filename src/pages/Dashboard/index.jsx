@@ -663,8 +663,15 @@ function Dashboard() {
 
         {/* Main Dashboard Content */}
         <div className="dashboard-content-section">
+          {/* View All Petitions Section */}
+          {activeSection === "dashboard" && showViewAllPetitions && (
+            <ViewAllPetitions 
+              onBack={() => setShowViewAllPetitions(false)} 
+            />
+          )}
+
           {/* Petition Dashboard Section */}
-          {activeSection === "dashboard" && (
+          {activeSection === "dashboard" && !showViewAllPetitions && (
             <div className="shadow-custom bg-white org-search-box">
               <h2 className="font-med mb-4">My Petition Dashboard</h2>
               <div className="row mb-5">
@@ -717,15 +724,15 @@ function Dashboard() {
                 </div>
               </div>
 
-              <div className="table-responsive">
-                <table className="table">
-                  <thead>
+              <div className="table-responsive petition-table-container">
+                <table className="table table-striped table-hover w-100">
+                  <thead className="table-light">
                     <tr>
-                      <th>Petition Number</th>
-                      <th>Property Address</th>
-                      <th>Status</th>
-                      <th>Filing Date</th>
-                      <th>Last Updated</th>
+                      <th style={{ width: '18%' }}>Petition Number</th>
+                      <th style={{ width: '32%' }}>Property Address</th>
+                      <th style={{ width: '18%' }}>Status</th>
+                      <th style={{ width: '16%' }}>Filing Date</th>
+                      <th style={{ width: '16%' }}>Last Updated</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1085,12 +1092,6 @@ function Dashboard() {
         <PetitionSteps 
           isOpen={showPetitionSteps} 
           onClose={() => setShowPetitionSteps(false)} 
-        />
-
-        {/* View All Petitions Modal */}
-        <ViewAllPetitions 
-          isOpen={showViewAllPetitions} 
-          onClose={() => setShowViewAllPetitions(false)} 
         />
 
         {/* Create Organization Modal */}

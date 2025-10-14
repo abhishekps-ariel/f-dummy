@@ -11,7 +11,7 @@
 	--text-base-med: 18px;
 	--text-base: 16px;
 	--text-sm: 14px;
-	--text-xs: 12px;
+	--text-xs: 12px;	
     --font-family: "Poppins", sans-serif; 
 	--dark-color: #222222;
 	--theme-color: #0265A3;
@@ -160,4 +160,85 @@ text-decoration: underline;
     transform: skew(-30deg);
     width: 66px;
 	background-color: rgba(56, 133, 87, .5);
+}
+
+/* Petition Tables - Full Width */
+.petition-table-container {
+    width: 100%;
+}
+
+.petition-table-container .table {
+    width: 100% !important;
+    table-layout: fixed;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-bottom: 0;
+}
+
+.petition-table-container .table th,
+.petition-table-container .table td {
+    padding: 8px 6px;
+    vertical-align: middle;
+    border: none;
+    border-bottom: 1px solid #dee2e6;
+    font-size: 0.9rem;
+}
+
+.petition-table-container .table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    color: #495057;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.petition-table-container .table td:first-child,
+.petition-table-container .table th:first-child {
+    white-space: nowrap;
+    text-align: left;
+}
+
+.petition-table-container .table td:nth-child(2),
+.petition-table-container .table th:nth-child(2) {
+    white-space: normal;
+    text-align: left;
+    word-wrap: break-word;
+}
+
+.petition-table-container .table td:nth-child(3),
+.petition-table-container .table th:nth-child(3) {
+    white-space: nowrap;
+    text-align: left;
+}
+
+.petition-table-container .table td:nth-child(4),
+.petition-table-container .table th:nth-child(4) {
+    white-space: nowrap;
+    text-align: center;
+}
+
+.petition-table-container .table td:nth-child(5),
+.petition-table-container .table th:nth-child(5) {
+    white-space: nowrap;
+    text-align: center;
+}
+
+.petition-table-container .table td:nth-child(6),
+.petition-table-container .table th:nth-child(6) {
+    white-space: normal;
+    text-align: center;
+    word-wrap: break-word;
+}
+
+.petition-table-container .table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+/* ViewAllPetitions specific styling */
+.shadow-custom.bg-white.org-search-box {
+    padding: 1.5rem;
+}
+
+/* Table header styling */
+.petition-table-container .table thead th {
+    background-color: #f8f9fa;
 }

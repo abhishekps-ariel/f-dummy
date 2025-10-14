@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 
-const ViewAllPetitions = ({ isOpen, onClose }) => {
+const ViewAllPetitions = ({ onBack }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [filteredPetitions, setFilteredPetitions] = useState([]);
@@ -14,9 +14,7 @@ const ViewAllPetitions = ({ isOpen, onClose }) => {
       status: 'Accepted',
       filingDate: '2025-09-15',
       lastUpdated: '2025-10-01 10:30 AM',
-      borrower: 'John Smith',
-      loanAmount: '$450,000',
-      county: 'Suffolk'
+      borrower: 'John Smith'
     },
     {
       id: 'PN-1002',
@@ -24,9 +22,7 @@ const ViewAllPetitions = ({ isOpen, onClose }) => {
       status: 'Submitted',
       filingDate: '2025-10-05',
       lastUpdated: '2025-10-09 03:15 PM',
-      borrower: 'Sarah Johnson',
-      loanAmount: '$320,000',
-      county: 'Middlesex'
+      borrower: 'Sarah Johnson'
     },
     {
       id: 'PN-1003',
@@ -34,9 +30,7 @@ const ViewAllPetitions = ({ isOpen, onClose }) => {
       status: 'Returned',
       filingDate: '2025-10-08',
       lastUpdated: '2025-10-10 11:00 AM',
-      borrower: 'Michael Brown',
-      loanAmount: '$280,000',
-      county: 'Essex'
+      borrower: 'Michael Brown'
     },
     {
       id: 'PN-1004',
@@ -44,9 +38,7 @@ const ViewAllPetitions = ({ isOpen, onClose }) => {
       status: 'Draft',
       filingDate: '2025-10-06',
       lastUpdated: '2025-09-28 09:00 AM',
-      borrower: 'Emily Davis',
-      loanAmount: '$380,000',
-      county: 'Norfolk'
+      borrower: 'Emily Davis'
     },
     {
       id: 'PN-1005',
@@ -54,9 +46,7 @@ const ViewAllPetitions = ({ isOpen, onClose }) => {
       status: 'Closed',
       filingDate: '2025-08-20',
       lastUpdated: '2025-09-15 02:45 PM',
-      borrower: 'Robert Wilson',
-      loanAmount: '$520,000',
-      county: 'Plymouth'
+      borrower: 'Robert Wilson'
     },
     {
       id: 'PN-1006',
@@ -64,9 +54,7 @@ const ViewAllPetitions = ({ isOpen, onClose }) => {
       status: 'Accepted',
       filingDate: '2025-09-22',
       lastUpdated: '2025-10-02 08:45 AM',
-      borrower: 'Lisa Anderson',
-      loanAmount: '$295,000',
-      county: 'Hampden'
+      borrower: 'Lisa Anderson'
     },
     {
       id: 'PN-1007',
@@ -74,9 +62,7 @@ const ViewAllPetitions = ({ isOpen, onClose }) => {
       status: 'Submitted',
       filingDate: '2025-10-12',
       lastUpdated: '2025-10-12 04:20 PM',
-      borrower: 'David Martinez',
-      loanAmount: '$410,000',
-      county: 'Worcester'
+      borrower: 'David Martinez'
     },
     {
       id: 'PN-1008',
@@ -84,9 +70,7 @@ const ViewAllPetitions = ({ isOpen, onClose }) => {
       status: 'Returned',
       filingDate: '2025-10-11',
       lastUpdated: '2025-10-11 01:30 PM',
-      borrower: 'Jennifer Taylor',
-      loanAmount: '$650,000',
-      county: 'Middlesex'
+      borrower: 'Jennifer Taylor'
     },
     {
       id: 'PN-1009',
@@ -94,9 +78,7 @@ const ViewAllPetitions = ({ isOpen, onClose }) => {
       status: 'Draft',
       filingDate: '2025-10-13',
       lastUpdated: '2025-10-13 10:15 AM',
-      borrower: 'Christopher Lee',
-      loanAmount: '$480,000',
-      county: 'Middlesex'
+      borrower: 'Christopher Lee'
     },
     {
       id: 'PN-1010',
@@ -104,9 +86,7 @@ const ViewAllPetitions = ({ isOpen, onClose }) => {
       status: 'Closed',
       filingDate: '2025-08-15',
       lastUpdated: '2025-09-10 03:00 PM',
-      borrower: 'Amanda White',
-      loanAmount: '$350,000',
-      county: 'Norfolk'
+      borrower: 'Amanda White'
     },
     {
       id: 'PN-1011',
@@ -114,9 +94,7 @@ const ViewAllPetitions = ({ isOpen, onClose }) => {
       status: 'Accepted',
       filingDate: '2025-09-30',
       lastUpdated: '2025-10-05 11:45 AM',
-      borrower: 'Kevin Thompson',
-      loanAmount: '$420,000',
-      county: 'Middlesex'
+      borrower: 'Kevin Thompson'
     },
     {
       id: 'PN-1012',
@@ -124,9 +102,7 @@ const ViewAllPetitions = ({ isOpen, onClose }) => {
       status: 'Submitted',
       filingDate: '2025-10-14',
       lastUpdated: '2025-10-14 09:30 AM',
-      borrower: 'Michelle Garcia',
-      loanAmount: '$310,000',
-      county: 'Middlesex'
+      borrower: 'Michelle Garcia'
     }
   ];
 
@@ -139,8 +115,7 @@ const ViewAllPetitions = ({ isOpen, onClose }) => {
       filtered = filtered.filter(petition =>
         petition.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
         petition.propertyAddress.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        petition.borrower.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        petition.county.toLowerCase().includes(searchQuery.toLowerCase())
+        petition.borrower.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
@@ -181,186 +156,136 @@ const ViewAllPetitions = ({ isOpen, onClose }) => {
     // Here you would implement actual export functionality
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} tabIndex="-1">
-      <div className="modal-dialog modal-fullscreen">
-        <div className="modal-content">
-          <div className="modal-header text-white theme-bg">
-            <h5 className="modal-title">
-              <i className="fa-solid fa-list me-2"></i>
-              All Petitions ({filteredPetitions.length})
-            </h5>
-            <button 
-              type="button" 
-              className="btn-close btn-close-white" 
-              onClick={onClose}
-              aria-label="Close"
-            ></button>
-          </div>
-          
-          <div className="modal-body p-4">
-            {/* Search and Filter Controls */}
-            <div className="row mb-4">
-              <div className="col-md-6">
-                <div className="input-group">
-                  <span className="input-group-text bg-white border-end-0">
-                    <i className="fas fa-search"></i>
-                  </span>
-                  <input
-                    type="text"
-                    className="form-control border-start-0 shadow-none"
-                    placeholder="Search by petition number, address, borrower, or county..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-              </div>
-              <div className="col-md-3">
-                <select 
-                  className="form-select"
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                >
-                  <option value="all">All Statuses</option>
-                  <option value="draft">Draft</option>
-                  <option value="submitted">Submitted</option>
-                  <option value="accepted">Accepted</option>
-                  <option value="returned">Returned</option>
-                  <option value="closed">Closed</option>
-                </select>
-              </div>
-              <div className="col-md-3">
-                <button 
-                  className="btn btn-outline-primary w-100"
-                  onClick={handleExport}
-                >
-                  <i className="fa-solid fa-download me-2"></i>
-                  Export
-                </button>
-              </div>
-            </div>
-
-            {/* Results Summary */}
-            <div className="d-flex justify-content-between align-items-center mb-3">
-              <div>
-                <span className="text-muted">
-                  Showing {filteredPetitions.length} of {allPetitions.length} petitions
-                </span>
-              </div>
-              <div className="d-flex gap-2">
-                <span className="badge bg-success">Accepted: {allPetitions.filter(p => p.status === 'Accepted').length}</span>
-                <span className="badge bg-primary">Submitted: {allPetitions.filter(p => p.status === 'Submitted').length}</span>
-                <span className="badge bg-warning">Returned: {allPetitions.filter(p => p.status === 'Returned').length}</span>
-                <span className="badge bg-secondary">Draft: {allPetitions.filter(p => p.status === 'Draft').length}</span>
-                <span className="badge bg-dark">Closed: {allPetitions.filter(p => p.status === 'Closed').length}</span>
-              </div>
-            </div>
-
-            {/* Petitions Table */}
-            <div className="table-responsive">
-              <table className="table table-hover">
-                <thead className="table-light">
-                  <tr>
-                    <th>Petition Number</th>
-                    <th>Property Address</th>
-                    <th>Borrower</th>
-                    <th>Loan Amount</th>
-                    <th>County</th>
-                    <th>Status</th>
-                    <th>Filing Date</th>
-                    <th>Last Updated</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredPetitions.length > 0 ? (
-                    filteredPetitions.map((petition) => (
-                      <tr
-                        key={petition.id}
-                        className="petition-row"
-                        onClick={() => handlePetitionClick(petition.id)}
-                        style={{ cursor: 'pointer' }}
-                      >
-                        <td>
-                          <a 
-                            href={`#details-${petition.id}`}
-                            className="text-decoration-none fw-medium"
-                          >
-                            {petition.id}
-                          </a>
-                        </td>
-                        <td>{petition.propertyAddress}</td>
-                        <td>{petition.borrower}</td>
-                        <td className="fw-medium">{petition.loanAmount}</td>
-                        <td>{petition.county}</td>
-                        <td>
-                          <span className={getStatusBadgeClass(petition.status)}>
-                            {petition.status}
-                          </span>
-                        </td>
-                        <td>{petition.filingDate}</td>
-                        <td className="text-muted">{petition.lastUpdated}</td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="8" className="text-center py-4">
-                        <i className="fa-solid fa-search text-muted mb-2" style={{ fontSize: '2rem' }}></i>
-                        <p className="text-muted mb-0">No petitions found matching your criteria</p>
-                        <small className="text-muted">Try adjusting your search or filter settings</small>
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Pagination (if needed in the future) */}
-            {filteredPetitions.length > 10 && (
-              <div className="d-flex justify-content-center mt-4">
-                <nav aria-label="Petitions pagination">
-                  <ul className="pagination">
-                    <li className="page-item disabled">
-                      <span className="page-link">Previous</span>
-                    </li>
-                    <li className="page-item active">
-                      <span className="page-link">1</span>
-                    </li>
-                    <li className="page-item">
-                      <a className="page-link" href="#">2</a>
-                    </li>
-                    <li className="page-item">
-                      <a className="page-link" href="#">3</a>
-                    </li>
-                    <li className="page-item">
-                      <a className="page-link" href="#">Next</a>
-                    </li>
-                  </ul>
-                </nav>
-              </div>
-            )}
-          </div>
-
-          <div className="modal-footer">
-            <button 
-              type="button" 
-              className="btn btn-secondary" 
-              onClick={onClose}
-            >
-              Close
-            </button>
-            <button 
-              type="button" 
-              className="btn btn-primary"
-              onClick={handleExport}
-            >
-              <i className="fa-solid fa-download me-2"></i>
-              Export Data
-            </button>
+    <div className="shadow-custom bg-white org-search-box">
+      <div className="d-flex align-items-center mb-4">
+        <button 
+          className="btn btn-link text-decoration-none me-3"
+          onClick={onBack}
+        >
+          <i className="fa-solid fa-arrow-left me-2"></i>
+          Back to Dashboard
+        </button>
+      </div>
+      {/* Search and Filter Controls */}
+      <div className="row mb-4">
+        <div className="col-md-8">
+          <div className="input-group">
+            <span className="input-group-text bg-white border-end-0">
+              <i className="fas fa-search"></i>
+            </span>
+            <input
+              type="text"
+              className="form-control border-start-0 shadow-none"
+              placeholder="Search by petition number, address, or borrower..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
         </div>
+        <div className="col-md-4">
+          <select 
+            className="form-select"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <option value="all">All Statuses</option>
+            <option value="draft">Draft</option>
+            <option value="submitted">Submitted</option>
+            <option value="accepted">Accepted</option>
+            <option value="returned">Returned</option>
+            <option value="closed">Closed</option>
+          </select>
+        </div>
       </div>
+
+      {/* Results Summary */}
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <span className="text-muted">
+            Showing {filteredPetitions.length} of {allPetitions.length} petitions
+          </span>
+        </div>
+      </div>
+
+      {/* Petitions Table */}
+      <div className="table-responsive petition-table-container">
+        <table className="table table-striped table-hover w-100">
+          <thead className="table-light">
+            <tr>
+              <th style={{ width: '12%' }}>Petition Number</th>
+              <th style={{ width: '35%' }}>Property Address</th>
+              <th style={{ width: '15%' }}>Borrower</th>
+              <th style={{ width: '12%' }}>Status</th>
+              <th style={{ width: '13%' }}>Filing Date</th>
+              <th style={{ width: '13%' }}>Last Updated</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredPetitions.length > 0 ? (
+              filteredPetitions.map((petition) => (
+                <tr
+                  key={petition.id}
+                  className="petition-row"
+                  onClick={() => handlePetitionClick(petition.id)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <td>
+                    <a 
+                      href={`#details-${petition.id}`}
+                      className="text-decoration-none fw-medium"
+                    >
+                      {petition.id}
+                    </a>
+                  </td>
+                  <td>{petition.propertyAddress}</td>
+                  <td>{petition.borrower}</td>
+                  <td>
+                    <span className={getStatusBadgeClass(petition.status)}>
+                      {petition.status}
+                    </span>
+                  </td>
+                  <td>{petition.filingDate}</td>
+                  <td className="text-muted">{petition.lastUpdated}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="6" className="text-center py-4">
+                  <i className="fa-solid fa-search text-muted mb-2" style={{ fontSize: '2rem' }}></i>
+                  <p className="text-muted mb-0">No petitions found matching your criteria</p>
+                  <small className="text-muted">Try adjusting your search or filter settings</small>
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Pagination (if needed in the future) */}
+      {filteredPetitions.length > 10 && (
+        <div className="d-flex justify-content-center mt-4">
+          <nav aria-label="Petitions pagination">
+            <ul className="pagination">
+              <li className="page-item disabled">
+                <span className="page-link">Previous</span>
+              </li>
+              <li className="page-item active">
+                <span className="page-link">1</span>
+              </li>
+              <li className="page-item">
+                <a className="page-link" href="#">2</a>
+              </li>
+              <li className="page-item">
+                <a className="page-link" href="#">3</a>
+              </li>
+              <li className="page-item">
+                <a className="page-link" href="#">Next</a>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      )}
     </div>
   );
 };
