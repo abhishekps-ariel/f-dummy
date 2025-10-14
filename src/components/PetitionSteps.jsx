@@ -28,49 +28,30 @@ const PetitionSteps = ({ isOpen, onClose }) => {
     preventGoogleFontsLoading: true
   });
 
-  // Debug logging
+  // Error logging
   useEffect(() => {
-    console.log('=== Google Maps Debug Info ===');
-    console.log('API Key configured:', Config.GOOGLE_PLACES_API_KEY ? 'Yes' : 'No');
-    console.log('API Key value:', Config.GOOGLE_PLACES_API_KEY ? Config.GOOGLE_PLACES_API_KEY.substring(0, 10) + '...' : 'Not set');
-    console.log('Google Maps Loaded:', isLoaded);
-    console.log('Current domain:', window.location.hostname);
-    console.log('Current protocol:', window.location.protocol);
-    
     if (loadError) {
       console.error('Google Maps Load Error:', loadError);
-      console.error('Error details:', {
-        message: loadError.message,
-        stack: loadError.stack
-      });
     }
     
     // Check if API key is properly configured
     if (Config.GOOGLE_PLACES_API_KEY === 'YOUR_GOOGLE_PLACES_API_KEY_HERE') {
-      console.warn('⚠️ Google Places API key not configured properly');
+      console.warn('Google Places API key not configured properly');
     }
-    
-    console.log('=============================');
   }, [isLoaded, loadError]);
 
   // Initialize Google Places services when API is loaded
   useEffect(() => {
     if (isLoaded && window.google && window.google.maps) {
-      console.log('🔧 Initializing Google Places services...');
-      
       try {
         // Initialize AutocompleteService
         autocompleteServiceRef.current = new window.google.maps.places.AutocompleteService();
-        console.log('✅ AutocompleteService initialized');
         
         // Initialize PlacesService
         const map = new window.google.maps.Map(document.createElement('div'));
         placesServiceRef.current = new window.google.maps.places.PlacesService(map);
-        console.log('✅ PlacesService initialized');
-        
-        console.log('🎉 All Google Places services initialized successfully!');
       } catch (error) {
-        console.error('💥 Error initializing Google Places services:', error);
+        console.error('Error initializing Google Places services:', error);
       }
     }
   }, [isLoaded]);
@@ -137,8 +118,6 @@ const PetitionSteps = ({ isOpen, onClose }) => {
 
   // Handle address input and get predictions
   const handleAddressInput = (input) => {
-    console.log('🔍 Searching for:', input);
-    
     if (!input.trim() || !autocompleteServiceRef.current) {
       setPredictions([]);
       setShowPredictions(false);
@@ -161,52 +140,31 @@ const PetitionSteps = ({ isOpen, onClose }) => {
         componentRestrictions: { country: 'us' }
       };
 
-      console.log('🚀 Making Google Places API request:', request);
-
       try {
         autocompleteServiceRef.current.getPlacePredictions(request, (predictions, status) => {
           setIsLoadingPredictions(false);
-          console.log('📍 Google Places API Response:', { 
-            status, 
-            predictionsCount: predictions?.length,
-            statusMessage: status === window.google.maps.places.PlacesServiceStatus.OK ? 'OK' : 
-                           status === window.google.maps.places.PlacesServiceStatus.ZERO_RESULTS ? 'ZERO_RESULTS' :
-                           status === window.google.maps.places.PlacesServiceStatus.OVER_QUERY_LIMIT ? 'OVER_QUERY_LIMIT' :
-                           status === window.google.maps.places.PlacesServiceStatus.REQUEST_DENIED ? 'REQUEST_DENIED' :
-                           status === window.google.maps.places.PlacesServiceStatus.INVALID_REQUEST ? 'INVALID_REQUEST' :
-                           'UNKNOWN_STATUS',
-            fullResponse: { predictions, status }
-          });
           
           if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
             setPredictions(predictions);
             setShowPredictions(true);
             setSelectedPredictionIndex(-1);
-            console.log('✅ Predictions received:', predictions);
           } else {
             setPredictions([]);
             setShowPredictions(false);
-            console.log('❌ No predictions or error:', status);
             
-            // Show specific error messages
+            // Show specific error messages for debugging
             if (status === window.google.maps.places.PlacesServiceStatus.REQUEST_DENIED) {
-              console.error('🚫 API request denied - check API key permissions');
-              console.error('💡 Make sure Places API is enabled and API key has proper permissions');
+              console.error('Google Places API request denied - check API key permissions');
             } else if (status === window.google.maps.places.PlacesServiceStatus.OVER_QUERY_LIMIT) {
-              console.error('💰 API quota exceeded');
-            } else if (status === window.google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
-              console.log('🔍 No results found for query');
+              console.error('Google Places API quota exceeded');
             } else if (status === window.google.maps.places.PlacesServiceStatus.INVALID_REQUEST) {
-              console.error('❌ Invalid request - check API key and request format');
-            } else {
-              console.error('❓ Unknown status:', status);
+              console.error('Google Places API invalid request');
             }
           }
         });
       } catch (error) {
         setIsLoadingPredictions(false);
-        console.error('💥 Error calling Google Places API:', error);
-        console.error('💡 This might indicate API key issues or network problems');
+        console.error('Error calling Google Places API:', error);
         setPredictions([]);
         setShowPredictions(false);
       }
@@ -291,68 +249,6 @@ const PetitionSteps = ({ isOpen, onClose }) => {
     }
   };
 
-  // Test Google Maps API manually
-  const testGoogleMapsAPI = async () => {
-    console.log('🧪 Testing Google Maps API...');
-    
-    if (window.google && window.google.maps) {
-      console.log('✅ Google Maps API is available globally');
-      console.log('Available services:', Object.keys(window.google.maps));
-      
-      if (window.google.maps.places) {
-        console.log('✅ Places API is available');
-        console.log('Available places services:', Object.keys(window.google.maps.places));
-        
-        // Test autocomplete service
-        if (autocompleteServiceRef.current) {
-          console.log('🧪 Testing AutocompleteService with sample query...');
-          const testRequest = {
-            input: '123 Main St Boston',
-            types: ['address'],
-            componentRestrictions: { country: 'us' }
-          };
-          
-          autocompleteServiceRef.current.getPlacePredictions(testRequest, (predictions, status) => {
-            console.log('🧪 Test API Response:', { status, predictionsCount: predictions?.length });
-            if (predictions && predictions.length > 0) {
-              console.log('✅ Test successful - API is working!');
-              console.log('Sample prediction:', predictions[0]);
-            } else {
-              console.log('❌ Test failed - no predictions returned');
-              console.log('Status:', status);
-            }
-          });
-        } else {
-          console.error('❌ AutocompleteService not initialized');
-        }
-      } else {
-        console.error('❌ Places API not available');
-      }
-    } else {
-      console.error('❌ Google Maps API not available globally');
-    }
-
-    // Test direct API call to verify API key
-    console.log('🧪 Testing direct Places API call...');
-    try {
-      const directApiUrl = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=123%20Main%20St%20Boston&types=address&components=country:us&key=${Config.GOOGLE_PLACES_API_KEY}`;
-      console.log('🔗 Direct API URL:', directApiUrl);
-      
-      const response = await fetch(directApiUrl);
-      const data = await response.json();
-      console.log('🧪 Direct API Response:', data);
-      
-      if (data.status === 'OK') {
-        console.log('✅ Direct API test successful!');
-        console.log('Predictions:', data.predictions);
-      } else {
-        console.error('❌ Direct API test failed:', data.status);
-        console.error('Error message:', data.error_message);
-      }
-    } catch (error) {
-      console.error('💥 Direct API test error:', error);
-    }
-  };
 
 
   // Validation functions
@@ -499,28 +395,6 @@ const PetitionSteps = ({ isOpen, onClose }) => {
                         ))}
                       </div>
                     )}
-                    
-                    <div className="text-success small mt-1">
-                      ✅ Google Maps API loaded successfully. Start typing to see suggestions.
-                    </div>
-                    <div className="small mt-1">
-                      <span className="text-muted">Services: </span>
-                      {autocompleteServiceRef.current ? (
-                        <span className="text-success">✅ Autocomplete</span>
-                      ) : (
-                        <span className="text-warning">⏳ Loading...</span>
-                      )}
-                      {placesServiceRef.current && (
-                        <span className="text-success ms-2">✅ Places</span>
-                      )}
-                    </div>
-                    <button 
-                      type="button" 
-                      className="btn btn-sm btn-outline-primary mt-2"
-                      onClick={testGoogleMapsAPI}
-                    >
-                      Test Google Maps API
-                    </button>
                   </div>
                 ) : (
                   <div className="form-control d-flex align-items-center justify-content-center" style={{ height: '38px' }}>
@@ -532,9 +406,7 @@ const PetitionSteps = ({ isOpen, onClose }) => {
                 )}
               </div>
               <div className="col-md-6">
-                <label htmlFor="city" className="form-label">
-                  City <small className="text-muted">(auto-filled, editable)</small>
-                </label>
+                <label htmlFor="city" className="form-label">City</label>
                 <input 
                   type="text" 
                   id="city" 
@@ -546,9 +418,7 @@ const PetitionSteps = ({ isOpen, onClose }) => {
                 />
               </div>
               <div className="col-md-6">
-                <label htmlFor="state" className="form-label">
-                  State <small className="text-muted">(auto-filled, editable)</small>
-                </label>
+                <label htmlFor="state" className="form-label">State</label>
                 <select 
                   id="state" 
                   name="state" 
@@ -611,9 +481,7 @@ const PetitionSteps = ({ isOpen, onClose }) => {
                 </select>
               </div>
               <div className="col-md-6">
-                <label htmlFor="zip_code" className="form-label">
-                  ZIP Code <small className="text-muted">(auto-filled, editable)</small>
-                </label>
+                <label htmlFor="zip_code" className="form-label">ZIP Code</label>
                 <input 
                   type="text" 
                   id="zip_code" 
