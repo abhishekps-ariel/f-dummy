@@ -210,7 +210,7 @@ const ViewAllPetitions = ({ onBack }) => {
 
       {/* Petitions Table */}
       <div className="table-responsive petition-table-container">
-        <table className="table table-striped table-hover w-100">
+        <table className="table table-hover w-100">
           <thead className="table-light">
             <tr>
               <th style={{ width: '12%' }}>Petition Number</th>

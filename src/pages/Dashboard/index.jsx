@@ -696,18 +696,6 @@ function Dashboard() {
               </div>
 
               <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-                <div className="col-md-4">
-                  <div className="input-group">
-                    <span className="input-group-text bg-white border-end-0">
-                      <i className="fas fa-search"></i>
-                    </span>
-                    <input
-                      type="text"
-                      className="form-control border-start-0 shadow-none"
-                      placeholder="Search Petitions"
-                    />
-                  </div>
-                </div>
                 <div className="d-flex gap-3 align-items-center">
                   <button 
                     className="btn btn-link text-decoration-hover p-0"
@@ -724,15 +712,16 @@ function Dashboard() {
                 </div>
               </div>
 
-              <div className="table-responsive petition-table-container">
-                <table className="table table-striped table-hover w-100">
+              <div className="table-responsive petition-table-container dashboard-petition-table">
+                <table className="table table-hover w-100">
                   <thead className="table-light">
                     <tr>
-                      <th style={{ width: '18%' }}>Petition Number</th>
-                      <th style={{ width: '32%' }}>Property Address</th>
-                      <th style={{ width: '18%' }}>Status</th>
-                      <th style={{ width: '16%' }}>Filing Date</th>
-                      <th style={{ width: '16%' }}>Last Updated</th>
+                      <th style={{ width: '15%' }}>Petition Number</th>
+                      <th style={{ width: '25%' }}>Property Address</th>
+                      <th style={{ width: '15%' }}>Borrower</th>
+                      <th style={{ width: '15%' }}>Status</th>
+                      <th style={{ width: '15%' }}>Filing Date</th>
+                      <th style={{ width: '15%' }}>Last Updated</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -744,6 +733,7 @@ function Dashboard() {
                         <a href="#details-1001">PN-1001</a>
                       </td>
                       <td>123 Main St, Anytown</td>
+                      <td>John Smith</td>
                       <td>
                         <span className="status-badge status-Accepted">
                           Accepted
@@ -760,6 +750,7 @@ function Dashboard() {
                         <a href="#details-1002">PN-1002</a>
                       </td>
                       <td>45 Baker Ln, Somewhere</td>
+                      <td>Sarah Johnson</td>
                       <td>
                         <span className="status-badge status-Submitted">
                           Submitted
@@ -776,6 +767,7 @@ function Dashboard() {
                         <a href="#details-1003">PN-1003</a>
                       </td>
                       <td>789 Oak Ave, Cityville</td>
+                      <td>Michael Brown</td>
                       <td>
                         <span className="status-badge status-Returned">
                           Returned
@@ -792,6 +784,7 @@ function Dashboard() {
                         <a href="#details-1004">PN-1004</a>
                       </td>
                       <td>32 Pine Ct, Otherplace</td>
+                      <td>Emily Davis</td>
                       <td>
                         <span className="status-badge status-Draft">Draft</span>
                       </td>
@@ -806,6 +799,7 @@ function Dashboard() {
                         <a href="#details-1005">PN-1005</a>
                       </td>
                       <td>55 River Rd, Waterton</td>
+                      <td>Robert Wilson</td>
                       <td>
                         <span className="status-badge status-Closed">
                           Closed

@@ -216,6 +216,18 @@ text-decoration: underline;
     text-align: center;
 }
 
+/* Dashboard table specific - Status column (4th column in dashboard) */
+.dashboard-petition-table .table td:nth-child(4),
+.dashboard-petition-table .table th:nth-child(4) {
+    white-space: nowrap;
+    text-align: center;
+}
+
+.dashboard-petition-table .table td:nth-child(4) .status-badge {
+    display: inline-block;
+    margin: 0 auto;
+}
+
 .petition-table-container .table td:nth-child(5),
 .petition-table-container .table th:nth-child(5) {
     white-space: nowrap;
@@ -229,8 +241,16 @@ text-decoration: underline;
     word-wrap: break-word;
 }
 
+.petition-table-container .table tbody tr:nth-child(even) {
+    background-color: #fdfdfd;
+}
+
+.petition-table-container .table tbody tr:nth-child(odd) {
+    background-color: #ffffff;
+}
+
 .petition-table-container .table tbody tr:hover {
-    background-color: #f8f9fa;
+    background-color: #f0f8ff;
 }
 
 /* ViewAllPetitions specific styling */
