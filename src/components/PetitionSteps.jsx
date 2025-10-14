@@ -84,9 +84,14 @@ const PetitionSteps = ({ isOpen, onClose }) => {
     current_rate: '',
     
     // Step 3: Borrower Details
-    borrower_first_name_1: '',
-    borrower_middle_initial_1: '',
-    borrower_last_name_1: '',
+    borrowers: [
+      {
+        id: 1,
+        first_name: '',
+        middle_initial: '',
+        last_name: ''
+      }
+    ],
     
     // Step 4: Filing Entity
     organization_name: '',
@@ -398,12 +403,82 @@ const PetitionSteps = ({ isOpen, onClose }) => {
     }
   };
 
+  // Borrower management functions
+  const addBorrower = () => {
+    const newBorrowerId = Math.max(...formData.borrowers.map(b => b.id)) + 1;
+    setFormData(prev => ({
+      ...prev,
+      borrowers: [
+        ...prev.borrowers,
+        {
+          id: newBorrowerId,
+          first_name: '',
+          middle_initial: '',
+          last_name: ''
+        }
+      ]
+    }));
+  };
+
+  const removeBorrower = (borrowerId) => {
+    if (formData.borrowers.length > 1) {
+      setFormData(prev => ({
+        ...prev,
+        borrowers: prev.borrowers.filter(borrower => borrower.id !== borrowerId)
+      }));
+    }
+  };
+
+  const updateBorrower = (borrowerId, field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      borrowers: prev.borrowers.map(borrower =>
+        borrower.id === borrowerId
+          ? { ...borrower, [field]: value }
+          : borrower
+      )
+    }));
+  };
+
+  // Validate borrower details
+  const validateBorrowerDetails = () => {
+    const errors = [];
+    
+    if (!formData.borrowers || formData.borrowers.length === 0) {
+      errors.push('At least one borrower must be entered');
+      return { isValid: false, errors };
+    }
+
+    formData.borrowers.forEach((borrower, index) => {
+      if (!borrower.first_name.trim()) {
+        errors.push(`Borrower ${index + 1}: First name is required`);
+      }
+      if (!borrower.last_name.trim()) {
+        errors.push(`Borrower ${index + 1}: Last name is required`);
+      }
+    });
+
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
+  };
+
   const nextStep = async (direction) => {
     const newStep = currentStep + direction;
     
     // Validate Property Details step before proceeding
     if (currentStep === 1 && direction === 1) {
       const validation = await validatePropertyDetailsStep();
+      if (!validation.isValid) {
+        toast.error(`Please fix the following errors: ${validation.errors.join(', ')}`);
+        return;
+      }
+    }
+    
+    // Validate Borrower Details step before proceeding
+    if (currentStep === 3 && direction === 1) {
+      const validation = validateBorrowerDetails();
       if (!validation.isValid) {
         toast.error(`Please fix the following errors: ${validation.errors.join(', ')}`);
         return;
@@ -772,42 +847,68 @@ const PetitionSteps = ({ isOpen, onClose }) => {
         return (
           <div>
             <h2 className="theme-color font-med mb-1">3. Borrower Details</h2>
-            <p className="text-muted small mb-3">Enter the full name for each borrower on the loan.</p>
-            <div className="p-3 border rounded bg-light mb-3">
-              <h5 className="fw-semibold text-dark mb-3 font-base">Borrower 1</h5>
-              <div className="row g-3">
-                <div className="col-md-4">
-                  <label className="form-label">First Name</label>
-                  <input 
-                    type="text" 
-                    name="borrower_first_name_1" 
-                    className="form-control"
-                    value={formData.borrower_first_name_1}
-                    onChange={handleInputChange}
-                  />
+            <p className="text-muted small mb-3">Enter the full name for each borrower on the loan. At least one borrower is required.</p>
+            
+            {formData.borrowers.map((borrower, index) => (
+              <div key={borrower.id} className="p-3 border rounded bg-light mb-3 position-relative">
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <h5 className="fw-semibold text-dark mb-0 font-base">Borrower {index + 1}</h5>
+                  {formData.borrowers.length > 1 && (
+                    <button
+                      type="button"
+                      className="btn btn-outline-danger btn-sm"
+                      onClick={() => removeBorrower(borrower.id)}
+                      title="Remove this borrower"
+                    >
+                      <i className="fas fa-trash"></i>
+                    </button>
+                  )}
                 </div>
-                <div className="col-md-4">
-                  <label className="form-label">Middle Initial (Optional)</label>
-                  <input 
-                    type="text" 
-                    name="borrower_middle_initial_1" 
-                    maxLength="1" 
-                    className="form-control"
-                    value={formData.borrower_middle_initial_1}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <div className="col-md-4">
-                  <label className="form-label">Last Name</label>
-                  <input 
-                    type="text" 
-                    name="borrower_last_name_1" 
-                    className="form-control"
-                    value={formData.borrower_last_name_1}
-                    onChange={handleInputChange}
-                  />
+                <div className="row g-3">
+                  <div className="col-md-4">
+                    <label className="form-label">First Name *</label>
+                    <input 
+                      type="text" 
+                      className="form-control"
+                      value={borrower.first_name}
+                      onChange={(e) => updateBorrower(borrower.id, 'first_name', e.target.value)}
+                      placeholder="Enter first name"
+                    />
+                  </div>
+                  <div className="col-md-4">
+                    <label className="form-label">Middle Initial (Optional)</label>
+                    <input 
+                      type="text" 
+                      maxLength="1" 
+                      className="form-control"
+                      value={borrower.middle_initial}
+                      onChange={(e) => updateBorrower(borrower.id, 'middle_initial', e.target.value)}
+                      placeholder="M"
+                    />
+                  </div>
+                  <div className="col-md-4">
+                    <label className="form-label">Last Name *</label>
+                    <input 
+                      type="text" 
+                      className="form-control"
+                      value={borrower.last_name}
+                      onChange={(e) => updateBorrower(borrower.id, 'last_name', e.target.value)}
+                      placeholder="Enter last name"
+                    />
+                  </div>
                 </div>
               </div>
+            ))}
+            
+            <div className="text-center">
+              <button
+                type="button"
+                className="dashboard-btn-create"
+                onClick={addBorrower}
+              >
+                <i className="fas fa-plus me-2"></i>
+                Add Another Borrower
+              </button>
             </div>
           </div>
         );
