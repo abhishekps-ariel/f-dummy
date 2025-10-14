@@ -30,6 +30,19 @@ const ViewAllPetitions = ({ onBack }) => {
     }
   };
 
+  // Reset all filters and refresh data
+  const handleRefresh = () => {
+    setSearchQuery('');
+    setStatusFilter('all');
+    setDateFilter('all');
+    setCustomDateFrom('');
+    setCustomDateTo('');
+    setShowCustomDateRange(false);
+    setSortBy('filingDate');
+    setSortOrder('desc');
+    loadPetitions(1);
+  };
+
   // Load petitions with filters and pagination
   const loadPetitions = async (page = 1) => {
     setLoading(true);
@@ -155,20 +168,32 @@ const ViewAllPetitions = ({ onBack }) => {
           </select>
         </div>
         <div className="col-md-2">
-          <select 
-            className="form-select"
-            value={`${sortBy}-${sortOrder}`}
-            onChange={(e) => {
-              const [field, order] = e.target.value.split('-');
-              setSortBy(field);
-              setSortOrder(order);
-            }}
-          >
-            <option value="filingDate-desc">Newest First</option>
-            <option value="filingDate-asc">Oldest First</option>
-            <option value="lastUpdated-desc">Recently Updated</option>
-            <option value="lastUpdated-asc">Least Updated</option>
-          </select>
+          <div className="d-flex gap-2">
+            <select 
+              className="form-select"
+              value={`${sortBy}-${sortOrder}`}
+              onChange={(e) => {
+                const [field, order] = e.target.value.split('-');
+                setSortBy(field);
+                setSortOrder(order);
+              }}
+            >
+              <option value="filingDate-desc">Newest First</option>
+              <option value="filingDate-asc">Oldest First</option>
+              <option value="lastUpdated-desc">Recently Updated</option>
+              <option value="lastUpdated-asc">Least Updated</option>
+            </select>
+            <button
+              className="dashboard-btn-refresh"
+              onClick={handleRefresh}
+              disabled={loading}
+              title="Reset all filters and refresh"
+            >
+              <i
+                className={`fa-solid fa-refresh ${loading ? "fa-spin" : ""}`}
+              ></i>
+            </button>
+          </div>
         </div>
       </div>
 
