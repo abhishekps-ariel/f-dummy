@@ -44,11 +44,7 @@ export const router = createBrowserRouter([
     element: <ResetPassword />,
   },
   {
-    path: ROUTES.SET_NEW_PASSWORD,
-    element: <SetNewPassword />,
-  },
-  {
-    path: `${ROUTES.SET_NEW_PASSWORD}/:token`,
+    path: `${ROUTES.SET_NEW_PASSWORD}/:token?`,
     element: <SetNewPassword />,
   },
   {
@@ -60,11 +56,7 @@ export const router = createBrowserRouter([
     element: <TwoFactorAuth />,
   },
   {
-    path: ROUTES.VERIFICATION_PAGE,
-    element: <VerificationPage />,
-  },
-  {
-    path: `${ROUTES.VERIFICATION_PAGE}/:token`,
+    path: `${ROUTES.VERIFICATION_PAGE}/:token?`,
     element: <VerificationPage />,
   },
   {
