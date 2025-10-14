@@ -86,7 +86,7 @@ export const verifyOtp = async (email, otpCode) => {
   };
 };
 
-export const register = async (formData) => {
+export const register = async (formData, inviteData = null) => {
   const requestBody = {
     firstName: formData.firstName,
     lastName: formData.lastName,
@@ -95,6 +95,12 @@ export const register = async (formData) => {
     role: "Normal User",
     phone: formData.phoneNumber,
   };
+
+  // Add invite-related parameters if provided
+  if (inviteData) {
+    requestBody.joinRequestId = inviteData.joinRequestId;
+    requestBody.isAdminInvite = inviteData.isAdminInvite;
+  }
 
   const response = await client.post(AUTH_ENDPOINTS.REGISTER, requestBody, {
     headers: {

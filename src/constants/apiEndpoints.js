@@ -23,6 +23,8 @@ export const ORGANIZATION_ENDPOINTS = {
   DELETE: (id) => `/Organization/${id}`,
   SUBMIT_JOIN_REQUEST: "/api/OrganizationJoinRequest/request",
   GET_MY_REQUESTS: "/api/OrganizationJoinRequest/my-requests",
+  GET_JOIN_REQUEST: (joinRequestId) => `/api/OrganizationJoinRequest/join-request/${joinRequestId}`,
+  BIND_USER_TO_ORGANIZATION: "/api/OrganizationJoinRequest/bind-user-to-organization",
 };
 
 export const COMMON_ENDPOINTS = {

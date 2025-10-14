@@ -87,3 +87,39 @@ export const deleteOrganization = async (id) => {
     data: response.data.data || response.data,
   };
 };
+
+export const getJoinRequest = async (joinRequestId) => {
+  const response = await client.get(ORGANIZATION_ENDPOINTS.GET_JOIN_REQUEST(joinRequestId), {
+    headers: {
+      Accept: "text/plain",
+    },
+  });
+
+  return {
+    isSuccess: response.status === 200,
+    msg: "Join request fetched successfully",
+    data: response.data, // This should contain the email
+  };
+};
+
+export const bindUserToOrganization = async (joinRequestId, userId) => {
+  const response = await client.post(
+    ORGANIZATION_ENDPOINTS.BIND_USER_TO_ORGANIZATION,
+    {
+      joinRequestId,
+      userId,
+    },
+    {
+      headers: {
+        Accept: "text/plain",
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  return {
+    isSuccess: response.data.success,
+    msg: response.data.message,
+    data: response.data.data,
+  };
+};

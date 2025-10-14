@@ -1,7 +1,8 @@
-import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { register } from "../../services/authService";
+import { getJoinRequest, bindUserToOrganization } from "../../services/organizationService";
 import { ROUTES } from "../../constants/routerConstants";
 import loginImg from "../../assets/logo-sample.png";
 import PasswordGuidelines from "../../components/PasswordGuidelines";
@@ -10,6 +11,9 @@ import "react-phone-input-2/lib/style.css";
 import "../../styles/custom.css";
 
 function Register() {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -29,8 +33,54 @@ function Register() {
     hasNumber: false,
     hasSpecialChar: false
   });
+  
+  // Invite flow state
+  const [inviteData, setInviteData] = useState(null);
+  const [isInviteFlow, setIsInviteFlow] = useState(false);
+  const [isLoadingInvite, setIsLoadingInvite] = useState(false);
+  const [inviteError, setInviteError] = useState(null);
 
-  const navigate = useNavigate();
+  // Handle invite parameters on component mount
+  useEffect(() => {
+    const joinRequestId = searchParams.get('joinRequestId');
+    const isAdminInvite = searchParams.get('isAdminInvite') === 'true';
+    
+    if (joinRequestId) {
+      setIsInviteFlow(true);
+      setIsLoadingInvite(true);
+      setInviteError(null);
+      
+      // Fetch invite data
+      fetchInviteData(joinRequestId, isAdminInvite);
+    }
+  }, [searchParams]);
+
+  const fetchInviteData = async (joinRequestId, isAdminInvite) => {
+    try {
+      const response = await getJoinRequest(joinRequestId);
+      
+      if (response.isSuccess) {
+        setInviteData({
+          joinRequestId,
+          isAdminInvite,
+          email: response.data
+        });
+        
+        // Pre-fill email field
+        setFormData(prev => ({
+          ...prev,
+          email: response.data
+        }));
+      } else {
+        setInviteError("Invalid or expired invite link");
+      }
+    } catch (error) {
+      console.error("Error fetching invite data:", error);
+      setInviteError("Failed to load invite details. Please check your link and try again.");
+    } finally {
+      setIsLoadingInvite(false);
+    }
+  };
 
   const checkPasswordGuidelines = (password) => {
     const guidelines = {
@@ -125,9 +175,29 @@ const handleSubmit = async (e) => {
   setIsSubmitting(true);
 
   try {
-    const response = await register(formData);
+    // For invite flow, pass invite data to registration
+    const response = await register(formData, inviteData);
+    
     if (response.isSuccess) {
-      navigate(ROUTES.VERIFICATION_EMAIL_SENT);
+      if (isInviteFlow) {
+        // For invite flow, bind user to organization if userId is returned
+        if (response.data && response.data.userId && inviteData) {
+          try {
+            await bindUserToOrganization(inviteData.joinRequestId, response.data.userId);
+            toast.success("Account created and organization access granted! Please login to continue.");
+          } catch (bindError) {
+            console.error("Error binding user to organization:", bindError);
+            toast.success("Account created successfully! Please login to continue.");
+            // Still navigate to login even if binding fails
+          }
+        } else {
+          toast.success("Account created successfully! Please login to continue.");
+        }
+        navigate(ROUTES.LOGIN);
+      } else {
+        // For normal registration, go to email verification
+        navigate(ROUTES.VERIFICATION_EMAIL_SENT);
+      }
     } else {
       toast.error(response.msg || "Registration failed!");
     }
@@ -142,6 +212,61 @@ const handleSubmit = async (e) => {
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
+
+  // Show loading state while fetching invite data
+  if (isLoadingInvite) {
+    return (
+      <div className="login">
+        <div className="container container-md-auto">
+          <div className="row m-0">
+            <div className="col-lg-5 col-md-4 px-0">
+              <div className="login-right-image"></div>
+            </div>
+            <div className="col-lg-7 col-md-8">
+              <div className="login-inner d-flex flex-column align-items-center justify-content-center register-inner">
+                <div className="text-center">
+                  <div className="spinner-border text-primary mb-3" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                  </div>
+                  <h5>Loading invite details...</h5>
+                  <p className="text-muted">Please wait while we verify your invite link.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state if invite is invalid
+  if (inviteError) {
+    return (
+      <div className="login">
+        <div className="container container-md-auto">
+          <div className="row m-0">
+            <div className="col-lg-5 col-md-4 px-0">
+              <div className="login-right-image"></div>
+            </div>
+            <div className="col-lg-7 col-md-8">
+              <div className="login-inner d-flex flex-column align-items-center justify-content-center register-inner">
+                <div className="text-center">
+                  <div className="alert alert-danger" role="alert">
+                    <i className="fa-solid fa-exclamation-triangle mb-2"></i>
+                    <h5>Invalid Invite Link</h5>
+                    <p>{inviteError}</p>
+                    <Link to={ROUTES.REGISTER} className="btn btn-primary">
+                      Try Regular Registration
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="login">
@@ -160,13 +285,22 @@ const handleSubmit = async (e) => {
                       <img src={loginImg} alt="logo" className="w-100" />
                     </Link>
                   </div>
-                  <h2 className="font-xl-med fw-bold">Register</h2>
-                  <p className="font-base">
-                    Have an account?{" "}
-                    <Link to="/login" className="text-dark-black fw-semibold">
-                      Login{" "}
-                    </Link>
-                  </p>
+                  <h2 className="font-xl-med fw-bold">
+                    {isInviteFlow ? "Complete Your Registration" : "Register"}
+                  </h2>
+                  {isInviteFlow ? (
+                    <div className="alert alert-info mb-3" role="alert">
+                      <i className="fa-solid fa-info-circle me-2"></i>
+                      You've been invited to join an organization. Complete your registration below.
+                    </div>
+                  ) : (
+                    <p className="font-base">
+                      Have an account?{" "}
+                      <Link to="/login" className="text-dark-black fw-semibold">
+                        Login{" "}
+                      </Link>
+                    </p>
+                  )}
                 </div>
 
                 <div className="form-group">
@@ -264,17 +398,24 @@ const handleSubmit = async (e) => {
                     <input
                       name="email"
                       type="email"
-                      className={`form-control ${errors.email ? 'is-invalid' : ''}`}
+                      className={`form-control ${errors.email ? 'is-invalid' : ''} ${isInviteFlow ? 'bg-light' : ''}`}
                       placeholder="hello@example.com"
                       value={formData.email}
                       onChange={handleChange}
+                      readOnly={isInviteFlow}
                       required
+                      style={isInviteFlow ? { cursor: 'not-allowed' } : {}}
                     />
                   </div>
                   {errors.email && (
                     <div className="invalid-feedback d-block">
                       <small className="text-danger">{errors.email}</small>
                     </div>
+                  )}
+                  {isInviteFlow && (
+                    <small className="text-muted">
+                      Email is pre-filled from your invite link
+                    </small>
                   )}
                 </div>
                 
@@ -358,10 +499,10 @@ const handleSubmit = async (e) => {
                   {isSubmitting ? (
                     <>
                       <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                      Creating Account...
+                      {isInviteFlow ? "Completing Registration..." : "Creating Account..."}
                     </>
                   ) : (
-                    'Create Account'
+                    isInviteFlow ? 'Complete Registration' : 'Create Account'
                   )}
                 </button>
               </form>
