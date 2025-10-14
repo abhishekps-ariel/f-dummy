@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { toast } from 'react-toastify';
-import { useJsApiLoader, Autocomplete } from '@react-google-maps/api';
+import { useJsApiLoader } from '@react-google-maps/api';
 import Config from '../config/envConfig';
+
+// Static libraries array to prevent LoadScript reload
+const LIBRARIES = ['places'];
 
 const PetitionSteps = ({ isOpen, onClose }) => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -9,14 +12,68 @@ const PetitionSteps = ({ isOpen, onClose }) => {
   
   // Google Places API state
   const [autocomplete, setAutocomplete] = useState(null);
+  const [predictions, setPredictions] = useState([]);
+  const [showPredictions, setShowPredictions] = useState(false);
+  const [selectedPredictionIndex, setSelectedPredictionIndex] = useState(-1);
+  const [isLoadingPredictions, setIsLoadingPredictions] = useState(false);
   const autocompleteRef = useRef(null);
+  const placesServiceRef = useRef(null);
+  const autocompleteServiceRef = useRef(null);
   
   // Initialize Google Maps API with React library
-  const { isLoaded } = useJsApiLoader({
+  const { isLoaded, loadError } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: Config.GOOGLE_PLACES_API_KEY,
-    libraries: ['places']
+    libraries: LIBRARIES,
+    preventGoogleFontsLoading: true
   });
+
+  // Debug logging
+  useEffect(() => {
+    console.log('=== Google Maps Debug Info ===');
+    console.log('API Key configured:', Config.GOOGLE_PLACES_API_KEY ? 'Yes' : 'No');
+    console.log('API Key value:', Config.GOOGLE_PLACES_API_KEY ? Config.GOOGLE_PLACES_API_KEY.substring(0, 10) + '...' : 'Not set');
+    console.log('Google Maps Loaded:', isLoaded);
+    console.log('Current domain:', window.location.hostname);
+    console.log('Current protocol:', window.location.protocol);
+    
+    if (loadError) {
+      console.error('Google Maps Load Error:', loadError);
+      console.error('Error details:', {
+        message: loadError.message,
+        stack: loadError.stack
+      });
+    }
+    
+    // Check if API key is properly configured
+    if (Config.GOOGLE_PLACES_API_KEY === 'YOUR_GOOGLE_PLACES_API_KEY_HERE') {
+      console.warn('⚠️ Google Places API key not configured properly');
+    }
+    
+    console.log('=============================');
+  }, [isLoaded, loadError]);
+
+  // Initialize Google Places services when API is loaded
+  useEffect(() => {
+    if (isLoaded && window.google && window.google.maps) {
+      console.log('🔧 Initializing Google Places services...');
+      
+      try {
+        // Initialize AutocompleteService
+        autocompleteServiceRef.current = new window.google.maps.places.AutocompleteService();
+        console.log('✅ AutocompleteService initialized');
+        
+        // Initialize PlacesService
+        const map = new window.google.maps.Map(document.createElement('div'));
+        placesServiceRef.current = new window.google.maps.places.PlacesService(map);
+        console.log('✅ PlacesService initialized');
+        
+        console.log('🎉 All Google Places services initialized successfully!');
+      } catch (error) {
+        console.error('💥 Error initializing Google Places services:', error);
+      }
+    }
+  }, [isLoaded]);
   
   const [formData, setFormData] = useState({
     // Step 1: Property Details
@@ -78,16 +135,95 @@ const PetitionSteps = ({ isOpen, onClose }) => {
     certification_check: false,
   });
 
-  // Handle autocomplete loading
-  const onLoad = (autocompleteInstance) => {
-    setAutocomplete(autocompleteInstance);
+  // Handle address input and get predictions
+  const handleAddressInput = (input) => {
+    console.log('🔍 Searching for:', input);
+    
+    if (!input.trim() || !autocompleteServiceRef.current) {
+      setPredictions([]);
+      setShowPredictions(false);
+      setIsLoadingPredictions(false);
+      return;
+    }
+
+    // Clear previous timeout
+    if (window.autocompleteTimeout) {
+      clearTimeout(window.autocompleteTimeout);
+    }
+
+    // Debounce the API call
+    window.autocompleteTimeout = setTimeout(() => {
+      setIsLoadingPredictions(true);
+      
+      const request = {
+        input: input,
+        types: ['address'],
+        componentRestrictions: { country: 'us' }
+      };
+
+      console.log('🚀 Making Google Places API request:', request);
+
+      try {
+        autocompleteServiceRef.current.getPlacePredictions(request, (predictions, status) => {
+          setIsLoadingPredictions(false);
+          console.log('📍 Google Places API Response:', { 
+            status, 
+            predictionsCount: predictions?.length,
+            statusMessage: status === window.google.maps.places.PlacesServiceStatus.OK ? 'OK' : 
+                           status === window.google.maps.places.PlacesServiceStatus.ZERO_RESULTS ? 'ZERO_RESULTS' :
+                           status === window.google.maps.places.PlacesServiceStatus.OVER_QUERY_LIMIT ? 'OVER_QUERY_LIMIT' :
+                           status === window.google.maps.places.PlacesServiceStatus.REQUEST_DENIED ? 'REQUEST_DENIED' :
+                           status === window.google.maps.places.PlacesServiceStatus.INVALID_REQUEST ? 'INVALID_REQUEST' :
+                           'UNKNOWN_STATUS',
+            fullResponse: { predictions, status }
+          });
+          
+          if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
+            setPredictions(predictions);
+            setShowPredictions(true);
+            setSelectedPredictionIndex(-1);
+            console.log('✅ Predictions received:', predictions);
+          } else {
+            setPredictions([]);
+            setShowPredictions(false);
+            console.log('❌ No predictions or error:', status);
+            
+            // Show specific error messages
+            if (status === window.google.maps.places.PlacesServiceStatus.REQUEST_DENIED) {
+              console.error('🚫 API request denied - check API key permissions');
+              console.error('💡 Make sure Places API is enabled and API key has proper permissions');
+            } else if (status === window.google.maps.places.PlacesServiceStatus.OVER_QUERY_LIMIT) {
+              console.error('💰 API quota exceeded');
+            } else if (status === window.google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
+              console.log('🔍 No results found for query');
+            } else if (status === window.google.maps.places.PlacesServiceStatus.INVALID_REQUEST) {
+              console.error('❌ Invalid request - check API key and request format');
+            } else {
+              console.error('❓ Unknown status:', status);
+            }
+          }
+        });
+      } catch (error) {
+        setIsLoadingPredictions(false);
+        console.error('💥 Error calling Google Places API:', error);
+        console.error('💡 This might indicate API key issues or network problems');
+        setPredictions([]);
+        setShowPredictions(false);
+      }
+    }, 300); // 300ms debounce
   };
 
-  // Handle place selection
-  const onPlaceChanged = () => {
-    if (autocomplete !== null) {
-      const place = autocomplete.getPlace();
-      if (place.address_components) {
+  // Handle prediction selection
+  const selectPrediction = (placeId) => {
+    if (!placesServiceRef.current) return;
+
+    const request = {
+      placeId: placeId,
+      fields: ['address_components', 'formatted_address']
+    };
+
+    placesServiceRef.current.getDetails(request, (place, status) => {
+      if (status === window.google.maps.places.PlacesServiceStatus.OK && place) {
         const addressComponents = place.address_components;
         let streetNumber = '';
         let route = '';
@@ -119,9 +255,105 @@ const PetitionSteps = ({ isOpen, onClose }) => {
           state: state || 'MA',
           zip_code: zipCode
         }));
+
+        setShowPredictions(false);
+        setPredictions([]);
       }
+    });
+  };
+
+  // Handle keyboard navigation
+  const handleKeyDown = (e) => {
+    if (!showPredictions || predictions.length === 0) return;
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setSelectedPredictionIndex(prev => 
+          prev < predictions.length - 1 ? prev + 1 : prev
+        );
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setSelectedPredictionIndex(prev => prev > 0 ? prev - 1 : prev);
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (selectedPredictionIndex >= 0) {
+          selectPrediction(predictions[selectedPredictionIndex].place_id);
+        }
+        break;
+      case 'Escape':
+        setShowPredictions(false);
+        setPredictions([]);
+        setSelectedPredictionIndex(-1);
+        break;
     }
   };
+
+  // Test Google Maps API manually
+  const testGoogleMapsAPI = async () => {
+    console.log('🧪 Testing Google Maps API...');
+    
+    if (window.google && window.google.maps) {
+      console.log('✅ Google Maps API is available globally');
+      console.log('Available services:', Object.keys(window.google.maps));
+      
+      if (window.google.maps.places) {
+        console.log('✅ Places API is available');
+        console.log('Available places services:', Object.keys(window.google.maps.places));
+        
+        // Test autocomplete service
+        if (autocompleteServiceRef.current) {
+          console.log('🧪 Testing AutocompleteService with sample query...');
+          const testRequest = {
+            input: '123 Main St Boston',
+            types: ['address'],
+            componentRestrictions: { country: 'us' }
+          };
+          
+          autocompleteServiceRef.current.getPlacePredictions(testRequest, (predictions, status) => {
+            console.log('🧪 Test API Response:', { status, predictionsCount: predictions?.length });
+            if (predictions && predictions.length > 0) {
+              console.log('✅ Test successful - API is working!');
+              console.log('Sample prediction:', predictions[0]);
+            } else {
+              console.log('❌ Test failed - no predictions returned');
+              console.log('Status:', status);
+            }
+          });
+        } else {
+          console.error('❌ AutocompleteService not initialized');
+        }
+      } else {
+        console.error('❌ Places API not available');
+      }
+    } else {
+      console.error('❌ Google Maps API not available globally');
+    }
+
+    // Test direct API call to verify API key
+    console.log('🧪 Testing direct Places API call...');
+    try {
+      const directApiUrl = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=123%20Main%20St%20Boston&types=address&components=country:us&key=${Config.GOOGLE_PLACES_API_KEY}`;
+      console.log('🔗 Direct API URL:', directApiUrl);
+      
+      const response = await fetch(directApiUrl);
+      const data = await response.json();
+      console.log('🧪 Direct API Response:', data);
+      
+      if (data.status === 'OK') {
+        console.log('✅ Direct API test successful!');
+        console.log('Predictions:', data.predictions);
+      } else {
+        console.error('❌ Direct API test failed:', data.status);
+        console.error('Error message:', data.error_message);
+      }
+    } catch (error) {
+      console.error('💥 Direct API test error:', error);
+    }
+  };
+
 
   // Validation functions
   const validateAddressFields = () => {
@@ -197,15 +429,24 @@ const PetitionSteps = ({ isOpen, onClose }) => {
             <div className="row g-3">
               <div className="col-12">
                 <label htmlFor="street_address" className="form-label">Street Address</label>
-                {isLoaded ? (
-                  <Autocomplete
-                    onLoad={onLoad}
-                    onPlaceChanged={onPlaceChanged}
-                    options={{
-                      types: ['address'],
-                      componentRestrictions: { country: 'us' }
-                    }}
-                  >
+                {loadError ? (
+                  <div>
+                <input 
+                  type="text" 
+                  id="street_address" 
+                  name="street_address" 
+                  className="form-control"
+                  value={formData.street_address}
+                  onChange={handleInputChange}
+                      placeholder="Enter address manually (Google Maps unavailable)"
+                      autoComplete="off"
+                    />
+                    <div className="text-danger small mt-1">
+                      ⚠️ Google Maps API failed to load. Please enter address manually.
+                    </div>
+                  </div>
+                ) : isLoaded ? (
+                  <div className="position-relative">
                     <input
                       ref={autocompleteRef}
                       type="text"
@@ -213,11 +454,74 @@ const PetitionSteps = ({ isOpen, onClose }) => {
                       name="street_address"
                       className="form-control"
                       value={formData.street_address}
-                      onChange={handleInputChange}
+                      onChange={(e) => {
+                        handleInputChange(e);
+                        handleAddressInput(e.target.value);
+                      }}
+                      onKeyDown={handleKeyDown}
+                      onBlur={() => {
+                        // Delay hiding suggestions to allow click events
+                        setTimeout(() => setShowPredictions(false), 200);
+                      }}
+                      onFocus={() => {
+                        if (predictions.length > 0) {
+                          setShowPredictions(true);
+                        }
+                      }}
                       placeholder="Start typing an address..."
                       autoComplete="off"
                     />
-                  </Autocomplete>
+                    
+                    {/* Loading indicator */}
+                    {isLoadingPredictions && (
+                      <div className="position-absolute top-50 end-0 translate-middle-y me-3">
+                        <div className="spinner-border spinner-border-sm text-muted" role="status">
+                          <span className="visually-hidden">Loading...</span>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Address suggestions dropdown */}
+                    {showPredictions && predictions.length > 0 && (
+                      <div className="position-absolute w-100 bg-white border border-top-0 rounded-bottom shadow-sm" style={{ zIndex: 1050, maxHeight: '200px', overflowY: 'auto' }}>
+                        {predictions.map((prediction, index) => (
+                          <div
+                            key={prediction.place_id}
+                            className={`px-3 py-2 cursor-pointer border-bottom ${
+                              index === selectedPredictionIndex ? 'bg-primary text-white' : 'hover-bg-light'
+                            }`}
+                            onClick={() => selectPrediction(prediction.place_id)}
+                            style={{ cursor: 'pointer' }}
+                          >
+                            <div className="fw-medium">{prediction.structured_formatting.main_text}</div>
+                            <div className="small text-muted">{prediction.structured_formatting.secondary_text}</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    
+                    <div className="text-success small mt-1">
+                      ✅ Google Maps API loaded successfully. Start typing to see suggestions.
+                    </div>
+                    <div className="small mt-1">
+                      <span className="text-muted">Services: </span>
+                      {autocompleteServiceRef.current ? (
+                        <span className="text-success">✅ Autocomplete</span>
+                      ) : (
+                        <span className="text-warning">⏳ Loading...</span>
+                      )}
+                      {placesServiceRef.current && (
+                        <span className="text-success ms-2">✅ Places</span>
+                      )}
+                    </div>
+                    <button 
+                      type="button" 
+                      className="btn btn-sm btn-outline-primary mt-2"
+                      onClick={testGoogleMapsAPI}
+                    >
+                      Test Google Maps API
+                    </button>
+                  </div>
                 ) : (
                   <div className="form-control d-flex align-items-center justify-content-center" style={{ height: '38px' }}>
                     <div className="spinner-border spinner-border-sm text-muted me-2" role="status">
