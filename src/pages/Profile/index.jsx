@@ -469,7 +469,7 @@ function Profile() {
         <div className="dashboard-content-section">
           {/* Profile Dashboard Section */}
           <div className="shadow-custom bg-white org-search-box">
-            <h2 className="font-med mb-4">My Profile</h2>
+            <h2 className="font-med mb-4 fw-medium">My Profile</h2>
             
 
             {/* Profile Header Card */}
@@ -486,7 +486,7 @@ function Profile() {
                       />
                     </div>
                     <div className="text-center text-md-start flex-grow-1">
-                      <h3 className="fw-bold mb-2">
+                      <h3 className="fw-medium mb-2">
                         {user.firstName} {user.lastName}
                       </h3>
                       <p className="text-muted mb-2">
@@ -537,8 +537,8 @@ function Profile() {
               {/* Filing Entity Type Card */}
               <div className="col-12 mb-3">
                 <div className="stat-card p-4">
-                  <h4 className="fw-bold mb-4">
-                    <i className="fas fa-building me-2 text-primary"></i>
+                  <h4 className="fw-medium mb-4">
+                    <i className="fas fa-building me-2 text-secondary"></i>
                     Filing Entity Type
                   </h4>
                   <div className="row g-3">
@@ -582,8 +582,8 @@ function Profile() {
 
               <div className="col-lg-6 mb-3">
                 <div className="stat-card p-4">
-                  <h4 className="fw-bold mb-4">
-                    <i className="fas fa-user me-2 text-primary"></i>
+                  <h4 className="fw-medium mb-4">
+                    <i className="fas fa-user me-2 text-secondary"></i>
                     Personal Information
                   </h4>
                   <div className="row g-3">
@@ -633,8 +633,8 @@ function Profile() {
 
               <div className="col-lg-6 mb-3">
                 <div className="stat-card p-4">
-                  <h4 className="fw-bold mb-4">
-                    <i className="fas fa-id-card me-2 text-primary"></i>
+                  <h4 className="fw-medium mb-4">
+                    <i className="fas fa-id-card me-2 text-secondary"></i>
                     Account Details
                   </h4>
                   <div className="row g-3">
