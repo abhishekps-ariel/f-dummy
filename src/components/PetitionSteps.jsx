@@ -11,14 +11,19 @@ const PetitionSteps = ({ isOpen, onClose }) => {
   const totalSteps = 8;
   
   // Google Places API state
+  // eslint-disable-next-line no-unused-vars
   const [autocomplete, setAutocomplete] = useState(null);
   const [predictions, setPredictions] = useState([]);
   const [showPredictions, setShowPredictions] = useState(false);
   const [selectedPredictionIndex, setSelectedPredictionIndex] = useState(-1);
   const [isLoadingPredictions, setIsLoadingPredictions] = useState(false);
+  const [isValidatingAddress, setIsValidatingAddress] = useState(false);
+  const [addressValidationError, setAddressValidationError] = useState('');
+  const [isAddressVerified, setIsAddressVerified] = useState(false);
   const autocompleteRef = useRef(null);
   const placesServiceRef = useRef(null);
   const autocompleteServiceRef = useRef(null);
+  const geocoderRef = useRef(null);
   
   // Initialize Google Maps API with React library
   const { isLoaded, loadError } = useJsApiLoader({
@@ -50,6 +55,9 @@ const PetitionSteps = ({ isOpen, onClose }) => {
         // Initialize PlacesService
         const map = new window.google.maps.Map(document.createElement('div'));
         placesServiceRef.current = new window.google.maps.places.PlacesService(map);
+        
+        // Initialize Geocoder
+        geocoderRef.current = new window.google.maps.Geocoder();
       } catch (error) {
         console.error('Error initializing Google Places services:', error);
       }
@@ -177,7 +185,7 @@ const PetitionSteps = ({ isOpen, onClose }) => {
 
     const request = {
       placeId: placeId,
-      fields: ['address_components', 'formatted_address']
+      fields: ['address_components', 'formatted_address', 'geometry']
     };
 
     placesServiceRef.current.getDetails(request, (place, status) => {
@@ -214,6 +222,9 @@ const PetitionSteps = ({ isOpen, onClose }) => {
           zip_code: zipCode
         }));
 
+        // Mark address as verified and clear any validation errors
+        setIsAddressVerified(true);
+        setAddressValidationError('');
         setShowPredictions(false);
         setPredictions([]);
       }
@@ -249,11 +260,74 @@ const PetitionSteps = ({ isOpen, onClose }) => {
     }
   };
 
+  // Validate address using Geocoding API
+  const validateAddressWithGeocoding = () => {
+    return new Promise((resolve) => {
+      if (!geocoderRef.current || !formData.street_address.trim()) {
+        resolve({ isValid: false, error: 'Address is required' });
+        return;
+      }
 
+      setIsValidatingAddress(true);
+      setAddressValidationError('');
+
+      const fullAddress = `${formData.street_address}, ${formData.city}, ${formData.state} ${formData.zip_code}`.trim();
+
+      geocoderRef.current.geocode({ address: fullAddress }, (results, status) => {
+        setIsValidatingAddress(false);
+
+        if (status === 'OK' && results && results.length > 0) {
+          const result = results[0];
+          const addressComponents = result.address_components;
+          
+          // Check if the geocoded result matches our input
+          let foundCity = false;
+          let foundState = false;
+          let foundZip = false;
+
+          addressComponents.forEach(component => {
+            const types = component.types;
+            if (types.includes('locality') || types.includes('administrative_area_level_2')) {
+              if (component.long_name.toLowerCase().includes(formData.city.toLowerCase())) {
+                foundCity = true;
+              }
+            }
+            if (types.includes('administrative_area_level_1')) {
+              if (component.short_name === formData.state) {
+                foundState = true;
+              }
+            }
+            if (types.includes('postal_code')) {
+              if (component.long_name === formData.zip_code) {
+                foundZip = true;
+              }
+            }
+          });
+
+          if (foundCity && foundState && foundZip) {
+            setIsAddressVerified(true);
+            resolve({ isValid: true, coordinates: result.geometry.location });
+          } else {
+            setIsAddressVerified(false);
+            setAddressValidationError('Address could not be verified. Please select from suggestions or enter a valid address.');
+            resolve({ isValid: false, error: 'Address verification failed' });
+          }
+        } else {
+          setIsAddressVerified(false);
+          setAddressValidationError('Invalid address. Please select from suggestions or enter a valid address.');
+          resolve({ isValid: false, error: 'Invalid address' });
+        }
+      });
+    });
+  };
 
   // Validation functions
   const validateAddressFields = () => {
     const errors = [];
+    
+    if (!formData.street_address.trim()) {
+      errors.push('Street address is required');
+    }
     
     if (!formData.city.trim()) {
       errors.push('City is required');
@@ -273,16 +347,51 @@ const PetitionSteps = ({ isOpen, onClose }) => {
     return errors;
   };
 
+  // Validate Property Details step
+  const validatePropertyDetailsStep = async () => {
+    const basicErrors = validateAddressFields();
+    
+    if (basicErrors.length > 0) {
+      return { isValid: false, errors: basicErrors };
+    }
+
+    // If address is not verified through autocomplete, validate with Geocoding API
+    if (!isAddressVerified) {
+      const addressValidation = await validateAddressWithGeocoding();
+      if (!addressValidation.isValid) {
+        return { isValid: false, errors: [addressValidationError || 'Address validation failed'] };
+      }
+    }
+
+    return { isValid: true, errors: [] };
+  };
+
   const handleInputChange = (e) => {
     const { name, value, type, checked, files } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : type === 'file' ? files[0] : value
     }));
+
+    // Reset address verification when manually editing address fields
+    if (['street_address', 'city', 'state', 'zip_code'].includes(name)) {
+      setIsAddressVerified(false);
+      setAddressValidationError('');
+    }
   };
 
-  const nextStep = (direction) => {
+  const nextStep = async (direction) => {
     const newStep = currentStep + direction;
+    
+    // Validate Property Details step before proceeding
+    if (currentStep === 1 && direction === 1) {
+      const validation = await validatePropertyDetailsStep();
+      if (!validation.isValid) {
+        toast.error(`Please fix the following errors: ${validation.errors.join(', ')}`);
+        return;
+      }
+    }
+    
     if (newStep >= 1 && newStep <= totalSteps) {
       setCurrentStep(newStep);
       // Scroll to top on step change for better mobile UX
@@ -306,6 +415,7 @@ const PetitionSteps = ({ isOpen, onClose }) => {
     }
 
     // Capture final timestamp
+    // eslint-disable-next-line no-unused-vars
     const now = new Date();
     
     // Here you would typically send the data to your API
@@ -324,7 +434,10 @@ const PetitionSteps = ({ isOpen, onClose }) => {
             <p className="text-muted small mb-3">Enter the full address and location details of the property subject to foreclosure.</p>
             <div className="row g-3">
               <div className="col-12">
-                <label htmlFor="street_address" className="form-label">Street Address</label>
+                <label htmlFor="street_address" className="form-label">
+                  Street Address 
+                  {isAddressVerified && <span className="text-success ms-2">✓ Verified</span>}
+                </label>
                 {loadError ? (
                   <div>
                 <input 
@@ -393,6 +506,20 @@ const PetitionSteps = ({ isOpen, onClose }) => {
                             <div className="small text-muted">{prediction.structured_formatting.secondary_text}</div>
                           </div>
                         ))}
+                      </div>
+                    )}
+                    
+                    {/* Address validation error */}
+                    {addressValidationError && (
+                      <div className="text-danger small mt-2">
+                        {addressValidationError}
+                      </div>
+                    )}
+                    
+                    {/* Address validation loading */}
+                    {isValidatingAddress && (
+                      <div className="text-info small mt-2">
+                        Validating address...
                       </div>
                     )}
                   </div>
