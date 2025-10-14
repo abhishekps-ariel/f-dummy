@@ -18,6 +18,7 @@ import { formatDate } from "../../utils/dateUtils";
 import NotificationDropdown from "../../components/NotificationDropdown";
 import PetitionSteps from "../../components/PetitionSteps";
 import ViewAllPetitions from "../../components/ViewAllPetitions";
+import petitionService from "../../services/petitionService";
 import "../../styles/custom.css";
 
 function Dashboard() {
@@ -49,12 +50,39 @@ function Dashboard() {
   const [isCreatingOrg, setIsCreatingOrg] = useState(false);
   const [showPetitionSteps, setShowPetitionSteps] = useState(false);
   const [showViewAllPetitions, setShowViewAllPetitions] = useState(false);
+  const [dashboardPetitions, setDashboardPetitions] = useState([]);
+  const [petitionStats, setPetitionStats] = useState({
+    total: 0,
+    accepted: 0,
+    returned: 0,
+    draft: 0
+  });
 
   const searchRef = useRef(null);
   const navigate = useNavigate();
   const { logout: authLogout } = useAuth();
 
   const debouncedSearchQuery = useDebounce(searchQuery, 400);
+
+  // Load dashboard petitions and stats
+  const loadDashboardData = async () => {
+    try {
+      const [petitionsResponse, statsResponse] = await Promise.all([
+        petitionService.getDashboardPetitions(),
+        petitionService.getPetitionStats()
+      ]);
+
+      if (petitionsResponse.success) {
+        setDashboardPetitions(petitionsResponse.data);
+      }
+
+      if (statsResponse.success) {
+        setPetitionStats(statsResponse.data);
+      }
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+    }
+  };
 
   useEffect(() => {
     const { user: userData, token } = getAuthData();
@@ -66,6 +94,7 @@ function Dashboard() {
 
     setUser(userData);
     loadJoinRequests();
+    loadDashboardData();
   }, [navigate]);
 
   useEffect(() => {
@@ -677,19 +706,19 @@ function Dashboard() {
               <div className="row mb-5">
                 <div className="col-md-4 mb-3">
                   <div className="stat-card">
-                    <h4 className="stat-count">150</h4>
+                    <h4 className="stat-count">{petitionStats.total}</h4>
                     <p className="stat-title">Total Active Petitions</p>
                   </div>
                 </div>
                 <div className="col-md-4 mb-3">
                   <div className="stat-card">
-                    <h4 className="stat-count">5</h4>
+                    <h4 className="stat-count">{petitionStats.returned}</h4>
                     <p className="stat-title">Returned Petitions</p>
                   </div>
                 </div>
                 <div className="col-md-4 mb-3">
                   <div className="stat-card">
-                    <h4 className="stat-count">75</h4>
+                    <h4 className="stat-count">{petitionStats.accepted}</h4>
                     <p className="stat-title">Accepted Petitions</p>
                   </div>
                 </div>
@@ -725,89 +754,34 @@ function Dashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr
-                      className="petition-row"
-                      onClick={() => (window.location.href = "#details-1001")}
-                    >
-                      <td>
-                        <a href="#details-1001">PN-1001</a>
-                      </td>
-                      <td>123 Main St, Anytown</td>
-                      <td>John Smith</td>
-                      <td>
-                        <span className="status-badge status-Accepted">
-                          Accepted
-                        </span>
-                      </td>
-                      <td>2025-09-15</td>
-                      <td>2025-10-01 10:30 AM</td>
-                    </tr>
-                    <tr
-                      className="petition-row"
-                      onClick={() => (window.location.href = "#details-1002")}
-                    >
-                      <td>
-                        <a href="#details-1002">PN-1002</a>
-                      </td>
-                      <td>45 Baker Ln, Somewhere</td>
-                      <td>Sarah Johnson</td>
-                      <td>
-                        <span className="status-badge status-Submitted">
-                          Submitted
-                        </span>
-                      </td>
-                      <td>2025-10-05</td>
-                      <td>2025-10-09 03:15 PM</td>
-                    </tr>
-                    <tr
-                      className="petition-row"
-                      onClick={() => (window.location.href = "#details-1003")}
-                    >
-                      <td>
-                        <a href="#details-1003">PN-1003</a>
-                      </td>
-                      <td>789 Oak Ave, Cityville</td>
-                      <td>Michael Brown</td>
-                      <td>
-                        <span className="status-badge status-Returned">
-                          Returned
-                        </span>
-                      </td>
-                      <td>2025-10-08</td>
-                      <td>2025-10-10 11:00 AM</td>
-                    </tr>
-                    <tr
-                      className="petition-row"
-                      onClick={() => (window.location.href = "#details-1004")}
-                    >
-                      <td>
-                        <a href="#details-1004">PN-1004</a>
-                      </td>
-                      <td>32 Pine Ct, Otherplace</td>
-                      <td>Emily Davis</td>
-                      <td>
-                        <span className="status-badge status-Draft">Draft</span>
-                      </td>
-                      <td>2025-10-06</td>
-                      <td>2025-09-28 09:00 AM</td>
-                    </tr>
-                    <tr
-                      className="petition-row"
-                      onClick={() => (window.location.href = "#details-1005")}
-                    >
-                      <td>
-                        <a href="#details-1005">PN-1005</a>
-                      </td>
-                      <td>55 River Rd, Waterton</td>
-                      <td>Robert Wilson</td>
-                      <td>
-                        <span className="status-badge status-Closed">
-                          Closed
-                        </span>
-                      </td>
-                      <td>2025-08-20</td>
-                      <td>2025-09-15 02:45 PM</td>
-                    </tr>
+                    {dashboardPetitions.length > 0 ? (
+                      dashboardPetitions.map((petition) => (
+                        <tr
+                          key={petition.id}
+                          className="petition-row"
+                          onClick={() => (window.location.href = `#details-${petition.id}`)}
+                        >
+                          <td>
+                            <a href={`#details-${petition.id}`}>{petition.id}</a>
+                          </td>
+                          <td>{petition.propertyAddress}</td>
+                          <td>{petition.borrower}</td>
+                          <td>
+                            <span className={`status-badge status-${petition.status}`}>
+                              {petition.status}
+                            </span>
+                          </td>
+                          <td>{petition.filingDate}</td>
+                          <td>{petition.lastUpdated}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="6" className="text-center py-4 text-muted">
+                          No petitions found
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>

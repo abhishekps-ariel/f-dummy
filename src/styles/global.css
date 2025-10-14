@@ -228,6 +228,109 @@ text-decoration: underline;
     margin: 0 auto;
 }
 
+/* Minimal Pagination Styles */
+.pagination-minimal {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 16px;
+    background: #ffffff;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.pagination-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: transparent;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    color: #6c757d;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.pagination-btn:hover:not(.disabled) {
+    background: #f8f9fa;
+    border-color: var(--theme-color);
+    color: var(--theme-color);
+}
+
+.pagination-btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #f8f9fa;
+}
+
+.pagination-pages {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.pagination-page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: transparent;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    color: #6c757d;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.pagination-page:hover {
+    background: #f8f9fa;
+    border-color: var(--theme-color);
+    color: var(--theme-color);
+}
+
+.pagination-page.active {
+    background: var(--theme-color);
+    border-color: var(--theme-color);
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.pagination-page.active:hover {
+    background: #015080;
+    border-color: #015080;
+    color: #ffffff;
+}
+
+/* Sortable Table Headers */
+.sortable-header {
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.sortable-header:hover {
+    background-color: #f8f9fa;
+    color: var(--theme-color);
+}
+
+.sortable-header i {
+    opacity: 0.7;
+    font-size: 0.8rem;
+}
+
+.sortable-header:hover i {
+    opacity: 1;
+}
+
 .petition-table-container .table td:nth-child(5),
 .petition-table-container .table th:nth-child(5) {
     white-space: nowrap;
