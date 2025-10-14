@@ -43,6 +43,73 @@ const ViewAllPetitions = ({ onBack }) => {
     loadPetitions(1);
   };
 
+  // Handle export functionality
+  const handleExport = (format) => {
+    try {
+      if (format === 'csv') {
+        exportToCSV();
+      } else if (format === 'excel') {
+        exportToExcel();
+      }
+      toast.success(`Petitions exported as ${format.toUpperCase()} successfully!`);
+    } catch (error) {
+      console.error('Export error:', error);
+      toast.error('Failed to export petitions. Please try again.');
+    }
+  };
+
+  // Export to CSV
+  const exportToCSV = () => {
+    const headers = ['Petition Number', 'Property Address', 'Borrower', 'Status', 'Filing Date', 'Last Updated'];
+    const csvContent = [
+      headers.join(','),
+      ...petitions.map(petition => [
+        petition.id,
+        `"${petition.propertyAddress}"`,
+        `"${petition.borrower}"`,
+        petition.status,
+        petition.filingDate,
+        petition.lastUpdated
+      ].join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `petitions_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Export to Excel (using CSV format with .xlsx extension for simplicity)
+  const exportToExcel = () => {
+    const headers = ['Petition Number', 'Property Address', 'Borrower', 'Status', 'Filing Date', 'Last Updated'];
+    const csvContent = [
+      headers.join(','),
+      ...petitions.map(petition => [
+        petition.id,
+        `"${petition.propertyAddress}"`,
+        `"${petition.borrower}"`,
+        petition.status,
+        petition.filingDate,
+        petition.lastUpdated
+      ].join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `petitions_${new Date().toISOString().split('T')[0]}.xlsx`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   // Load petitions with filters and pagination
   const loadPetitions = async (page = 1) => {
     setLoading(true);
@@ -113,7 +180,7 @@ const ViewAllPetitions = ({ onBack }) => {
 
   return (
     <div className="shadow-custom bg-white org-search-box">
-      <div className="d-flex align-items-center mb-4">
+      <div className="d-flex align-items-center justify-content-between mb-4">
         <button 
           className="btn btn-link text-decoration-none me-3"
           onClick={onBack}
@@ -121,6 +188,40 @@ const ViewAllPetitions = ({ onBack }) => {
           <i className="fa-solid fa-arrow-left me-2"></i>
           Back to Dashboard
         </button>
+        
+        {/* Export Dropdown */}
+        <div className="dropdown">
+          <button
+            className="dashboard-btn-refresh"
+            type="button"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+            title="Export petitions"
+          >
+            <i className="fa-solid fa-download me-2"></i>
+            Export
+          </button>
+          <ul className="dropdown-menu dropdown-menu-end">
+            <li>
+              <button 
+                className="dropdown-item" 
+                onClick={() => handleExport('csv')}
+              >
+                <i className="fa-solid fa-file-csv me-2"></i>
+                Export as CSV
+              </button>
+            </li>
+            <li>
+              <button 
+                className="dropdown-item" 
+                onClick={() => handleExport('excel')}
+              >
+                <i className="fa-solid fa-file-excel me-2"></i>
+                Export as Excel
+              </button>
+            </li>
+          </ul>
+        </div>
       </div>
       {/* Search and Filter Controls */}
       <div className="row mb-4">
@@ -218,16 +319,16 @@ const ViewAllPetitions = ({ onBack }) => {
               onChange={(e) => setCustomDateTo(e.target.value)}
             />
           </div>
-          <div className="col-md-3 d-flex align-items-end">
+          <div className="col-md-3 d-flex align-items-end gap-2 mb-1">
             <button
-              className="btn btn-primary me-2"
+              className="dashboard-btn-create"
               onClick={() => loadPetitions(1)}
               disabled={!customDateFrom || !customDateTo}
             >
               Apply Filter
             </button>
             <button
-              className="btn btn-outline-secondary"
+              className="dashboard-btn-refresh"
               onClick={() => {
                 setDateFilter('all');
                 setShowCustomDateRange(false);
