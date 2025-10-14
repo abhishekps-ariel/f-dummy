@@ -719,6 +719,7 @@ function Dashboard() {
                       <th>Petition Number</th>
                       <th>Property Address</th>
                       <th>Status</th>
+                      <th>Filing Date</th>
                       <th>Last Updated</th>
                     </tr>
                   </thead>
@@ -736,6 +737,7 @@ function Dashboard() {
                           Accepted
                         </span>
                       </td>
+                      <td>2025-09-15</td>
                       <td>2025-10-01 10:30 AM</td>
                     </tr>
                     <tr
@@ -751,6 +753,7 @@ function Dashboard() {
                           Submitted
                         </span>
                       </td>
+                      <td>2025-10-05</td>
                       <td>2025-10-09 03:15 PM</td>
                     </tr>
                     <tr
@@ -766,6 +769,7 @@ function Dashboard() {
                           Returned
                         </span>
                       </td>
+                      <td>2025-10-08</td>
                       <td>2025-10-10 11:00 AM</td>
                     </tr>
                     <tr
@@ -779,6 +783,7 @@ function Dashboard() {
                       <td>
                         <span className="status-badge status-Draft">Draft</span>
                       </td>
+                      <td>2025-10-06</td>
                       <td>2025-09-28 09:00 AM</td>
                     </tr>
                     <tr
@@ -794,6 +799,7 @@ function Dashboard() {
                           Closed
                         </span>
                       </td>
+                      <td>2025-08-20</td>
                       <td>2025-09-15 02:45 PM</td>
                     </tr>
                   </tbody>
