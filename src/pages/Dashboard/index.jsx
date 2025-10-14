@@ -17,6 +17,7 @@ import { toast } from "react-toastify";
 import { formatDate } from "../../utils/dateUtils";
 import NotificationDropdown from "../../components/NotificationDropdown";
 import PetitionSteps from "../../components/PetitionSteps";
+import ViewAllPetitions from "../../components/ViewAllPetitions";
 import "../../styles/custom.css";
 
 function Dashboard() {
@@ -47,6 +48,7 @@ function Dashboard() {
 
   const [isCreatingOrg, setIsCreatingOrg] = useState(false);
   const [showPetitionSteps, setShowPetitionSteps] = useState(false);
+  const [showViewAllPetitions, setShowViewAllPetitions] = useState(false);
 
   const searchRef = useRef(null);
   const navigate = useNavigate();
@@ -700,9 +702,12 @@ function Dashboard() {
                   </div>
                 </div>
                 <div className="d-flex gap-3 align-items-center">
-                  <a href="#!" className="text-decoration-hover">
+                  <button 
+                    className="btn btn-link text-decoration-hover p-0"
+                    onClick={() => setShowViewAllPetitions(true)}
+                  >
                     View all Petition
-                  </a>
+                  </button>
                   <button
                     className="dashboard-btn-create"
                     onClick={() => setShowPetitionSteps(true)}
@@ -1080,6 +1085,12 @@ function Dashboard() {
         <PetitionSteps 
           isOpen={showPetitionSteps} 
           onClose={() => setShowPetitionSteps(false)} 
+        />
+
+        {/* View All Petitions Modal */}
+        <ViewAllPetitions 
+          isOpen={showViewAllPetitions} 
+          onClose={() => setShowViewAllPetitions(false)} 
         />
 
         {/* Create Organization Modal */}
