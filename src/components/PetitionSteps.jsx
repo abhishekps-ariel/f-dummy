@@ -1,9 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { toast } from 'react-toastify';
+import { useJsApiLoader, Autocomplete } from '@react-google-maps/api';
+import Config from '../config/envConfig';
 
 const PetitionSteps = ({ isOpen, onClose }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 8;
+  
+  // Google Places API state
+  const [autocomplete, setAutocomplete] = useState(null);
+  const autocompleteRef = useRef(null);
+  
+  // Initialize Google Maps API with React library
+  const { isLoaded } = useJsApiLoader({
+    id: 'google-map-script',
+    googleMapsApiKey: Config.GOOGLE_PLACES_API_KEY,
+    libraries: ['places']
+  });
+  
   const [formData, setFormData] = useState({
     // Step 1: Property Details
     street_address: '',
@@ -64,6 +78,73 @@ const PetitionSteps = ({ isOpen, onClose }) => {
     certification_check: false,
   });
 
+  // Handle autocomplete loading
+  const onLoad = (autocompleteInstance) => {
+    setAutocomplete(autocompleteInstance);
+  };
+
+  // Handle place selection
+  const onPlaceChanged = () => {
+    if (autocomplete !== null) {
+      const place = autocomplete.getPlace();
+      if (place.address_components) {
+        const addressComponents = place.address_components;
+        let streetNumber = '';
+        let route = '';
+        let city = '';
+        let state = '';
+        let zipCode = '';
+
+        addressComponents.forEach(component => {
+          const types = component.types;
+          if (types.includes('street_number')) {
+            streetNumber = component.long_name;
+          } else if (types.includes('route')) {
+            route = component.long_name;
+          } else if (types.includes('locality')) {
+            city = component.long_name;
+          } else if (types.includes('administrative_area_level_1')) {
+            state = component.short_name;
+          } else if (types.includes('postal_code')) {
+            zipCode = component.long_name;
+          }
+        });
+
+        const fullAddress = `${streetNumber} ${route}`.trim();
+        
+        setFormData(prev => ({
+          ...prev,
+          street_address: fullAddress,
+          city: city,
+          state: state || 'MA',
+          zip_code: zipCode
+        }));
+      }
+    }
+  };
+
+  // Validation functions
+  const validateAddressFields = () => {
+    const errors = [];
+    
+    if (!formData.city.trim()) {
+      errors.push('City is required');
+    }
+    
+    if (!formData.state.trim()) {
+      errors.push('State is required');
+    }
+    
+    const zipPattern = /^\d{5}(-\d{4})?$/;
+    if (!formData.zip_code.trim()) {
+      errors.push('ZIP code is required');
+    } else if (!zipPattern.test(formData.zip_code)) {
+      errors.push('ZIP code must be in valid format (12345 or 12345-6789)');
+    }
+    
+    return errors;
+  };
+
   const handleInputChange = (e) => {
     const { name, value, type, checked, files } = e.target;
     setFormData(prev => ({
@@ -89,6 +170,13 @@ const PetitionSteps = ({ isOpen, onClose }) => {
       return;
     }
 
+    // Validate address fields
+    const addressErrors = validateAddressFields();
+    if (addressErrors.length > 0) {
+      toast.error(`Address validation failed: ${addressErrors.join(', ')}`);
+      return;
+    }
+
     // Capture final timestamp
     const now = new Date();
     
@@ -109,17 +197,40 @@ const PetitionSteps = ({ isOpen, onClose }) => {
             <div className="row g-3">
               <div className="col-12">
                 <label htmlFor="street_address" className="form-label">Street Address</label>
-                <input 
-                  type="text" 
-                  id="street_address" 
-                  name="street_address" 
-                  className="form-control"
-                  value={formData.street_address}
-                  onChange={handleInputChange}
-                />
+                {isLoaded ? (
+                  <Autocomplete
+                    onLoad={onLoad}
+                    onPlaceChanged={onPlaceChanged}
+                    options={{
+                      types: ['address'],
+                      componentRestrictions: { country: 'us' }
+                    }}
+                  >
+                    <input
+                      ref={autocompleteRef}
+                      type="text"
+                      id="street_address"
+                      name="street_address"
+                      className="form-control"
+                      value={formData.street_address}
+                      onChange={handleInputChange}
+                      placeholder="Start typing an address..."
+                      autoComplete="off"
+                    />
+                  </Autocomplete>
+                ) : (
+                  <div className="form-control d-flex align-items-center justify-content-center" style={{ height: '38px' }}>
+                    <div className="spinner-border spinner-border-sm text-muted me-2" role="status">
+                      <span className="visually-hidden">Loading...</span>
+                    </div>
+                    <span className="text-muted">Loading Google Maps...</span>
+                  </div>
+                )}
               </div>
               <div className="col-md-6">
-                <label htmlFor="city" className="form-label">City</label>
+                <label htmlFor="city" className="form-label">
+                  City <small className="text-muted">(auto-filled, editable)</small>
+                </label>
                 <input 
                   type="text" 
                   id="city" 
@@ -127,10 +238,13 @@ const PetitionSteps = ({ isOpen, onClose }) => {
                   className="form-control"
                   value={formData.city}
                   onChange={handleInputChange}
+                  placeholder="Enter city name"
                 />
               </div>
               <div className="col-md-6">
-                <label htmlFor="state" className="form-label">State</label>
+                <label htmlFor="state" className="form-label">
+                  State <small className="text-muted">(auto-filled, editable)</small>
+                </label>
                 <select 
                   id="state" 
                   name="state" 
@@ -138,11 +252,64 @@ const PetitionSteps = ({ isOpen, onClose }) => {
                   value={formData.state}
                   onChange={handleInputChange}
                 >
+                  <option value="">Select State</option>
+                  <option value="AL">Alabama (AL)</option>
+                  <option value="AK">Alaska (AK)</option>
+                  <option value="AZ">Arizona (AZ)</option>
+                  <option value="AR">Arkansas (AR)</option>
+                  <option value="CA">California (CA)</option>
+                  <option value="CO">Colorado (CO)</option>
+                  <option value="CT">Connecticut (CT)</option>
+                  <option value="DE">Delaware (DE)</option>
+                  <option value="FL">Florida (FL)</option>
+                  <option value="GA">Georgia (GA)</option>
+                  <option value="HI">Hawaii (HI)</option>
+                  <option value="ID">Idaho (ID)</option>
+                  <option value="IL">Illinois (IL)</option>
+                  <option value="IN">Indiana (IN)</option>
+                  <option value="IA">Iowa (IA)</option>
+                  <option value="KS">Kansas (KS)</option>
+                  <option value="KY">Kentucky (KY)</option>
+                  <option value="LA">Louisiana (LA)</option>
+                  <option value="ME">Maine (ME)</option>
+                  <option value="MD">Maryland (MD)</option>
                   <option value="MA">Massachusetts (MA)</option>
+                  <option value="MI">Michigan (MI)</option>
+                  <option value="MN">Minnesota (MN)</option>
+                  <option value="MS">Mississippi (MS)</option>
+                  <option value="MO">Missouri (MO)</option>
+                  <option value="MT">Montana (MT)</option>
+                  <option value="NE">Nebraska (NE)</option>
+                  <option value="NV">Nevada (NV)</option>
+                  <option value="NH">New Hampshire (NH)</option>
+                  <option value="NJ">New Jersey (NJ)</option>
+                  <option value="NM">New Mexico (NM)</option>
+                  <option value="NY">New York (NY)</option>
+                  <option value="NC">North Carolina (NC)</option>
+                  <option value="ND">North Dakota (ND)</option>
+                  <option value="OH">Ohio (OH)</option>
+                  <option value="OK">Oklahoma (OK)</option>
+                  <option value="OR">Oregon (OR)</option>
+                  <option value="PA">Pennsylvania (PA)</option>
+                  <option value="RI">Rhode Island (RI)</option>
+                  <option value="SC">South Carolina (SC)</option>
+                  <option value="SD">South Dakota (SD)</option>
+                  <option value="TN">Tennessee (TN)</option>
+                  <option value="TX">Texas (TX)</option>
+                  <option value="UT">Utah (UT)</option>
+                  <option value="VT">Vermont (VT)</option>
+                  <option value="VA">Virginia (VA)</option>
+                  <option value="WA">Washington (WA)</option>
+                  <option value="WV">West Virginia (WV)</option>
+                  <option value="WI">Wisconsin (WI)</option>
+                  <option value="WY">Wyoming (WY)</option>
+                  <option value="DC">District of Columbia (DC)</option>
                 </select>
               </div>
               <div className="col-md-6">
-                <label htmlFor="zip_code" className="form-label">ZIP Code</label>
+                <label htmlFor="zip_code" className="form-label">
+                  ZIP Code <small className="text-muted">(auto-filled, editable)</small>
+                </label>
                 <input 
                   type="text" 
                   id="zip_code" 
@@ -151,6 +318,7 @@ const PetitionSteps = ({ isOpen, onClose }) => {
                   className="form-control"
                   value={formData.zip_code}
                   onChange={handleInputChange}
+                  placeholder="12345 or 12345-6789"
                 />
               </div>
               <div className="col-md-6">
