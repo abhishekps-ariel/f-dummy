@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 const ViewAllPetitions = ({ onBack }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [dateFilter, setDateFilter] = useState('all');
   const [filteredPetitions, setFilteredPetitions] = useState([]);
 
   // Extended dummy data for all petitions
@@ -106,7 +107,7 @@ const ViewAllPetitions = ({ onBack }) => {
     }
   ];
 
-  // Filter petitions based on search query and status
+  // Filter petitions based on search query, status, and date
   useEffect(() => {
     let filtered = allPetitions;
 
@@ -126,8 +127,53 @@ const ViewAllPetitions = ({ onBack }) => {
       );
     }
 
+    // Filter by date
+    if (dateFilter !== 'all') {
+      const today = new Date();
+      const filterDate = new Date();
+      
+      switch (dateFilter) {
+        case 'today':
+          filtered = filtered.filter(petition => {
+            const petitionDate = new Date(petition.filingDate);
+            return petitionDate.toDateString() === today.toDateString();
+          });
+          break;
+        case 'week':
+          filterDate.setDate(today.getDate() - 7);
+          filtered = filtered.filter(petition => {
+            const petitionDate = new Date(petition.filingDate);
+            return petitionDate >= filterDate;
+          });
+          break;
+        case 'month':
+          filterDate.setMonth(today.getMonth() - 1);
+          filtered = filtered.filter(petition => {
+            const petitionDate = new Date(petition.filingDate);
+            return petitionDate >= filterDate;
+          });
+          break;
+        case 'quarter':
+          filterDate.setMonth(today.getMonth() - 3);
+          filtered = filtered.filter(petition => {
+            const petitionDate = new Date(petition.filingDate);
+            return petitionDate >= filterDate;
+          });
+          break;
+        case 'year':
+          filterDate.setFullYear(today.getFullYear() - 1);
+          filtered = filtered.filter(petition => {
+            const petitionDate = new Date(petition.filingDate);
+            return petitionDate >= filterDate;
+          });
+          break;
+        default:
+          break;
+      }
+    }
+
     setFilteredPetitions(filtered);
-  }, [searchQuery, statusFilter]);
+  }, [searchQuery, statusFilter, dateFilter]);
 
   const getStatusBadgeClass = (status) => {
     switch (status.toLowerCase()) {
@@ -169,7 +215,7 @@ const ViewAllPetitions = ({ onBack }) => {
       </div>
       {/* Search and Filter Controls */}
       <div className="row mb-4">
-        <div className="col-md-8">
+        <div className="col-md-5">
           <div className="input-group">
             <span className="input-group-text bg-white border-end-0">
               <i className="fas fa-search"></i>
@@ -183,7 +229,7 @@ const ViewAllPetitions = ({ onBack }) => {
             />
           </div>
         </div>
-        <div className="col-md-4">
+        <div className="col-md-3">
           <select 
             className="form-select"
             value={statusFilter}
@@ -195,6 +241,20 @@ const ViewAllPetitions = ({ onBack }) => {
             <option value="accepted">Accepted</option>
             <option value="returned">Returned</option>
             <option value="closed">Closed</option>
+          </select>
+        </div>
+        <div className="col-md-4">
+          <select 
+            className="form-select"
+            value={dateFilter}
+            onChange={(e) => setDateFilter(e.target.value)}
+          >
+            <option value="all">All Dates</option>
+            <option value="today">Today</option>
+            <option value="week">Last 7 Days</option>
+            <option value="month">Last Month</option>
+            <option value="quarter">Last 3 Months</option>
+            <option value="year">Last Year</option>
           </select>
         </div>
       </div>
