@@ -152,12 +152,6 @@ const ViewAllPetitions = ({ onBack }) => {
             <option value="filingDate-asc">Oldest First</option>
             <option value="lastUpdated-desc">Recently Updated</option>
             <option value="lastUpdated-asc">Least Updated</option>
-            <option value="id-asc">Petition # (A-Z)</option>
-            <option value="id-desc">Petition # (Z-A)</option>
-            <option value="borrower-asc">Borrower (A-Z)</option>
-            <option value="borrower-desc">Borrower (Z-A)</option>
-            <option value="status-asc">Status (A-Z)</option>
-            <option value="status-desc">Status (Z-A)</option>
           </select>
         </div>
       </div>
