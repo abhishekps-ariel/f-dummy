@@ -730,7 +730,7 @@ function Dashboard() {
                     className="btn btn-link text-decoration-hover p-0"
                     onClick={() => setShowViewAllPetitions(true)}
                   >
-                    View all Petition
+                    View all Petitions
                   </button>
                   <button
                     className="dashboard-btn-create"
