@@ -8,6 +8,7 @@ const LIBRARIES = ['places'];
 
 const PetitionSteps = ({ isOpen, onClose }) => {
   const [currentStep, setCurrentStep] = useState(1);
+  const [isIntentionalSubmit, setIsIntentionalSubmit] = useState(false);
   const totalSteps = 8;
   
   // Google Places API state
@@ -419,8 +420,14 @@ const PetitionSteps = ({ isOpen, onClose }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     
+    // Only validate certification if we're actually on the last step and trying to submit
+    if (currentStep !== totalSteps || !isIntentionalSubmit) {
+      return;
+    }
+    
     if (!formData.certification_check) {
       toast.error("Please certify the petition by checking the certification checkbox.");
+      setIsIntentionalSubmit(false); // Reset the flag
       return;
     }
 
@@ -428,6 +435,7 @@ const PetitionSteps = ({ isOpen, onClose }) => {
     const addressErrors = validateAddressFields();
     if (addressErrors.length > 0) {
       toast.error(`Address validation failed: ${addressErrors.join(', ')}`);
+      setIsIntentionalSubmit(false); // Reset the flag
       return;
     }
 
@@ -439,6 +447,7 @@ const PetitionSteps = ({ isOpen, onClose }) => {
     console.log('Petition Data:', formData);
     
     toast.success("Petition submitted successfully!");
+    setIsIntentionalSubmit(false); // Reset the flag
     onClose();
   };
 
@@ -535,7 +544,7 @@ const PetitionSteps = ({ isOpen, onClose }) => {
                     
                     {/* Address validation loading */}
                     {isValidatingAddress && (
-                      <div className="text-info small mt-2">
+                      <div className="text-muted small mt-2">
                         Validating address...
                       </div>
                     )}
@@ -1213,6 +1222,7 @@ const PetitionSteps = ({ isOpen, onClose }) => {
                       <button 
                         type="submit" 
                         className="btn custom-btn theme-btn text-center ms-auto py-2 px-3"
+                        onClick={() => setIsIntentionalSubmit(true)}
                       >
                         Submit Petition
                       </button>
