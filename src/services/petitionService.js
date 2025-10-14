@@ -319,6 +319,8 @@ class PetitionService {
       search = '',
       status = 'all',
       dateFilter = 'all',
+      customDateFrom = '',
+      customDateTo = '',
       sortBy = 'filingDate',
       sortOrder = 'desc'
     } = options;
@@ -384,6 +386,19 @@ class PetitionService {
             const petitionDate = new Date(petition.filingDate);
             return petitionDate >= filterDate;
           });
+          break;
+        case 'custom':
+          if (customDateFrom && customDateTo) {
+            const fromDate = new Date(customDateFrom);
+            const toDate = new Date(customDateTo);
+            // Set toDate to end of day to include the entire day
+            toDate.setHours(23, 59, 59, 999);
+            
+            filteredPetitions = filteredPetitions.filter(petition => {
+              const petitionDate = new Date(petition.filingDate);
+              return petitionDate >= fromDate && petitionDate <= toDate;
+            });
+          }
           break;
         default:
           break;

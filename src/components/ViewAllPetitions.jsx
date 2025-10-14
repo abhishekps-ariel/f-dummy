@@ -6,6 +6,9 @@ const ViewAllPetitions = ({ onBack }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('all');
+  const [customDateFrom, setCustomDateFrom] = useState('');
+  const [customDateTo, setCustomDateTo] = useState('');
+  const [showCustomDateRange, setShowCustomDateRange] = useState(false);
   const [sortBy, setSortBy] = useState('filingDate');
   const [sortOrder, setSortOrder] = useState('desc');
   const [petitions, setPetitions] = useState([]);
@@ -17,6 +20,16 @@ const ViewAllPetitions = ({ onBack }) => {
     limit: 10
   });
 
+  // Handle date filter change
+  const handleDateFilterChange = (value) => {
+    setDateFilter(value);
+    setShowCustomDateRange(value === 'custom');
+    if (value !== 'custom') {
+      setCustomDateFrom('');
+      setCustomDateTo('');
+    }
+  };
+
   // Load petitions with filters and pagination
   const loadPetitions = async (page = 1) => {
     setLoading(true);
@@ -27,6 +40,8 @@ const ViewAllPetitions = ({ onBack }) => {
         search: searchQuery,
         status: statusFilter,
         dateFilter: dateFilter,
+        customDateFrom: dateFilter === 'custom' ? customDateFrom : '',
+        customDateTo: dateFilter === 'custom' ? customDateTo : '',
         sortBy: sortBy,
         sortOrder: sortOrder
       });
@@ -128,7 +143,7 @@ const ViewAllPetitions = ({ onBack }) => {
           <select 
             className="form-select"
             value={dateFilter}
-            onChange={(e) => setDateFilter(e.target.value)}
+            onChange={(e) => handleDateFilterChange(e.target.value)}
           >
             <option value="all">All Dates</option>
             <option value="today">Today</option>
@@ -136,6 +151,7 @@ const ViewAllPetitions = ({ onBack }) => {
             <option value="month">Last Month</option>
             <option value="quarter">Last 3 Months</option>
             <option value="year">Last Year</option>
+            <option value="custom">Custom Range</option>
           </select>
         </div>
         <div className="col-md-2">
@@ -155,6 +171,51 @@ const ViewAllPetitions = ({ onBack }) => {
           </select>
         </div>
       </div>
+
+      {/* Custom Date Range */}
+      {showCustomDateRange && (
+        <div className="row mb-4">
+          <div className="col-md-3">
+            <label className="form-label">From Date</label>
+            <input
+              type="date"
+              className="form-control"
+              value={customDateFrom}
+              onChange={(e) => setCustomDateFrom(e.target.value)}
+            />
+          </div>
+          <div className="col-md-3">
+            <label className="form-label">To Date</label>
+            <input
+              type="date"
+              className="form-control"
+              value={customDateTo}
+              onChange={(e) => setCustomDateTo(e.target.value)}
+            />
+          </div>
+          <div className="col-md-3 d-flex align-items-end">
+            <button
+              className="btn btn-primary me-2"
+              onClick={() => loadPetitions(1)}
+              disabled={!customDateFrom || !customDateTo}
+            >
+              Apply Filter
+            </button>
+            <button
+              className="btn btn-outline-secondary"
+              onClick={() => {
+                setDateFilter('all');
+                setShowCustomDateRange(false);
+                setCustomDateFrom('');
+                setCustomDateTo('');
+                loadPetitions(1);
+              }}
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Results Summary */}
       <div className="d-flex justify-content-between align-items-center mb-3">
