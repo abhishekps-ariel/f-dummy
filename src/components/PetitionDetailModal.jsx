@@ -41,6 +41,110 @@ const PetitionDetailModal = ({ petition, isOpen, onClose }) => {
     }
   };
 
+  const downloadPetitionDetails = () => {
+    const details = petition.details || {};
+    
+    let content = `PETITION DETAILS - ${petition.id}\n`;
+    content += `=====================================\n\n`;
+    
+    content += `PETITION OVERVIEW\n`;
+    content += `-----------------\n`;
+    content += `Petition ID: ${petition.id}\n`;
+    content += `Status: ${petition.status}\n`;
+    content += `Filing Date: ${formatDate(petition.filingDate)}\n`;
+    content += `Last Updated: ${petition.lastUpdated}\n`;
+    content += `Property Address: ${petition.propertyAddress}\n`;
+    content += `Borrower: ${petition.borrower}\n`;
+    content += `Loan Amount: ${petition.loanAmount}\n\n`;
+    
+    content += `PROPERTY DETAILS\n`;
+    content += `----------------\n`;
+    content += `Street Address: ${details.street_address || 'N/A'}\n`;
+    content += `City: ${details.city || 'N/A'}\n`;
+    content += `State: ${details.state || 'N/A'}\n`;
+    content += `ZIP Code: ${details.zip_code || 'N/A'}\n`;
+    content += `County: ${details.county || 'N/A'}\n\n`;
+    
+    content += `LOAN DETAILS\n`;
+    content += `------------\n`;
+    content += `Loan Account #: ${details.loan_account_number || 'N/A'}\n`;
+    content += `Lien Position: ${details.lien_position || 'N/A'}\n`;
+    content += `Loan Type: ${details.loan_type_term || 'N/A'}\n`;
+    content += `Year Originated: ${details.year_originated || 'N/A'}\n`;
+    content += `Original Amount: ${formatCurrency(details.original_amount)}\n`;
+    content += `Current Amount: ${formatCurrency(details.current_amount)}\n`;
+    content += `Original Rate: ${details.original_rate ? `${details.original_rate}%` : 'N/A'}\n`;
+    content += `Current Rate: ${details.current_rate ? `${details.current_rate}%` : 'N/A'}\n\n`;
+    
+    if (details.borrowers && details.borrowers.length > 0) {
+      content += `BORROWER DETAILS\n`;
+      content += `----------------\n`;
+      details.borrowers.forEach((borrower, index) => {
+        content += `Borrower ${index + 1}:\n`;
+        content += `  First Name: ${borrower.first_name || 'N/A'}\n`;
+        content += `  Middle Initial: ${borrower.middle_initial || 'N/A'}\n`;
+        content += `  Last Name: ${borrower.last_name || 'N/A'}\n\n`;
+      });
+    }
+    
+    content += `FILING ENTITY\n`;
+    content += `-------------\n`;
+    content += `Organization Name: ${details.organization_name || 'N/A'}\n`;
+    content += `Contact First Name: ${details.contact_first_name || 'N/A'}\n`;
+    content += `Contact Last Name: ${details.contact_last_name || 'N/A'}\n`;
+    content += `Contact Phone: ${details.contact_phone || 'N/A'}\n`;
+    content += `Contact Email: ${details.contact_email || 'N/A'}\n\n`;
+    
+    content += `RIGHT-TO-CURE (§35A)\n`;
+    content += `--------------------\n`;
+    content += `Notice Date: ${formatDate(details.notice_date)}\n`;
+    content += `Days Delinquent: ${details.days_delinquent || 'N/A'}\n`;
+    content += `Amount in Default: ${formatCurrency(details.amount_default)}\n`;
+    content += `Cure Expiration: ${formatDate(details.cure_expiration_date)}\n`;
+    content += `Notice Mailing Address: ${details.notice_mailing_address || 'N/A'}\n`;
+    if (details.acceleration_date) {
+      content += `Acceleration Date: ${formatDate(details.acceleration_date)}\n`;
+    }
+    content += `\n`;
+    
+    content += `FORM 35B COMPLIANCE\n`;
+    content += `-------------------\n`;
+    content += `Form 35B Upload: ${details.form_35b_upload ? 'Document uploaded' : 'No document uploaded'}\n`;
+    content += `Affiant Name: ${details.affiant_name || 'N/A'}\n`;
+    content += `Affiant Title: ${details.affiant_title || 'N/A'}\n`;
+    content += `Affidavit Date: ${formatDate(details.affidavit_date)}\n`;
+    content += `Notary Information: ${details.notary_info || 'N/A'}\n\n`;
+    
+    content += `LOAN ASSIGNEES\n`;
+    content += `--------------\n`;
+    content += `Lender Name: ${details.assignee_lender_name_1 || 'N/A'}\n`;
+    content += `Lender Type: ${details.assignee_lender_type_1 || 'N/A'}\n`;
+    content += `Originator Name: ${details.assignee_originator_name_1 || 'N/A'}\n`;
+    content += `License Number: ${details.assignee_license_number_1 || 'N/A'}\n`;
+    content += `License State: ${details.assignee_license_state_1 || 'N/A'}\n`;
+    content += `Lender Address: ${details.assignee_lender_address_1 || 'N/A'}\n\n`;
+    
+    content += `PETITION ATTESTATION\n`;
+    content += `--------------------\n`;
+    content += `Attester First Name: ${details.attester_first_name || 'N/A'}\n`;
+    content += `Middle Initial: ${details.attester_middle_initial || 'N/A'}\n`;
+    content += `Attester Last Name: ${details.attester_last_name || 'N/A'}\n`;
+    content += `Certification: ${details.certification_check ? 'Certified' : 'Not certified'}\n\n`;
+    
+    content += `Generated on: ${new Date().toLocaleString()}\n`;
+    
+    // Create and download the file
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `petition-${petition.id}-details.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} tabIndex="-1">
       <div className="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
@@ -377,11 +481,8 @@ const PetitionDetailModal = ({ petition, isOpen, onClose }) => {
                     <button
                       className="dashboard-btn-refresh"
                       type="button"
-                      onClick={() => {
-                        // Here you could add functionality to download as PDF
-                        console.log('Download PDF:', petition.id);
-                      }}
-                      title="Download petition as PDF"
+                      onClick={downloadPetitionDetails}
+                      title="Download petition details"
                     >
                       <i className="fa-solid fa-download me-2"></i>
                       Download
