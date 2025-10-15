@@ -57,8 +57,11 @@ function Dashboard() {
   const [petitionStats, setPetitionStats] = useState({
     total: 0,
     accepted: 0,
+    submitted: 0,
     returned: 0,
-    draft: 0
+    resubmitted: 0,
+    draft: 0,
+    closed: 0
   });
 
   const searchRef = useRef(null);

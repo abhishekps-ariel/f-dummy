@@ -239,6 +239,8 @@ const ViewAllPetitions = ({ onBack }) => {
         return 'status-badge status-Accepted';
       case 'submitted':
         return 'status-badge status-Submitted';
+      case 'resubmitted':
+        return 'status-badge status-Resubmitted';
       case 'returned':
         return 'status-badge status-Returned';
       case 'draft':
@@ -348,6 +350,7 @@ const ViewAllPetitions = ({ onBack }) => {
             <option value="all">All Statuses</option>
             <option value="draft">Draft</option>
             <option value="submitted">Submitted</option>
+            <option value="resubmitted">Resubmitted</option>
             <option value="accepted">Accepted</option>
             <option value="returned">Returned</option>
             <option value="closed">Closed</option>

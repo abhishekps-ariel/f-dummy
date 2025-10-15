@@ -13,7 +13,7 @@ const mockPetitions = [
   {
     id: 'PN-1002',
     propertyAddress: '45 Baker Ln, Somewhere, MA 02102',
-    status: 'Submitted',
+    status: 'Resubmitted',
     filingDate: '2025-10-05',
     lastUpdated: '2025-10-09 03:15 PM',
     borrower: 'Sarah Johnson',
@@ -163,7 +163,7 @@ const mockPetitions = [
   {
     id: 'PN-1017',
     propertyAddress: '567 Lincoln Ave, Fall River, MA 02720',
-    status: 'Submitted',
+    status: 'Resubmitted',
     filingDate: '2025-10-16',
     lastUpdated: '2025-10-16 01:15 PM',
     borrower: 'Thomas Jackson',
@@ -253,7 +253,7 @@ const mockPetitions = [
   {
     id: 'PN-1026',
     propertyAddress: '258 Broadway, Arlington, MA 02474',
-    status: 'Returned',
+    status: 'Resubmitted',
     filingDate: '2025-10-14',
     lastUpdated: '2025-10-14 01:00 PM',
     borrower: 'Lisa Robinson',
@@ -491,6 +491,7 @@ class PetitionService {
       accepted: this.petitions.filter(p => p.status === 'Accepted').length,
       submitted: this.petitions.filter(p => p.status === 'Submitted').length,
       returned: this.petitions.filter(p => p.status === 'Returned').length,
+      resubmitted: this.petitions.filter(p => p.status === 'Resubmitted').length,
       draft: this.petitions.filter(p => p.status === 'Draft').length,
       closed: this.petitions.filter(p => p.status === 'Closed').length
     };
