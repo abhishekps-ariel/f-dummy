@@ -12,12 +12,33 @@ export const getAuthData = () => {
   
   return { token, refreshToken, user };
 };
+// Track if logout is in progress to prevent multiple simultaneous logouts
+let isLogoutInProgress = false;
 
 export const clearAuthData = () => {
-  localStorage.removeItem('token');
-  localStorage.removeItem('refreshToken');
-  localStorage.removeItem('user');
+  // Prevent multiple simultaneous logout attempts
+  if (isLogoutInProgress) {
+    console.log('Logout already in progress, skipping...');
+    return;
+  }
   
-  // Dispatch custom event to notify AuthContext
-  window.dispatchEvent(new CustomEvent('authDataCleared'));
+  isLogoutInProgress = true;
+  
+  try {
+    localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('user');
+    
+    // Dispatch custom event to notify AuthContext
+    window.dispatchEvent(new CustomEvent('authDataCleared'));
+    
+    console.log('Auth data cleared successfully');
+  } catch (error) {
+    console.error('Error clearing auth data:', error);
+  } finally {
+    // Reset the flag after a short delay
+    setTimeout(() => {
+      isLogoutInProgress = false;
+    }, 1000);
+  }
 };
