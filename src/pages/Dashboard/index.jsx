@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { getAuthData, clearAuthData } from "../../utils/storage";
 import { useAuth } from "../../context/AuthContext";
 import { ROUTES } from "../../constants/routerConstants";
@@ -63,6 +63,7 @@ function Dashboard() {
 
   const searchRef = useRef(null);
   const navigate = useNavigate();
+  const location = useLocation();
   const { logout: authLogout } = useAuth();
 
   const debouncedSearchQuery = useDebounce(searchQuery, 400);
@@ -98,6 +99,11 @@ function Dashboard() {
     setUser(userData);
     loadJoinRequests();
     loadDashboardData();
+    
+    // Check if we should show organizations section
+    if (location.state?.activeSection === 'organizations') {
+      setActiveSection('organizations');
+    }
   }, [navigate]);
 
   useEffect(() => {

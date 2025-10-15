@@ -5,6 +5,7 @@ import { useAuth } from "../../context/AuthContext";
 import { ROUTES } from "../../constants/routerConstants";
 import { logout as logoutApi, updateUser, getUserById } from "../../services/authService";
 import { getFilingEntityTypes } from "../../services/commonService";
+import { getUserJoinRequests, getOrganizationById } from "../../services/organizationService";
 import { toast } from "react-toastify";
 import NotificationDropdown from "../../components/NotificationDropdown";
 import "../../styles/custom.css";
@@ -20,6 +21,12 @@ function Profile() {
     firstName: "",
     lastName: "",
   });
+
+  // Organization state
+  const [joinRequests, setJoinRequests] = useState([]);
+  const [userOrganization, setUserOrganization] = useState(null);
+  const [isLoadingOrgData, setIsLoadingOrgData] = useState(false);
+  const [hasLoadedOrgData, setHasLoadedOrgData] = useState(false);
   const navigate = useNavigate();
   const { logout: authLogout } = useAuth();
 
@@ -70,6 +77,91 @@ function Profile() {
 
     fetchFilingEntityTypes();
   }, []); // Load on page load instead of only when entering edit mode
+
+  // Load organization data
+  useEffect(() => {
+    if (user) {
+      loadOrganizationData();
+    }
+  }, [user]);
+
+  const loadOrganizationData = async () => {
+    setIsLoadingOrgData(true);
+    try {
+      const response = await getUserJoinRequests();
+      if (response.isSuccess) {
+        const requests = response.data || [];
+        
+        // Sort requests by date
+        const sortedRequests = requests.sort((a, b) => {
+          return new Date(b.requestedOn) - new Date(a.requestedOn);
+        });
+
+        // Fetch organization details for each request
+        const requestsWithOrgNames = await Promise.all(
+          sortedRequests.map(async (request) => {
+            try {
+              const orgResponse = await getOrganizationById(request.organizationId);
+              if (orgResponse.isSuccess && orgResponse.data) {
+                return {
+                  ...request,
+                  organizationName: orgResponse.data.name,
+                  organizationType: orgResponse.data.type,
+                  organizationAddress: orgResponse.data.address,
+                };
+              }
+              return request;
+            } catch (error) {
+              console.error(`Error fetching organization ${request.organizationId}:`, error);
+              return request;
+            }
+          })
+        );
+
+        setJoinRequests(requestsWithOrgNames);
+        
+        // Check if user has any approved requests and load their organization
+        const approvedRequest = requestsWithOrgNames.find(request => request.status === 1);
+        if (approvedRequest) {
+          setUserOrganization(approvedRequest);
+        }
+      } else {
+        console.error("Failed to load join requests:", response.msg);
+        setJoinRequests([]);
+      }
+    } catch (error) {
+      console.error("Error loading organization data:", error);
+      setJoinRequests([]);
+    } finally {
+      setIsLoadingOrgData(false);
+      setHasLoadedOrgData(true);
+    }
+  };
+
+  const getStatusInfo = (status) => {
+    switch (status) {
+      case 0:
+        return { text: "Pending", class: "status-pending", icon: "fa-clock" };
+      case 1:
+        return {
+          text: "Approved",
+          class: "status-approved",
+          icon: "fa-check-circle",
+        };
+      case 2:
+        return {
+          text: "Rejected",
+          class: "status-rejected",
+          icon: "fa-times-circle",
+        };
+      default:
+        return {
+          text: "Unknown",
+          class: "status-unknown",
+          icon: "fa-question-circle",
+        };
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -260,7 +352,7 @@ function Profile() {
                 className="dashboard-nav-link"
                 onClick={(e) => {
                   e.preventDefault();
-                  navigate(ROUTES.DASHBOARD);
+                  navigate(ROUTES.DASHBOARD, { state: { activeSection: 'organizations' } });
                 }}
               >
                 <i className="fa-solid fa-building me-2"></i>
@@ -330,7 +422,7 @@ function Profile() {
                 className="dashboard-nav-link"
                 onClick={(e) => {
                   e.preventDefault();
-                  navigate(ROUTES.DASHBOARD);
+                  navigate(ROUTES.DASHBOARD, { state: { activeSection: 'organizations' } });
                 }}
               >
                 <i className="fa-solid fa-building me-2"></i>
@@ -580,7 +672,7 @@ function Profile() {
                 </div>
               </div>
 
-              <div className="col-lg-6 mb-3">
+              <div className="col-12 mb-3">
                 <div className="stat-card p-4">
                   <h4 className="fw-medium mb-4">
                     <i className="fas fa-user me-2 text-secondary"></i>
@@ -631,32 +723,171 @@ function Profile() {
                 </div>
               </div>
 
-              <div className="col-lg-6 mb-3">
+              <div className="col-12 mb-3">
                 <div className="stat-card p-4">
                   <h4 className="fw-medium mb-4">
                     <i className="fas fa-id-card me-2 text-secondary"></i>
                     Account Details
                   </h4>
                   <div className="row g-3">
-                    <div className="col-12">
+                    <div className="col-sm-6">
                       <label className="form-label text-muted small">Role</label>
                       <p className="fw-medium mb-0">
                         <span className="badge bg-primary fs-6">{user.role || "Normal User"}</span>
                       </p>
                     </div>
-                    <div className="col-12">
+                    <div className="col-sm-6">
                       <label className="form-label text-muted small">Account Status</label>
                       <p className="fw-medium mb-0">
                         <span className="badge bg-success fs-6">Active</span>
                       </p>
                     </div>
-                    <div className="col-12">
-                      <label className="form-label text-muted small">Member Since</label>
-                      <p className="fw-medium mb-0">January 2024</p>
-                    </div>
                   </div>
                 </div>
               </div>
+
+            </div>
+
+            {/* Organization Section */}
+            <div className="row mb-4">
+              <div className="col-12 mb-3">
+                <div className="stat-card p-4">
+                  <h4 className="fw-medium mb-4">
+                    <i className="fas fa-building me-2 text-secondary"></i>
+                    Organization Information
+                  </h4>
+                  
+                  {isLoadingOrgData ? (
+                    <div className="text-center py-3">
+                      <div className="spinner-border spinner-border-sm text-primary" role="status">
+                        <span className="visually-hidden">Loading...</span>
+                      </div>
+                      <p className="mt-2 text-muted small">Loading...</p>
+                    </div>
+                  ) : hasLoadedOrgData ? (
+                    <>
+                      {userOrganization ? (
+                        // User is part of an organization
+                        <div className="row g-3">
+                          <div className="col-12">
+                            <label className="form-label text-muted small">Organization</label>
+                            <p className="fw-medium mb-0">{userOrganization.organizationName}</p>
+                          </div>
+                          <div className="col-12">
+                            <label className="form-label text-muted small">Type</label>
+                            <p className="fw-medium mb-0">{userOrganization.organizationType || "N/A"}</p>
+                          </div>
+                          {userOrganization.organizationAddress && (
+                            <div className="col-12">
+                              <label className="form-label text-muted small">Address</label>
+                              <p className="fw-medium mb-0 small">{userOrganization.organizationAddress}</p>
+                            </div>
+                          )}
+                          <div className="col-12">
+                            <label className="form-label text-muted small">Status</label>
+                            <p className="fw-medium mb-0">
+                              <span className="badge bg-success fs-6">
+                                <i className="fa-solid fa-check-circle me-1"></i>
+                                Active Member
+                              </span>
+                            </p>
+                          </div>
+                          <div className="col-12">
+                            <label className="form-label text-muted small">Joined</label>
+                            <p className="fw-medium mb-0">
+                              {new Date(userOrganization.respondedOn || userOrganization.requestedOn).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <div className="col-12 mt-3">
+                            <button 
+                              className="dashboard-btn-create w-100"
+                              onClick={() => navigate(ROUTES.DASHBOARD, { state: { activeSection: 'organizations' } })}
+                            >
+                              <i className="fa-solid fa-building me-1"></i>
+                              View Organization Section
+                            </button>
+                          </div>
+                        </div>
+                      ) : joinRequests.length > 0 ? (
+                        // User has pending requests
+                        <div className="row g-3">
+                          <div className="col-12">
+                            <div className="alert alert-info py-2 px-3 mb-3">
+                              <i className="fa-solid fa-clock me-1"></i>
+                              <small>You have pending requests</small>
+                            </div>
+                          </div>
+                          {joinRequests.slice(0, 2).map((request) => {
+                            const statusInfo = getStatusInfo(request.status);
+                            return (
+                              <div key={request.id} className="col-12">
+                                <div className="border rounded p-3">
+                                  <div className="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                      <h6 className="mb-1 small">{request.organizationName}</h6>
+                                      <small className="text-muted">{request.organizationType}</small>
+                                    </div>
+                                    <span className={`badge ${statusInfo.class} fs-6`}>
+                                      <i className={`fa-solid ${statusInfo.icon} me-1`}></i>
+                                      {statusInfo.text}
+                                    </span>
+                                  </div>
+                                  <small className="text-muted">
+                                    <i className="fa-solid fa-calendar me-1"></i>
+                                    Requested: {new Date(request.requestedOn).toLocaleDateString()}
+                                  </small>
+                                </div>
+                              </div>
+                            );
+                          })}
+                          {joinRequests.length > 2 && (
+                            <div className="col-12">
+                              <small className="text-muted">
+                                +{joinRequests.length - 2} more requests
+                              </small>
+                            </div>
+                          )}
+                          <div className="col-12 mt-2">
+                            <button 
+                              className="dashboard-btn-create w-100"
+                              onClick={() => navigate(ROUTES.DASHBOARD, { state: { activeSection: 'organizations' } })}
+                            >
+                              <i className="fa-solid fa-building me-1"></i>
+                              View All Requests
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        // User is not part of any organization
+                        <div className="text-center py-3">
+                          <div className="mb-3">
+                            <i className="fa-solid fa-building text-muted" style={{ fontSize: "2rem" }}></i>
+                          </div>
+                          <h6 className="text-muted mb-2">Not part of any organization</h6>
+                          <p className="text-muted mb-3 small">
+                            Join an organization to access the petition filing dashboard.
+                          </p>
+                          <button 
+                            className="dashboard-btn-create w-100"
+                            onClick={() => navigate(ROUTES.DASHBOARD, { state: { activeSection: 'organizations' } })}
+                          >
+                            <i className="fa-solid fa-building me-1"></i>
+                            Join Organization
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="text-center py-3">
+                      <div className="spinner-border spinner-border-sm text-primary" role="status">
+                        <span className="visually-hidden">Loading...</span>
+                      </div>
+                      <p className="mt-2 text-muted small">Loading...</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
             </div>
 
           </div>
