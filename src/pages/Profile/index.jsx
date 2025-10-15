@@ -28,7 +28,7 @@ function Profile() {
   const [isLoadingOrgData, setIsLoadingOrgData] = useState(false);
   const [hasLoadedOrgData, setHasLoadedOrgData] = useState(false);
   const navigate = useNavigate();
-  const { logout: authLogout } = useAuth();
+  const { logout: authLogout, login } = useAuth();
 
   useEffect(() => {
     const { user: userData, token } = getAuthData();
