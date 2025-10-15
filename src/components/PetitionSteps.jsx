@@ -265,13 +265,13 @@ const PetitionSteps = ({ isOpen, onClose }) => {
           ...prev,
           street_address_line_1: fullAddress,
           city: city,
-          state: state || 'MA',
+          state: 'MA', // Always keep as MA since it's locked
           zip_code: zipCode,
           county: county
         }));
 
-        // Mark address as verified and clear any validation errors
-        setIsAddressVerified(true);
+        // Don't mark as verified automatically - validation will happen on Save
+        setIsAddressVerified(false);
         setAddressValidationError('');
         setShowPredictions(false);
         setPredictions([]);
@@ -335,6 +335,8 @@ const PetitionSteps = ({ isOpen, onClose }) => {
           let foundZip = false;
           let county = '';
 
+          let actualState = '';
+          
           addressComponents.forEach(component => {
             const types = component.types;
             if (types.includes('locality') || types.includes('administrative_area_level_2')) {
@@ -343,7 +345,8 @@ const PetitionSteps = ({ isOpen, onClose }) => {
               }
             }
             if (types.includes('administrative_area_level_1')) {
-              if (component.short_name === formData.state) {
+              actualState = component.short_name;
+              if (component.short_name === 'MA') {
                 foundState = true;
               }
             }
@@ -358,6 +361,14 @@ const PetitionSteps = ({ isOpen, onClose }) => {
             }
           });
 
+          // Check if the address is actually in Massachusetts
+          if (actualState && actualState !== 'MA') {
+            setIsAddressVerified(false);
+            setAddressValidationError(`This address is in ${actualState}, but this system only accepts Massachusetts addresses. Please select a Massachusetts address.`);
+            resolve({ isValid: false, error: 'Address is not in Massachusetts' });
+            return;
+          }
+
           if (foundCity && foundState && foundZip) {
             // Auto-fill county if it was found and not already set
             if (county && !formData.county) {
@@ -370,7 +381,7 @@ const PetitionSteps = ({ isOpen, onClose }) => {
             resolve({ isValid: true, coordinates: result.geometry.location });
           } else {
             setIsAddressVerified(false);
-            setAddressValidationError('Address could not be verified. Please select from suggestions or enter a valid address.');
+            setAddressValidationError('Address could not be verified. Please select from suggestions or enter a valid Massachusetts address.');
             resolve({ isValid: false, error: 'Address verification failed' });
           }
         } else {
@@ -423,13 +434,11 @@ const PetitionSteps = ({ isOpen, onClose }) => {
       return { isValid: false, errors: validation.errors };
     }
 
-    // If address is not verified through autocomplete, validate with Geocoding API
-    if (!isAddressVerified) {
-      const addressValidation = await validateAddressWithGeocoding();
-      if (!addressValidation.isValid) {
-        setFieldErrors(prev => ({ ...prev, address: addressValidationError || 'Address validation failed' }));
-        return { isValid: false, errors: { address: addressValidationError || 'Address validation failed' } };
-      }
+    // Always validate address with Geocoding API when saving
+    const addressValidation = await validateAddressWithGeocoding();
+    if (!addressValidation.isValid) {
+      setFieldErrors(prev => ({ ...prev, address: addressValidationError || 'Address validation failed' }));
+      return { isValid: false, errors: { address: addressValidationError || 'Address validation failed' } };
     }
 
     return { isValid: true, errors: {} };
@@ -533,6 +542,7 @@ const PetitionSteps = ({ isOpen, onClose }) => {
       let validation = { isValid: true, errors: {} };
       
       if (currentStep === 1) {
+        // Always validate address when saving, even if it was previously verified
         validation = await validatePropertyDetailsStep();
       } else if (currentStep === 3) {
         validation = validateBorrowerDetails();
@@ -585,24 +595,7 @@ const PetitionSteps = ({ isOpen, onClose }) => {
   const nextStep = async (direction) => {
     const newStep = currentStep + direction;
     
-    // Validate Property Details step before proceeding
-    if (currentStep === 1 && direction === 1) {
-      const validation = await validatePropertyDetailsStep();
-      if (!validation.isValid) {
-        // Field errors are already set in the validation function
-        return;
-      }
-    }
-    
-    // Validate Borrower Details step before proceeding
-    if (currentStep === 3 && direction === 1) {
-      const validation = validateBorrowerDetails();
-      if (!validation.isValid) {
-        toast.error(`Please fix the following errors: ${validation.errors.join(', ')}`);
-        return;
-      }
-    }
-    
+    // No validation on Next Step - just navigate
     if (newStep >= 1 && newStep <= totalSteps) {
       setCurrentStep(newStep);
       // Scroll to top on step change for better mobile UX
@@ -809,9 +802,7 @@ const PetitionSteps = ({ isOpen, onClose }) => {
                     {fieldErrors.state}
                   </div>
                 )}
-                <div className="text-muted small mt-1">
-                  State is pre-filled as Massachusetts and locked
-                </div>
+                
               </div>
               <div className="col-md-6">
                 <label htmlFor="zip_code" className="form-label">ZIP Code *</label>
