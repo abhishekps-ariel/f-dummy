@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import petitionService from '../services/petitionService';
 
 const ViewAllPetitions = ({ onBack }) => {
@@ -48,8 +50,8 @@ const ViewAllPetitions = ({ onBack }) => {
     try {
       if (format === 'csv') {
         exportToCSV();
-      } else if (format === 'excel') {
-        exportToExcel();
+      } else if (format === 'pdf') {
+        exportToPDF();
       }
       toast.success(`Petitions exported as ${format.toUpperCase()} successfully!`);
     } catch (error) {
@@ -84,30 +86,64 @@ const ViewAllPetitions = ({ onBack }) => {
     document.body.removeChild(link);
   };
 
-  // Export to Excel (using CSV format with .xlsx extension for simplicity)
-  const exportToExcel = () => {
+  // Export to PDF
+  const exportToPDF = () => {
+    const doc = new jsPDF();
+    
+    // Add title
+    doc.setFontSize(18);
+    doc.text('Petitions Report', 14, 22);
+    
+    // Add date
+    doc.setFontSize(10);
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 32);
+    
+    // Prepare table data
     const headers = ['Petition Number', 'Property Address', 'Borrower', 'Status', 'Filing Date', 'Last Updated'];
-    const csvContent = [
-      headers.join(','),
-      ...petitions.map(petition => [
-        petition.id,
-        `"${petition.propertyAddress}"`,
-        `"${petition.borrower}"`,
-        petition.status,
-        petition.filingDate,
-        petition.lastUpdated
-      ].join(','))
-    ].join('\n');
+    const tableData = petitions.map(petition => [
+      petition.id,
+      petition.propertyAddress,
+      petition.borrower,
+      petition.status,
+      petition.filingDate,
+      petition.lastUpdated
+    ]);
 
-    const blob = new Blob([csvContent], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `petitions_${new Date().toISOString().split('T')[0]}.xlsx`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // Add table using autoTable plugin
+    autoTable(doc, {
+      head: [headers],
+      body: tableData,
+      startY: 40,
+      styles: {
+        fontSize: 8,
+        cellPadding: 3,
+      },
+      headStyles: {
+        fillColor: [52, 73, 94], // Dark blue-gray color
+        textColor: 255,
+        fontStyle: 'bold',
+      },
+      alternateRowStyles: {
+        fillColor: [245, 245, 245], // Light gray for alternating rows
+      },
+      margin: { top: 40 },
+      columnStyles: {
+        0: { cellWidth: 25 }, // Petition Number
+        1: { cellWidth: 60 }, // Property Address
+        2: { cellWidth: 30 }, // Borrower
+        3: { cellWidth: 20 }, // Status
+        4: { cellWidth: 25 }, // Filing Date
+        5: { cellWidth: 25 }, // Last Updated
+      },
+    });
+
+    // Add summary at the bottom
+    const finalY = doc.lastAutoTable.finalY + 10;
+    doc.setFontSize(10);
+    doc.text(`Total Petitions: ${petitions.length}`, 14, finalY);
+    
+    // Save the PDF
+    doc.save(`petitions_${new Date().toISOString().split('T')[0]}.pdf`);
   };
 
   // Load petitions with filters and pagination
@@ -214,10 +250,10 @@ const ViewAllPetitions = ({ onBack }) => {
             <li>
               <button 
                 className="dropdown-item" 
-                onClick={() => handleExport('excel')}
+                onClick={() => handleExport('pdf')}
               >
-                <i className="fa-solid fa-file-excel me-2"></i>
-                Export as Excel
+                <i className="fa-solid fa-file-pdf me-2"></i>
+                Export as PDF
               </button>
             </li>
           </ul>
