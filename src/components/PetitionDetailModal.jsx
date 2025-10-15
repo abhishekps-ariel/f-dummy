@@ -94,7 +94,12 @@ const PetitionDetailModal = ({ petition, isOpen, onClose }) => {
                       <div className="row g-2">
                         <div className="col-12">
                           <span className="fw-semibold">Street Address:</span>
-                          <p className="mb-1">{petition.details?.street_address || 'N/A'}</p>
+                          <p className="mb-1">
+                            {petition.details?.street_address_line_1 || 'N/A'}
+                            {petition.details?.street_address_line_2 && (
+                              <><br />{petition.details.street_address_line_2}</>
+                            )}
+                          </p>
                         </div>
                         <div className="col-md-6">
                           <span className="fw-semibold">City:</span>

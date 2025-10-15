@@ -11,7 +11,8 @@ const mockPetitions = [
     county: 'Suffolk',
     details: {
       // Step 1: Property Details
-      street_address: '123 Main St',
+      street_address_line_1: '123 Main St',
+      street_address_line_2: '',
       city: 'Anytown',
       state: 'MA',
       zip_code: '02101',
@@ -85,7 +86,8 @@ const mockPetitions = [
     county: 'Middlesex',
     details: {
       // Step 1: Property Details
-      street_address: '45 Baker Ln',
+      street_address_line_1: '45 Baker Ln',
+      street_address_line_2: 'Apt 2B',
       city: 'Somewhere',
       state: 'MA',
       zip_code: '02102',
@@ -159,7 +161,8 @@ const mockPetitions = [
     county: 'Essex',
     details: {
       // Step 1: Property Details
-      street_address: '789 Oak Ave',
+      street_address_line_1: '789 Oak Ave',
+      street_address_line_2: '',
       city: 'Cityville',
       state: 'MA',
       zip_code: '02103',

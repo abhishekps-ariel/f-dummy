@@ -21,6 +21,9 @@ const PetitionSteps = ({ isOpen, onClose }) => {
   const [isValidatingAddress, setIsValidatingAddress] = useState(false);
   const [addressValidationError, setAddressValidationError] = useState('');
   const [isAddressVerified, setIsAddressVerified] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [isSaving, setIsSaving] = useState(false);
+  const [hasSavedDraft, setHasSavedDraft] = useState(false);
   const autocompleteRef = useRef(null);
   const placesServiceRef = useRef(null);
   const autocompleteServiceRef = useRef(null);
@@ -64,10 +67,44 @@ const PetitionSteps = ({ isOpen, onClose }) => {
       }
     }
   }, [isLoaded]);
+
+  // Load saved drafts on component mount
+  useEffect(() => {
+    const loadSavedDrafts = () => {
+      try {
+        const savedDrafts = JSON.parse(localStorage.getItem('petitionDrafts') || '[]');
+        if (savedDrafts.length > 0) {
+          // Find the most recent draft for the current step
+          const currentStepDraft = savedDrafts.find(draft => draft.step === currentStep);
+          if (currentStepDraft && currentStepDraft.formData) {
+            // Merge saved data with current form data
+            setFormData(prev => ({
+              ...prev,
+              ...currentStepDraft.formData
+            }));
+            setHasSavedDraft(true);
+            console.log(`Loaded saved draft for step ${currentStep}`);
+          } else {
+            setHasSavedDraft(false);
+          }
+        } else {
+          setHasSavedDraft(false);
+        }
+      } catch (error) {
+        console.error('Error loading saved drafts:', error);
+        setHasSavedDraft(false);
+      }
+    };
+
+    if (isOpen) {
+      loadSavedDrafts();
+    }
+  }, [isOpen, currentStep]);
   
   const [formData, setFormData] = useState({
     // Step 1: Property Details
-    street_address: '',
+    street_address_line_1: '',
+    street_address_line_2: '',
     city: '',
     state: 'MA',
     zip_code: '',
@@ -226,7 +263,7 @@ const PetitionSteps = ({ isOpen, onClose }) => {
         
         setFormData(prev => ({
           ...prev,
-          street_address: fullAddress,
+          street_address_line_1: fullAddress,
           city: city,
           state: state || 'MA',
           zip_code: zipCode,
@@ -274,15 +311,16 @@ const PetitionSteps = ({ isOpen, onClose }) => {
   // Validate address using Geocoding API
   const validateAddressWithGeocoding = () => {
     return new Promise((resolve) => {
-      if (!geocoderRef.current || !formData.street_address.trim()) {
-        resolve({ isValid: false, error: 'Address is required' });
+      if (!geocoderRef.current || !formData.street_address_line_1.trim()) {
+        resolve({ isValid: false, error: 'Street address is required' });
         return;
       }
 
       setIsValidatingAddress(true);
       setAddressValidationError('');
 
-      const fullAddress = `${formData.street_address}, ${formData.city}, ${formData.state} ${formData.zip_code}`.trim();
+      const addressLine2 = formData.street_address_line_2 ? ` ${formData.street_address_line_2}` : '';
+      const fullAddress = `${formData.street_address_line_1}${addressLine2}, ${formData.city}, ${formData.state} ${formData.zip_code}`.trim();
 
       geocoderRef.current.geocode({ address: fullAddress }, (results, status) => {
         setIsValidatingAddress(false);
@@ -346,47 +384,55 @@ const PetitionSteps = ({ isOpen, onClose }) => {
 
   // Validation functions
   const validateAddressFields = () => {
-    const errors = [];
+    const errors = {};
+    let hasErrors = false;
     
-    if (!formData.street_address.trim()) {
-      errors.push('Street address is required');
+    if (!formData.street_address_line_1.trim()) {
+      errors.street_address_line_1 = 'Street address is required';
+      hasErrors = true;
     }
     
     if (!formData.city.trim()) {
-      errors.push('City is required');
+      errors.city = 'City is required';
+      hasErrors = true;
     }
     
     if (!formData.state.trim()) {
-      errors.push('State is required');
+      errors.state = 'State is required';
+      hasErrors = true;
     }
     
     const zipPattern = /^\d{5}(-\d{4})?$/;
     if (!formData.zip_code.trim()) {
-      errors.push('ZIP code is required');
+      errors.zip_code = 'ZIP code is required';
+      hasErrors = true;
     } else if (!zipPattern.test(formData.zip_code)) {
-      errors.push('ZIP code must be in valid format (12345 or 12345-6789)');
+      errors.zip_code = 'ZIP code must be in valid format (12345 or 12345-6789)';
+      hasErrors = true;
     }
     
-    return errors;
+    setFieldErrors(errors);
+    return { hasErrors, errors };
   };
 
   // Validate Property Details step
   const validatePropertyDetailsStep = async () => {
-    const basicErrors = validateAddressFields();
+    const validation = validateAddressFields();
     
-    if (basicErrors.length > 0) {
-      return { isValid: false, errors: basicErrors };
+    if (validation.hasErrors) {
+      return { isValid: false, errors: validation.errors };
     }
 
     // If address is not verified through autocomplete, validate with Geocoding API
     if (!isAddressVerified) {
       const addressValidation = await validateAddressWithGeocoding();
       if (!addressValidation.isValid) {
-        return { isValid: false, errors: [addressValidationError || 'Address validation failed'] };
+        setFieldErrors(prev => ({ ...prev, address: addressValidationError || 'Address validation failed' }));
+        return { isValid: false, errors: { address: addressValidationError || 'Address validation failed' } };
       }
     }
 
-    return { isValid: true, errors: [] };
+    return { isValid: true, errors: {} };
   };
 
   const handleInputChange = (e) => {
@@ -396,8 +442,22 @@ const PetitionSteps = ({ isOpen, onClose }) => {
       [name]: type === 'checkbox' ? checked : type === 'file' ? files[0] : value
     }));
 
+    // Clear field error when user starts typing
+    if (fieldErrors[name]) {
+      setFieldErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
+
+    // Reset saved draft indicator when user makes changes
+    if (hasSavedDraft) {
+      setHasSavedDraft(false);
+    }
+
     // Reset address verification when manually editing address fields
-    if (['street_address', 'city', 'state', 'zip_code', 'county'].includes(name)) {
+    if (['street_address_line_1', 'street_address_line_2', 'city', 'state', 'zip_code', 'county'].includes(name)) {
       setIsAddressVerified(false);
       setAddressValidationError('');
     }
@@ -464,6 +524,64 @@ const PetitionSteps = ({ isOpen, onClose }) => {
     };
   };
 
+  // Save current step data
+  const saveCurrentStep = async () => {
+    setIsSaving(true);
+    
+    try {
+      // Validate current step before saving
+      let validation = { isValid: true, errors: {} };
+      
+      if (currentStep === 1) {
+        validation = await validatePropertyDetailsStep();
+      } else if (currentStep === 3) {
+        validation = validateBorrowerDetails();
+      }
+      
+      if (!validation.isValid) {
+        toast.error("Please fix the errors before saving");
+        setIsSaving(false);
+        return;
+      }
+      
+      // Here you would typically send the data to your API
+      // For now, we'll simulate a save operation
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Create save data object
+      const saveData = {
+        step: currentStep,
+        formData: formData,
+        timestamp: new Date().toISOString(),
+        isDraft: true
+      };
+      
+      // In a real application, you would save this to your backend
+      console.log('Saving step data:', saveData);
+      
+      // Store in localStorage for now (in real app, this would be API call)
+      const existingDrafts = JSON.parse(localStorage.getItem('petitionDrafts') || '[]');
+      const draftIndex = existingDrafts.findIndex(draft => draft.step === currentStep);
+      
+      if (draftIndex >= 0) {
+        existingDrafts[draftIndex] = saveData;
+      } else {
+        existingDrafts.push(saveData);
+      }
+      
+      localStorage.setItem('petitionDrafts', JSON.stringify(existingDrafts));
+      
+      setHasSavedDraft(true);
+      toast.success(`Step ${currentStep} saved successfully!`);
+      
+    } catch (error) {
+      console.error('Error saving step:', error);
+      toast.error("Failed to save step. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const nextStep = async (direction) => {
     const newStep = currentStep + direction;
     
@@ -471,7 +589,7 @@ const PetitionSteps = ({ isOpen, onClose }) => {
     if (currentStep === 1 && direction === 1) {
       const validation = await validatePropertyDetailsStep();
       if (!validation.isValid) {
-        toast.error(`Please fix the following errors: ${validation.errors.join(', ')}`);
+        // Field errors are already set in the validation function
         return;
       }
     }
@@ -507,9 +625,8 @@ const PetitionSteps = ({ isOpen, onClose }) => {
     }
 
     // Validate address fields
-    const addressErrors = validateAddressFields();
-    if (addressErrors.length > 0) {
-      toast.error(`Address validation failed: ${addressErrors.join(', ')}`);
+    const addressValidation = validateAddressFields();
+    if (addressValidation.hasErrors) {
       setIsIntentionalSubmit(false); // Reset the flag
       return;
     }
@@ -535,22 +652,27 @@ const PetitionSteps = ({ isOpen, onClose }) => {
             <p className="text-muted small mb-3">Enter the full address and location details of the property subject to foreclosure.</p>
             <div className="row g-3">
               <div className="col-12">
-                <label htmlFor="street_address" className="form-label">
-                  Street Address 
+                <label htmlFor="street_address_line_1" className="form-label">
+                  Street Address Line 1 *
                   {isAddressVerified && <span className="text-success ms-2">✓ Verified</span>}
                 </label>
                 {loadError ? (
                   <div>
                 <input 
                   type="text" 
-                  id="street_address" 
-                  name="street_address" 
-                  className="form-control"
-                  value={formData.street_address}
+                  id="street_address_line_1" 
+                  name="street_address_line_1" 
+                  className={`form-control ${fieldErrors.street_address_line_1 ? 'is-invalid' : ''}`}
+                  value={formData.street_address_line_1}
                   onChange={handleInputChange}
                       placeholder="Enter address manually (Google Maps unavailable)"
                       autoComplete="off"
                     />
+                    {fieldErrors.street_address_line_1 && (
+                      <div className="text-danger small mt-1">
+                        {fieldErrors.street_address_line_1}
+                      </div>
+                    )}
                     <div className="text-danger small mt-1">
                       ⚠️ Google Maps API failed to load. Please enter address manually.
                     </div>
@@ -560,10 +682,10 @@ const PetitionSteps = ({ isOpen, onClose }) => {
                     <input
                       ref={autocompleteRef}
                       type="text"
-                      id="street_address"
-                      name="street_address"
-                      className="form-control"
-                      value={formData.street_address}
+                      id="street_address_line_1"
+                      name="street_address_line_1"
+                      className={`form-control ${fieldErrors.street_address_line_1 ? 'is-invalid' : ''}`}
+                      value={formData.street_address_line_1}
                       onChange={(e) => {
                         handleInputChange(e);
                         handleAddressInput(e.target.value);
@@ -610,6 +732,13 @@ const PetitionSteps = ({ isOpen, onClose }) => {
                       </div>
                     )}
                     
+                    {/* Field error display */}
+                    {fieldErrors.street_address_line_1 && (
+                      <div className="text-danger small mt-1">
+                        {fieldErrors.street_address_line_1}
+                      </div>
+                    )}
+                    
                     {/* Address validation error */}
                     {addressValidationError && (
                       <div className="text-danger small mt-2">
@@ -633,93 +762,74 @@ const PetitionSteps = ({ isOpen, onClose }) => {
                   </div>
                 )}
               </div>
+              
+              <div className="col-12">
+                <label htmlFor="street_address_line_2" className="form-label">Street Address Line 2 (Optional)</label>
+                <input 
+                  type="text" 
+                  id="street_address_line_2" 
+                  name="street_address_line_2" 
+                  className="form-control"
+                  value={formData.street_address_line_2}
+                  onChange={handleInputChange}
+                  placeholder="Apartment, suite, unit, building, floor, etc."
+                />
+              </div>
               <div className="col-md-6">
-                <label htmlFor="city" className="form-label">City</label>
+                <label htmlFor="city" className="form-label">City *</label>
                 <input 
                   type="text" 
                   id="city" 
                   name="city" 
-                  className="form-control"
+                  className={`form-control ${fieldErrors.city ? 'is-invalid' : ''}`}
                   value={formData.city}
                   onChange={handleInputChange}
                   placeholder="Enter city name"
                 />
+                {fieldErrors.city && (
+                  <div className="text-danger small mt-1">
+                    {fieldErrors.city}
+                  </div>
+                )}
               </div>
               <div className="col-md-6">
-                <label htmlFor="state" className="form-label">State</label>
+                <label htmlFor="state" className="form-label">State *</label>
                 <select 
                   id="state" 
                   name="state" 
-                  className="form-select"
+                  className={`form-select ${fieldErrors.state ? 'is-invalid' : ''}`}
                   value={formData.state}
                   onChange={handleInputChange}
+                  disabled
                 >
-                  <option value="">Select State</option>
-                  <option value="AL">Alabama (AL)</option>
-                  <option value="AK">Alaska (AK)</option>
-                  <option value="AZ">Arizona (AZ)</option>
-                  <option value="AR">Arkansas (AR)</option>
-                  <option value="CA">California (CA)</option>
-                  <option value="CO">Colorado (CO)</option>
-                  <option value="CT">Connecticut (CT)</option>
-                  <option value="DE">Delaware (DE)</option>
-                  <option value="FL">Florida (FL)</option>
-                  <option value="GA">Georgia (GA)</option>
-                  <option value="HI">Hawaii (HI)</option>
-                  <option value="ID">Idaho (ID)</option>
-                  <option value="IL">Illinois (IL)</option>
-                  <option value="IN">Indiana (IN)</option>
-                  <option value="IA">Iowa (IA)</option>
-                  <option value="KS">Kansas (KS)</option>
-                  <option value="KY">Kentucky (KY)</option>
-                  <option value="LA">Louisiana (LA)</option>
-                  <option value="ME">Maine (ME)</option>
-                  <option value="MD">Maryland (MD)</option>
                   <option value="MA">Massachusetts (MA)</option>
-                  <option value="MI">Michigan (MI)</option>
-                  <option value="MN">Minnesota (MN)</option>
-                  <option value="MS">Mississippi (MS)</option>
-                  <option value="MO">Missouri (MO)</option>
-                  <option value="MT">Montana (MT)</option>
-                  <option value="NE">Nebraska (NE)</option>
-                  <option value="NV">Nevada (NV)</option>
-                  <option value="NH">New Hampshire (NH)</option>
-                  <option value="NJ">New Jersey (NJ)</option>
-                  <option value="NM">New Mexico (NM)</option>
-                  <option value="NY">New York (NY)</option>
-                  <option value="NC">North Carolina (NC)</option>
-                  <option value="ND">North Dakota (ND)</option>
-                  <option value="OH">Ohio (OH)</option>
-                  <option value="OK">Oklahoma (OK)</option>
-                  <option value="OR">Oregon (OR)</option>
-                  <option value="PA">Pennsylvania (PA)</option>
-                  <option value="RI">Rhode Island (RI)</option>
-                  <option value="SC">South Carolina (SC)</option>
-                  <option value="SD">South Dakota (SD)</option>
-                  <option value="TN">Tennessee (TN)</option>
-                  <option value="TX">Texas (TX)</option>
-                  <option value="UT">Utah (UT)</option>
-                  <option value="VT">Vermont (VT)</option>
-                  <option value="VA">Virginia (VA)</option>
-                  <option value="WA">Washington (WA)</option>
-                  <option value="WV">West Virginia (WV)</option>
-                  <option value="WI">Wisconsin (WI)</option>
-                  <option value="WY">Wyoming (WY)</option>
-                  <option value="DC">District of Columbia (DC)</option>
                 </select>
+                {fieldErrors.state && (
+                  <div className="text-danger small mt-1">
+                    {fieldErrors.state}
+                  </div>
+                )}
+                <div className="text-muted small mt-1">
+                  State is pre-filled as Massachusetts and locked
+                </div>
               </div>
               <div className="col-md-6">
-                <label htmlFor="zip_code" className="form-label">ZIP Code</label>
+                <label htmlFor="zip_code" className="form-label">ZIP Code *</label>
                 <input 
                   type="text" 
                   id="zip_code" 
                   name="zip_code" 
                   pattern="\d{5}(?:-\d{4})?" 
-                  className="form-control"
+                  className={`form-control ${fieldErrors.zip_code ? 'is-invalid' : ''}`}
                   value={formData.zip_code}
                   onChange={handleInputChange}
                   placeholder="12345 or 12345-6789"
                 />
+                {fieldErrors.zip_code && (
+                  <div className="text-danger small mt-1">
+                    {fieldErrors.zip_code}
+                  </div>
+                )}
               </div>
               <div className="col-md-6">
                 <label htmlFor="county" className="form-label">County (Filing Location)</label>
@@ -1296,38 +1406,57 @@ const PetitionSteps = ({ isOpen, onClose }) => {
                   {renderStep()}
 
                   {/* Navigation Buttons */}
-                  <div className="mt-4 pt-3 border-top d-flex justify-content-between">
-                    <button 
-                      type="button" 
-                      className={`btn create-org-btn ${currentStep === 1 ? 'd-none' : ''}`}
-                      onClick={() => nextStep(-1)}
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-arrow-left me-2" viewBox="0 0 16 16">
-                        <path fillRule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
-                      </svg>
-                      Previous Step
-                    </button>
-                    
-                    {currentStep < totalSteps ? (
+                  <div className="mt-4 pt-3 border-top">
+                    <div className="d-flex justify-content-between align-items-center">
                       <button 
                         type="button" 
-                        className="btn custom-btn theme-btn text-center ms-auto py-2 px-3"
-                        onClick={() => nextStep(1)}
+                        className={`btn create-org-btn ${currentStep === 1 ? 'd-none' : ''}`}
+                        onClick={() => nextStep(-1)}
                       >
-                        Next Step
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-arrow-right ms-2" viewBox="0 0 16 16">
-                          <path fillRule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8"/>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-arrow-left me-2" viewBox="0 0 16 16">
+                          <path fillRule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
                         </svg>
+                        Previous Step
                       </button>
-                    ) : (
-                      <button 
-                        type="submit" 
-                        className="btn custom-btn theme-btn text-center ms-auto py-2 px-3"
-                        onClick={() => setIsIntentionalSubmit(true)}
-                      >
-                        Submit Petition
-                      </button>
-                    )}
+                      
+                      <div className="d-flex gap-2">
+                        {/* Save Button */}
+                        <button 
+                          type="button" 
+                          className="dashboard-btn-refresh"
+                          onClick={saveCurrentStep}
+                          disabled={isSaving}
+                        >
+                          {isSaving ? (
+                            <>
+                              <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                              Saving...
+                            </>
+                          ) : (
+                            'Save'
+                          )}
+                        </button>
+                        
+                        {/* Next Step or Submit Button */}
+                        {currentStep < totalSteps ? (
+                          <button 
+                            type="button" 
+                            className="dashboard-btn-create"
+                            onClick={() => nextStep(1)}
+                          >
+                            Next Step
+                          </button>
+                        ) : (
+                          <button 
+                            type="submit" 
+                            className="dashboard-btn-create"
+                            onClick={() => setIsIntentionalSubmit(true)}
+                          >
+                            Submit Petition
+                          </button>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </form>
               </div>
