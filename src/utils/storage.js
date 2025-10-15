@@ -17,4 +17,7 @@ export const clearAuthData = () => {
   localStorage.removeItem('token');
   localStorage.removeItem('refreshToken');
   localStorage.removeItem('user');
+  
+  // Dispatch custom event to notify AuthContext
+  window.dispatchEvent(new CustomEvent('authDataCleared'));
 };
