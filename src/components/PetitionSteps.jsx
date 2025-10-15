@@ -422,6 +422,11 @@ const PetitionSteps = ({ isOpen, onClose }) => {
       hasErrors = true;
     }
     
+    if (!formData.county.trim()) {
+      errors.county = 'County is required';
+      hasErrors = true;
+    }
+    
     setFieldErrors(errors);
     return { hasErrors, errors };
   };
@@ -595,7 +600,24 @@ const PetitionSteps = ({ isOpen, onClose }) => {
   const nextStep = async (direction) => {
     const newStep = currentStep + direction;
     
-    // No validation on Next Step - just navigate
+    // Basic field validation for Next Step (no address validation)
+    if (currentStep === 1 && direction === 1) {
+      const basicValidation = validateAddressFields();
+      if (basicValidation.hasErrors) {
+        // Field errors are already set in the validation function
+        return;
+      }
+    }
+    
+    // Validate Borrower Details step before proceeding
+    if (currentStep === 3 && direction === 1) {
+      const validation = validateBorrowerDetails();
+      if (!validation.isValid) {
+        toast.error(`Please fix the following errors: ${validation.errors.join(', ')}`);
+        return;
+      }
+    }
+    
     if (newStep >= 1 && newStep <= totalSteps) {
       setCurrentStep(newStep);
       // Scroll to top on step change for better mobile UX
@@ -823,15 +845,21 @@ const PetitionSteps = ({ isOpen, onClose }) => {
                 )}
               </div>
               <div className="col-md-6">
-                <label htmlFor="county" className="form-label">County (Filing Location)</label>
+                <label htmlFor="county" className="form-label">County (Filing Location) *</label>
                 <input 
                   type="text" 
                   id="county" 
                   name="county" 
-                  className="form-control"
+                  className={`form-control ${fieldErrors.county ? 'is-invalid' : ''}`}
                   value={formData.county}
                   onChange={handleInputChange}
+                  placeholder="Enter county name"
                 />
+                {fieldErrors.county && (
+                  <div className="text-danger small mt-1">
+                    {fieldErrors.county}
+                  </div>
+                )}
               </div>
             </div>
           </div>
