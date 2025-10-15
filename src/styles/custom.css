@@ -1665,3 +1665,136 @@ form.search-form input:focus {
     font-weight: normal;
     margin-left: 4px;
 }
+
+/* Organization Details Styles */
+.organization-details {
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+}
+
+.organization-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.organization-icon {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 16px;
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.15);
+}
+
+.organization-icon i {
+    font-size: 24px;
+    color: white;
+}
+
+.organization-info {
+    flex: 1;
+}
+
+.organization-name {
+    font-size: 24px;
+    font-weight: 700;
+    color: #212529;
+    margin: 0 0 8px 0;
+    line-height: 1.2;
+}
+
+.organization-type {
+    font-size: 14px;
+    color: #6c757d;
+    display: flex;
+    align-items: center;
+}
+
+.organization-details-grid {
+    display: grid;
+    gap: 16px;
+}
+
+.organization-detail-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 16px;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    transition: box-shadow 0.2s ease;
+}
+
+.organization-detail-item:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.detail-icon {
+    width: 40px;
+    height: 40px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+
+.detail-icon i {
+    font-size: 16px;
+    color: #6c757d;
+}
+
+.detail-content {
+    flex: 1;
+}
+
+.detail-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+.detail-value {
+    font-size: 14px;
+    color: #212529;
+    font-weight: 500;
+    line-height: 1.4;
+}
+
+/* Responsive adjustments for organization details */
+@media (max-width: 768px) {
+    .organization-header {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .organization-icon {
+        margin-right: 0;
+        margin-bottom: 12px;
+    }
+    
+    .organization-name {
+        font-size: 20px;
+    }
+    
+    .organization-details-grid {
+        gap: 12px;
+    }
+    
+    .organization-detail-item {
+        padding: 12px;
+    }
+}

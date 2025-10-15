@@ -46,6 +46,9 @@ function Dashboard() {
   const [joinRequests, setJoinRequests] = useState([]);
   const [isLoadingJoinRequests, setIsLoadingJoinRequests] = useState(false);
   const [hasLoadedJoinRequests, setHasLoadedJoinRequests] = useState(false);
+  
+  const [userOrganization, setUserOrganization] = useState(null);
+  const [isLoadingUserOrganization, setIsLoadingUserOrganization] = useState(false);
 
   const [isCreatingOrg, setIsCreatingOrg] = useState(false);
   const [showPetitionSteps, setShowPetitionSteps] = useState(false);
@@ -178,6 +181,16 @@ function Dashboard() {
     };
   }, []);
 
+  // Load organization details when join requests change and user has approved requests
+  useEffect(() => {
+    if (hasLoadedJoinRequests && joinRequests.length > 0) {
+      const hasApprovedRequest = joinRequests.some(request => request.status === 1);
+      if (hasApprovedRequest && !userOrganization && !isLoadingUserOrganization) {
+        loadUserOrganization();
+      }
+    }
+  }, [joinRequests, hasLoadedJoinRequests, userOrganization, isLoadingUserOrganization]);
+
   const handleLogout = async () => {
     try {
       // Get refresh token from storage
@@ -238,6 +251,13 @@ function Dashboard() {
         );
 
         setJoinRequests(requestsWithOrgNames);
+        
+        // Check if user has any approved requests and load their organization
+        const hasApprovedRequest = requestsWithOrgNames.some(request => request.status === 1);
+        if (hasApprovedRequest) {
+          // Load organization details immediately after setting join requests
+          await loadUserOrganization();
+        }
       } else {
         console.error("Failed to load join requests:", response.msg);
         toast.error(response.msg || "Failed to load join requests");
@@ -250,6 +270,34 @@ function Dashboard() {
     } finally {
       setIsLoadingJoinRequests(false);
       setHasLoadedJoinRequests(true);
+    }
+  };
+
+  const loadUserOrganization = async () => {
+    setIsLoadingUserOrganization(true);
+    try {
+      // Find the approved request to get the organization ID
+      const approvedRequest = joinRequests.find(request => request.status === 1);
+      
+      if (!approvedRequest) {
+        console.error("No approved request found");
+        setUserOrganization(null);
+        return;
+      }
+
+      // Use getOrganizationById to fetch the organization details
+      const response = await getOrganizationById(approvedRequest.organizationId);
+      if (response.isSuccess) {
+        setUserOrganization(response.data);
+      } else {
+        console.error("Failed to load user organization:", response.msg);
+        setUserOrganization(null);
+      }
+    } catch (error) {
+      console.error("Error loading user organization:", error);
+      setUserOrganization(null);
+    } finally {
+      setIsLoadingUserOrganization(false);
     }
   };
 
@@ -957,10 +1005,94 @@ function Dashboard() {
               </div>
             )}
 
-          {/* Show join request status only if user has submitted a request and data has loaded */}
+          {/* Show My Organization section if user has approved requests */}
           {activeSection === "organizations" &&
             hasLoadedJoinRequests &&
-            joinRequests.length > 0 && (
+            joinRequests.length > 0 &&
+            joinRequests.some(request => request.status === 1) && (
+              <div className="org-search-box">
+                <div className="d-flex align-items-center justify-content-between mb-3">
+                  <h2 className="h5 mb-0">My Organization</h2>
+                </div>
+
+                {isLoadingUserOrganization ? (
+                  <div className="text-center py-4">
+                    <div className="spinner-border text-primary" role="status">
+                      <span className="visually-hidden">Loading...</span>
+                    </div>
+                    <p className="mt-2 text-muted">Loading organization details...</p>
+                  </div>
+                ) : userOrganization ? (
+                  <div className="organization-details">
+                    <div className="organization-header">
+                      <div className="organization-icon">
+                        <i className="fa-solid fa-building"></i>
+                      </div>
+                      <div className="organization-info">
+                        <h3 className="organization-name">{userOrganization.name}</h3>
+                        <div className="organization-type">
+                          <i className="fa-solid fa-tag me-1"></i>
+                          {userOrganization.type || "N/A"}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="organization-details-grid">
+                      {userOrganization.address && (
+                        <div className="organization-detail-item">
+                          <div className="detail-icon">
+                            <i className="fa-solid fa-location-dot"></i>
+                          </div>
+                          <div className="detail-content">
+                            <div className="detail-label">Address</div>
+                            <div className="detail-value">{userOrganization.address}</div>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {userOrganization.primaryContact && (
+                        <div className="organization-detail-item">
+                          <div className="detail-icon">
+                            <i className="fa-solid fa-user"></i>
+                          </div>
+                          <div className="detail-content">
+                            <div className="detail-label">Primary Contact</div>
+                            <div className="detail-value">{userOrganization.primaryContact}</div>
+                          </div>
+                        </div>
+                      )}
+                      
+                      <div className="organization-detail-item">
+                        <div className="detail-icon">
+                          <i className="fa-solid fa-check-circle text-success"></i>
+                        </div>
+                        <div className="detail-content">
+                          <div className="detail-label">Status</div>
+                          <div className="detail-value text-success">Active Member</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-4">
+                    <i
+                      className="fa-solid fa-building text-muted mb-3"
+                      style={{ fontSize: "2rem" }}
+                    ></i>
+                    <p className="text-muted mb-0">Organization details not available</p>
+                    <small className="text-muted">
+                      Please refresh the page or contact support
+                    </small>
+                  </div>
+                )}
+              </div>
+            )}
+
+          {/* Show join request status only if user has submitted requests but none are approved */}
+          {activeSection === "organizations" &&
+            hasLoadedJoinRequests &&
+            joinRequests.length > 0 &&
+            !joinRequests.some(request => request.status === 1) && (
               <div className="org-search-box">
                 <div className="d-flex align-items-center justify-content-between mb-3">
                   <h2 className="h5 mb-0">Request Status</h2>
