@@ -15,6 +15,7 @@ const ViewAllPetitions = ({ onBack }) => {
   const [sortOrder, setSortOrder] = useState('desc');
   const [petitions, setPetitions] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 1,
@@ -46,104 +47,155 @@ const ViewAllPetitions = ({ onBack }) => {
   };
 
   // Handle export functionality
-  const handleExport = (format) => {
+  const handleExport = async (format) => {
+    setExporting(true);
     try {
       if (format === 'csv') {
-        exportToCSV();
+        await exportToCSV();
       } else if (format === 'pdf') {
-        exportToPDF();
+        await exportToPDF();
       }
       toast.success(`Petitions exported as ${format.toUpperCase()} successfully!`);
     } catch (error) {
       console.error('Export error:', error);
       toast.error('Failed to export petitions. Please try again.');
+    } finally {
+      setExporting(false);
     }
   };
 
   // Export to CSV
-  const exportToCSV = () => {
-    const headers = ['Petition Number', 'Property Address', 'Borrower', 'Status', 'Filing Date', 'Last Updated'];
-    const csvContent = [
-      headers.join(','),
-      ...petitions.map(petition => [
-        petition.id,
-        `"${petition.propertyAddress}"`,
-        `"${petition.borrower}"`,
-        petition.status,
-        petition.filingDate,
-        petition.lastUpdated
-      ].join(','))
-    ].join('\n');
+  const exportToCSV = async () => {
+    try {
+      // Fetch all petitions data without pagination limits
+      const response = await petitionService.getPetitions({
+        page: 1,
+        limit: 10000, // Large number to get all records
+        search: searchQuery,
+        status: statusFilter,
+        dateFilter: dateFilter,
+        customDateFrom: dateFilter === 'custom' ? customDateFrom : '',
+        customDateTo: dateFilter === 'custom' ? customDateTo : '',
+        sortBy: sortBy,
+        sortOrder: sortOrder
+      });
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `petitions_${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+      if (!response.success) {
+        toast.error('Failed to fetch data for export');
+        return;
+      }
+
+      const allPetitions = response.data;
+      const headers = ['Petition Number', 'Property Address', 'Borrower', 'Status', 'Filing Date', 'Last Updated'];
+      const csvContent = [
+        headers.join(','),
+        ...allPetitions.map(petition => [
+          petition.id,
+          `"${petition.propertyAddress}"`,
+          `"${petition.borrower}"`,
+          petition.status,
+          petition.filingDate,
+          petition.lastUpdated
+        ].join(','))
+      ].join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `petitions_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('CSV export error:', error);
+      toast.error('Failed to export CSV. Please try again.');
+    }
   };
 
   // Export to PDF
-  const exportToPDF = () => {
-    const doc = new jsPDF();
-    
-    // Add title
-    doc.setFontSize(18);
-    doc.text('Petitions Report', 14, 22);
-    
-    // Add date
-    doc.setFontSize(10);
-    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 32);
-    
-    // Prepare table data
-    const headers = ['Petition Number', 'Property Address', 'Borrower', 'Status', 'Filing Date', 'Last Updated'];
-    const tableData = petitions.map(petition => [
-      petition.id,
-      petition.propertyAddress,
-      petition.borrower,
-      petition.status,
-      petition.filingDate,
-      petition.lastUpdated
-    ]);
+  const exportToPDF = async () => {
+    try {
+      // Fetch all petitions data without pagination limits
+      const response = await petitionService.getPetitions({
+        page: 1,
+        limit: 10000, // Large number to get all records
+        search: searchQuery,
+        status: statusFilter,
+        dateFilter: dateFilter,
+        customDateFrom: dateFilter === 'custom' ? customDateFrom : '',
+        customDateTo: dateFilter === 'custom' ? customDateTo : '',
+        sortBy: sortBy,
+        sortOrder: sortOrder
+      });
 
-    // Add table using autoTable plugin
-    autoTable(doc, {
-      head: [headers],
-      body: tableData,
-      startY: 40,
-      styles: {
-        fontSize: 8,
-        cellPadding: 3,
-      },
-      headStyles: {
-        fillColor: [52, 73, 94], // Dark blue-gray color
-        textColor: 255,
-        fontStyle: 'bold',
-      },
-      alternateRowStyles: {
-        fillColor: [245, 245, 245], // Light gray for alternating rows
-      },
-      margin: { top: 40 },
-      columnStyles: {
-        0: { cellWidth: 25 }, // Petition Number
-        1: { cellWidth: 60 }, // Property Address
-        2: { cellWidth: 30 }, // Borrower
-        3: { cellWidth: 20 }, // Status
-        4: { cellWidth: 25 }, // Filing Date
-        5: { cellWidth: 25 }, // Last Updated
-      },
-    });
+      if (!response.success) {
+        toast.error('Failed to fetch data for export');
+        return;
+      }
 
-    // Add summary at the bottom
-    const finalY = doc.lastAutoTable.finalY + 10;
-    doc.setFontSize(10);
-    doc.text(`Total Petitions: ${petitions.length}`, 14, finalY);
-    
-    // Save the PDF
-    doc.save(`petitions_${new Date().toISOString().split('T')[0]}.pdf`);
+      const allPetitions = response.data;
+      const doc = new jsPDF();
+      
+      // Add title
+      doc.setFontSize(18);
+      doc.text('Petitions Report', 14, 22);
+      
+      // Add date
+      doc.setFontSize(10);
+      doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 32);
+      
+      // Prepare table data
+      const headers = ['Petition Number', 'Property Address', 'Borrower', 'Status', 'Filing Date', 'Last Updated'];
+      const tableData = allPetitions.map(petition => [
+        petition.id,
+        petition.propertyAddress,
+        petition.borrower,
+        petition.status,
+        petition.filingDate,
+        petition.lastUpdated
+      ]);
+
+      // Add table using autoTable plugin
+      autoTable(doc, {
+        head: [headers],
+        body: tableData,
+        startY: 40,
+        styles: {
+          fontSize: 8,
+          cellPadding: 3,
+        },
+        headStyles: {
+          fillColor: [52, 73, 94], // Dark blue-gray color
+          textColor: 255,
+          fontStyle: 'bold',
+        },
+        alternateRowStyles: {
+          fillColor: [245, 245, 245], // Light gray for alternating rows
+        },
+        margin: { top: 40 },
+        columnStyles: {
+          0: { cellWidth: 25 }, // Petition Number
+          1: { cellWidth: 60 }, // Property Address
+          2: { cellWidth: 30 }, // Borrower
+          3: { cellWidth: 20 }, // Status
+          4: { cellWidth: 25 }, // Filing Date
+          5: { cellWidth: 25 }, // Last Updated
+        },
+      });
+
+      // Add summary at the bottom
+      const finalY = doc.lastAutoTable.finalY + 10;
+      doc.setFontSize(10);
+      doc.text(`Total Petitions: ${allPetitions.length}`, 14, finalY);
+      
+      // Save the PDF
+      doc.save(`petitions_${new Date().toISOString().split('T')[0]}.pdf`);
+    } catch (error) {
+      console.error('PDF export error:', error);
+      toast.error('Failed to export PDF. Please try again.');
+    }
   };
 
   // Load petitions with filters and pagination
@@ -233,15 +285,26 @@ const ViewAllPetitions = ({ onBack }) => {
             data-bs-toggle="dropdown"
             aria-expanded="false"
             title="Export petitions"
+            disabled={exporting}
           >
-            <i className="fa-solid fa-download me-2"></i>
-            Export
+            {exporting ? (
+              <>
+                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                Exporting...
+              </>
+            ) : (
+              <>
+                <i className="fa-solid fa-download me-2"></i>
+                Export
+              </>
+            )}
           </button>
           <ul className="dropdown-menu dropdown-menu-end">
             <li>
               <button 
                 className="dropdown-item" 
                 onClick={() => handleExport('csv')}
+                disabled={exporting}
               >
                 <i className="fa-solid fa-file-csv me-2"></i>
                 Export as CSV
@@ -251,6 +314,7 @@ const ViewAllPetitions = ({ onBack }) => {
               <button 
                 className="dropdown-item" 
                 onClick={() => handleExport('pdf')}
+                disabled={exporting}
               >
                 <i className="fa-solid fa-file-pdf me-2"></i>
                 Export as PDF
