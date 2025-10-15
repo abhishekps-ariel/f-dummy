@@ -14,8 +14,7 @@ function SetNewPassword() {
     newPassword: "",
     confirmPassword: "",
   });
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showPasswords, setShowPasswords] = useState(false);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPasswordChanged, setIsPasswordChanged] = useState(false);
@@ -157,12 +156,8 @@ function SetNewPassword() {
     }
   };
 
-  const togglePasswordVisibility = (field) => {
-    if (field === 'newPassword') {
-      setShowNewPassword(!showNewPassword);
-    } else {
-      setShowConfirmPassword(!showConfirmPassword);
-    }
+  const togglePasswordVisibility = () => {
+    setShowPasswords(!showPasswords);
   };
 
   // Show loading while checking token
@@ -279,7 +274,7 @@ function SetNewPassword() {
                         </div>
                         <input
                           name="newPassword"
-                          type={showNewPassword ? "text" : "password"}
+                          type={showPasswords ? "text" : "password"}
                           className={`form-control ${errors.newPassword ? 'is-invalid' : ''}`}
                           placeholder="Enter new password"
                           value={formData.newPassword}
@@ -290,11 +285,11 @@ function SetNewPassword() {
                         />
                         <span 
                           className="password-eye" 
-                          onClick={() => togglePasswordVisibility('newPassword')}
+                          onClick={togglePasswordVisibility}
                           style={{ cursor: 'pointer' }}
-                          title={showNewPassword ? 'Hide password' : 'Show password'}
+                          title={showPasswords ? 'Hide passwords' : 'Show passwords'}
                         >
-                          <i className={`fa-solid ${showNewPassword ? 'fa-eye' : 'fa-eye-slash'}`}></i>
+                          <i className={`fa-solid ${showPasswords ? 'fa-eye' : 'fa-eye-slash'}`}></i>
                         </span>
                         {/* Password Guidelines Tooltip */}
                         <PasswordGuidelines 
@@ -317,7 +312,7 @@ function SetNewPassword() {
                         </div>
                         <input
                           name="confirmPassword"
-                          type={showConfirmPassword ? "text" : "password"}
+                          type={showPasswords ? "text" : "password"}
                           className={`form-control ${errors.confirmPassword ? 'is-invalid' : ''}`}
                           placeholder="Confirm new password"
                           value={formData.confirmPassword}
@@ -326,11 +321,11 @@ function SetNewPassword() {
                         />
                         <span 
                           className="password-eye" 
-                          onClick={() => togglePasswordVisibility('confirmPassword')}
+                          onClick={togglePasswordVisibility}
                           style={{ cursor: 'pointer' }}
-                          title={showConfirmPassword ? 'Hide password' : 'Show password'}
+                          title={showPasswords ? 'Hide passwords' : 'Show passwords'}
                         >
-                          <i className={`fa-solid ${showConfirmPassword ? 'fa-eye' : 'fa-eye-slash'}`}></i>
+                          <i className={`fa-solid ${showPasswords ? 'fa-eye' : 'fa-eye-slash'}`}></i>
                         </span>
                       </div>
                       {errors.confirmPassword && (

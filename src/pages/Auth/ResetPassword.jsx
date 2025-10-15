@@ -9,8 +9,7 @@ function ResetPassword() {
     newPassword: "",
     confirmPassword: "",
   });
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showPasswords, setShowPasswords] = useState(false);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -73,12 +72,8 @@ function ResetPassword() {
     }
   };
 
-  const togglePasswordVisibility = (field) => {
-    if (field === 'newPassword') {
-      setShowNewPassword(!showNewPassword);
-    } else {
-      setShowConfirmPassword(!showConfirmPassword);
-    }
+  const togglePasswordVisibility = () => {
+    setShowPasswords(!showPasswords);
   };
 
   return (
@@ -110,7 +105,7 @@ function ResetPassword() {
                     </div>
                     <input
                       name="newPassword"
-                      type={showNewPassword ? "text" : "password"}
+                      type={showPasswords ? "text" : "password"}
                       className={`form-control ${errors.newPassword ? 'is-invalid' : ''}`}
                       placeholder="Password"
                       value={formData.newPassword}
@@ -119,11 +114,11 @@ function ResetPassword() {
                     />
                     <span 
                       className="password-eye" 
-                      onClick={() => togglePasswordVisibility('newPassword')}
+                      onClick={togglePasswordVisibility}
                       style={{ cursor: 'pointer' }}
-                      title={showNewPassword ? 'Hide password' : 'Show password'}
+                      title={showPasswords ? 'Hide passwords' : 'Show passwords'}
                     >
-                      <i className={`fa-solid ${showNewPassword ? 'fa-eye' : 'fa-eye-slash'}`}></i>
+                      <i className={`fa-solid ${showPasswords ? 'fa-eye' : 'fa-eye-slash'}`}></i>
                     </span>
                   </div>
                   {errors.newPassword && (
@@ -141,7 +136,7 @@ function ResetPassword() {
                     </div>
                     <input
                       name="confirmPassword"
-                      type={showConfirmPassword ? "text" : "password"}
+                      type={showPasswords ? "text" : "password"}
                       className={`form-control ${errors.confirmPassword ? 'is-invalid' : ''}`}
                       placeholder="Confirm Password"
                       value={formData.confirmPassword}
@@ -150,11 +145,11 @@ function ResetPassword() {
                     />
                     <span 
                       className="password-eye" 
-                      onClick={() => togglePasswordVisibility('confirmPassword')}
+                      onClick={togglePasswordVisibility}
                       style={{ cursor: 'pointer' }}
-                      title={showConfirmPassword ? 'Hide password' : 'Show password'}
+                      title={showPasswords ? 'Hide passwords' : 'Show passwords'}
                     >
-                      <i className={`fa-solid ${showConfirmPassword ? 'fa-eye' : 'fa-eye-slash'}`}></i>
+                      <i className={`fa-solid ${showPasswords ? 'fa-eye' : 'fa-eye-slash'}`}></i>
                     </span>
                   </div>
                   {errors.confirmPassword && (

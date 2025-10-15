@@ -443,11 +443,19 @@ class PetitionService {
     };
   }
 
-  // Get dashboard petitions (first 5 for dashboard view)
+  // Get dashboard petitions (5 most recently updated petitions)
   async getDashboardPetitions() {
     await delay(200);
     
-    const dashboardPetitions = this.petitions.slice(0, 5);
+    // Sort petitions by lastUpdated in descending order (most recent first)
+    const sortedPetitions = [...this.petitions].sort((a, b) => {
+      const dateA = new Date(a.lastUpdated);
+      const dateB = new Date(b.lastUpdated);
+      return dateB - dateA; // Descending order (newest first)
+    });
+    
+    // Get the first 5 (most recently updated) petitions
+    const dashboardPetitions = sortedPetitions.slice(0, 5);
     
     return {
       success: true,
