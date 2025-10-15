@@ -3,6 +3,7 @@ import { toast } from 'react-toastify';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import petitionService from '../services/petitionService';
+import PetitionDetailModal from './PetitionDetailModal';
 
 const ViewAllPetitions = ({ onBack }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -22,6 +23,8 @@ const ViewAllPetitions = ({ onBack }) => {
     totalCount: 0,
     limit: 10
   });
+  const [showPetitionDetail, setShowPetitionDetail] = useState(false);
+  const [selectedPetition, setSelectedPetition] = useState(null);
 
   // Handle date filter change
   const handleDateFilterChange = (value) => {
@@ -252,9 +255,9 @@ const ViewAllPetitions = ({ onBack }) => {
     }
   };
 
-  const handlePetitionClick = (petitionId) => {
-    toast.info(`Opening details for ${petitionId}`);
-    // Here you would typically navigate to petition details or open a details modal
+  const handlePetitionClick = (petition) => {
+    setSelectedPetition(petition);
+    setShowPetitionDetail(true);
   };
 
   const handleSort = (field) => {
@@ -529,7 +532,7 @@ const ViewAllPetitions = ({ onBack }) => {
                 <tr
                   key={petition.id}
                   className="petition-row"
-                  onClick={() => handlePetitionClick(petition.id)}
+                  onClick={() => handlePetitionClick(petition)}
                   style={{ cursor: 'pointer' }}
                 >
                   <td>
@@ -603,6 +606,18 @@ const ViewAllPetitions = ({ onBack }) => {
             </button>
           </div>
         </div>
+      )}
+
+      {/* Petition Detail Modal */}
+      {showPetitionDetail && (
+        <PetitionDetailModal 
+          petition={selectedPetition}
+          isOpen={showPetitionDetail} 
+          onClose={() => {
+            setShowPetitionDetail(false);
+            setSelectedPetition(null);
+          }} 
+        />
       )}
     </div>
   );

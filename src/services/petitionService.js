@@ -8,7 +8,71 @@ const mockPetitions = [
     lastUpdated: '2025-10-01 10:30 AM',
     borrower: 'John Smith',
     loanAmount: '$450,000',
-    county: 'Suffolk'
+    county: 'Suffolk',
+    details: {
+      // Step 1: Property Details
+      street_address: '123 Main St',
+      city: 'Anytown',
+      state: 'MA',
+      zip_code: '02101',
+      county: 'Suffolk',
+      
+      // Step 2: Loan Details
+      loan_account_number: 'LOAN-123456789',
+      lien_position: 'First',
+      loan_type_term: '30-Year Fixed',
+      year_originated: '2020',
+      original_amount: 450000,
+      current_amount: 425000,
+      original_rate: 3.5,
+      current_rate: 3.5,
+      
+      // Step 3: Borrower Details
+      borrowers: [
+        {
+          id: 1,
+          first_name: 'John',
+          middle_initial: 'A',
+          last_name: 'Smith'
+        }
+      ],
+      
+      // Step 4: Filing Entity
+      organization_name: 'First National Bank',
+      contact_first_name: 'Sarah',
+      contact_last_name: 'Johnson',
+      contact_phone: '(555) 123-4567',
+      contact_email: 'sarah.johnson@fnb.com',
+      
+      // Step 5: Right-to-Cure
+      notice_date: '2025-08-15',
+      days_delinquent: 90,
+      amount_default: 15000,
+      cure_expiration_date: '2025-09-15',
+      notice_mailing_address: '123 Main St, Anytown, MA 02101',
+      acceleration_date: '',
+      
+      // Step 6: Form 35B Compliance
+      form_35b_upload: 'form_35b_pn1001.pdf',
+      affiant_name: 'Michael Brown',
+      affiant_title: 'Loan Officer',
+      affidavit_date: '2025-08-20',
+      notary_info: 'Jane Doe, Commission Expires 12/31/2026',
+      
+      // Step 7: Loan Assignees
+      assignee_lender_name_1: 'First National Bank',
+      assignee_lender_type_1: 'Commercial Bank',
+      assignee_originator_name_1: 'ABC Mortgage Corp',
+      assignee_license_number_1: 'MB-12345',
+      assignee_license_state_1: 'MA',
+      assignee_lender_address_1: '100 Financial Plaza, Boston, MA 02110',
+      
+      // Step 8: Petition Attestation
+      attester_first_name: 'Sarah',
+      attester_middle_initial: 'M',
+      attester_last_name: 'Johnson',
+      certification_check: true
+    }
   },
   {
     id: 'PN-1002',
@@ -18,7 +82,71 @@ const mockPetitions = [
     lastUpdated: '2025-10-09 03:15 PM',
     borrower: 'Sarah Johnson',
     loanAmount: '$320,000',
-    county: 'Middlesex'
+    county: 'Middlesex',
+    details: {
+      // Step 1: Property Details
+      street_address: '45 Baker Ln',
+      city: 'Somewhere',
+      state: 'MA',
+      zip_code: '02102',
+      county: 'Middlesex',
+      
+      // Step 2: Loan Details
+      loan_account_number: 'LOAN-987654321',
+      lien_position: 'First',
+      loan_type_term: '15-Year Fixed',
+      year_originated: '2018',
+      original_amount: 320000,
+      current_amount: 280000,
+      original_rate: 4.2,
+      current_rate: 4.2,
+      
+      // Step 3: Borrower Details
+      borrowers: [
+        {
+          id: 1,
+          first_name: 'Sarah',
+          middle_initial: 'L',
+          last_name: 'Johnson'
+        }
+      ],
+      
+      // Step 4: Filing Entity
+      organization_name: 'Community Credit Union',
+      contact_first_name: 'Robert',
+      contact_last_name: 'Wilson',
+      contact_phone: '(555) 987-6543',
+      contact_email: 'robert.wilson@ccu.org',
+      
+      // Step 5: Right-to-Cure
+      notice_date: '2025-09-20',
+      days_delinquent: 75,
+      amount_default: 12000,
+      cure_expiration_date: '2025-10-20',
+      notice_mailing_address: '45 Baker Ln, Somewhere, MA 02102',
+      acceleration_date: '',
+      
+      // Step 6: Form 35B Compliance
+      form_35b_upload: null,
+      affiant_name: '',
+      affiant_title: '',
+      affidavit_date: '',
+      notary_info: '',
+      
+      // Step 7: Loan Assignees
+      assignee_lender_name_1: 'Community Credit Union',
+      assignee_lender_type_1: 'Credit Union',
+      assignee_originator_name_1: 'Local Mortgage LLC',
+      assignee_license_number_1: 'MB-67890',
+      assignee_license_state_1: 'MA',
+      assignee_lender_address_1: '200 Community St, Cambridge, MA 02139',
+      
+      // Step 8: Petition Attestation
+      attester_first_name: 'Robert',
+      attester_middle_initial: 'K',
+      attester_last_name: 'Wilson',
+      certification_check: true
+    }
   },
   {
     id: 'PN-1003',
@@ -28,7 +156,77 @@ const mockPetitions = [
     lastUpdated: '2025-10-10 11:00 AM',
     borrower: 'Michael Brown',
     loanAmount: '$280,000',
-    county: 'Essex'
+    county: 'Essex',
+    details: {
+      // Step 1: Property Details
+      street_address: '789 Oak Ave',
+      city: 'Cityville',
+      state: 'MA',
+      zip_code: '02103',
+      county: 'Essex',
+      
+      // Step 2: Loan Details
+      loan_account_number: 'LOAN-456789123',
+      lien_position: 'Second',
+      loan_type_term: '20-Year ARM',
+      year_originated: '2019',
+      original_amount: 280000,
+      current_amount: 260000,
+      original_rate: 3.8,
+      current_rate: 4.1,
+      
+      // Step 3: Borrower Details
+      borrowers: [
+        {
+          id: 1,
+          first_name: 'Michael',
+          middle_initial: 'D',
+          last_name: 'Brown'
+        },
+        {
+          id: 2,
+          first_name: 'Jennifer',
+          middle_initial: 'S',
+          last_name: 'Brown'
+        }
+      ],
+      
+      // Step 4: Filing Entity
+      organization_name: 'Regional Bank Corp',
+      contact_first_name: 'Lisa',
+      contact_last_name: 'Anderson',
+      contact_phone: '(555) 456-7890',
+      contact_email: 'lisa.anderson@regionalbank.com',
+      
+      // Step 5: Right-to-Cure
+      notice_date: '2025-09-25',
+      days_delinquent: 60,
+      amount_default: 8500,
+      cure_expiration_date: '2025-10-25',
+      notice_mailing_address: '789 Oak Ave, Cityville, MA 02103',
+      acceleration_date: '',
+      
+      // Step 6: Form 35B Compliance
+      form_35b_upload: 'form_35b_pn1003.pdf',
+      affiant_name: 'David Martinez',
+      affiant_title: 'Senior Loan Officer',
+      affidavit_date: '2025-09-30',
+      notary_info: 'John Smith, Commission Expires 06/30/2027',
+      
+      // Step 7: Loan Assignees
+      assignee_lender_name_1: 'Regional Bank Corp',
+      assignee_lender_type_1: 'Regional Bank',
+      assignee_originator_name_1: 'Metro Mortgage Services',
+      assignee_license_number_1: 'MB-11111',
+      assignee_license_state_1: 'MA',
+      assignee_lender_address_1: '300 Business Center, Salem, MA 01970',
+      
+      // Step 8: Petition Attestation
+      attester_first_name: 'Lisa',
+      attester_middle_initial: 'M',
+      attester_last_name: 'Anderson',
+      certification_check: true
+    }
   },
   {
     id: 'PN-1004',

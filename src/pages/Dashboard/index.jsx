@@ -18,6 +18,7 @@ import { formatDate } from "../../utils/dateUtils";
 import NotificationDropdown from "../../components/NotificationDropdown";
 import PetitionSteps from "../../components/PetitionSteps";
 import ViewAllPetitions from "../../components/ViewAllPetitions";
+import PetitionDetailModal from "../../components/PetitionDetailModal";
 import petitionService from "../../services/petitionService";
 import "../../styles/custom.css";
 
@@ -53,6 +54,8 @@ function Dashboard() {
   const [isCreatingOrg, setIsCreatingOrg] = useState(false);
   const [showPetitionSteps, setShowPetitionSteps] = useState(false);
   const [showViewAllPetitions, setShowViewAllPetitions] = useState(false);
+  const [showPetitionDetail, setShowPetitionDetail] = useState(false);
+  const [selectedPetition, setSelectedPetition] = useState(null);
   const [dashboardPetitions, setDashboardPetitions] = useState([]);
   const [petitionStats, setPetitionStats] = useState({
     total: 0,
@@ -218,6 +221,11 @@ function Dashboard() {
       authLogout();
       navigate(ROUTES.LOGIN);
     }
+  };
+
+  const handlePetitionClick = (petition) => {
+    setSelectedPetition(petition);
+    setShowPetitionDetail(true);
   };
 
   const loadJoinRequests = async () => {
@@ -816,7 +824,8 @@ function Dashboard() {
                         <tr
                           key={petition.id}
                           className="petition-row"
-                          onClick={() => (window.location.href = `#details-${petition.id}`)}
+                          onClick={() => handlePetitionClick(petition)}
+                          style={{ cursor: 'pointer' }}
                         >
                           <td>
                             <a href={`#details-${petition.id}`}>{petition.id}</a>
@@ -1202,6 +1211,18 @@ function Dashboard() {
           isOpen={showPetitionSteps} 
           onClose={() => setShowPetitionSteps(false)} 
         />
+
+        {/* Petition Detail Modal */}
+        {showPetitionDetail && (
+          <PetitionDetailModal 
+            petition={selectedPetition}
+            isOpen={showPetitionDetail} 
+            onClose={() => {
+              setShowPetitionDetail(false);
+              setSelectedPetition(null);
+            }} 
+          />
+        )}
 
         {/* Create Organization Modal */}
         <div
