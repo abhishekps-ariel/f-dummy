@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { clearAuthData } from '../utils/storage';
-import Config from '../config/envConfig';
+import Config from '../config/index';
 
 const client = axios.create({
   baseURL: Config.API_URL,
