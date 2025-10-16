@@ -40,29 +40,6 @@ export const AuthProvider = ({ children }) => {
     checkAuthStatus();
   }, []);
 
-  // Listen for storage changes and custom auth events
-  useEffect(() => {
-    const handleStorageChange = () => {
-      const { token, user: userData } = getAuthData();
-      if (!token || !userData) {
-        setIsAuthenticated(false);
-        setUser(null);
-      }
-    };
-
-    const handleAuthDataCleared = () => {
-      setIsAuthenticated(false);
-      setUser(null);
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('authDataCleared', handleAuthDataCleared);
-    
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('authDataCleared', handleAuthDataCleared);
-    };
-  }, []);
 
   const login = (userData) => {
     setIsAuthenticated(true);

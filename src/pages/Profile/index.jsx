@@ -227,9 +227,10 @@ function Profile() {
             setUser(updatedUser);
             
             // Update auth context with new user data
+             const { token } = getAuthData();
+            clearAuthData();
+            localStorage.setItem('token', token);
             localStorage.setItem('user', JSON.stringify(updatedUser));
-            // Update the auth context state
-            login(updatedUser);
             
             // Update the form data with the fresh data
             setEditFormData({
@@ -264,9 +265,11 @@ function Profile() {
           };
           setUser(updatedUser);
           
+          const { token } = getAuthData();
+            clearAuthData();
+            localStorage.setItem('token', token);
           localStorage.setItem('user', JSON.stringify(updatedUser));
-          // Update the auth context state
-          login(updatedUser);
+  
         }
         
         setIsEditMode(false);
