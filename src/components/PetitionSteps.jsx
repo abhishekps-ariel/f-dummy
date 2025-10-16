@@ -369,7 +369,37 @@ const PetitionSteps = ({ isOpen, onClose }) => {
             return;
           }
 
-          if (foundCity && foundState && foundZip) {
+          // More strict validation - check if all components match
+          let cityMatch = false;
+          let zipMatch = false;
+          let countyMatch = false;
+          
+          // Check city match (more flexible matching)
+          addressComponents.forEach(component => {
+            const types = component.types;
+            if (types.includes('locality') || types.includes('administrative_area_level_2')) {
+              const componentCity = component.long_name.toLowerCase();
+              const inputCity = formData.city.toLowerCase();
+              if (componentCity.includes(inputCity) || inputCity.includes(componentCity)) {
+                cityMatch = true;
+              }
+            }
+            if (types.includes('postal_code')) {
+              if (component.long_name === formData.zip_code) {
+                zipMatch = true;
+              }
+            }
+            if (types.includes('administrative_area_level_2')) {
+              const componentCounty = component.long_name.toLowerCase();
+              const inputCounty = formData.county.toLowerCase();
+              if (componentCounty.includes(inputCounty) || inputCounty.includes(componentCounty)) {
+                countyMatch = true;
+              }
+            }
+          });
+
+          // Require all components to match for verification
+          if (foundState && cityMatch && zipMatch && countyMatch) {
             // Auto-fill county if it was found and not already set
             if (county && !formData.county) {
               setFormData(prev => ({
@@ -381,7 +411,12 @@ const PetitionSteps = ({ isOpen, onClose }) => {
             resolve({ isValid: true, coordinates: result.geometry.location });
           } else {
             setIsAddressVerified(false);
-            setAddressValidationError('Address could not be verified. Please select from suggestions or enter a valid Massachusetts address.');
+            let errorMessage = 'Address verification failed. Please check:';
+            if (!cityMatch) errorMessage += ' City does not match the address';
+            if (!zipMatch) errorMessage += ' ZIP code does not match the address';
+            if (!countyMatch) errorMessage += ' County does not match the address';
+            
+            setAddressValidationError(errorMessage);
             resolve({ isValid: false, error: 'Address verification failed' });
           }
         } else {
@@ -449,6 +484,52 @@ const PetitionSteps = ({ isOpen, onClose }) => {
     return { isValid: true, errors: {} };
   };
 
+  // Auto-detect city and county when street address and ZIP are entered
+  const autoDetectAddressComponents = async (streetAddress, zipCode) => {
+    if (!streetAddress.trim() || !zipCode.trim() || !geocoderRef.current) {
+      return;
+    }
+
+    try {
+      const fullAddress = `${streetAddress}, MA ${zipCode}`;
+      
+      geocoderRef.current.geocode({ address: fullAddress }, (results, status) => {
+        if (status === 'OK' && results && results.length > 0) {
+          const result = results[0];
+          const addressComponents = result.address_components;
+          
+          let detectedCity = '';
+          let detectedCounty = '';
+          let isInMA = false;
+
+          addressComponents.forEach(component => {
+            const types = component.types;
+            if (types.includes('locality')) {
+              detectedCity = component.long_name;
+            } else if (types.includes('administrative_area_level_2')) {
+              detectedCounty = component.long_name;
+            } else if (types.includes('administrative_area_level_1')) {
+              if (component.short_name === 'MA') {
+                isInMA = true;
+              }
+            }
+          });
+
+          // Only auto-fill if the address is in Massachusetts
+          if (isInMA && (detectedCity || detectedCounty)) {
+            setFormData(prev => ({
+              ...prev,
+              ...(detectedCity && !prev.city ? { city: detectedCity } : {}),
+              ...(detectedCounty && !prev.county ? { county: detectedCounty } : {})
+            }));
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Auto-detection error:', error);
+    }
+  };
+
   const handleInputChange = (e) => {
     const { name, value, type, checked, files } = e.target;
     setFormData(prev => ({
@@ -474,6 +555,22 @@ const PetitionSteps = ({ isOpen, onClose }) => {
     if (['street_address_line_1', 'street_address_line_2', 'city', 'state', 'zip_code', 'county'].includes(name)) {
       setIsAddressVerified(false);
       setAddressValidationError('');
+    }
+
+    // Auto-detect city and county when street address and ZIP are both entered
+    if (name === 'street_address_line_1' || name === 'zip_code') {
+      const currentFormData = { ...formData, [name]: value };
+      const streetAddress = name === 'street_address_line_1' ? value : currentFormData.street_address_line_1;
+      const zipCode = name === 'zip_code' ? value : currentFormData.zip_code;
+      
+      // Debounce the auto-detection
+      if (window.autoDetectTimeout) {
+        clearTimeout(window.autoDetectTimeout);
+      }
+      
+      window.autoDetectTimeout = setTimeout(() => {
+        autoDetectAddressComponents(streetAddress, zipCode);
+      }, 1000); // 1 second delay
     }
   };
 
