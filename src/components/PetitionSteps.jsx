@@ -637,7 +637,41 @@ const PetitionSteps = ({ isOpen, onClose }) => {
     };
   };
 
-  // Save current step data (draft - no validation required)
+  // Auto-save current step data (no validation, no modal close)
+  const autoSaveCurrentStep = async () => {
+    try {
+      // Create save data object
+      const saveData = {
+        step: currentStep,
+        formData: formData,
+        timestamp: new Date().toISOString(),
+        isDraft: true
+      };
+      
+      // In a real application, you would send this to your backend
+      console.log('Auto-saving step data:', saveData);
+      
+      // Store in localStorage for now (in real app, this would be API call)
+      const existingDrafts = JSON.parse(localStorage.getItem('petitionDrafts') || '[]');
+      const draftIndex = existingDrafts.findIndex(draft => draft.step === currentStep);
+      
+      if (draftIndex >= 0) {
+        existingDrafts[draftIndex] = saveData;
+      } else {
+        existingDrafts.push(saveData);
+      }
+      
+      localStorage.setItem('petitionDrafts', JSON.stringify(existingDrafts));
+      
+      setHasSavedDraft(true);
+      
+    } catch (error) {
+      console.error('Error auto-saving step:', error);
+      // Don't show error toast for auto-save failures to avoid interrupting user flow
+    }
+  };
+
+  // Save current step data (draft - no validation required) and close modal
   const saveCurrentStep = async () => {
     setIsSaving(true);
     
@@ -672,6 +706,11 @@ const PetitionSteps = ({ isOpen, onClose }) => {
       
       setHasSavedDraft(true);
       toast.success(`Step ${currentStep} saved as draft!`);
+      
+      // Close the modal after saving as draft
+      setTimeout(() => {
+        onClose();
+      }, 1000); // Small delay to show the success message
       
     } catch (error) {
       console.error('Error saving step:', error);
@@ -713,6 +752,9 @@ const PetitionSteps = ({ isOpen, onClose }) => {
     }
     
     if (newStep >= 1 && newStep <= totalSteps) {
+      // Auto-save current step before moving to next step
+      await autoSaveCurrentStep();
+      
       setCurrentStep(newStep);
       // Scroll to top on step change for better mobile UX
       window.scrollTo(0, 0);
@@ -729,12 +771,15 @@ const PetitionSteps = ({ isOpen, onClose }) => {
     }
   };
 
-  const handleAddressValidationProceed = () => {
+  const handleAddressValidationProceed = async () => {
     setShowAddressValidationDialog(false);
     setAddressValidationMessage('');
     // Proceed to next step without validation
     const newStep = currentStep + 1;
     if (newStep >= 1 && newStep <= totalSteps) {
+      // Auto-save current step before proceeding
+      await autoSaveCurrentStep();
+      
       setCurrentStep(newStep);
       // Scroll to top on step change for better mobile UX
       window.scrollTo(0, 0);
@@ -1602,7 +1647,7 @@ const PetitionSteps = ({ isOpen, onClose }) => {
                       </button>
                       
                       <div className="d-flex gap-2">
-                        {/* Save Button */}
+                        {/* Save as Draft Button */}
                         <button 
                           type="button" 
                           className="dashboard-btn-refresh"
@@ -1615,7 +1660,7 @@ const PetitionSteps = ({ isOpen, onClose }) => {
                               Saving...
                             </>
                           ) : (
-                            'Save'
+                            'Save as Draft'
                           )}
                         </button>
                         
