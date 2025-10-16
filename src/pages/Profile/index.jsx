@@ -9,6 +9,8 @@ import { getUserJoinRequests, getOrganizationById } from "../../services/organiz
 import { toast } from "react-toastify";
 import NotificationDropdown from "../../components/NotificationDropdown";
 import "../../styles/custom.css";
+import loginImg from "../../assets/logo-sample.png";
+
 
 function Profile() {
   const [user, setUser] = useState(null);
@@ -320,7 +322,7 @@ function Profile() {
           {/* Logo */}
           <div className="dashboard-logo">
             <img
-              src="/src/assets/logo-sample.png"
+              src={loginImg}
               alt="FILIR Logo"
               className="dashboard-logo-img"
             />
@@ -387,7 +389,7 @@ function Profile() {
       >
         <div className="offcanvas-header">
           <img
-            src="/src/assets/logo-sample.png"
+            src={loginImg}
             alt="FILIR Logo"
             className="dashboard-logo-img"
           />

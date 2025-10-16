@@ -21,6 +21,8 @@ import ViewAllPetitions from "../../components/ViewAllPetitions";
 import PetitionDetailModal from "../../components/PetitionDetailModal";
 import petitionService from "../../services/petitionService";
 import "../../styles/custom.css";
+import loginImg from "../../assets/logo-sample.png";
+
 
 function Dashboard() {
   const [user, setUser] = useState(null);
@@ -508,7 +510,7 @@ function Dashboard() {
           {/* Logo */}
           <div className="dashboard-logo">
             <img
-              src="/src/assets/logo-sample.png"
+              src={loginImg}
               alt="FILIR Logo"
               className="dashboard-logo-img"
             />
@@ -579,7 +581,7 @@ function Dashboard() {
       >
         <div className="offcanvas-header">
           <img
-            src="/src/assets/logo-sample.png"
+            src={loginImg}
             alt="FILIR Logo"
             className="dashboard-logo-img"
           />
