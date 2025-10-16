@@ -24,6 +24,8 @@ const PetitionSteps = ({ isOpen, onClose }) => {
   const [fieldErrors, setFieldErrors] = useState({});
   const [isSaving, setIsSaving] = useState(false);
   const [hasSavedDraft, setHasSavedDraft] = useState(false);
+  const [showAddressValidationDialog, setShowAddressValidationDialog] = useState(false);
+  const [addressValidationMessage, setAddressValidationMessage] = useState('');
   const autocompleteRef = useRef(null);
   const placesServiceRef = useRef(null);
   const autocompleteServiceRef = useRef(null);
@@ -694,7 +696,9 @@ const PetitionSteps = ({ isOpen, onClose }) => {
       // Then validate address with Geocoding API
       const addressValidation = await validatePropertyDetailsStep();
       if (!addressValidation.isValid) {
-        toast.error("Please fix the address validation errors before proceeding to the next step.");
+        // Show dialog instead of blocking
+        setAddressValidationMessage(addressValidationError || 'Address validation failed');
+        setShowAddressValidationDialog(true);
         return;
       }
     }
@@ -708,6 +712,28 @@ const PetitionSteps = ({ isOpen, onClose }) => {
       }
     }
     
+    if (newStep >= 1 && newStep <= totalSteps) {
+      setCurrentStep(newStep);
+      // Scroll to top on step change for better mobile UX
+      window.scrollTo(0, 0);
+    }
+  };
+
+  // Handle address validation dialog actions
+  const handleAddressValidationEdit = () => {
+    setShowAddressValidationDialog(false);
+    setAddressValidationMessage('');
+    // Focus on the address input field
+    if (autocompleteRef.current) {
+      autocompleteRef.current.focus();
+    }
+  };
+
+  const handleAddressValidationProceed = () => {
+    setShowAddressValidationDialog(false);
+    setAddressValidationMessage('');
+    // Proceed to next step without validation
+    const newStep = currentStep + 1;
     if (newStep >= 1 && newStep <= totalSteps) {
       setCurrentStep(newStep);
       // Scroll to top on step change for better mobile UX
@@ -1490,19 +1516,66 @@ const PetitionSteps = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} tabIndex="-1">
-      <div className="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-        <div className="modal-content">
-          <div className="modal-header text-white theme-bg">
-            <h5 className="modal-title">Foreclosure Petition Filing</h5>
-            <button 
-              type="button" 
-              className="btn-close btn-close-white" 
-              onClick={onClose}
-              aria-label="Close"
-            ></button>
+    <React.Fragment>
+      {/* Address Validation Dialog */}
+      {showAddressValidationDialog && (
+        <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1060 }} tabIndex="-1">
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Address Validation</h5>
+                <button 
+                  type="button" 
+                  className="btn-close" 
+                  onClick={() => setShowAddressValidationDialog(false)}
+                  aria-label="Close"
+                ></button>
+              </div>
+              <div className="modal-body">
+                <div className="text-center mb-3">
+                  <i className="fas fa-exclamation-triangle text-warning" style={{ fontSize: '3rem' }}></i>
+                </div>
+                <p className="text-center mb-3">
+                  We couldn't verify the address you entered. Would you like to correct it, or continue to the next step with the current address?
+                </p>
+              </div>
+              <div className="modal-footer justify-content-center">
+                <button 
+                  type="button" 
+                  className="dashboard-btn-refresh me-2"
+                  onClick={handleAddressValidationEdit}
+                >
+                  <i className="fas fa-edit me-2"></i>
+                  Edit Address
+                </button>
+                <button 
+                  type="button" 
+                  className="dashboard-btn-create"
+                  onClick={handleAddressValidationProceed}
+                >
+                  <i className="fas fa-arrow-right me-2"></i>
+                  Proceed Anyway
+                </button>
+              </div>
+            </div>
           </div>
-          <div className="modal-body">
+        </div>
+      )}
+
+      {/* Main Modal */}
+      <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} tabIndex="-1">
+        <div className="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+          <div className="modal-content">
+            <div className="modal-header text-white theme-bg">
+              <h5 className="modal-title">Foreclosure Petition Filing</h5>
+              <button 
+                type="button" 
+                className="btn-close btn-close-white" 
+                onClick={onClose}
+                aria-label="Close"
+              ></button>
+            </div>
+            <div className="modal-body">
             <div className="container">
               <header className="border-bottom mb-3">
                 <p className="font-base text-muted">Complete the 8 steps below to submit your foreclosure petition details.</p>
@@ -1570,10 +1643,11 @@ const PetitionSteps = ({ isOpen, onClose }) => {
                 </form>
               </div>
             </div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </React.Fragment>
   );
 };
 
