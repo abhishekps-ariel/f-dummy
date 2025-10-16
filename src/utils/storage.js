@@ -19,3 +19,4 @@ export const clearAuthData = () => {
   localStorage.removeItem('user');
   
 };
+

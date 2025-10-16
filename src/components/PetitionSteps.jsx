@@ -635,27 +635,12 @@ const PetitionSteps = ({ isOpen, onClose }) => {
     };
   };
 
-  // Save current step data
+  // Save current step data (draft - no validation required)
   const saveCurrentStep = async () => {
     setIsSaving(true);
     
     try {
-      // Validate current step before saving
-      let validation = { isValid: true, errors: {} };
-      
-      if (currentStep === 1) {
-        // Always validate address when saving, even if it was previously verified
-        validation = await validatePropertyDetailsStep();
-      } else if (currentStep === 3) {
-        validation = validateBorrowerDetails();
-      }
-      
-      if (!validation.isValid) {
-        toast.error("Please fix the errors before saving");
-        setIsSaving(false);
-        return;
-      }
-      
+      // No validation required for saving drafts - just save the current form data
       // Here you would typically send the data to your API
       // For now, we'll simulate a save operation
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -669,7 +654,7 @@ const PetitionSteps = ({ isOpen, onClose }) => {
       };
       
       // In a real application, you would save this to your backend
-      console.log('Saving step data:', saveData);
+      console.log('Saving step data as draft:', saveData);
       
       // Store in localStorage for now (in real app, this would be API call)
       const existingDrafts = JSON.parse(localStorage.getItem('petitionDrafts') || '[]');
@@ -684,7 +669,7 @@ const PetitionSteps = ({ isOpen, onClose }) => {
       localStorage.setItem('petitionDrafts', JSON.stringify(existingDrafts));
       
       setHasSavedDraft(true);
-      toast.success(`Step ${currentStep} saved successfully!`);
+      toast.success(`Step ${currentStep} saved as draft!`);
       
     } catch (error) {
       console.error('Error saving step:', error);
@@ -697,11 +682,19 @@ const PetitionSteps = ({ isOpen, onClose }) => {
   const nextStep = async (direction) => {
     const newStep = currentStep + direction;
     
-    // Basic field validation for Next Step (no address validation)
+    // Full validation for Next Step (including address validation for step 1)
     if (currentStep === 1 && direction === 1) {
+      // First validate basic fields
       const basicValidation = validateAddressFields();
       if (basicValidation.hasErrors) {
         // Field errors are already set in the validation function
+        return;
+      }
+      
+      // Then validate address with Geocoding API
+      const addressValidation = await validatePropertyDetailsStep();
+      if (!addressValidation.isValid) {
+        toast.error("Please fix the address validation errors before proceeding to the next step.");
         return;
       }
     }
