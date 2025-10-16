@@ -99,9 +99,9 @@ const PetitionDetailModal = ({ petition, isOpen, onClose }) => {
               <div className="row">
                 <div className="col-12">
                   {/* Property Details */}
-                  <div className="card mb-4">
-                    <div className="card-header bg-light">
-                      <h5 className="mb-0 fw-bolder">Property Details</h5>
+                  <div className="card mb-4 border-0 shadow-sm">
+                    <div className="card-header bg-transparent border-0 pb-0">
+                      <h5 className="mb-3 fw-bold text-dark border-bottom pb-2">Property Details</h5>
                     </div>
                     <div className="card-body">
                       <div className="row g-3">
@@ -135,9 +135,9 @@ const PetitionDetailModal = ({ petition, isOpen, onClose }) => {
                   </div>
 
                   {/* Loan Details */}
-                  <div className="card mb-4">
-                    <div className="card-header bg-light">
-                      <h5 className="mb-0 fw-bolder">Loan Details</h5>
+                  <div className="card mb-4 border-0 shadow-sm">
+                    <div className="card-header bg-transparent border-0 pb-0">
+                      <h5 className="mb-3 fw-bold text-dark border-bottom pb-2">Loan Details</h5>
                     </div>
                     <div className="card-body">
                       <div className="row g-3">
@@ -178,9 +178,9 @@ const PetitionDetailModal = ({ petition, isOpen, onClose }) => {
                   </div>
 
                   {/* Borrower Details */}
-                  <div className="card mb-4">
-                    <div className="card-header bg-light">
-                      <h5 className="mb-0 fw-bolder">Borrower Details</h5>
+                  <div className="card mb-4 border-0 shadow-sm">
+                    <div className="card-header bg-transparent border-0 pb-0">
+                      <h5 className="mb-3 fw-bold text-dark border-bottom pb-2">Borrower Details</h5>
                     </div>
                     <div className="card-body">
                       {petition.details?.borrowers && petition.details.borrowers.length > 0 ? (
@@ -210,9 +210,9 @@ const PetitionDetailModal = ({ petition, isOpen, onClose }) => {
                   </div>
 
                   {/* Filing Entity */}
-                  <div className="card mb-4">
-                    <div className="card-header bg-light">
-                      <h5 className="mb-0 fw-bolder">Filing Entity</h5>
+                  <div className="card mb-4 border-0 shadow-sm">
+                    <div className="card-header bg-transparent border-0 pb-0">
+                      <h5 className="mb-3 fw-bold text-dark border-bottom pb-2">Filing Entity</h5>
                     </div>
                     <div className="card-body">
                       <div className="row g-3">
@@ -241,9 +241,9 @@ const PetitionDetailModal = ({ petition, isOpen, onClose }) => {
                   </div>
 
                   {/* Right-to-Cure */}
-                  <div className="card mb-4">
-                    <div className="card-header bg-light">
-                      <h5 className="mb-0 fw-bolder">Right-to-Cure (§35A)</h5>
+                  <div className="card mb-4 border-0 shadow-sm">
+                    <div className="card-header bg-transparent border-0 pb-0">
+                      <h5 className="mb-3 fw-bold text-dark border-bottom pb-2">Right-to-Cure (§35A)</h5>
                     </div>
                     <div className="card-body">
                       <div className="row g-3">
@@ -276,9 +276,9 @@ const PetitionDetailModal = ({ petition, isOpen, onClose }) => {
                   </div>
 
                   {/* Form 35B Compliance */}
-                  <div className="card mb-4">
-                    <div className="card-header bg-light">
-                      <h5 className="mb-0 fw-bolder">Form 35B Compliance</h5>
+                  <div className="card mb-4 border-0 shadow-sm">
+                    <div className="card-header bg-transparent border-0 pb-0">
+                      <h5 className="mb-3 fw-bold text-dark border-bottom pb-2">Form 35B Compliance</h5>
                     </div>
                     <div className="card-body">
                       <div className="row g-3">
@@ -315,9 +315,9 @@ const PetitionDetailModal = ({ petition, isOpen, onClose }) => {
                   </div>
 
                   {/* Loan Assignees */}
-                  <div className="card mb-4">
-                    <div className="card-header bg-light">
-                      <h5 className="mb-0 fw-bolder">Loan Assignees</h5>
+                  <div className="card mb-4 border-0 shadow-sm">
+                    <div className="card-header bg-transparent border-0 pb-0">
+                      <h5 className="mb-3 fw-bold text-dark border-bottom pb-2">Loan Assignees</h5>
                     </div>
                     <div className="card-body">
                       <div className="row g-3">
@@ -350,9 +350,9 @@ const PetitionDetailModal = ({ petition, isOpen, onClose }) => {
                   </div>
 
                   {/* Petition Attestation */}
-                  <div className="card mb-4">
-                    <div className="card-header bg-light">
-                      <h5 className="mb-0 fw-bolder">Petition Attestation</h5>
+                  <div className="card mb-4 border-0 shadow-sm">
+                    <div className="card-header bg-transparent border-0 pb-0">
+                      <h5 className="mb-3 fw-bold text-dark border-bottom pb-2">Petition Attestation</h5>
                     </div>
                     <div className="card-body">
                       <div className="row g-3">
