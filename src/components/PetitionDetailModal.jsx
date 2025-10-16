@@ -43,48 +43,6 @@ const PetitionDetailModal = ({ petition, isOpen, onClose }) => {
     }
   };
 
-  const handlePrint = () => {
-    // Create a new window for printing
-    const printWindow = window.open('', '_blank');
-    const printContent = document.getElementById('petition-detail-content');
-    
-    if (printContent) {
-      printWindow.document.write(`
-        <html>
-          <head>
-            <title>Petition Details - ${petition.id}</title>
-            <style>
-              body { font-family: Arial, sans-serif; margin: 20px; }
-              .print-header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 20px; }
-              .print-section { margin-bottom: 25px; page-break-inside: avoid; }
-              .print-section h3 { color: #333; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-bottom: 15px; }
-              .print-row { display: flex; margin-bottom: 8px; }
-              .print-label { font-weight: bold; width: 200px; }
-              .print-value { flex: 1; }
-              .print-borrower { border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; }
-              @media print {
-                body { margin: 0; }
-                .print-section { page-break-inside: avoid; }
-              }
-            </style>
-          </head>
-          <body>
-            <div class="print-header">
-              <h1>FILIR - Foreclosure Intake & Loan Information Resource</h1>
-              <h2>Petition Details - ${petition.id}</h2>
-              <p><strong>Property Address:</strong> ${petition.propertyAddress}</p>
-              <p><strong>Status:</strong> ${petition.status} | <strong>Filed:</strong> ${formatDate(petition.filingDate)} | <strong>Last Updated:</strong> ${petition.lastUpdated}</p>
-            </div>
-            ${printContent.innerHTML}
-          </body>
-        </html>
-      `);
-      printWindow.document.close();
-      printWindow.focus();
-      printWindow.print();
-      printWindow.close();
-    }
-  };
 
   const handleDownloadPDF = () => {
     try {
@@ -353,15 +311,6 @@ const PetitionDetailModal = ({ petition, isOpen, onClose }) => {
               
               {/* Right side - Action Buttons and Close */}
               <div className="d-flex align-items-center gap-2">
-                <button 
-                  type="button" 
-                  className="dashboard-btn-refresh"
-                  onClick={handlePrint}
-                  title="Print petition details"
-                >
-                  <i className="fas fa-print me-1"></i>
-                  Print
-                </button>
                 <button 
                   type="button" 
                   className="dashboard-btn-refresh"
