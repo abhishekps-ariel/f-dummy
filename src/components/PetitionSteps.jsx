@@ -671,7 +671,7 @@ const PetitionSteps = ({ isOpen, onClose }) => {
     }
   };
 
-  // Save current step data (draft - no validation required) and close modal
+  // Save current step data (draft - no validation required)
   const saveCurrentStep = async () => {
     setIsSaving(true);
     
@@ -706,11 +706,6 @@ const PetitionSteps = ({ isOpen, onClose }) => {
       
       setHasSavedDraft(true);
       toast.success(`Step ${currentStep} saved as draft!`);
-      
-      // Close the modal after saving as draft
-      setTimeout(() => {
-        onClose();
-      }, 1000); // Small delay to show the success message
       
     } catch (error) {
       console.error('Error saving step:', error);
