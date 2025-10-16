@@ -22,6 +22,58 @@ body {
     min-height: 100vh;
 }
 
+/* Petition Action Expansion - Horizontal Layout */
+.petition-action-expansion {
+  position: relative;
+  display: inline-block;
+}
+
+.petition-action-buttons {
+  display: flex;
+  align-items: stretch;
+  background: white;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1000;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.petition-action-buttons .btn {
+  font-size: 0.75rem;
+  padding: 6px 12px;
+  border-radius: 0;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  min-width: 60px;
+  border: none;
+  background: transparent;
+  color: #6c757d;
+  border-right: 1px solid #dee2e6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.petition-action-buttons .btn:last-child {
+  border-right: none;
+}
+
+.petition-action-buttons .btn:hover {
+  background-color: #f8f9fa;
+  color: #495057;
+}
+
+.petition-action-buttons .btn-delete:hover {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
 /*---- Login page css start ----*/
 .login-inner {
     min-height: 100vh;

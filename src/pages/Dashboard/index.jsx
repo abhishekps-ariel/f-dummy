@@ -59,6 +59,7 @@ function Dashboard() {
   const [showPetitionDetail, setShowPetitionDetail] = useState(false);
   const [selectedPetition, setSelectedPetition] = useState(null);
   const [dashboardPetitions, setDashboardPetitions] = useState([]);
+  const [openDropdownId, setOpenDropdownId] = useState(null);
   const [petitionStats, setPetitionStats] = useState({
     total: 0,
     accepted: 0,
@@ -159,13 +160,17 @@ function Dashboard() {
       if (searchRef.current && !searchRef.current.contains(event.target)) {
         setShowDropdown(false);
       }
+      // Close dropdown when clicking outside
+      if (openDropdownId && !event.target.closest('.petition-action-expansion')) {
+        setOpenDropdownId(null);
+      }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, []);
+  }, [openDropdownId]);
 
   useEffect(() => {
     const modalElement = document.getElementById("createorganizationModal");
@@ -818,6 +823,7 @@ function Dashboard() {
                       <th style={{ width: '15%' }}>Status</th>
                       <th style={{ width: '15%' }}>Filing Date</th>
                       <th style={{ width: '15%' }}>Last Updated</th>
+                      <th style={{ width: '40px' }}></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -826,11 +832,18 @@ function Dashboard() {
                         <tr
                           key={petition.id}
                           className="petition-row"
-                          onClick={() => handlePetitionClick(petition)}
-                          style={{ cursor: 'pointer' }}
                         >
                           <td>
-                            <a href={`#details-${petition.id}`}>{petition.id}</a>
+                            <a 
+                              href={`#details-${petition.id}`}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                handlePetitionClick(petition);
+                              }}
+                              style={{ cursor: 'pointer' }}
+                            >
+                              {petition.id}
+                            </a>
                           </td>
                           <td>{petition.propertyAddress}</td>
                           <td>{petition.borrower}</td>
@@ -841,11 +854,53 @@ function Dashboard() {
                           </td>
                           <td>{petition.filingDate}</td>
                           <td>{petition.lastUpdated}</td>
+                          <td>
+                            <div className="petition-action-expansion">
+                              <button
+                                className="btn btn-sm border-0"
+                                type="button"
+                                style={{ background: 'transparent', color: '#6c757d' }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setOpenDropdownId(openDropdownId === petition.id ? null : petition.id);
+                                }}
+                                title="Actions"
+                              >
+                                <i className="fas fa-ellipsis-v"></i>
+                              </button>
+                              {openDropdownId === petition.id && (
+                                <div className="petition-action-buttons">
+                                  <button 
+                                    className="btn btn-resume"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setOpenDropdownId(null);
+                                      // TODO: Implement resume functionality
+                                      console.log('Resume petition:', petition.id);
+                                    }}
+                                  >
+                                    Resume
+                                  </button>
+                                  <button 
+                                    className="btn btn-delete"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setOpenDropdownId(null);
+                                      // TODO: Implement delete functionality
+                                      console.log('Delete petition:', petition.id);
+                                    }}
+                                  >
+                                    Delete
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </td>
                         </tr>
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="6" className="text-center py-4 text-muted">
+                        <td colSpan="7" className="text-center py-4 text-muted">
                           No petitions found
                         </td>
                       </tr>

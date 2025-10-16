@@ -25,6 +25,7 @@ const ViewAllPetitions = ({ onBack }) => {
   });
   const [showPetitionDetail, setShowPetitionDetail] = useState(false);
   const [selectedPetition, setSelectedPetition] = useState(null);
+  const [openDropdownId, setOpenDropdownId] = useState(null);
 
   // Handle date filter change
   const handleDateFilterChange = (value) => {
@@ -235,6 +236,20 @@ const ViewAllPetitions = ({ onBack }) => {
   useEffect(() => {
     loadPetitions(1);
   }, [searchQuery, statusFilter, dateFilter, sortBy, sortOrder]);
+
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (openDropdownId && !event.target.closest('.petition-action-expansion')) {
+        setOpenDropdownId(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [openDropdownId]);
 
   const getStatusBadgeClass = (status) => {
     switch (status.toLowerCase()) {
@@ -515,12 +530,13 @@ const ViewAllPetitions = ({ onBack }) => {
                   <i className={`fas fa-sort-${sortOrder === 'asc' ? 'up' : 'down'} ms-1`}></i>
                 )}
               </th>
+              <th style={{ width: '40px' }}></th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan="6" className="text-center py-4">
+                <td colSpan="7" className="text-center py-4">
                   <div className="spinner-border text-primary" role="status">
                     <span className="visually-hidden">Loading...</span>
                   </div>
@@ -532,13 +548,16 @@ const ViewAllPetitions = ({ onBack }) => {
                 <tr
                   key={petition.id}
                   className="petition-row"
-                  onClick={() => handlePetitionClick(petition)}
-                  style={{ cursor: 'pointer' }}
                 >
                   <td>
                     <a 
                       href={`#details-${petition.id}`}
                       className="text-decoration-none fw-medium"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handlePetitionClick(petition);
+                      }}
+                      style={{ cursor: 'pointer' }}
                     >
                       {petition.id}
                     </a>
@@ -552,11 +571,53 @@ const ViewAllPetitions = ({ onBack }) => {
                   </td>
                   <td>{petition.filingDate}</td>
                   <td className="text-muted">{petition.lastUpdated}</td>
+                  <td>
+                    <div className="petition-action-expansion">
+                      <button
+                        className="btn btn-sm border-0"
+                        type="button"
+                        style={{ background: 'transparent', color: '#6c757d' }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenDropdownId(openDropdownId === petition.id ? null : petition.id);
+                        }}
+                        title="Actions"
+                      >
+                        <i className="fas fa-ellipsis-v"></i>
+                      </button>
+                      {openDropdownId === petition.id && (
+                        <div className="petition-action-buttons">
+                          <button 
+                            className="btn btn-resume"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setOpenDropdownId(null);
+                              // TODO: Implement resume functionality
+                              console.log('Resume petition:', petition.id);
+                            }}
+                          >
+                            Resume
+                          </button>
+                          <button 
+                            className="btn btn-delete"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setOpenDropdownId(null);
+                              // TODO: Implement delete functionality
+                              console.log('Delete petition:', petition.id);
+                            }}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="6" className="text-center py-4">
+                <td colSpan="7" className="text-center py-4">
                   <i className="fa-solid fa-search text-muted mb-2" style={{ fontSize: '2rem' }}></i>
                   <p className="text-muted mb-0">No petitions found matching your criteria</p>
                   <small className="text-muted">Try adjusting your search or filter settings</small>
