@@ -7,13 +7,6 @@ body {
     scroll-behavior: smooth;
 }
 
-/* Responsive scroll padding for mobile */
-@media (max-width: 991.98px) {
-    html {
-        scroll-padding-top: 120px;
-    }
-}
-
 /* Auth: right-side background image */
 .login-right-image {
     background-image: url('../assets/login-right-bg.svg');
@@ -969,6 +962,33 @@ select.form-control {
 }
 .upcoming-events {
     scroll-margin-top: 30px;
+}
+
+/* Mobile-specific scroll margin adjustments */
+@media (max-width: 768px) {
+    .contact-info {
+        scroll-margin-top: 278px !important;
+    }
+    
+    .featured-items {
+        scroll-margin-top: 278px !important;
+    }
+    
+    .who-we-serve {
+        scroll-margin-top: 278px !important;
+    }
+    
+    .actions {
+        scroll-margin-top: 295px !important;
+    }
+    
+    .news-announcements {
+        scroll-margin-top: 278px !important;
+    }
+    
+    .upcoming-events {
+        scroll-margin-top: 278px !important;
+    }
 }
 
 /* Organization Search Box Styles */
