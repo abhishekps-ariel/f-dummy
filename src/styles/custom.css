@@ -228,6 +228,11 @@ select.form-control {
     .official-banner .btn-link {
         font-size: 0.8rem !important;
     }
+    
+    .official-banner .container {
+        padding-left: 20px !important;
+        padding-right: 20px !important;
+    }
 }
 
 .official-banner button {
@@ -481,6 +486,24 @@ select.form-control {
     right: 99%;
     width: 50vw;
     background: var(--mass-primary-green);
+}
+
+/* Mobile responsive fix for green title box */
+@media (max-width: 768px) {
+    .green-title-box {
+        margin: -40px 0 30px !important;
+        transform: skew(-15deg) !important;
+    }
+    
+    .green-title-box h2 {
+        padding: 15px 15px 15px 0 !important;
+        transform: skew(15deg) !important;
+        font-size: 1.5rem !important;
+    }
+    
+    .green-title-box:before {
+        width: 30vw !important;
+    }
 }
 .who-we-serve {
     padding-bottom: 80px;

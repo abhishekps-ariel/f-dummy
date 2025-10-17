@@ -33,6 +33,26 @@ body {
 	 font-size: var(--text-base);
     }
 
+/* Mobile fix for main content width and Bootstrap containers */
+@media (max-width: 768px) {
+    html, body {
+        overflow-x: hidden;
+        width: 100%;
+        max-width: 100%;
+    }
+    
+    .container, .container-fluid {
+        max-width: 100% !important;
+        padding-left: 15px !important;
+        padding-right: 15px !important;
+    }
+    
+    .row {
+        margin-left: -15px !important;
+        margin-right: -15px !important;
+    }
+}
+
 a {
 	color: var(--theme-color);
 }	

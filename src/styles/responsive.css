@@ -385,6 +385,14 @@
     padding-right: 0;
 }
 
+/* Mobile padding fix for official banner columns */
+@media (max-width: 767.98px) {
+    .official-banner .col-md-6 {
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+    }
+}
+
 .portal-banner .d-flex {
     flex-wrap: wrap;
     gap: 8px;

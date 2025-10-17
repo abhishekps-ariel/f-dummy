@@ -7,6 +7,15 @@
   width: 100%;
 }
 
+/* Mobile fix for root element */
+@media (max-width: 768px) {
+  #root {
+    overflow-x: hidden !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
+
 .logo:hover {
   filter: drop-shadow(0 0 2em #646cffaa);
 }
@@ -47,6 +56,16 @@
   /* padding: 20px 2rem; */
   overflow-y: auto;
   background: #ffffff;
+}
+
+/* Mobile fix for main content width */
+@media (max-width: 768px) {
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    padding: 0 !important;
+  }
 }
 
 .action-icons {
