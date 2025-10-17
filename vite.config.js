@@ -5,6 +5,9 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
+    host: true, 
+    port: 5173,
+    allowedHosts: ['bloodstained-superornamentally-ivonne.ngrok-free.dev'],
     proxy: {
       '/api': {
         target: 'https://localhost:44321',
