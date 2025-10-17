@@ -304,7 +304,12 @@ select.form-control {
 /* Responsive adjustments for massgov banner */
 @media (max-width: 767.98px) {
     .massgov-banner {
-        padding: 20px 15px;
+        padding: 20px 10px;
+    }
+    
+    .massgov-banner .container {
+        padding-left: 10px !important;
+        padding-right: 10px !important;
     }
     
     .gov-logo {
