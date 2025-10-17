@@ -10,7 +10,6 @@ const Login = lazy(() => import('../pages/Auth/Login'));
 const Register = lazy(() => import('../pages/Auth/Register'));
 const ForgotPassword = lazy(() => import('../pages/Auth/ForgotPassword'));
 const PasswordEmailSent = lazy(() => import('../pages/Auth/PasswordEmailSent'));
-const ResetPassword = lazy(() => import('../pages/Auth/ResetPassword'));
 const SetNewPassword = lazy(() => import('../pages/Auth/SetNewPassword'));
 const PasswordChanged = lazy(() => import('../pages/Auth/PasswordChanged'));
 const TwoFactorAuth = lazy(() => import('../pages/Auth/TwoFactorAuth'));
@@ -38,10 +37,6 @@ export const router = createBrowserRouter([
   {
     path: ROUTES.PASSWORD_EMAIL_SENT,
     element: <PasswordEmailSent />,
-  },
-  {
-    path: ROUTES.RESET_PASSWORD,
-    element: <ResetPassword />,
   },
   {
     path: `${ROUTES.SET_NEW_PASSWORD}/:token?`,

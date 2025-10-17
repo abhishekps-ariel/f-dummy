@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useSearchParams, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { checkResetToken, resetPassword } from "../../services/authService";
-import PasswordGuidelines from "../../components/PasswordGuidelines";
+import PasswordGuidelines from "../../components/shared/PasswordGuidelines";
 import loginImg from "../../assets/logo-sample.png";
 import "../../styles/custom.css";
 
