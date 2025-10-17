@@ -865,7 +865,7 @@ select.form-control {
     }
     
     .form-control {
-        font-size: 14px !important;
+        font-size: 16px !important;
         padding: 12px 12px !important;
         height: 44px !important;
         border-radius: 8px !important;
@@ -896,7 +896,7 @@ select.form-control {
         padding: 12px 12px !important;
         flex: 1 !important;
         height: 44px !important;
-        font-size: 14px !important;
+        font-size: 16px !important;
         line-height: 1.2 !important;
         display: flex !important;
         align-items: center !important;
@@ -989,6 +989,13 @@ form.search-form input {
     padding: 10px 14px;
     font-size: 14px;
     margin-bottom: 12px;
+}
+
+/* Mobile fix for search form input */
+@media (max-width: 768px) {
+    form.search-form input {
+        font-size: 16px !important;
+    }
 }
 
 form.search-form input:focus {
@@ -1231,10 +1238,47 @@ form.search-form input:focus {
 }
 
 .form-control, .form-select {
-    font-size: 14px;
+    font-size: 16px !important;
     border: 1px solid #ddd;
     border-radius: 8px;
     padding: 10px 14px;
+}
+
+/* Global fix to prevent mobile zoom - applies to ALL devices */
+input, textarea, select {
+    font-size: 16px !important;
+}
+
+/* Mobile-specific additional fixes */
+@media (max-width: 768px) {
+    .form-control, .form-select {
+        font-size: 16px !important;
+    }
+    
+    /* Prevent zoom and focus issues on all form inputs */
+    .form-control:focus,
+    .form-control:focus-visible,
+    .form-select:focus,
+    .form-select:focus-visible {
+        outline: none !important;
+        box-shadow: none !important;
+        transform: none !important;
+        zoom: 1 !important;
+    }
+    
+    /* Additional mobile input fixes */
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="tel"],
+    input[type="number"],
+    select,
+    textarea {
+        font-size: 16px !important;
+        -webkit-appearance: none !important;
+        -moz-appearance: none !important;
+        appearance: none !important;
+    }
 }
 
 .form-control:focus, .form-select:focus {
