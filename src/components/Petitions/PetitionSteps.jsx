@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { toast } from 'react-toastify';
 import { useJsApiLoader } from '@react-google-maps/api';
 import Config from '../../config/index';
+import { usePetitionCommonData } from '../../hooks/usePetitionCommonData';
 
 // Static libraries array to prevent LoadScript reload
 const LIBRARIES = ['places'];
@@ -10,6 +11,16 @@ const PetitionSteps = ({ isOpen, onClose }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [isIntentionalSubmit, setIsIntentionalSubmit] = useState(false);
   const totalSteps = 8;
+  
+  // Load petition common data
+  const {
+    getLienPositions,
+    getLoanTypes,
+    getAssigneeTypes,
+    getAssigneeRoles,
+    loading: commonDataLoading,
+    error: commonDataError
+  } = usePetitionCommonData();
   
   // Google Places API state
   // eslint-disable-next-line no-unused-vars
@@ -105,67 +116,109 @@ const PetitionSteps = ({ isOpen, onClose }) => {
   
   const [formData, setFormData] = useState({
     // Step 1: Property Details
-    street_address_line_1: '',
-    street_address_line_2: '',
-    city: '',
-    state: 'MA',
-    zip_code: '',
-    county: '',
+    propertyStreet1: '',
+    propertyStreet2: '',
+    propertyCity: '',
+    propertyState: 'MA',
+    propertyZip: '',
+    propertyCounty: '',
+    assessorParcelId: '',
     
     // Step 2: Loan Details
-    loan_account_number: '',
-    lien_position: '',
-    loan_type_term: '',
-    year_originated: '',
-    original_amount: '',
-    current_amount: '',
-    original_rate: '',
-    current_rate: '',
+    minNumber: '',
+    loanNumber: '',
+    petitionLoanTypeId: '',
+    petitionLoanTypeName: '',
+    lienPosition: 0,
+    originationDate: '',
+    originalPrincipalAmount: 0,
+    currentPrincipalBalance: 0,
+    interestRatePercent: 0,
+    variableRate: false,
+    interestOnly: false,
+    negativeAmortization: false,
+    monthlyPaymentAmount: 0,
+    delinquencyDaysAtFiling: 0,
     
     // Step 3: Borrower Details
     borrowers: [
       {
         id: 1,
-        first_name: '',
-        middle_initial: '',
-        last_name: ''
+        firstName: '',
+        middleName: '',
+        lastName: '',
+        suffix: '',
+        borrowerIsPrimary: true,
+        mailingStreet1: '',
+        mailingCity: '',
+        mailingState: '',
+        mailingZip: '',
+        phone: '',
+        email: ''
       }
     ],
     
     // Step 4: Filing Entity
-    organization_name: '',
-    contact_first_name: '',
-    contact_last_name: '',
-    contact_phone: '',
-    contact_email: '',
+    filingEntityLegalName: '',
+    filingEntityRole: 0,
+    filingEntityStreet1: '',
+    filingEntityCity: '',
+    filingEntityState: '',
+    filingEntityZip: '',
+    filingContactName: '',
+    filingContactEmail: '',
+    filingContactPhone: '',
+    nmlsLicenseNumber: '',
+    stateLicenseNumber: '',
+    stateLicenseState: '',
     
     // Step 5: Right-to-Cure
-    notice_date: '',
-    days_delinquent: '',
-    amount_default: '',
-    cure_expiration_date: '',
-    notice_mailing_address: '',
-    acceleration_date: '',
+    noticeSent: false,
+    noticeDate: '',
+    amountInDefault: 0,
+    daysDelinquentAtNotice: 0,
+    cureExpirationDate: '',
+    noticeAddressStreet1: '',
+    noticeAddressCity: '',
+    noticeAddressState: '',
+    noticeAddressZip: '',
+    manualOverrideReason: '',
     
     // Step 6: Form 35B Compliance
-    form_35b_upload: null,
-    affiant_name: '',
-    affiant_title: '',
-    affidavit_date: '',
-    notary_info: '',
+    certainMortgageLoan: false,
+    form35bComplianceAffidavitPdf: null,
+    form35bNonApplicabilityAffidavitPdf: null,
+    affiantName: '',
+    affiantTitle: '',
+    affidavitExecutionDate: '',
     
     // Step 7: Loan Assignees
-    assignee_lender_name_1: '',
-    assignee_lender_type_1: '',
-    assignee_originator_name_1: '',
-    assignee_license_number_1: '',
-    assignee_license_state_1: '',
-    assignee_lender_address_1: '',
+    loanAssignees: [
+      {
+        assigneeName: '',
+        assigneeTypeId: '',
+        assigneeRoleId: '',
+        contactEmail: '',
+        contactPhone: ''
+      }
+    ],
     
-    // Step 8: Petition Attestation
-    attester_first_name: '',
-    attester_middle_initial: '',
-    attester_last_name: '',
+    // Step 8: Petition Attestation & Signatures
+    signatures: [
+      {
+        signerFullName: '',
+        signerTitle: '',
+        signerEmail: '',
+        esignConsent: false,
+        signatureDrawnOrTyped: '',
+        signedAt: '',
+        signerIp: '',
+        otpCode: ''
+      }
+    ],
+    
+    // Additional fields
+    documents: [],
     certification_check: false,
   });
 
@@ -265,11 +318,11 @@ const PetitionSteps = ({ isOpen, onClose }) => {
         
         setFormData(prev => ({
           ...prev,
-          street_address_line_1: fullAddress,
-          city: city,
-          state: 'MA', // Always keep as MA since it's locked
-          zip_code: zipCode,
-          county: county
+          propertyStreet1: fullAddress,
+          propertyCity: city,
+          propertyState: 'MA', // Always keep as MA since it's locked
+          propertyZip: zipCode,
+          propertyCounty: county
         }));
 
         // Don't mark as verified automatically - validation will happen on Save
@@ -313,7 +366,7 @@ const PetitionSteps = ({ isOpen, onClose }) => {
   // Validate address using Geocoding API
   const validateAddressWithGeocoding = () => {
     return new Promise((resolve) => {
-      if (!geocoderRef.current || !formData.street_address_line_1.trim()) {
+      if (!geocoderRef.current || !formData.propertyStreet1.trim()) {
         resolve({ isValid: false, error: 'Street address is required' });
         return;
       }
@@ -321,8 +374,8 @@ const PetitionSteps = ({ isOpen, onClose }) => {
       setIsValidatingAddress(true);
       setAddressValidationError('');
 
-      const addressLine2 = formData.street_address_line_2 ? ` ${formData.street_address_line_2}` : '';
-      const fullAddress = `${formData.street_address_line_1}${addressLine2}, ${formData.city}, ${formData.state} ${formData.zip_code}`.trim();
+      const addressLine2 = formData.propertyStreet2 ? ` ${formData.propertyStreet2}` : '';
+      const fullAddress = `${formData.propertyStreet1}${addressLine2}, ${formData.propertyCity}, ${formData.propertyState} ${formData.propertyZip}`.trim();
 
       geocoderRef.current.geocode({ address: fullAddress }, (results, status) => {
         setIsValidatingAddress(false);
@@ -342,7 +395,7 @@ const PetitionSteps = ({ isOpen, onClose }) => {
           addressComponents.forEach(component => {
             const types = component.types;
             if (types.includes('locality') || types.includes('administrative_area_level_2')) {
-              if (component.long_name.toLowerCase().includes(formData.city.toLowerCase())) {
+              if (component.long_name.toLowerCase().includes(formData.propertyCity.toLowerCase())) {
                 foundCity = true;
               }
             }
@@ -353,7 +406,7 @@ const PetitionSteps = ({ isOpen, onClose }) => {
               }
             }
             if (types.includes('postal_code')) {
-              if (component.long_name === formData.zip_code) {
+              if (component.long_name === formData.propertyZip) {
                 foundZip = true;
               }
             }
@@ -381,19 +434,19 @@ const PetitionSteps = ({ isOpen, onClose }) => {
             const types = component.types;
             if (types.includes('locality') || types.includes('administrative_area_level_2')) {
               const componentCity = component.long_name.toLowerCase();
-              const inputCity = formData.city.toLowerCase();
+              const inputCity = formData.propertyCity.toLowerCase();
               if (componentCity.includes(inputCity) || inputCity.includes(componentCity)) {
                 cityMatch = true;
               }
             }
             if (types.includes('postal_code')) {
-              if (component.long_name === formData.zip_code) {
+              if (component.long_name === formData.propertyZip) {
                 zipMatch = true;
               }
             }
             if (types.includes('administrative_area_level_2')) {
               const componentCounty = component.long_name.toLowerCase();
-              const inputCounty = formData.county.toLowerCase();
+              const inputCounty = formData.propertyCounty.toLowerCase();
               if (componentCounty.includes(inputCounty) || inputCounty.includes(componentCounty)) {
                 countyMatch = true;
               }
@@ -403,10 +456,10 @@ const PetitionSteps = ({ isOpen, onClose }) => {
           // Require all components to match for verification
           if (foundState && cityMatch && zipMatch && countyMatch) {
             // Auto-fill county if it was found and not already set
-            if (county && !formData.county) {
+            if (county && !formData.propertyCounty) {
               setFormData(prev => ({
                 ...prev,
-                county: county
+                propertyCounty: county
               }));
             }
             setIsAddressVerified(true);
@@ -435,32 +488,32 @@ const PetitionSteps = ({ isOpen, onClose }) => {
     const errors = {};
     let hasErrors = false;
     
-    if (!formData.street_address_line_1.trim()) {
-      errors.street_address_line_1 = 'Street address is required';
+    if (!formData.propertyStreet1.trim()) {
+      errors.propertyStreet1 = 'Street address is required';
       hasErrors = true;
     }
     
-    if (!formData.city.trim()) {
-      errors.city = 'City is required';
+    if (!formData.propertyCity.trim()) {
+      errors.propertyCity = 'City is required';
       hasErrors = true;
     }
     
-    if (!formData.state.trim()) {
-      errors.state = 'State is required';
+    if (!formData.propertyState.trim()) {
+      errors.propertyState = 'State is required';
       hasErrors = true;
     }
     
     const zipPattern = /^\d{5}(-\d{4})?$/;
-    if (!formData.zip_code.trim()) {
-      errors.zip_code = 'ZIP code is required';
+    if (!formData.propertyZip.trim()) {
+      errors.propertyZip = 'ZIP code is required';
       hasErrors = true;
-    } else if (!zipPattern.test(formData.zip_code)) {
-      errors.zip_code = 'ZIP code must be in valid format (12345 or 12345-6789)';
+    } else if (!zipPattern.test(formData.propertyZip)) {
+      errors.propertyZip = 'ZIP code must be in valid format (12345 or 12345-6789)';
       hasErrors = true;
     }
     
-    if (!formData.county.trim()) {
-      errors.county = 'County is required';
+    if (!formData.propertyCounty.trim()) {
+      errors.propertyCounty = 'County is required';
       hasErrors = true;
     }
     
@@ -521,8 +574,8 @@ const PetitionSteps = ({ isOpen, onClose }) => {
           if (isInMA && (detectedCity || detectedCounty)) {
             setFormData(prev => ({
               ...prev,
-              ...(detectedCity && !prev.city ? { city: detectedCity } : {}),
-              ...(detectedCounty && !prev.county ? { county: detectedCounty } : {})
+              ...(detectedCity && !prev.propertyCity ? { propertyCity: detectedCity } : {}),
+              ...(detectedCounty && !prev.propertyCounty ? { propertyCounty: detectedCounty } : {})
             }));
           }
         }
@@ -554,16 +607,16 @@ const PetitionSteps = ({ isOpen, onClose }) => {
     }
 
     // Reset address verification when manually editing address fields
-    if (['street_address_line_1', 'street_address_line_2', 'city', 'state', 'zip_code', 'county'].includes(name)) {
+    if (['propertyStreet1', 'propertyStreet2', 'propertyCity', 'propertyState', 'propertyZip', 'propertyCounty'].includes(name)) {
       setIsAddressVerified(false);
       setAddressValidationError('');
     }
 
     // Auto-detect city and county when street address and ZIP are both entered
-    if (name === 'street_address_line_1' || name === 'zip_code') {
+    if (name === 'propertyStreet1' || name === 'propertyZip') {
       const currentFormData = { ...formData, [name]: value };
-      const streetAddress = name === 'street_address_line_1' ? value : currentFormData.street_address_line_1;
-      const zipCode = name === 'zip_code' ? value : currentFormData.zip_code;
+      const streetAddress = name === 'propertyStreet1' ? value : currentFormData.propertyStreet1;
+      const zipCode = name === 'propertyZip' ? value : currentFormData.propertyZip;
       
       // Debounce the auto-detection
       if (window.autoDetectTimeout) {
@@ -585,9 +638,17 @@ const PetitionSteps = ({ isOpen, onClose }) => {
         ...prev.borrowers,
         {
           id: newBorrowerId,
-          first_name: '',
-          middle_initial: '',
-          last_name: ''
+          firstName: '',
+          middleName: '',
+          lastName: '',
+          suffix: '',
+          borrowerIsPrimary: false,
+          mailingStreet1: '',
+          mailingCity: '',
+          mailingState: '',
+          mailingZip: '',
+          phone: '',
+          email: ''
         }
       ]
     }));
@@ -613,6 +674,41 @@ const PetitionSteps = ({ isOpen, onClose }) => {
     }));
   };
 
+  // Loan assignee management functions
+  const addLoanAssignee = () => {
+    setFormData(prev => ({
+      ...prev,
+      loanAssignees: [
+        ...prev.loanAssignees,
+        {
+          assigneeName: '',
+          assigneeTypeId: '',
+          assigneeRoleId: '',
+          contactEmail: '',
+          contactPhone: ''
+        }
+      ]
+    }));
+  };
+
+  const removeLoanAssignee = (index) => {
+    if (formData.loanAssignees.length > 1) {
+      setFormData(prev => ({
+        ...prev,
+        loanAssignees: prev.loanAssignees.filter((_, i) => i !== index)
+      }));
+    }
+  };
+
+  const updateLoanAssignee = (index, field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      loanAssignees: prev.loanAssignees.map((assignee, i) =>
+        i === index ? { ...assignee, [field]: value } : assignee
+      )
+    }));
+  };
+
   // Validate borrower details
   const validateBorrowerDetails = () => {
     const errors = [];
@@ -623,10 +719,10 @@ const PetitionSteps = ({ isOpen, onClose }) => {
     }
 
     formData.borrowers.forEach((borrower, index) => {
-      if (!borrower.first_name.trim()) {
+      if (!borrower.firstName.trim()) {
         errors.push(`Borrower ${index + 1}: First name is required`);
       }
-      if (!borrower.last_name.trim()) {
+      if (!borrower.lastName.trim()) {
         errors.push(`Borrower ${index + 1}: Last name is required`);
       }
     });
@@ -823,7 +919,7 @@ const PetitionSteps = ({ isOpen, onClose }) => {
             <p className="text-muted small mb-3">Enter the full address and location details of the property subject to foreclosure.</p>
             <div className="row g-3">
               <div className="col-12">
-                <label htmlFor="street_address_line_1" className="form-label">
+                <label htmlFor="propertyStreet1" className="form-label">
                   Street Address Line 1 *
                   {isAddressVerified && <span className="text-success ms-2">✓ Verified</span>}
                 </label>
@@ -831,17 +927,17 @@ const PetitionSteps = ({ isOpen, onClose }) => {
                   <div>
                 <input 
                   type="text" 
-                  id="street_address_line_1" 
-                  name="street_address_line_1" 
-                  className={`form-control ${fieldErrors.street_address_line_1 ? 'is-invalid' : ''}`}
-                  value={formData.street_address_line_1}
+                  id="propertyStreet1" 
+                  name="propertyStreet1" 
+                  className={`form-control ${fieldErrors.propertyStreet1 ? 'is-invalid' : ''}`}
+                  value={formData.propertyStreet1}
                   onChange={handleInputChange}
                       placeholder="Enter address manually (Google Maps unavailable)"
                       autoComplete="off"
                     />
-                    {fieldErrors.street_address_line_1 && (
+                    {fieldErrors.propertyStreet1 && (
                       <div className="text-danger small mt-1">
-                        {fieldErrors.street_address_line_1}
+                        {fieldErrors.propertyStreet1}
                       </div>
                     )}
                     <div className="text-danger small mt-1">
@@ -853,10 +949,10 @@ const PetitionSteps = ({ isOpen, onClose }) => {
                     <input
                       ref={autocompleteRef}
                       type="text"
-                      id="street_address_line_1"
-                      name="street_address_line_1"
-                      className={`form-control ${fieldErrors.street_address_line_1 ? 'is-invalid' : ''}`}
-                      value={formData.street_address_line_1}
+                      id="propertyStreet1"
+                      name="propertyStreet1"
+                      className={`form-control ${fieldErrors.propertyStreet1 ? 'is-invalid' : ''}`}
+                      value={formData.propertyStreet1}
                       onChange={(e) => {
                         handleInputChange(e);
                         handleAddressInput(e.target.value);
@@ -864,7 +960,7 @@ const PetitionSteps = ({ isOpen, onClose }) => {
                       onKeyDown={handleKeyDown}
                       onBlur={() => {
                         // Delay hiding suggestions to allow click events
-                        setTimeout(() => setShowPredictions(false), 200);
+                        setTimeout(() => setShowPredictions(false), 300);
                       }}
                       onFocus={() => {
                         if (predictions.length > 0) {
@@ -893,7 +989,7 @@ const PetitionSteps = ({ isOpen, onClose }) => {
                             className={`px-3 py-2 cursor-pointer border-bottom ${
                               index === selectedPredictionIndex ? 'bg-primary text-white' : 'hover-bg-light'
                             }`}
-                            onClick={() => selectPrediction(prediction.place_id)}
+                            onMouseDown={() => selectPrediction(prediction.place_id)}
                             style={{ cursor: 'pointer' }}
                           >
                             <div className="fw-medium">{prediction.structured_formatting.main_text}</div>
@@ -904,9 +1000,9 @@ const PetitionSteps = ({ isOpen, onClose }) => {
                     )}
                     
                     {/* Field error display */}
-                    {fieldErrors.street_address_line_1 && (
+                    {fieldErrors.propertyStreet1 && (
                       <div className="text-danger small mt-1">
-                        {fieldErrors.street_address_line_1}
+                        {fieldErrors.propertyStreet1}
                       </div>
                     )}
                     
@@ -935,87 +1031,99 @@ const PetitionSteps = ({ isOpen, onClose }) => {
               </div>
               
               <div className="col-12">
-                <label htmlFor="street_address_line_2" className="form-label">Street Address Line 2 (Optional)</label>
+                <label htmlFor="propertyStreet2" className="form-label">Street Address Line 2 (Optional)</label>
                 <input 
                   type="text" 
-                  id="street_address_line_2" 
-                  name="street_address_line_2" 
+                  id="propertyStreet2" 
+                  name="propertyStreet2" 
                   className="form-control"
-                  value={formData.street_address_line_2}
+                  value={formData.propertyStreet2}
                   onChange={handleInputChange}
                   placeholder="Apartment, suite, unit, building, floor, etc."
                 />
               </div>
               <div className="col-md-6">
-                <label htmlFor="city" className="form-label">City *</label>
+                <label htmlFor="propertyCity" className="form-label">City *</label>
                 <input 
                   type="text" 
-                  id="city" 
-                  name="city" 
-                  className={`form-control ${fieldErrors.city ? 'is-invalid' : ''}`}
-                  value={formData.city}
+                  id="propertyCity" 
+                  name="propertyCity" 
+                  className={`form-control ${fieldErrors.propertyCity ? 'is-invalid' : ''}`}
+                  value={formData.propertyCity}
                   onChange={handleInputChange}
                   placeholder="Enter city name"
                 />
-                {fieldErrors.city && (
+                {fieldErrors.propertyCity && (
                   <div className="text-danger small mt-1">
-                    {fieldErrors.city}
+                    {fieldErrors.propertyCity}
                   </div>
                 )}
               </div>
               <div className="col-md-6">
-                <label htmlFor="state" className="form-label">State *</label>
+                <label htmlFor="propertyState" className="form-label">State *</label>
                 <select 
-                  id="state" 
-                  name="state" 
-                  className={`form-select ${fieldErrors.state ? 'is-invalid' : ''}`}
-                  value={formData.state}
+                  id="propertyState" 
+                  name="propertyState" 
+                  className={`form-select ${fieldErrors.propertyState ? 'is-invalid' : ''}`}
+                  value={formData.propertyState}
                   onChange={handleInputChange}
                   disabled
                 >
                   <option value="MA">Massachusetts (MA)</option>
                 </select>
-                {fieldErrors.state && (
+                {fieldErrors.propertyState && (
                   <div className="text-danger small mt-1">
-                    {fieldErrors.state}
+                    {fieldErrors.propertyState}
                   </div>
                 )}
                 
               </div>
               <div className="col-md-6">
-                <label htmlFor="zip_code" className="form-label">ZIP Code *</label>
+                <label htmlFor="propertyZip" className="form-label">ZIP Code *</label>
                 <input 
                   type="text" 
-                  id="zip_code" 
-                  name="zip_code" 
+                  id="propertyZip" 
+                  name="propertyZip" 
                   pattern="\d{5}(?:-\d{4})?" 
-                  className={`form-control ${fieldErrors.zip_code ? 'is-invalid' : ''}`}
-                  value={formData.zip_code}
+                  className={`form-control ${fieldErrors.propertyZip ? 'is-invalid' : ''}`}
+                  value={formData.propertyZip}
                   onChange={handleInputChange}
                   placeholder="12345 or 12345-6789"
                 />
-                {fieldErrors.zip_code && (
+                {fieldErrors.propertyZip && (
                   <div className="text-danger small mt-1">
-                    {fieldErrors.zip_code}
+                    {fieldErrors.propertyZip}
                   </div>
                 )}
               </div>
               <div className="col-md-6">
-                <label htmlFor="county" className="form-label">County (Filing Location) *</label>
+                <label htmlFor="propertyCounty" className="form-label">County (Filing Location) *</label>
                 <input 
                   type="text" 
-                  id="county" 
-                  name="county" 
-                  className={`form-control ${fieldErrors.county ? 'is-invalid' : ''}`}
-                  value={formData.county}
+                  id="propertyCounty" 
+                  name="propertyCounty" 
+                  className={`form-control ${fieldErrors.propertyCounty ? 'is-invalid' : ''}`}
+                  value={formData.propertyCounty}
                   onChange={handleInputChange}
                   placeholder="Enter county name"
                 />
-                {fieldErrors.county && (
+                {fieldErrors.propertyCounty && (
                   <div className="text-danger small mt-1">
-                    {fieldErrors.county}
+                    {fieldErrors.propertyCounty}
                   </div>
                 )}
+              </div>
+              <div className="col-12">
+                <label htmlFor="assessorParcelId" className="form-label">Assessor Parcel ID (Optional)</label>
+                <input 
+                  type="text" 
+                  id="assessorParcelId" 
+                  name="assessorParcelId" 
+                  className="form-control"
+                  value={formData.assessorParcelId}
+                  onChange={handleInputChange}
+                  placeholder="Enter assessor parcel ID"
+                />
               </div>
             </div>
           </div>
@@ -1026,103 +1134,206 @@ const PetitionSteps = ({ isOpen, onClose }) => {
           <div>
             <h2 className="theme-color font-med mb-1">2. Loan Details</h2>
             <p className="text-muted small mb-3">Provide the key financial information for the loan. <span className="fw-semibold text-success">MERS Integration:</span> System validates Loan Account Number.</p>
+            
+            {commonDataError && (
+              <div className="alert alert-warning" role="alert">
+                <i className="fas fa-exclamation-triangle me-2"></i>
+                {commonDataError}
+              </div>
+            )}
+            
             <div className="row g-3">
               <div className="col-md-6">
-                <label htmlFor="loan_account_number" className="form-label">Loan Account Number</label>
+                <label htmlFor="minNumber" className="form-label">MIN Number</label>
                 <input 
                   type="text" 
-                  id="loan_account_number" 
-                  name="loan_account_number" 
+                  id="minNumber" 
+                  name="minNumber" 
                   className="form-control"
-                  value={formData.loan_account_number}
+                  value={formData.minNumber}
                   onChange={handleInputChange}
+                  placeholder="Enter MIN number"
                 />
               </div>
               <div className="col-md-6">
-                <label htmlFor="lien_position" className="form-label">Lien Position</label>
-                <select 
-                  id="lien_position" 
-                  name="lien_position" 
-                  className="form-select"
-                  value={formData.lien_position}
+                <label htmlFor="loanNumber" className="form-label">Loan Number</label>
+                <input 
+                  type="text" 
+                  id="loanNumber" 
+                  name="loanNumber" 
+                  className="form-control"
+                  value={formData.loanNumber}
                   onChange={handleInputChange}
+                  placeholder="Enter loan number"
+                />
+              </div>
+              <div className="col-md-6">
+                <label htmlFor="petitionLoanTypeId" className="form-label">Loan Type</label>
+                <select 
+                  id="petitionLoanTypeId" 
+                  name="petitionLoanTypeId" 
+                  className="form-select"
+                  value={formData.petitionLoanTypeId}
+                  onChange={handleInputChange}
+                  disabled={commonDataLoading}
+                >
+                  <option value="">Select Loan Type</option>
+                  {getLoanTypes().map(loanType => (
+                    <option key={loanType.id} value={loanType.id}>
+                      {loanType.name}
+                    </option>
+                  ))}
+                </select>
+                {commonDataLoading && (
+                  <div className="form-text">
+                    <i className="fas fa-spinner fa-spin me-1"></i>
+                    Loading loan types...
+                  </div>
+                )}
+              </div>
+              <div className="col-md-6">
+                <label htmlFor="lienPosition" className="form-label">Lien Position</label>
+                <select 
+                  id="lienPosition" 
+                  name="lienPosition" 
+                  className="form-select"
+                  value={formData.lienPosition}
+                  onChange={handleInputChange}
+                  disabled={commonDataLoading}
                 >
                   <option value="">Select Position</option>
-                  <option value="First">First Lien</option>
-                  <option value="Second">Second Lien</option>
+                  {getLienPositions().map(position => (
+                    <option key={position.value} value={position.value}>
+                      {position.name}
+                    </option>
+                  ))}
                 </select>
+                {commonDataLoading && (
+                  <div className="form-text">
+                    <i className="fas fa-spinner fa-spin me-1"></i>
+                    Loading lien positions...
+                  </div>
+                )}
               </div>
               <div className="col-md-6">
-                <label htmlFor="loan_type_term" className="form-label">Loan Type and Term (e.g., 30-Year Fixed)</label>
+                <label htmlFor="originationDate" className="form-label">Origination Date</label>
                 <input 
-                  type="text" 
-                  id="loan_type_term" 
-                  name="loan_type_term" 
+                  type="date" 
+                  id="originationDate" 
+                  name="originationDate" 
                   className="form-control"
-                  value={formData.loan_type_term}
+                  value={formData.originationDate}
                   onChange={handleInputChange}
                 />
               </div>
               <div className="col-md-6">
-                <label htmlFor="year_originated" className="form-label">Year Loan Originated</label>
-                <input 
-                  type="number" 
-                  id="year_originated" 
-                  name="year_originated" 
-                  min="1900" 
-                  max="2100" 
-                  className="form-control"
-                  value={formData.year_originated}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div className="col-md-6">
-                <label htmlFor="original_amount" className="form-label">Original Loan Amount ($)</label>
+                <label htmlFor="originalPrincipalAmount" className="form-label">Original Principal Amount ($)</label>
                 <input 
                   type="number" 
                   step="0.01" 
-                  id="original_amount" 
-                  name="original_amount" 
+                  id="originalPrincipalAmount" 
+                  name="originalPrincipalAmount" 
                   className="form-control"
-                  value={formData.original_amount}
+                  value={formData.originalPrincipalAmount}
                   onChange={handleInputChange}
                 />
               </div>
               <div className="col-md-6">
-                <label htmlFor="current_amount" className="form-label">Current Loan Amount ($)</label>
+                <label htmlFor="currentPrincipalBalance" className="form-label">Current Principal Balance ($)</label>
                 <input 
                   type="number" 
                   step="0.01" 
-                  id="current_amount" 
-                  name="current_amount" 
+                  id="currentPrincipalBalance" 
+                  name="currentPrincipalBalance" 
                   className="form-control"
-                  value={formData.current_amount}
+                  value={formData.currentPrincipalBalance}
                   onChange={handleInputChange}
                 />
               </div>
               <div className="col-md-6">
-                <label htmlFor="original_rate" className="form-label">Original Interest Rate (%)</label>
+                <label htmlFor="interestRatePercent" className="form-label">Interest Rate (%)</label>
                 <input 
                   type="number" 
                   step="0.001" 
-                  id="original_rate" 
-                  name="original_rate" 
+                  id="interestRatePercent" 
+                  name="interestRatePercent" 
                   className="form-control"
-                  value={formData.original_rate}
+                  value={formData.interestRatePercent}
                   onChange={handleInputChange}
                 />
               </div>
               <div className="col-md-6">
-                <label htmlFor="current_rate" className="form-label">Current Interest Rate (%)</label>
+                <label htmlFor="monthlyPaymentAmount" className="form-label">Monthly Payment Amount ($)</label>
                 <input 
                   type="number" 
-                  step="0.001" 
-                  id="current_rate" 
-                  name="current_rate" 
+                  step="0.01" 
+                  id="monthlyPaymentAmount" 
+                  name="monthlyPaymentAmount" 
                   className="form-control"
-                  value={formData.current_rate}
+                  value={formData.monthlyPaymentAmount}
                   onChange={handleInputChange}
                 />
+              </div>
+              <div className="col-md-6">
+                <label htmlFor="delinquencyDaysAtFiling" className="form-label">Delinquency Days at Filing</label>
+                <input 
+                  type="number" 
+                  id="delinquencyDaysAtFiling" 
+                  name="delinquencyDaysAtFiling" 
+                  min="0"
+                  className="form-control"
+                  value={formData.delinquencyDaysAtFiling}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div className="col-12">
+                <div className="row">
+                  <div className="col-md-4">
+                    <div className="form-check">
+                      <input 
+                        className="form-check-input" 
+                        type="checkbox" 
+                        id="variableRate" 
+                        name="variableRate"
+                        checked={formData.variableRate}
+                        onChange={handleInputChange}
+                      />
+                      <label className="form-check-label" htmlFor="variableRate">
+                        Variable Rate
+                      </label>
+                    </div>
+                  </div>
+                  <div className="col-md-4">
+                    <div className="form-check">
+                      <input 
+                        className="form-check-input" 
+                        type="checkbox" 
+                        id="interestOnly" 
+                        name="interestOnly"
+                        checked={formData.interestOnly}
+                        onChange={handleInputChange}
+                      />
+                      <label className="form-check-label" htmlFor="interestOnly">
+                        Interest Only
+                      </label>
+                    </div>
+                  </div>
+                  <div className="col-md-4">
+                    <div className="form-check">
+                      <input 
+                        className="form-check-input" 
+                        type="checkbox" 
+                        id="negativeAmortization" 
+                        name="negativeAmortization"
+                        checked={formData.negativeAmortization}
+                        onChange={handleInputChange}
+                      />
+                      <label className="form-check-label" htmlFor="negativeAmortization">
+                        Negative Amortization
+                      </label>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -1150,35 +1361,122 @@ const PetitionSteps = ({ isOpen, onClose }) => {
                   )}
                 </div>
                 <div className="row g-3">
-                  <div className="col-md-4">
+                  <div className="col-md-3">
                     <label className="form-label">First Name *</label>
                     <input 
                       type="text" 
                       className="form-control"
-                      value={borrower.first_name}
-                      onChange={(e) => updateBorrower(borrower.id, 'first_name', e.target.value)}
+                      value={borrower.firstName}
+                      onChange={(e) => updateBorrower(borrower.id, 'firstName', e.target.value)}
                       placeholder="Enter first name"
                     />
                   </div>
-                  <div className="col-md-4">
-                    <label className="form-label">Middle Initial (Optional)</label>
+                  <div className="col-md-2">
+                    <label className="form-label">Middle Name</label>
                     <input 
                       type="text" 
-                      maxLength="1" 
                       className="form-control"
-                      value={borrower.middle_initial}
-                      onChange={(e) => updateBorrower(borrower.id, 'middle_initial', e.target.value)}
-                      placeholder="M"
+                      value={borrower.middleName}
+                      onChange={(e) => updateBorrower(borrower.id, 'middleName', e.target.value)}
+                      placeholder="Middle"
                     />
                   </div>
-                  <div className="col-md-4">
+                  <div className="col-md-3">
                     <label className="form-label">Last Name *</label>
                     <input 
                       type="text" 
                       className="form-control"
-                      value={borrower.last_name}
-                      onChange={(e) => updateBorrower(borrower.id, 'last_name', e.target.value)}
+                      value={borrower.lastName}
+                      onChange={(e) => updateBorrower(borrower.id, 'lastName', e.target.value)}
                       placeholder="Enter last name"
+                    />
+                  </div>
+                  <div className="col-md-2">
+                    <label className="form-label">Suffix</label>
+                    <input 
+                      type="text" 
+                      className="form-control"
+                      value={borrower.suffix}
+                      onChange={(e) => updateBorrower(borrower.id, 'suffix', e.target.value)}
+                      placeholder="Jr, Sr, III"
+                    />
+                  </div>
+                  <div className="col-md-2">
+                    <label className="form-label">Primary Borrower</label>
+                    <div className="form-check">
+                      <input 
+                        className="form-check-input" 
+                        type="checkbox" 
+                        checked={borrower.borrowerIsPrimary}
+                        onChange={(e) => updateBorrower(borrower.id, 'borrowerIsPrimary', e.target.checked)}
+                      />
+                      <label className="form-check-label">
+                        Primary
+                      </label>
+                    </div>
+                  </div>
+                </div>
+                <div className="row g-3 mt-2">
+                  <div className="col-md-6">
+                    <label className="form-label">Mailing Address</label>
+                    <input 
+                      type="text" 
+                      className="form-control"
+                      value={borrower.mailingStreet1}
+                      onChange={(e) => updateBorrower(borrower.id, 'mailingStreet1', e.target.value)}
+                      placeholder="Street address"
+                    />
+                  </div>
+                  <div className="col-md-3">
+                    <label className="form-label">City</label>
+                    <input 
+                      type="text" 
+                      className="form-control"
+                      value={borrower.mailingCity}
+                      onChange={(e) => updateBorrower(borrower.id, 'mailingCity', e.target.value)}
+                      placeholder="City"
+                    />
+                  </div>
+                  <div className="col-md-1">
+                    <label className="form-label">State</label>
+                    <input 
+                      type="text" 
+                      className="form-control"
+                      value={borrower.mailingState}
+                      onChange={(e) => updateBorrower(borrower.id, 'mailingState', e.target.value)}
+                      placeholder="MA"
+                    />
+                  </div>
+                  <div className="col-md-2">
+                    <label className="form-label">ZIP</label>
+                    <input 
+                      type="text" 
+                      className="form-control"
+                      value={borrower.mailingZip}
+                      onChange={(e) => updateBorrower(borrower.id, 'mailingZip', e.target.value)}
+                      placeholder="02101"
+                    />
+                  </div>
+                </div>
+                <div className="row g-3 mt-2">
+                  <div className="col-md-6">
+                    <label className="form-label">Phone Number</label>
+                    <input 
+                      type="tel" 
+                      className="form-control"
+                      value={borrower.phone}
+                      onChange={(e) => updateBorrower(borrower.id, 'phone', e.target.value)}
+                      placeholder="(555) 123-4567"
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">Email Address</label>
+                    <input 
+                      type="email" 
+                      className="form-control"
+                      value={borrower.email}
+                      onChange={(e) => updateBorrower(borrower.id, 'email', e.target.value)}
+                      placeholder="borrower@example.com"
                     />
                   </div>
                 </div>
@@ -1415,70 +1713,117 @@ const PetitionSteps = ({ isOpen, onClose }) => {
           <div>
             <h2 className="theme-color font-med mb-1">7. Loan Assignees (Optional)</h2>
             <p className="text-muted small mb-3">List any prior holders or assignees of the loan.</p>
-            <div className="p-3 border rounded bg-light mb-3">
-              <h5 className="fw-semibold text-dark mb-3">Assignee 1</h5>
-              <div className="row g-3">
-                <div className="col-12">
-                  <label className="form-label">Lender Name</label>
-                  <input 
-                    type="text" 
-                    name="assignee_lender_name_1" 
-                    className="form-control"
-                    value={formData.assignee_lender_name_1}
-                    onChange={handleInputChange}
-                  />
+            
+            {commonDataError && (
+              <div className="alert alert-warning" role="alert">
+                <i className="fas fa-exclamation-triangle me-2"></i>
+                {commonDataError}
+              </div>
+            )}
+            
+            {formData.loanAssignees.map((assignee, index) => (
+              <div key={index} className="p-3 border rounded bg-light mb-3">
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <h5 className="fw-semibold text-dark mb-0">Assignee {index + 1}</h5>
+                  {formData.loanAssignees.length > 1 && (
+                    <button
+                      type="button"
+                      className="btn btn-outline-danger btn-sm"
+                      onClick={() => removeLoanAssignee(index)}
+                      title="Remove this assignee"
+                    >
+                      <i className="fas fa-trash"></i>
+                    </button>
+                  )}
                 </div>
-                <div className="col-md-6">
-                  <label className="form-label">Lender Type</label>
-                  <input 
-                    type="text" 
-                    name="assignee_lender_type_1" 
-                    className="form-control"
-                    value={formData.assignee_lender_type_1}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <div className="col-md-6">
-                  <label className="form-label">Loan Originator Name</label>
-                  <input 
-                    type="text" 
-                    name="assignee_originator_name_1" 
-                    className="form-control"
-                    value={formData.assignee_originator_name_1}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <div className="col-md-6">
-                  <label className="form-label">Loan Originator License Number</label>
-                  <input 
-                    type="text" 
-                    name="assignee_license_number_1" 
-                    className="form-control"
-                    value={formData.assignee_license_number_1}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <div className="col-md-6">
-                  <label className="form-label">License State</label>
-                  <input 
-                    type="text" 
-                    name="assignee_license_state_1" 
-                    className="form-control"
-                    value={formData.assignee_license_state_1}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <div className="col-12">
-                  <label className="form-label">Lender Address</label>
-                  <textarea 
-                    name="assignee_lender_address_1" 
-                    rows="2" 
-                    className="form-control"
-                    value={formData.assignee_lender_address_1}
-                    onChange={handleInputChange}
-                  ></textarea>
+                <div className="row g-3">
+                  <div className="col-12">
+                    <label className="form-label">Assignee Name</label>
+                    <input 
+                      type="text" 
+                      className="form-control"
+                      value={assignee.assigneeName}
+                      onChange={(e) => updateLoanAssignee(index, 'assigneeName', e.target.value)}
+                      placeholder="Enter assignee name"
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">Assignee Type</label>
+                    <select 
+                      className="form-select"
+                      value={assignee.assigneeTypeId}
+                      onChange={(e) => updateLoanAssignee(index, 'assigneeTypeId', e.target.value)}
+                      disabled={commonDataLoading}
+                    >
+                      <option value="">Select Type</option>
+                      {getAssigneeTypes().map(type => (
+                        <option key={type.id} value={type.id}>
+                          {type.name}
+                        </option>
+                      ))}
+                    </select>
+                    {commonDataLoading && (
+                      <div className="form-text">
+                        <i className="fas fa-spinner fa-spin me-1"></i>
+                        Loading assignee types...
+                      </div>
+                    )}
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">Assignee Role</label>
+                    <select 
+                      className="form-select"
+                      value={assignee.assigneeRoleId}
+                      onChange={(e) => updateLoanAssignee(index, 'assigneeRoleId', e.target.value)}
+                      disabled={commonDataLoading}
+                    >
+                      <option value="">Select Role</option>
+                      {getAssigneeRoles().map(role => (
+                        <option key={role.id} value={role.id}>
+                          {role.name}
+                        </option>
+                      ))}
+                    </select>
+                    {commonDataLoading && (
+                      <div className="form-text">
+                        <i className="fas fa-spinner fa-spin me-1"></i>
+                        Loading assignee roles...
+                      </div>
+                    )}
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">Contact Email</label>
+                    <input 
+                      type="email" 
+                      className="form-control"
+                      value={assignee.contactEmail}
+                      onChange={(e) => updateLoanAssignee(index, 'contactEmail', e.target.value)}
+                      placeholder="Enter contact email"
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">Contact Phone</label>
+                    <input 
+                      type="tel" 
+                      className="form-control"
+                      value={assignee.contactPhone}
+                      onChange={(e) => updateLoanAssignee(index, 'contactPhone', e.target.value)}
+                      placeholder="Enter contact phone"
+                    />
+                  </div>
                 </div>
               </div>
+            ))}
+            
+            <div className="text-center">
+              <button
+                type="button"
+                className="dashboard-btn-create"
+                onClick={addLoanAssignee}
+              >
+                <i className="fas fa-plus me-2"></i>
+                Add Another Assignee
+              </button>
             </div>
           </div>
         );

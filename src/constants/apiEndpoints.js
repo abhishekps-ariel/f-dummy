@@ -29,5 +29,9 @@ export const ORGANIZATION_ENDPOINTS = {
 
 export const COMMON_ENDPOINTS = {
   GET_FILING_ENTITY_TYPES: "/Common/get-filing-entity-types",
+  GET_PETITION_ENUMS: "/Common/petition-enums",
+  GET_PETITION_LOAN_TYPES: "/Common/get-petition-loan-types",
+  GET_PETITION_ASSIGNEE_TYPES: "/Common/get-petition-assignee-types",
+  GET_PETITION_ASSIGNEE_ROLES: "/Common/get-petition-assignee-roles",
 };
 
