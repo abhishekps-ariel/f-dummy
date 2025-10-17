@@ -83,10 +83,16 @@
     .react-tel-input .form-control {
         font-size: 16px !important;
         height: 48px !important;
+        padding-left: 40px !important;
     }
     
     .react-tel-input .flag-dropdown {
         height: 48px !important;
+        width: 50px !important;
+    }
+    
+    .react-tel-input .selected-flag {
+        width: 50px !important;
     }
     
     /* MFA option cards responsive */
