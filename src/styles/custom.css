@@ -69,6 +69,11 @@ body {
   color: #495057;
 }
 
+.petition-action-buttons .btn-view:hover {
+  background-color: #d1ecf1;
+  color: #0c5460;
+}
+
 .petition-action-buttons .btn-delete:hover {
   background-color: #f8d7da;
   color: #721c24;

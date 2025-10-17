@@ -588,6 +588,16 @@ const ViewAllPetitions = ({ onBack }) => {
                       {openDropdownId === petition.id && (
                         <div className="petition-action-buttons">
                           <button 
+                            className="btn btn-view"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setOpenDropdownId(null);
+                              handlePetitionClick(petition);
+                            }}
+                          >
+                            View
+                          </button>
+                          <button 
                             className="btn btn-resume"
                             onClick={(e) => {
                               e.stopPropagation();
