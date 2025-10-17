@@ -4,7 +4,7 @@ import { ToastContainer } from 'react-toastify';
 import { Suspense } from 'react';
 import { AuthProvider } from './context/AuthContext';
 import { router } from './routes/routes';
-import LoadingFallback from './components/LoadingFallback';
+import LoadingFallback from './components/shared/LoadingFallback';
 
 function App() {
   return (

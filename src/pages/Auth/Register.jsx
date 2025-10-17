@@ -5,7 +5,7 @@ import { register } from "../../services/authService";
 import { getJoinRequest, bindUserToOrganization } from "../../services/organizationService";
 import { ROUTES } from "../../constants/routerConstants";
 import loginImg from "../../assets/logo-sample.png";
-import PasswordGuidelines from "../../components/PasswordGuidelines";
+import PasswordGuidelines from "../../components/shared/PasswordGuidelines";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import "../../styles/custom.css";
@@ -60,17 +60,24 @@ function Register() {
       const response = await getJoinRequest(joinRequestId);
       
       if (response.isSuccess) {
-        setInviteData({
-          joinRequestId,
-          isAdminInvite,
-          email: response.data
-        });
+        // Access email from the nested data structure
+        const email = response.data.data?.email || response.data.email;
         
-        // Pre-fill email field
-        setFormData(prev => ({
-          ...prev,
-          email: response.data
-        }));
+        if (email) {
+          setInviteData({
+            joinRequestId,
+            isAdminInvite,
+            email: email
+          });
+          
+          // Pre-fill email field
+          setFormData(prev => ({
+            ...prev,
+            email: email
+          }));
+        } else {
+          setInviteError("Email not found in invite data");
+        }
       } else {
         setInviteError("Invalid or expired invite link");
       }

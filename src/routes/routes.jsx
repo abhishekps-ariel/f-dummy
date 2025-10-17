@@ -16,7 +16,7 @@ const PasswordChanged = lazy(() => import('../pages/Auth/PasswordChanged'));
 const TwoFactorAuth = lazy(() => import('../pages/Auth/TwoFactorAuth'));
 const VerificationPage = lazy(() => import('../pages/Auth/VerificationPage'));
 const VerificationEmailSent = lazy(() => import('../pages/Auth/VerificationEmailSent'));
-const PageNotFound = lazy(() => import('../components/PageNotFound'));
+const PageNotFound = lazy(() => import('../components/shared/PageNotFound'));
 
 export const router = createBrowserRouter([
   {

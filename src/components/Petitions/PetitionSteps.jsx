@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { toast } from 'react-toastify';
 import { useJsApiLoader } from '@react-google-maps/api';
-import Config from '../config/index';
+import Config from '../../config/index';
 
 // Static libraries array to prevent LoadScript reload
 const LIBRARIES = ['places'];

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import petitionService from '../services/petitionService';
+import petitionService from '../../services/petitionService';
 import PetitionDetailModal from './PetitionDetailModal';
 
 const ViewAllPetitions = ({ onBack }) => {
