@@ -464,9 +464,7 @@ const handleSubmit = async (e) => {
                   )}
                   
                 </div>
-                
-                
-
+          
                 <div className="form-group">
                   <label className="label-text">Confirm Password</label>
                   <div className="input-group position-relative">

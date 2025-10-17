@@ -12,7 +12,7 @@ function PasswordEmailSent() {
   useEffect(() => {
     const storedEmail = localStorage.getItem('resetEmail');
     if (storedEmail) {
-      setEmail(storedEmail);
+      setEmail(storedEmail);  
     }
   }, []);
 
@@ -21,8 +21,7 @@ function PasswordEmailSent() {
       toast.error("Email not found. Please try again.");
       return;
     }
-
-    if (isResending) return;
+     if (isResending) return;
     
     setIsResending(true);
     

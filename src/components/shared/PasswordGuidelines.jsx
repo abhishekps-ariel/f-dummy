@@ -16,8 +16,9 @@ const PasswordGuidelines = ({ showGuidelines, passwordGuidelines }) => {
       padding: '12px',
       boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
       minWidth: '280px',
-      maxWidth: '360px'
-    }}>
+      maxWidth: '360px',
+      width: '100%'
+    }} className="password-guidelines">
       <div style={{ 
         fontWeight: 'bold', 
         marginBottom: '12px',
