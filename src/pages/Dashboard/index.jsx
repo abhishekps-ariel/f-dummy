@@ -19,7 +19,7 @@ import NotificationDropdown from "../../components/shared/NotificationDropdown";
 import PetitionSteps from "../../components/Petitions/PetitionSteps";
 import ViewAllPetitions from "../../components/Petitions/ViewAllPetitions";
 import PetitionDetailModal from "../../components/Petitions/PetitionDetailModal";
-import petitionService from "../../services/petitionService";
+import { usePetitions } from "../../hooks/usePetitions";
 import "../../styles/custom.css";
 import loginImg from "../../assets/logo-sample.png";
 
@@ -27,6 +27,14 @@ import loginImg from "../../assets/logo-sample.png";
 function Dashboard() {
   const [user, setUser] = useState(null);
   const [activeSection, setActiveSection] = useState("dashboard");
+  
+  // Use the petitions hook for organization-based data
+  const { 
+    petitions, 
+    loading: petitionsLoading, 
+    hasOrganizationAccess,
+    organization 
+  } = usePetitions();
   const [orgFormData, setOrgFormData] = useState({
     orgName: "",
     orgType: "",
@@ -77,25 +85,6 @@ function Dashboard() {
 
   const debouncedSearchQuery = useDebounce(searchQuery, 400);
 
-  // Load dashboard petitions and stats
-  const loadDashboardData = async () => {
-    try {
-      const [petitionsResponse, statsResponse] = await Promise.all([
-        petitionService.getDashboardPetitions(),
-        petitionService.getPetitionStats()
-      ]);
-
-      if (petitionsResponse.success) {
-        setDashboardPetitions(petitionsResponse.data);
-      }
-
-      if (statsResponse.success) {
-        setPetitionStats(statsResponse.data);
-      }
-    } catch (error) {
-      console.error('Error loading dashboard data:', error);
-    }
-  };
 
   useEffect(() => {
     const { user: userData, token } = getAuthData();
@@ -107,7 +96,6 @@ function Dashboard() {
 
     setUser(userData);
     loadJoinRequests();
-    loadDashboardData();
     
     // Check if we should show organizations section
     if (location.state?.activeSection === 'organizations') {
@@ -773,24 +761,25 @@ function Dashboard() {
 
           {/* Petition Dashboard Section */}
           {activeSection === "dashboard" && !showViewAllPetitions && (
+            hasOrganizationAccess ? (
             <div className="shadow-custom bg-white org-search-box">
               <h2 className="font-med mb-4">My Petition Dashboard</h2>
               <div className="row mb-5">
                 <div className="col-md-4 mb-3">
                   <div className="stat-card">
-                    <h4 className="stat-count">{petitionStats.total}</h4>
+                    <h4 className="stat-count">{petitions.length}</h4>
                     <p className="stat-title">Total Active Petitions</p>
                   </div>
                 </div>
                 <div className="col-md-4 mb-3">
                   <div className="stat-card">
-                    <h4 className="stat-count">{petitionStats.returned}</h4>
+                    <h4 className="stat-count">{petitions.filter(p => p.status.toLowerCase() === 'returned').length}</h4>
                     <p className="stat-title">Returned Petitions</p>
                   </div>
                 </div>
                 <div className="col-md-4 mb-3">
                   <div className="stat-card">
-                    <h4 className="stat-count">{petitionStats.accepted}</h4>
+                    <h4 className="stat-count">{petitions.filter(p => p.status.toLowerCase() === 'accepted').length}</h4>
                     <p className="stat-title">Accepted Petitions</p>
                   </div>
                 </div>
@@ -827,8 +816,8 @@ function Dashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {dashboardPetitions.length > 0 ? (
-                      dashboardPetitions.map((petition) => (
+                    {petitions.length > 0 ? (
+                      petitions.slice(0, 5).map((petition) => (
                         <tr
                           key={petition.id}
                           className="petition-row"
@@ -919,6 +908,32 @@ function Dashboard() {
                 </table>
               </div>
             </div>
+            ) : (
+              <div className="shadow-custom bg-white org-search-box">
+                <div className="text-center py-5">
+                  <div className="mb-4">
+                    <i className="fas fa-building-slash text-muted" style={{ fontSize: '4rem' }}></i>
+                  </div>
+                  
+                  <h3 className="h4 mb-3">Organization Required</h3>
+                  
+                  <p className="text-muted mb-4">
+                    You need to be part of an organization to access the Petition Dashboard. 
+                    This ensures that petitions are properly managed and associated with the correct organization.
+                  </p>
+                  
+                  <div className="d-flex gap-3 justify-content-center">
+                    <button
+                      className="btn btn-primary"
+                      onClick={() => setActiveSection('organizations')}
+                    >
+                      <i className="fas fa-building me-2"></i>
+                      Manage Organizations
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )
           )}
 
           {/* Show loading state while fetching initial data */}

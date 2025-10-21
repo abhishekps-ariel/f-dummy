@@ -3,6 +3,7 @@ import { toast } from 'react-toastify';
 import { useJsApiLoader } from '@react-google-maps/api';
 import Config from '../../config/index';
 import { usePetitionCommonData } from '../../hooks/usePetitionCommonData';
+import { usePetitions } from '../../hooks/usePetitions';
 
 // Static libraries array to prevent LoadScript reload
 const LIBRARIES = ['places'];
@@ -21,6 +22,9 @@ const PetitionSteps = ({ isOpen, onClose }) => {
     loading: commonDataLoading,
     error: commonDataError
   } = usePetitionCommonData();
+
+  // Load petition API functions
+  const { submitPetition, hasOrganizationAccess } = usePetitions();
   
   // Google Places API state
   // eslint-disable-next-line no-unused-vars
@@ -877,7 +881,7 @@ const PetitionSteps = ({ isOpen, onClose }) => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     // Only validate certification if we're actually on the last step and trying to submit
@@ -898,16 +902,23 @@ const PetitionSteps = ({ isOpen, onClose }) => {
       return;
     }
 
-    // Capture final timestamp
-    // eslint-disable-next-line no-unused-vars
-    const now = new Date();
-    
-    // Here you would typically send the data to your API
-    console.log('Petition Data:', formData);
-    
-    toast.success("Petition submitted successfully!");
-    setIsIntentionalSubmit(false); // Reset the flag
-    onClose();
+    // Check organization access
+    if (!hasOrganizationAccess) {
+      toast.error("You must be part of an organization to submit petitions.");
+      setIsIntentionalSubmit(false);
+      return;
+    }
+
+    try {
+      // Submit petition using API
+      await submitPetition(formData);
+      setIsIntentionalSubmit(false); // Reset the flag
+      onClose();
+    } catch (error) {
+      console.error('Error submitting petition:', error);
+      setIsIntentionalSubmit(false); // Reset the flag
+      // Error is already handled in the submitPetition function with toast
+    }
   };
 
   const renderStep = () => {

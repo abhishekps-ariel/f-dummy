@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import petitionService from '../../services/petitionService';
 import PetitionDetailModal from './PetitionDetailModal';
+import { usePetitions } from '../../hooks/usePetitions';
+import NoOrganizationAccess from './NoOrganizationAccess';
 
 const ViewAllPetitions = ({ onBack }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -14,8 +15,6 @@ const ViewAllPetitions = ({ onBack }) => {
   const [showCustomDateRange, setShowCustomDateRange] = useState(false);
   const [sortBy, setSortBy] = useState('filingDate');
   const [sortOrder, setSortOrder] = useState('desc');
-  const [petitions, setPetitions] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [pagination, setPagination] = useState({
     currentPage: 1,
@@ -26,6 +25,16 @@ const ViewAllPetitions = ({ onBack }) => {
   const [showPetitionDetail, setShowPetitionDetail] = useState(false);
   const [selectedPetition, setSelectedPetition] = useState(null);
   const [openDropdownId, setOpenDropdownId] = useState(null);
+
+  // Use the petitions hook
+  const { 
+    petitions, 
+    loading, 
+    error, 
+    hasOrganizationAccess, 
+    fetchPetitions,
+    organization 
+  } = usePetitions();
 
   // Handle date filter change
   const handleDateFilterChange = (value) => {
@@ -47,7 +56,7 @@ const ViewAllPetitions = ({ onBack }) => {
     setShowCustomDateRange(false);
     setSortBy('filingDate');
     setSortOrder('desc');
-    loadPetitions(1);
+    fetchPetitions();
   };
 
   // Handle export functionality
@@ -71,25 +80,8 @@ const ViewAllPetitions = ({ onBack }) => {
   // Export to CSV
   const exportToCSV = async () => {
     try {
-      // Fetch all petitions data without pagination limits
-      const response = await petitionService.getPetitions({
-        page: 1,
-        limit: 10000, // Large number to get all records
-        search: searchQuery,
-        status: statusFilter,
-        dateFilter: dateFilter,
-        customDateFrom: dateFilter === 'custom' ? customDateFrom : '',
-        customDateTo: dateFilter === 'custom' ? customDateTo : '',
-        sortBy: sortBy,
-        sortOrder: sortOrder
-      });
-
-      if (!response.success) {
-        toast.error('Failed to fetch data for export');
-        return;
-      }
-
-      const allPetitions = response.data;
+      // Use filtered and sorted petitions
+      const allPetitions = filteredAndSortedPetitions;
       const headers = ['Petition Number', 'Property Address', 'Borrower', 'Status', 'Filing Date', 'Last Updated'];
       const csvContent = [
         headers.join(','),
@@ -121,25 +113,8 @@ const ViewAllPetitions = ({ onBack }) => {
   // Export to PDF
   const exportToPDF = async () => {
     try {
-      // Fetch all petitions data without pagination limits
-      const response = await petitionService.getPetitions({
-        page: 1,
-        limit: 10000, // Large number to get all records
-        search: searchQuery,
-        status: statusFilter,
-        dateFilter: dateFilter,
-        customDateFrom: dateFilter === 'custom' ? customDateFrom : '',
-        customDateTo: dateFilter === 'custom' ? customDateTo : '',
-        sortBy: sortBy,
-        sortOrder: sortOrder
-      });
-
-      if (!response.success) {
-        toast.error('Failed to fetch data for export');
-        return;
-      }
-
-      const allPetitions = response.data;
+      // Use filtered and sorted petitions
+      const allPetitions = filteredAndSortedPetitions;
       const doc = new jsPDF();
       
       // Add title
@@ -202,40 +177,106 @@ const ViewAllPetitions = ({ onBack }) => {
     }
   };
 
-  // Load petitions with filters and pagination
-  const loadPetitions = async (page = 1) => {
-    setLoading(true);
-    try {
-      const response = await petitionService.getPetitions({
-        page,
-        limit: pagination.limit,
-        search: searchQuery,
-        status: statusFilter,
-        dateFilter: dateFilter,
-        customDateFrom: dateFilter === 'custom' ? customDateFrom : '',
-        customDateTo: dateFilter === 'custom' ? customDateTo : '',
-        sortBy: sortBy,
-        sortOrder: sortOrder
-      });
+  // Filter and sort petitions locally (since API returns all petitions for organization)
+  const filteredAndSortedPetitions = React.useMemo(() => {
+    let filtered = [...petitions];
 
-      if (response.success) {
-        setPetitions(response.data);
-        setPagination(response.pagination);
-      } else {
-        toast.error('Failed to load petitions');
-      }
-    } catch (error) {
-      console.error('Error loading petitions:', error);
-      toast.error('Error loading petitions');
-    } finally {
-      setLoading(false);
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const searchLower = searchQuery.toLowerCase();
+      filtered = filtered.filter(petition =>
+        petition.id.toLowerCase().includes(searchLower) ||
+        petition.propertyAddress.toLowerCase().includes(searchLower) ||
+        petition.borrower.toLowerCase().includes(searchLower) ||
+        petition.petitionNumber.toLowerCase().includes(searchLower)
+      );
     }
-  };
 
-  // Load petitions when filters or sorting change
+    // Apply status filter
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(petition => 
+        petition.status.toLowerCase() === statusFilter.toLowerCase()
+      );
+    }
+
+    // Apply date filter
+    if (dateFilter !== 'all') {
+      const today = new Date();
+      const filterDate = new Date();
+      
+      switch (dateFilter) {
+        case 'today':
+          filtered = filtered.filter(petition => {
+            const petitionDate = new Date(petition.filingDate);
+            return petitionDate.toDateString() === today.toDateString();
+          });
+          break;
+        case 'week':
+          filterDate.setDate(today.getDate() - 7);
+          filtered = filtered.filter(petition => {
+            const petitionDate = new Date(petition.filingDate);
+            return petitionDate >= filterDate;
+          });
+          break;
+        case 'month':
+          filterDate.setMonth(today.getMonth() - 1);
+          filtered = filtered.filter(petition => {
+            const petitionDate = new Date(petition.filingDate);
+            return petitionDate >= filterDate;
+          });
+          break;
+        case 'custom':
+          if (customDateFrom && customDateTo) {
+            const fromDate = new Date(customDateFrom);
+            const toDate = new Date(customDateTo);
+            toDate.setHours(23, 59, 59, 999);
+            
+            filtered = filtered.filter(petition => {
+              const petitionDate = new Date(petition.filingDate);
+              return petitionDate >= fromDate && petitionDate <= toDate;
+            });
+          }
+          break;
+        default:
+          break;
+      }
+    }
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      let aValue = a[sortBy];
+      let bValue = b[sortBy];
+
+      if (sortBy === 'filingDate' || sortBy === 'lastUpdated') {
+        aValue = new Date(aValue);
+        bValue = new Date(bValue);
+      }
+
+      if (sortOrder === 'asc') {
+        return aValue > bValue ? 1 : -1;
+      } else {
+        return aValue < bValue ? 1 : -1;
+      }
+    });
+
+    return filtered;
+  }, [petitions, searchQuery, statusFilter, dateFilter, customDateFrom, customDateTo, sortBy, sortOrder]);
+
+  // Paginate filtered results
+  const paginatedPetitions = React.useMemo(() => {
+    const startIndex = (pagination.currentPage - 1) * pagination.limit;
+    return filteredAndSortedPetitions.slice(startIndex, startIndex + pagination.limit);
+  }, [filteredAndSortedPetitions, pagination.currentPage, pagination.limit]);
+
+  // Update pagination when filtered results change
   useEffect(() => {
-    loadPetitions(1);
-  }, [searchQuery, statusFilter, dateFilter, sortBy, sortOrder]);
+    const totalPages = Math.ceil(filteredAndSortedPetitions.length / pagination.limit);
+    setPagination(prev => ({
+      ...prev,
+      totalPages,
+      totalCount: filteredAndSortedPetitions.length
+    }));
+  }, [filteredAndSortedPetitions.length, pagination.limit]);
 
   // Handle click outside to close dropdown
   useEffect(() => {
@@ -285,6 +326,11 @@ const ViewAllPetitions = ({ onBack }) => {
       setSortOrder('asc');
     }
   };
+
+  // Check organization access
+  if (!hasOrganizationAccess) {
+    return <NoOrganizationAccess />;
+  }
 
   return (
     <div className="shadow-custom bg-white org-search-box">
@@ -443,7 +489,7 @@ const ViewAllPetitions = ({ onBack }) => {
           <div className="col-md-3 d-flex align-items-end gap-2 mb-1">
             <button
               className="dashboard-btn-create"
-              onClick={() => loadPetitions(1)}
+              onClick={() => fetchPetitions()}
               disabled={!customDateFrom || !customDateTo}
             >
               Apply Filter
@@ -455,7 +501,7 @@ const ViewAllPetitions = ({ onBack }) => {
                 setShowCustomDateRange(false);
                 setCustomDateFrom('');
                 setCustomDateTo('');
-                loadPetitions(1);
+                fetchPetitions();
               }}
             >
               Clear
@@ -468,7 +514,7 @@ const ViewAllPetitions = ({ onBack }) => {
       <div className="d-flex justify-content-between align-items-center mb-3">
         <div>
           <span className="text-muted">
-            Showing {petitions.length} of {pagination.totalCount} petitions
+            Showing {paginatedPetitions.length} of {pagination.totalCount} petitions
             {loading && <span className="ms-2">(Loading...)</span>}
           </span>
         </div>
@@ -543,8 +589,8 @@ const ViewAllPetitions = ({ onBack }) => {
                   <p className="mt-2 text-muted">Loading petitions...</p>
                 </td>
               </tr>
-            ) : petitions.length > 0 ? (
-              petitions.map((petition) => (
+            ) : paginatedPetitions.length > 0 ? (
+              paginatedPetitions.map((petition) => (
                 <tr
                   key={petition.id}
                   className="petition-row"
@@ -644,7 +690,7 @@ const ViewAllPetitions = ({ onBack }) => {
           <div className="pagination-minimal">
             <button 
               className={`pagination-btn ${!pagination.hasPrevPage ? 'disabled' : ''}`}
-              onClick={() => loadPetitions(pagination.currentPage - 1)}
+              onClick={() => setPagination(prev => ({ ...prev, currentPage: prev.currentPage - 1 }))}
               disabled={!pagination.hasPrevPage}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -658,7 +704,7 @@ const ViewAllPetitions = ({ onBack }) => {
                 <button 
                   key={page}
                   className={`pagination-page ${page === pagination.currentPage ? 'active' : ''}`}
-                  onClick={() => loadPetitions(page)}
+                  onClick={() => setPagination(prev => ({ ...prev, currentPage: page }))}
                 >
                   {page}
                 </button>
@@ -667,7 +713,7 @@ const ViewAllPetitions = ({ onBack }) => {
             
             <button 
               className={`pagination-btn ${!pagination.hasNextPage ? 'disabled' : ''}`}
-              onClick={() => loadPetitions(pagination.currentPage + 1)}
+              onClick={() => setPagination(prev => ({ ...prev, currentPage: prev.currentPage + 1 }))}
               disabled={!pagination.hasNextPage}
             >
               Next

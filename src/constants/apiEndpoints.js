@@ -35,3 +35,8 @@ export const COMMON_ENDPOINTS = {
   GET_PETITION_ASSIGNEE_ROLES: "/Common/get-petition-assignee-roles",
 };
 
+export const PETITION_ENDPOINTS = {
+  SUBMIT_PETITION: "/api/Petition/submit",
+  GET_PETITIONS_BY_ORGANIZATION: (organizationId) => `/api/Petition/organization/${organizationId}`,
+};
+
