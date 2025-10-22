@@ -63,18 +63,11 @@ const NoOrganizationAccess = () => {
             <div className="mt-4">
               <Link 
                 to={ROUTES.DASHBOARD} 
-                className="btn btn-primary me-3"
+                className="dashboard-btn-create"
+                style={{ textDecoration: 'none' }}
               >
                 <i className="fas fa-building me-2"></i>
                 Manage Organizations
-              </Link>
-              
-              <Link 
-                to={ROUTES.HOME} 
-                className="btn btn-outline-secondary"
-              >
-                <i className="fas fa-home me-2"></i>
-                Back to Home
               </Link>
             </div>
           </div>
