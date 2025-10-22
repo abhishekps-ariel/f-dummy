@@ -147,6 +147,27 @@ export const resendVerification = async (email) => {
   };
 };
 
+export const refreshToken = async (refreshToken) => {
+  const response = await client.post(
+    AUTH_ENDPOINTS.REFRESH_TOKEN,
+    {
+      refreshToken: refreshToken,
+    },
+    {
+      headers: {
+        Accept: "text/plain",
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  return {
+    isSuccess: response.data.success,
+    msg: response.data.message,
+    data: response.data.data,
+  };
+};
+
 export const logout = async (refreshToken) => {
   const response = await client.post(
     AUTH_ENDPOINTS.LOGOUT,
