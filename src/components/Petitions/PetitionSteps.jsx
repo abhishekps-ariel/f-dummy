@@ -4,6 +4,9 @@ import { useJsApiLoader } from '@react-google-maps/api';
 import Config from '../../config/index';
 import { usePetitionCommonData } from '../../hooks/usePetitionCommonData';
 import { usePetitions } from '../../hooks/usePetitions';
+import { useAuth } from '../../context/AuthContext';
+import { getUserById } from '../../services/authService';
+import { getFilingEntityTypes } from '../../services/commonService';
 
 // Static libraries array to prevent LoadScript reload
 const LIBRARIES = ['places'];
@@ -12,6 +15,12 @@ const PetitionSteps = ({ isOpen, onClose }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [isIntentionalSubmit, setIsIntentionalSubmit] = useState(false);
   const totalSteps = 8;
+  
+  // User profile and filing entity type state
+  const [userProfile, setUserProfile] = useState(null);
+  const [filingEntityTypes, setFilingEntityTypes] = useState([]);
+  const [userFilingEntityType, setUserFilingEntityType] = useState(null);
+  const [profileLoading, setProfileLoading] = useState(true);
   
   // Load petition common data
   const {
@@ -25,6 +34,9 @@ const PetitionSteps = ({ isOpen, onClose }) => {
 
   // Load petition API functions
   const { submitPetition, hasOrganizationAccess } = usePetitions();
+  
+  // Get user info from auth context
+  const { user } = useAuth();
   
   // Google Places API state
   // eslint-disable-next-line no-unused-vars
@@ -46,6 +58,42 @@ const PetitionSteps = ({ isOpen, onClose }) => {
   const autocompleteServiceRef = useRef(null);
   const geocoderRef = useRef(null);
   
+  // Load user profile and filing entity types
+  useEffect(() => {
+    const loadUserProfileAndTypes = async () => {
+      if (!user?.id) return;
+      
+      setProfileLoading(true);
+      try {
+        // Load user profile
+        const profileResponse = await getUserById(user.id);
+        if (profileResponse.isSuccess) {
+          setUserProfile(profileResponse.data);
+          setUserFilingEntityType(profileResponse.data.filingEntityTypeId);
+          
+          // Set the filing entity type in form data
+          setFormData(prev => ({
+            ...prev,
+            filingEntityTypeId: profileResponse.data.filingEntityTypeId || ''
+          }));
+        }
+        
+        // Load filing entity types
+        const typesResponse = await getFilingEntityTypes();
+        if (typesResponse.isSuccess) {
+          setFilingEntityTypes(typesResponse.data);
+        }
+      } catch (error) {
+        console.error('Error loading user profile:', error);
+        toast.error('Failed to load user profile');
+      } finally {
+        setProfileLoading(false);
+      }
+    };
+    
+    loadUserProfileAndTypes();
+  }, [user?.id]);
+
   // Initialize Google Maps API with React library
   const { isLoaded, loadError } = useJsApiLoader({
     id: 'google-map-script',
@@ -178,7 +226,7 @@ const PetitionSteps = ({ isOpen, onClose }) => {
     
     // Step 4: Filing Entity
     filingEntityLegalName: '',
-    filingEntityRole: 0,
+    filingEntityTypeId: '',
     filingEntityStreet1: '',
     filingEntityCity: '',
     filingEntityState: '',
@@ -833,6 +881,12 @@ const PetitionSteps = ({ isOpen, onClose }) => {
 
   const nextStep = async (direction) => {
     const newStep = currentStep + direction;
+    
+    // Check if user has set filing entity type when trying to proceed from step 4
+    if (currentStep === 4 && direction === 1 && !userFilingEntityType) {
+      toast.error('Please set your filing entity type in your profile before proceeding.');
+      return;
+    }
     
     // Full validation for Next Step (including address validation for step 1)
     if (currentStep === 1 && direction === 1) {
@@ -1540,6 +1594,29 @@ const PetitionSteps = ({ isOpen, onClose }) => {
                   value={formData.filingEntityLegalName}
                   onChange={handleInputChange}
                 />
+              </div>
+              
+              {/* Filing Entity Type - Read Only from Profile */}
+              <div className="col-12">
+                <label htmlFor="filingEntityTypeId" className="form-label">Filing Entity Type</label>
+                {profileLoading ? (
+                  <div className="form-control form-control-lg bg-light">
+                    <span className="text-muted">Loading...</span>
+                  </div>
+                ) : userFilingEntityType ? (
+                  <div className="form-control form-control-lg bg-light">
+                    <span className="text-success">
+                      {filingEntityTypes.find(type => type.id === userFilingEntityType)?.name || 'Unknown Type'}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="form-control form-control-lg bg-light">
+                    <span className="text-muted">
+                      <i className="fa fa-exclamation-triangle me-2"></i>
+                      Please set your filing entity type in your profile
+                    </span>
+                  </div>
+                )}
               </div>
               <div className="col-md-6">
                 <label htmlFor="filingContactName" className="form-label">Contact Name</label>

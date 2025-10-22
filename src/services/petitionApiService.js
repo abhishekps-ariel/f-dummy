@@ -128,7 +128,7 @@ class PetitionApiService {
       },
       filingEntity: {
         filingEntityLegalName: formData.filingEntityLegalName || "",
-        filingEntityRole: parseInt(formData.filingEntityRole) || 0,
+        filingEntityTypeId: formData.filingEntityTypeId || "",
         filingEntityStreet1: formData.filingEntityStreet1 || "",
         filingEntityCity: formData.filingEntityCity || "",
         filingEntityState: formData.filingEntityState || "",
