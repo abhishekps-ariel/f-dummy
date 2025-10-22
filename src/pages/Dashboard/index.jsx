@@ -920,7 +920,7 @@ function Dashboard() {
               </div>
             </div>
             ) : (
-              <NoOrganizationAccess />
+              <NoOrganizationAccess onNavigateToOrganizations={() => setActiveSection('organizations')} />
             )
           )}
 
