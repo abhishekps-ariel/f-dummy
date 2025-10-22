@@ -24,6 +24,43 @@ class PetitionApiService {
     }
   }
 
+  // Get paginated petitions by organization ID with filters
+  async getPetitionsPaged(paginationParams) {
+    try {
+      console.log('API Service - Sending request to:', PETITION_ENDPOINTS.GET_PETITIONS_PAGED);
+      console.log('API Service - Request body:', paginationParams);
+      
+      // Ensure all required parameters are present and valid
+      const validatedParams = {
+        organizationId: paginationParams.organizationId,
+        pageNumber: paginationParams.pageNumber || 1, // Default to page 1 (1-based)
+        pageSize: paginationParams.pageSize || 5,
+        searchText: paginationParams.searchText || "",
+        status: paginationParams.status || 0,
+        fromDate: paginationParams.fromDate,
+        toDate: paginationParams.toDate
+      };
+      
+      console.log('API Service - Validated params:', validatedParams);
+      console.log('API Service - Base URL:', axiosInstance.defaults.baseURL);
+      console.log('API Service - Endpoint:', PETITION_ENDPOINTS.GET_PETITIONS_PAGED);
+      console.log('API Service - Full URL:', axiosInstance.defaults.baseURL + PETITION_ENDPOINTS.GET_PETITIONS_PAGED);
+      
+      const response = await axiosInstance.post(PETITION_ENDPOINTS.GET_PETITIONS_PAGED, validatedParams, {
+        headers: {
+          'Accept': 'text/plain',
+          'Content-Type': 'application/json'
+        }
+      });
+      console.log('API Service - Response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching paginated petitions:', error);
+      console.error('Error response:', error.response?.data);
+      throw error;
+    }
+  }
+
   // Transform form data to API format
   transformFormDataToApiFormat(formData, organizationId) {
     // Helper function to safely convert dates
@@ -139,10 +176,12 @@ class PetitionApiService {
       return [];
     }
 
+    console.log('Transforming API response:', apiResponse);
     // Handle both single petition and array of petitions
     const petitions = Array.isArray(apiResponse.data) ? apiResponse.data : [apiResponse.data];
+    console.log('Petitions to transform:', petitions);
 
-    return petitions.map(petition => {
+    const transformedPetitions = petitions.map(petition => {
       // Map status number to readable status
       const getStatusDisplay = (status) => {
         switch (status) {
@@ -193,14 +232,17 @@ class PetitionApiService {
         status: statusInfo.text,
         statusClass: statusInfo.class,
         statusValue: petition.status,
-        filingDate: petition.createdAt || new Date().toISOString().split('T')[0],
-        lastUpdated: petition.updatedAt || new Date().toISOString(),
+        filingDate: petition.createdDate ? new Date(petition.createdDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        lastUpdated: petition.modifiedDate || new Date().toISOString(),
         borrower: borrowerName,
         loanAmount,
         county: petition.property?.propertyCounty || 'N/A',
         details: petition // Store full details for modal view
       };
     });
+    
+    console.log('Transformed petitions:', transformedPetitions);
+    return transformedPetitions;
   }
 }
 

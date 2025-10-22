@@ -39,5 +39,6 @@ export const COMMON_ENDPOINTS = {
 export const PETITION_ENDPOINTS = {
   SUBMIT_PETITION: "/api/Petition/submit",
   GET_PETITIONS_BY_ORGANIZATION: (organizationId) => `/api/Petition/organization/${organizationId}`,
+  GET_PETITIONS_PAGED: "/api/Petition/organization/paged",
 };
 

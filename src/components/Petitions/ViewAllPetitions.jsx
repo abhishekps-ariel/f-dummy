@@ -5,6 +5,7 @@ import autoTable from 'jspdf-autotable';
 import PetitionDetailModal from './PetitionDetailModal';
 import { usePetitions } from '../../hooks/usePetitions';
 import NoOrganizationAccess from './NoOrganizationAccess';
+import petitionApiService from '../../services/petitionApiService';
 
 const ViewAllPetitions = ({ onBack }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -17,22 +18,20 @@ const ViewAllPetitions = ({ onBack }) => {
   const [sortOrder, setSortOrder] = useState('desc');
   const [exporting, setExporting] = useState(false);
   const [pagination, setPagination] = useState({
-    currentPage: 1,
+    currentPage: 1, // API uses 1-based indexing
     totalPages: 1,
     totalCount: 0,
-    limit: 5
+    pageSize: 5
   });
   const [showPetitionDetail, setShowPetitionDetail] = useState(false);
   const [selectedPetition, setSelectedPetition] = useState(null);
   const [openDropdownId, setOpenDropdownId] = useState(null);
+  const [petitions, setPetitions] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  // Use the petitions hook
+  // Use the petitions hook for organization access
   const {
-    petitions,
-    loading,
-    error,
     hasOrganizationAccess,
-    fetchPetitions,
     organization,
     organizationCheckComplete
   } = usePetitions();
@@ -47,140 +46,89 @@ const ViewAllPetitions = ({ onBack }) => {
     }
   };
 
-  // Reset all filters and refresh data
-  const handleRefresh = () => {
-    setSearchQuery('');
-    setStatusFilter('all');
-    setDateFilter('all');
-    setCustomDateFrom('');
-    setCustomDateTo('');
-    setShowCustomDateRange(false);
-    setSortBy('filingDate');
-    setSortOrder('desc');
-    fetchPetitions();
-  };
-
-  // Handle export functionality
-  const handleExport = async (format) => {
-    setExporting(true);
+  // Fetch petitions with fallback to existing endpoint
+  const fetchPetitions = async (page = 1) => {
+    if (!organization?.id) {
+      console.log('No organization ID available');
+      return;
+    }
+    
+    console.log('Fetching petitions for organization:', organization.id, 'page:', page);
+    setLoading(true);
     try {
-      if (format === 'csv') {
-        await exportToCSV();
-      } else if (format === 'pdf') {
-        await exportToPDF();
+      // Try server-side pagination first
+      const paginationParams = {
+        organizationId: organization.id,
+        pageNumber: page, // Send current page number (1-based)
+        pageSize: 5, // 5 petitions per page
+        searchText: searchQuery.trim() || "",
+        status: getStatusValue(statusFilter),
+        fromDate: getFromDate(),
+        toDate: getToDate()
+      };
+
+      console.log('Sending pagination params:', paginationParams);
+      
+      try {
+        const response = await petitionApiService.getPetitionsPaged(paginationParams);
+        console.log('API Response received:', response);
+        
+        if (response.success) {
+          const transformedPetitions = petitionApiService.transformApiResponseToDisplayFormat(response);
+          console.log('Transformed petitions:', transformedPetitions);
+          setPetitions(transformedPetitions);
+          
+          // Update pagination info from API response
+          setPagination(prev => ({
+            ...prev,
+            currentPage: page,
+            totalPages: Math.ceil(response.totalRecords / 5),
+            totalCount: response.totalRecords
+          }));
+          return;
+        }
+      } catch (pagedError) {
+        console.log('Server-side pagination not available, falling back to client-side pagination');
+        
+        // Fallback to existing endpoint with client-side pagination
+        const response = await petitionApiService.getPetitionsByOrganization(organization.id);
+        
+        if (response.isSuccess) {
+          const allPetitions = petitionApiService.transformApiResponseToDisplayFormat(response);
+          
+          // Apply client-side filtering
+          const filteredPetitions = applyClientSideFilters(allPetitions);
+          
+          // Apply client-side pagination
+          const startIndex = (page - 1) * 5;
+          const paginatedPetitions = filteredPetitions.slice(startIndex, startIndex + 5);
+          
+          setPetitions(paginatedPetitions);
+          
+          // Update pagination info
+          setPagination(prev => ({
+            ...prev,
+            currentPage: page,
+            totalPages: Math.ceil(filteredPetitions.length / 5),
+            totalCount: filteredPetitions.length
+          }));
+        } else {
+          toast.error(response.message || 'Failed to fetch petitions');
+          setPetitions([]);
+        }
       }
-      toast.success(`Petitions exported as ${format.toUpperCase()} successfully!`);
     } catch (error) {
-      console.error('Export error:', error);
-      toast.error('Failed to export petitions. Please try again.');
+      console.error('Error fetching petitions:', error);
+      toast.error('Failed to fetch petitions. Please try again.');
+      setPetitions([]);
     } finally {
-      setExporting(false);
+      setLoading(false);
     }
   };
 
-  // Export to CSV
-  const exportToCSV = async () => {
-    try {
-      // Use filtered and sorted petitions
-      const allPetitions = filteredAndSortedPetitions;
-      const headers = ['Petition Number', 'Property Address', 'Borrower', 'Status', 'Filing Date', 'Last Updated'];
-      const csvContent = [
-        headers.join(','),
-        ...allPetitions.map(petition => [
-          petition.id,
-          `"${petition.propertyAddress}"`,
-          `"${petition.borrower}"`,
-          petition.status,
-          petition.filingDate,
-          petition.lastUpdated
-        ].join(','))
-      ].join('\n');
-
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      link.setAttribute('download', `petitions_${new Date().toISOString().split('T')[0]}.csv`);
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch (error) {
-      console.error('CSV export error:', error);
-      toast.error('Failed to export CSV. Please try again.');
-    }
-  };
-
-  // Export to PDF
-  const exportToPDF = async () => {
-    try {
-      // Use filtered and sorted petitions
-      const allPetitions = filteredAndSortedPetitions;
-      const doc = new jsPDF();
-      
-      // Add title
-      doc.setFontSize(18);
-      doc.text('Petitions Report', 14, 22);
-      
-      // Add date
-      doc.setFontSize(10);
-      doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 32);
-      
-      // Prepare table data
-      const headers = ['Petition Number', 'Property Address', 'Borrower', 'Status', 'Filing Date', 'Last Updated'];
-      const tableData = allPetitions.map(petition => [
-        petition.id,
-        petition.propertyAddress,
-        petition.borrower,
-        petition.status,
-        petition.filingDate,
-        petition.lastUpdated
-      ]);
-
-      // Add table using autoTable plugin
-      autoTable(doc, {
-        head: [headers],
-        body: tableData,
-        startY: 40,
-        styles: {
-          fontSize: 8,
-          cellPadding: 3,
-        },
-        headStyles: {
-          fillColor: [52, 73, 94], // Dark blue-gray color
-          textColor: 255,
-          fontStyle: 'bold',
-        },
-        alternateRowStyles: {
-          fillColor: [245, 245, 245], // Light gray for alternating rows
-        },
-        margin: { top: 40 },
-        columnStyles: {
-          0: { cellWidth: 25 }, // Petition Number
-          1: { cellWidth: 60 }, // Property Address
-          2: { cellWidth: 30 }, // Borrower
-          3: { cellWidth: 20 }, // Status
-          4: { cellWidth: 25 }, // Filing Date
-          5: { cellWidth: 25 }, // Last Updated
-        },
-      });
-
-      // Add summary at the bottom
-      const finalY = doc.lastAutoTable.finalY + 10;
-      doc.setFontSize(10);
-      doc.text(`Total Petitions: ${allPetitions.length}`, 14, finalY);
-      
-      // Save the PDF
-      doc.save(`petitions_${new Date().toISOString().split('T')[0]}.pdf`);
-    } catch (error) {
-      console.error('PDF export error:', error);
-      toast.error('Failed to export PDF. Please try again.');
-    }
-  };
-
-  // Filter and sort petitions locally (since API returns all petitions for organization)
-  const filteredAndSortedPetitions = React.useMemo(() => {
-    let filtered = [...petitions];
+  // Apply client-side filters
+  const applyClientSideFilters = (allPetitions) => {
+    let filtered = [...allPetitions];
 
     // Apply search filter
     if (searchQuery.trim()) {
@@ -260,25 +208,214 @@ const ViewAllPetitions = ({ onBack }) => {
     });
 
     return filtered;
-  }, [petitions, searchQuery, statusFilter, dateFilter, customDateFrom, customDateTo, sortBy, sortOrder]);
+  };
 
-  // Paginate filtered results
-  const paginatedPetitions = React.useMemo(() => {
-    const startIndex = (pagination.currentPage - 1) * pagination.limit;
-    return filteredAndSortedPetitions.slice(startIndex, startIndex + pagination.limit);
-  }, [filteredAndSortedPetitions, pagination.currentPage, pagination.limit]);
+  // Helper function to get status value for API
+  const getStatusValue = (status) => {
+    const statusMap = {
+      'all': 0,
+      'draft': 0,
+      'submitted': 1,
+      'resubmitted': 3,
+      'accepted': 4,
+      'returned': 2,
+      'closed': 5
+    };
+    return statusMap[status] || 0;
+  };
 
-  // Update pagination when filtered results change
+  // Helper function to get from date
+  const getFromDate = () => {
+    if (dateFilter === 'custom' && customDateFrom) {
+      return new Date(customDateFrom).toISOString();
+    }
+    if (dateFilter === 'today') {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return today.toISOString();
+    }
+    if (dateFilter === 'week') {
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      return weekAgo.toISOString();
+    }
+    if (dateFilter === 'month') {
+      const monthAgo = new Date();
+      monthAgo.setMonth(monthAgo.getMonth() - 1);
+      return monthAgo.toISOString();
+    }
+    return new Date('2020-01-01').toISOString(); // Default to a very old date
+  };
+
+  // Helper function to get to date
+  const getToDate = () => {
+    if (dateFilter === 'custom' && customDateTo) {
+      const toDate = new Date(customDateTo);
+      toDate.setHours(23, 59, 59, 999);
+      return toDate.toISOString();
+    }
+    return new Date().toISOString();
+  };
+
+  // Reset all filters and refresh data
+  const handleRefresh = () => {
+    setSearchQuery('');
+    setStatusFilter('all');
+    setDateFilter('all');
+    setCustomDateFrom('');
+    setCustomDateTo('');
+    setShowCustomDateRange(false);
+    setSortBy('filingDate');
+    setSortOrder('desc');
+    setPagination(prev => ({ ...prev, currentPage: 1 }));
+    fetchPetitions(1);
+  };
+
+  // Handle export functionality
+  const handleExport = async (format) => {
+    setExporting(true);
+    try {
+      if (format === 'csv') {
+        await exportToCSV();
+      } else if (format === 'pdf') {
+        await exportToPDF();
+      }
+      toast.success(`Petitions exported as ${format.toUpperCase()} successfully!`);
+    } catch (error) {
+      console.error('Export error:', error);
+      toast.error('Failed to export petitions. Please try again.');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  // Export to CSV
+  const exportToCSV = async () => {
+    try {
+      // Use current petitions from server
+      const allPetitions = petitions;
+      const headers = ['Petition Number', 'Property Address', 'Borrower', 'Status', 'Filing Date', 'Last Updated'];
+      const csvContent = [
+        headers.join(','),
+        ...allPetitions.map(petition => [
+          petition.id,
+          `"${petition.propertyAddress}"`,
+          `"${petition.borrower}"`,
+          petition.status,
+          petition.filingDate,
+          petition.lastUpdated
+        ].join(','))
+      ].join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `petitions_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('CSV export error:', error);
+      toast.error('Failed to export CSV. Please try again.');
+    }
+  };
+
+  // Export to PDF
+  const exportToPDF = async () => {
+    try {
+      // Use current petitions from server
+      const allPetitions = petitions;
+      const doc = new jsPDF();
+      
+      // Add title
+      doc.setFontSize(18);
+      doc.text('Petitions Report', 14, 22);
+      
+      // Add date
+      doc.setFontSize(10);
+      doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 32);
+      
+      // Prepare table data
+      const headers = ['Petition Number', 'Property Address', 'Borrower', 'Status', 'Filing Date', 'Last Updated'];
+      const tableData = allPetitions.map(petition => [
+        petition.id,
+        petition.propertyAddress,
+        petition.borrower,
+        petition.status,
+        petition.filingDate,
+        petition.lastUpdated
+      ]);
+
+      // Add table using autoTable plugin
+      autoTable(doc, {
+        head: [headers],
+        body: tableData,
+        startY: 40,
+        styles: {
+          fontSize: 8,
+          cellPadding: 3,
+        },
+        headStyles: {
+          fillColor: [52, 73, 94], // Dark blue-gray color
+          textColor: 255,
+          fontStyle: 'bold',
+        },
+        alternateRowStyles: {
+          fillColor: [245, 245, 245], // Light gray for alternating rows
+        },
+        margin: { top: 40 },
+        columnStyles: {
+          0: { cellWidth: 25 }, // Petition Number
+          1: { cellWidth: 60 }, // Property Address
+          2: { cellWidth: 30 }, // Borrower
+          3: { cellWidth: 20 }, // Status
+          4: { cellWidth: 25 }, // Filing Date
+          5: { cellWidth: 25 }, // Last Updated
+        },
+      });
+
+      // Add summary at the bottom
+      const finalY = doc.lastAutoTable.finalY + 10;
+      doc.setFontSize(10);
+      doc.text(`Total Petitions: ${allPetitions.length}`, 14, finalY);
+      
+      // Save the PDF
+      doc.save(`petitions_${new Date().toISOString().split('T')[0]}.pdf`);
+    } catch (error) {
+      console.error('PDF export error:', error);
+      toast.error('Failed to export PDF. Please try again.');
+    }
+  };
+
+  // Load initial data when component mounts
   useEffect(() => {
-    const totalPages = Math.ceil(filteredAndSortedPetitions.length / pagination.limit);
-    setPagination(prev => ({
-      ...prev,
-      totalPages,
-      totalCount: filteredAndSortedPetitions.length,
-      hasPrevPage: prev.currentPage > 1,
-      hasNextPage: prev.currentPage < totalPages
-    }));
-  }, [filteredAndSortedPetitions.length, pagination.limit, pagination.currentPage]);
+    console.log('Organization check:', { organization, organizationCheckComplete });
+    if (organization?.id && organizationCheckComplete) {
+      fetchPetitions(1);
+    }
+  }, [organization?.id, organizationCheckComplete]);
+
+  // Handle filter changes with debouncing
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (organization?.id) {
+        setPagination(prev => ({ ...prev, currentPage: 1 }));
+        fetchPetitions(1);
+      }
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery, statusFilter, dateFilter, customDateFrom, customDateTo]);
+
+  // Handle custom date range changes
+  useEffect(() => {
+    if (dateFilter === 'custom' && customDateFrom && customDateTo && organization?.id) {
+      setPagination(prev => ({ ...prev, currentPage: 1 }));
+      fetchPetitions(1);
+    }
+  }, [customDateFrom, customDateTo, dateFilter, organization?.id]);
 
   // Handle click outside to close dropdown
   useEffect(() => {
@@ -514,7 +651,10 @@ const ViewAllPetitions = ({ onBack }) => {
           <div className="col-md-3 d-flex align-items-end gap-2 mb-1">
             <button
               className="dashboard-btn-create"
-              onClick={() => fetchPetitions()}
+              onClick={() => {
+                setPagination(prev => ({ ...prev, currentPage: 1 }));
+                fetchPetitions(1);
+              }}
               disabled={!customDateFrom || !customDateTo}
             >
               Apply Filter
@@ -526,7 +666,8 @@ const ViewAllPetitions = ({ onBack }) => {
                 setShowCustomDateRange(false);
                 setCustomDateFrom('');
                 setCustomDateTo('');
-                fetchPetitions();
+                setPagination(prev => ({ ...prev, currentPage: 1 }));
+                fetchPetitions(1);
               }}
             >
               Clear
@@ -539,7 +680,7 @@ const ViewAllPetitions = ({ onBack }) => {
       <div className="d-flex justify-content-between align-items-center mb-3">
         <div>
           <span className="text-muted">
-            Showing {paginatedPetitions.length} of {pagination.totalCount} petitions
+            Showing {petitions.length} of {pagination.totalCount} petitions
             {loading && <span className="ms-2">(Loading...)</span>}
           </span>
         </div>
@@ -614,8 +755,8 @@ const ViewAllPetitions = ({ onBack }) => {
                   <p className="mt-2 text-muted">Loading petitions...</p>
                 </td>
               </tr>
-            ) : paginatedPetitions.length > 0 ? (
-              paginatedPetitions.map((petition) => (
+            ) : petitions.length > 0 ? (
+              petitions.map((petition) => (
                 <tr
                   key={petition.id}
                   className="petition-row"
@@ -714,17 +855,13 @@ const ViewAllPetitions = ({ onBack }) => {
         <div className="d-flex justify-content-center mt-4">
           <div className="pagination-minimal">
             <button 
-              className={`pagination-btn ${!pagination.hasPrevPage ? 'disabled' : ''}`}
-              onClick={() => setPagination(prev => {
-                const newPage = prev.currentPage - 1;
-                return { 
-                  ...prev, 
-                  currentPage: newPage,
-                  hasPrevPage: newPage > 1,
-                  hasNextPage: newPage < prev.totalPages
-                };
-              })}
-              disabled={!pagination.hasPrevPage}
+              className={`pagination-btn ${pagination.currentPage === 1 ? 'disabled' : ''}`}
+              onClick={() => {
+                if (pagination.currentPage > 1) {
+                  fetchPetitions(pagination.currentPage - 1);
+                }
+              }}
+              disabled={pagination.currentPage === 1}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -733,34 +870,28 @@ const ViewAllPetitions = ({ onBack }) => {
             </button>
             
             <div className="pagination-pages">
-              {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map(page => (
-                <button 
-                  key={page}
-                  className={`pagination-page ${page === pagination.currentPage ? 'active' : ''}`}
-                  onClick={() => setPagination(prev => ({ 
-                    ...prev, 
-                    currentPage: page,
-                    hasPrevPage: page > 1,
-                    hasNextPage: page < prev.totalPages
-                  }))}
-                >
-                  {page}
-                </button>
-              ))}
+              {Array.from({ length: Math.min(pagination.totalPages, 5) }, (_, i) => {
+                const page = i + 1;
+                return (
+                  <button 
+                    key={page}
+                    className={`pagination-page ${page === pagination.currentPage ? 'active' : ''}`}
+                    onClick={() => fetchPetitions(page)}
+                  >
+                    {page}
+                  </button>
+                );
+              })}
             </div>
             
             <button 
-              className={`pagination-btn ${!pagination.hasNextPage ? 'disabled' : ''}`}
-              onClick={() => setPagination(prev => {
-                const newPage = prev.currentPage + 1;
-                return { 
-                  ...prev, 
-                  currentPage: newPage,
-                  hasPrevPage: newPage > 1,
-                  hasNextPage: newPage < prev.totalPages
-                };
-              })}
-              disabled={!pagination.hasNextPage}
+              className={`pagination-btn ${pagination.currentPage >= pagination.totalPages ? 'disabled' : ''}`}
+              onClick={() => {
+                if (pagination.currentPage < pagination.totalPages) {
+                  fetchPetitions(pagination.currentPage + 1);
+                }
+              }}
+              disabled={pagination.currentPage >= pagination.totalPages}
             >
               Next
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
