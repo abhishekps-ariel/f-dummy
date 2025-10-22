@@ -27,13 +27,14 @@ const ViewAllPetitions = ({ onBack }) => {
   const [openDropdownId, setOpenDropdownId] = useState(null);
 
   // Use the petitions hook
-  const { 
-    petitions, 
-    loading, 
-    error, 
-    hasOrganizationAccess, 
+  const {
+    petitions,
+    loading,
+    error,
+    hasOrganizationAccess,
     fetchPetitions,
-    organization 
+    organization,
+    organizationCheckComplete
   } = usePetitions();
 
   // Handle date filter change
@@ -185,10 +186,9 @@ const ViewAllPetitions = ({ onBack }) => {
     if (searchQuery.trim()) {
       const searchLower = searchQuery.toLowerCase();
       filtered = filtered.filter(petition =>
-        petition.id.toLowerCase().includes(searchLower) ||
+        petition.petitionNumber.toLowerCase().includes(searchLower) ||
         petition.propertyAddress.toLowerCase().includes(searchLower) ||
-        petition.borrower.toLowerCase().includes(searchLower) ||
-        petition.petitionNumber.toLowerCase().includes(searchLower)
+        petition.borrower.toLowerCase().includes(searchLower)
       );
     }
 
@@ -292,20 +292,29 @@ const ViewAllPetitions = ({ onBack }) => {
     };
   }, [openDropdownId]);
 
-  const getStatusBadgeClass = (status) => {
+  const getStatusBadgeClass = (status, statusClass) => {
+    // Use the statusClass from API if available, otherwise fallback to status text
+    if (statusClass) {
+      return `status-badge status-${statusClass}`;
+    }
+    
     switch (status.toLowerCase()) {
       case 'accepted':
-        return 'status-badge status-Accepted';
+        return 'status-badge status-accepted';
       case 'submitted':
-        return 'status-badge status-Submitted';
+        return 'status-badge status-submitted';
       case 'resubmitted':
-        return 'status-badge status-Resubmitted';
+        return 'status-badge status-submitted';
       case 'returned':
-        return 'status-badge status-Returned';
+        return 'status-badge status-returned';
       case 'draft':
-        return 'status-badge status-Draft';
+        return 'status-badge status-draft';
+      case 'under review':
+        return 'status-badge status-under-review';
+      case 'rejected':
+        return 'status-badge status-rejected';
       case 'closed':
-        return 'status-badge status-Closed';
+        return 'status-badge status-closed';
       default:
         return 'status-badge';
     }
@@ -327,7 +336,21 @@ const ViewAllPetitions = ({ onBack }) => {
     }
   };
 
-  // Check organization access
+  // Show loading state while checking organization access or fetching data
+  if (loading || !organizationCheckComplete) {
+    return (
+      <div className="shadow-custom bg-white org-search-box">
+        <div className="text-center py-5">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+          <p className="mt-3 text-muted">Loading petitions...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Check organization access only after organization check is complete
   if (!hasOrganizationAccess) {
     return <NoOrganizationAccess />;
   }
@@ -605,13 +628,13 @@ const ViewAllPetitions = ({ onBack }) => {
                       }}
                       style={{ cursor: 'pointer' }}
                     >
-                      {petition.id}
+                      {petition.petitionNumber}
                     </a>
                   </td>
                   <td>{petition.propertyAddress}</td>
                   <td>{petition.borrower}</td>
                   <td>
-                    <span className={getStatusBadgeClass(petition.status)}>
+                    <span className={getStatusBadgeClass(petition.status, petition.statusClass)}>
                       {petition.status}
                     </span>
                   </td>

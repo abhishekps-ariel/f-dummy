@@ -7,16 +7,21 @@ import { toast } from 'react-toastify';
 export const usePetitions = () => {
   const { organization, isAuthenticated } = useAuth();
   const [petitions, setPetitions] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Start with loading true
   const [error, setError] = useState(null);
   const [userOrganizationId, setUserOrganizationId] = useState(null);
+  const [organizationCheckComplete, setOrganizationCheckComplete] = useState(false);
 
   // Check if user has organization access by looking for approved join requests
   const hasOrganizationAccess = isAuthenticated && userOrganizationId;
 
   // Check user's join requests to determine organization membership
   const checkOrganizationMembership = async () => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated) {
+      setOrganizationCheckComplete(true);
+      setLoading(false);
+      return;
+    }
 
     try {
       const response = await getUserJoinRequests();
@@ -36,6 +41,9 @@ export const usePetitions = () => {
     } catch (error) {
       console.error('Error checking organization membership:', error);
       setUserOrganizationId(null);
+    } finally {
+      setOrganizationCheckComplete(true);
+      setLoading(false);
     }
   };
 
@@ -121,6 +129,8 @@ export const usePetitions = () => {
       setUserOrganizationId(null);
       setPetitions([]);
       setError(null);
+      setOrganizationCheckComplete(true);
+      setLoading(false);
     }
   }, [isAuthenticated]);
 
@@ -142,6 +152,7 @@ export const usePetitions = () => {
     fetchPetitions,
     submitPetition,
     organization: userOrganizationId ? { id: userOrganizationId } : null,
-    userOrganizationId
+    userOrganizationId,
+    organizationCheckComplete
   };
 };

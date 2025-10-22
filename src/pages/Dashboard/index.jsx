@@ -19,6 +19,7 @@ import NotificationDropdown from "../../components/shared/NotificationDropdown";
 import PetitionSteps from "../../components/Petitions/PetitionSteps";
 import ViewAllPetitions from "../../components/Petitions/ViewAllPetitions";
 import PetitionDetailModal from "../../components/Petitions/PetitionDetailModal";
+import NoOrganizationAccess from "../../components/Petitions/NoOrganizationAccess";
 import { usePetitions } from "../../hooks/usePetitions";
 import "../../styles/custom.css";
 import loginImg from "../../assets/logo-sample.png";
@@ -33,7 +34,8 @@ function Dashboard() {
     petitions, 
     loading: petitionsLoading, 
     hasOrganizationAccess,
-    organization 
+    organization,
+    organizationCheckComplete
   } = usePetitions();
   const [orgFormData, setOrgFormData] = useState({
     orgName: "",
@@ -761,7 +763,16 @@ function Dashboard() {
 
           {/* Petition Dashboard Section */}
           {activeSection === "dashboard" && !showViewAllPetitions && (
-            hasOrganizationAccess ? (
+            (petitionsLoading || !organizationCheckComplete) ? (
+              <div className="shadow-custom bg-white org-search-box">
+                <div className="text-center py-5">
+                  <div className="spinner-border text-primary" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                  </div>
+                  <p className="mt-3 text-muted">Checking organization access...</p>
+                </div>
+              </div>
+            ) : hasOrganizationAccess ? (
             <div className="shadow-custom bg-white org-search-box">
               <h2 className="font-med mb-4">My Petition Dashboard</h2>
               <div className="row mb-5">
@@ -831,13 +842,13 @@ function Dashboard() {
                               }}
                               style={{ cursor: 'pointer' }}
                             >
-                              {petition.id}
+                              {petition.petitionNumber}
                             </a>
                           </td>
                           <td>{petition.propertyAddress}</td>
                           <td>{petition.borrower}</td>
                           <td>
-                            <span className={`status-badge status-${petition.status}`}>
+                            <span className={`status-badge status-${petition.statusClass || petition.status.toLowerCase().replace(' ', '-')}`}>
                               {petition.status}
                             </span>
                           </td>
@@ -909,30 +920,7 @@ function Dashboard() {
               </div>
             </div>
             ) : (
-              <div className="shadow-custom bg-white org-search-box">
-                <div className="text-center py-5">
-                  <div className="mb-4">
-                    <i className="fas fa-building-slash text-muted" style={{ fontSize: '4rem' }}></i>
-                  </div>
-                  
-                  <h3 className="h4 mb-3">Organization Required</h3>
-                  
-                  <p className="text-muted mb-4">
-                    You need to be part of an organization to access the Petition Dashboard. 
-                    This ensures that petitions are properly managed and associated with the correct organization.
-                  </p>
-                  
-                  <div className="d-flex gap-3 justify-content-center">
-                    <button
-                      className="btn btn-primary"
-                      onClick={() => setActiveSection('organizations')}
-                    >
-                      <i className="fas fa-building me-2"></i>
-                      Manage Organizations
-                    </button>
-                  </div>
-                </div>
-              </div>
+              <NoOrganizationAccess />
             )
           )}
 

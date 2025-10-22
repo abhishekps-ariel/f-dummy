@@ -24,20 +24,29 @@ const PetitionDetailModal = ({ petition, isOpen, onClose }) => {
     });
   };
 
-  const getStatusBadgeClass = (status) => {
+  const getStatusBadgeClass = (status, statusClass) => {
+    // Use the statusClass from API if available, otherwise fallback to status text
+    if (statusClass) {
+      return `status-badge status-${statusClass}`;
+    }
+    
     switch (status.toLowerCase()) {
       case 'accepted':
-        return 'status-badge status-Accepted';
+        return 'status-badge status-accepted';
       case 'submitted':
-        return 'status-badge status-Submitted';
+        return 'status-badge status-submitted';
       case 'resubmitted':
-        return 'status-badge status-Resubmitted';
+        return 'status-badge status-submitted';
       case 'returned':
-        return 'status-badge status-Returned';
+        return 'status-badge status-returned';
       case 'draft':
-        return 'status-badge status-Draft';
+        return 'status-badge status-draft';
+      case 'under review':
+        return 'status-badge status-under-review';
+      case 'rejected':
+        return 'status-badge status-rejected';
       case 'closed':
-        return 'status-badge status-Closed';
+        return 'status-badge status-closed';
       default:
         return 'status-badge';
     }
@@ -56,7 +65,7 @@ const PetitionDetailModal = ({ petition, isOpen, onClose }) => {
     yPosition += 10;
 
     doc.setFontSize(14);
-    doc.text(`Petition Details - ${petition.id}`, 20, yPosition);
+      doc.text(`Petition Details - ${petition.petitionNumber}`, 20, yPosition);
     yPosition += 10;
 
     doc.setFontSize(10);
@@ -282,7 +291,7 @@ const PetitionDetailModal = ({ petition, isOpen, onClose }) => {
     });
 
       // Save the PDF
-      doc.save(`petition-${petition.id}-details.pdf`);
+      doc.save(`petition-${petition.petitionNumber}-details.pdf`);
     } catch (error) {
       console.error('Error generating PDF:', error);
       alert('Error generating PDF. Please try again.');
@@ -298,14 +307,14 @@ const PetitionDetailModal = ({ petition, isOpen, onClose }) => {
             <div className="d-flex justify-content-between align-items-center w-100">
               {/* Left side - Petition Info */}
               <div className="flex-grow-1">
-                <h5 className="modal-title mb-1 text-dark">Petition Details - {petition.id}</h5>
+                <h5 className="modal-title mb-1 text-dark">Petition Details - {petition.petitionNumber}</h5>
                 <div className="text-muted mb-1">{petition.propertyAddress}</div>
                 <div className="d-flex align-items-center gap-3">
                   <span className="small text-muted">Filed: {formatDate(petition.filingDate)}</span>
                   <span className="small text-muted">Last Updated: {petition.lastUpdated}</span>
-                   <span className={getStatusBadgeClass(petition.status)}>
-                    {petition.status}
-                  </span>
+                   <span className={getStatusBadgeClass(petition.status, petition.statusClass)}>
+                     {petition.status}
+                   </span>
                 </div>
               </div>
               
@@ -345,27 +354,31 @@ const PetitionDetailModal = ({ petition, isOpen, onClose }) => {
                         <div className="col-md-6">
                           <label className="form-label fw-semibold">Street Address</label>
                           <div className="form-control-plaintext">
-                            {petition.details?.street_address_line_1 || 'N/A'}
-                            {petition.details?.street_address_line_2 && (
-                              <><br />{petition.details.street_address_line_2}</>
+                            {petition.details?.property?.propertyStreet1 || 'N/A'}
+                            {petition.details?.property?.propertyStreet2 && (
+                              <><br />{petition.details.property.propertyStreet2}</>
                             )}
                           </div>
                         </div>
                         <div className="col-md-3">
                           <label className="form-label fw-semibold">City</label>
-                          <div className="form-control-plaintext">{petition.details?.city || 'N/A'}</div>
+                          <div className="form-control-plaintext">{petition.details?.property?.propertyCity || 'N/A'}</div>
                         </div>
                         <div className="col-md-3">
                           <label className="form-label fw-semibold">State</label>
-                          <div className="form-control-plaintext">{petition.details?.state || 'N/A'}</div>
+                          <div className="form-control-plaintext">{petition.details?.property?.propertyState || 'N/A'}</div>
                         </div>
                         <div className="col-md-6">
                           <label className="form-label fw-semibold">ZIP Code</label>
-                          <div className="form-control-plaintext">{petition.details?.zip_code || 'N/A'}</div>
+                          <div className="form-control-plaintext">{petition.details?.property?.propertyZip || 'N/A'}</div>
                         </div>
                         <div className="col-md-6">
                           <label className="form-label fw-semibold">County</label>
-                          <div className="form-control-plaintext">{petition.details?.county || 'N/A'}</div>
+                          <div className="form-control-plaintext">{petition.details?.property?.propertyCounty || 'N/A'}</div>
+                        </div>
+                        <div className="col-md-6">
+                          <label className="form-label fw-semibold">Assessor Parcel ID</label>
+                          <div className="form-control-plaintext">{petition.details?.property?.assessorParcelId || 'N/A'}</div>
                         </div>
                       </div>
                     </div>
@@ -379,36 +392,56 @@ const PetitionDetailModal = ({ petition, isOpen, onClose }) => {
                     <div className="card-body">
                       <div className="row g-3">
                         <div className="col-md-6">
-                          <label className="form-label fw-semibold">Loan Account Number</label>
-                          <div className="form-control-plaintext">{petition.details?.loan_account_number || 'N/A'}</div>
+                          <label className="form-label fw-semibold">MIN Number</label>
+                          <div className="form-control-plaintext">{petition.details?.loan?.minNumber || 'N/A'}</div>
                         </div>
                         <div className="col-md-6">
-                          <label className="form-label fw-semibold">Lien Position</label>
-                          <div className="form-control-plaintext">{petition.details?.lien_position || 'N/A'}</div>
+                          <label className="form-label fw-semibold">Loan Number</label>
+                          <div className="form-control-plaintext">{petition.details?.loan?.loanNumber || 'N/A'}</div>
                         </div>
                         <div className="col-md-6">
                           <label className="form-label fw-semibold">Loan Type</label>
-                          <div className="form-control-plaintext">{petition.details?.loan_type_term || 'N/A'}</div>
+                          <div className="form-control-plaintext">{petition.details?.loan?.petitionLoanTypeName || 'N/A'}</div>
                         </div>
                         <div className="col-md-6">
-                          <label className="form-label fw-semibold">Year Originated</label>
-                          <div className="form-control-plaintext">{petition.details?.year_originated || 'N/A'}</div>
+                          <label className="form-label fw-semibold">Lien Position</label>
+                          <div className="form-control-plaintext">{petition.details?.loan?.lienPosition || 'N/A'}</div>
                         </div>
                         <div className="col-md-6">
-                          <label className="form-label fw-semibold">Original Amount</label>
-                          <div className="form-control-plaintext">{formatCurrency(petition.details?.original_amount)}</div>
+                          <label className="form-label fw-semibold">Origination Date</label>
+                          <div className="form-control-plaintext">{formatDate(petition.details?.loan?.originationDate)}</div>
                         </div>
                         <div className="col-md-6">
-                          <label className="form-label fw-semibold">Current Amount</label>
-                          <div className="form-control-plaintext">{formatCurrency(petition.details?.current_amount)}</div>
+                          <label className="form-label fw-semibold">Original Principal Amount</label>
+                          <div className="form-control-plaintext">{formatCurrency(petition.details?.loan?.originalPrincipalAmount)}</div>
                         </div>
                         <div className="col-md-6">
-                          <label className="form-label fw-semibold">Original Rate</label>
-                          <div className="form-control-plaintext">{petition.details?.original_rate ? `${petition.details.original_rate}%` : 'N/A'}</div>
+                          <label className="form-label fw-semibold">Current Principal Balance</label>
+                          <div className="form-control-plaintext">{formatCurrency(petition.details?.loan?.currentPrincipalBalance)}</div>
                         </div>
                         <div className="col-md-6">
-                          <label className="form-label fw-semibold">Current Rate</label>
-                          <div className="form-control-plaintext">{petition.details?.current_rate ? `${petition.details.current_rate}%` : 'N/A'}</div>
+                          <label className="form-label fw-semibold">Interest Rate</label>
+                          <div className="form-control-plaintext">{petition.details?.loan?.interestRatePercent ? `${petition.details.loan.interestRatePercent}%` : 'N/A'}</div>
+                        </div>
+                        <div className="col-md-6">
+                          <label className="form-label fw-semibold">Monthly Payment Amount</label>
+                          <div className="form-control-plaintext">{formatCurrency(petition.details?.loan?.monthlyPaymentAmount)}</div>
+                        </div>
+                        <div className="col-md-6">
+                          <label className="form-label fw-semibold">Delinquency Days at Filing</label>
+                          <div className="form-control-plaintext">{petition.details?.loan?.delinquencyDaysAtFiling || 'N/A'}</div>
+                        </div>
+                        <div className="col-md-6">
+                          <label className="form-label fw-semibold">Variable Rate</label>
+                          <div className="form-control-plaintext">{petition.details?.loan?.variableRate ? 'Yes' : 'No'}</div>
+                        </div>
+                        <div className="col-md-6">
+                          <label className="form-label fw-semibold">Interest Only</label>
+                          <div className="form-control-plaintext">{petition.details?.loan?.interestOnly ? 'Yes' : 'No'}</div>
+                        </div>
+                        <div className="col-md-6">
+                          <label className="form-label fw-semibold">Negative Amortization</label>
+                          <div className="form-control-plaintext">{petition.details?.loan?.negativeAmortization ? 'Yes' : 'No'}</div>
                         </div>
                       </div>
                     </div>
@@ -425,17 +458,49 @@ const PetitionDetailModal = ({ petition, isOpen, onClose }) => {
                           <div key={borrower.id || index} className="border rounded p-3 mb-3">
                             <h6 className="mb-3 fw-semibold">Borrower {index + 1}</h6>
                             <div className="row g-3">
-                              <div className="col-md-4">
+                              <div className="col-md-3">
                                 <label className="form-label fw-semibold">First Name</label>
-                                <div className="form-control-plaintext">{borrower.first_name || 'N/A'}</div>
+                                <div className="form-control-plaintext">{borrower.firstName || 'N/A'}</div>
                               </div>
-                              <div className="col-md-4">
-                                <label className="form-label fw-semibold">Middle Initial</label>
-                                <div className="form-control-plaintext">{borrower.middle_initial || 'N/A'}</div>
+                              <div className="col-md-3">
+                                <label className="form-label fw-semibold">Middle Name</label>
+                                <div className="form-control-plaintext">{borrower.middleName || 'N/A'}</div>
                               </div>
-                              <div className="col-md-4">
+                              <div className="col-md-3">
                                 <label className="form-label fw-semibold">Last Name</label>
-                                <div className="form-control-plaintext">{borrower.last_name || 'N/A'}</div>
+                                <div className="form-control-plaintext">{borrower.lastName || 'N/A'}</div>
+                              </div>
+                              <div className="col-md-3">
+                                <label className="form-label fw-semibold">Suffix</label>
+                                <div className="form-control-plaintext">{borrower.suffix || 'N/A'}</div>
+                              </div>
+                              <div className="col-md-6">
+                                <label className="form-label fw-semibold">Primary Borrower</label>
+                                <div className="form-control-plaintext">{borrower.borrowerIsPrimary ? 'Yes' : 'No'}</div>
+                              </div>
+                              <div className="col-md-6">
+                                <label className="form-label fw-semibold">Email</label>
+                                <div className="form-control-plaintext">{borrower.email || 'N/A'}</div>
+                              </div>
+                              <div className="col-md-6">
+                                <label className="form-label fw-semibold">Phone</label>
+                                <div className="form-control-plaintext">{borrower.phone || 'N/A'}</div>
+                              </div>
+                              <div className="col-md-6">
+                                <label className="form-label fw-semibold">Mailing Address</label>
+                                <div className="form-control-plaintext">{borrower.mailingStreet1 || 'N/A'}</div>
+                              </div>
+                              <div className="col-md-4">
+                                <label className="form-label fw-semibold">Mailing City</label>
+                                <div className="form-control-plaintext">{borrower.mailingCity || 'N/A'}</div>
+                              </div>
+                              <div className="col-md-4">
+                                <label className="form-label fw-semibold">Mailing State</label>
+                                <div className="form-control-plaintext">{borrower.mailingState || 'N/A'}</div>
+                              </div>
+                              <div className="col-md-4">
+                                <label className="form-label fw-semibold">Mailing ZIP</label>
+                                <div className="form-control-plaintext">{borrower.mailingZip || 'N/A'}</div>
                               </div>
                             </div>
                           </div>
@@ -454,24 +519,24 @@ const PetitionDetailModal = ({ petition, isOpen, onClose }) => {
                     <div className="card-body">
                       <div className="row g-3">
                         <div className="col-12">
-                          <label className="form-label fw-semibold">Organization Name</label>
-                          <div className="form-control-plaintext">{petition.details?.organization_name || 'N/A'}</div>
+                          <label className="form-label fw-semibold">Filing Entity Legal Name</label>
+                          <div className="form-control-plaintext">{petition.details?.filingEntity?.filingEntityLegalName || 'N/A'}</div>
                         </div>
                         <div className="col-md-6">
-                          <label className="form-label fw-semibold">Contact First Name</label>
-                          <div className="form-control-plaintext">{petition.details?.contact_first_name || 'N/A'}</div>
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label fw-semibold">Contact Last Name</label>
-                          <div className="form-control-plaintext">{petition.details?.contact_last_name || 'N/A'}</div>
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label fw-semibold">Contact Phone</label>
-                          <div className="form-control-plaintext">{petition.details?.contact_phone || 'N/A'}</div>
+                          <label className="form-label fw-semibold">Contact Name</label>
+                          <div className="form-control-plaintext">{petition.details?.filingEntity?.filingContactName || 'N/A'}</div>
                         </div>
                         <div className="col-md-6">
                           <label className="form-label fw-semibold">Contact Email</label>
-                          <div className="form-control-plaintext">{petition.details?.contact_email || 'N/A'}</div>
+                          <div className="form-control-plaintext">{petition.details?.filingEntity?.filingContactEmail || 'N/A'}</div>
+                        </div>
+                        <div className="col-md-6">
+                          <label className="form-label fw-semibold">Contact Phone</label>
+                          <div className="form-control-plaintext">{petition.details?.filingEntity?.filingContactPhone || 'N/A'}</div>
+                        </div>
+                        <div className="col-md-6">
+                          <label className="form-label fw-semibold">NMLS License Number</label>
+                          <div className="form-control-plaintext">{petition.details?.filingEntity?.nmlsLicenseNumber || 'N/A'}</div>
                         </div>
                       </div>
                     </div>
@@ -485,28 +550,42 @@ const PetitionDetailModal = ({ petition, isOpen, onClose }) => {
                     <div className="card-body">
                       <div className="row g-3">
                         <div className="col-md-6">
-                          <label className="form-label fw-semibold">Notice Date</label>
-                          <div className="form-control-plaintext">{formatDate(petition.details?.notice_date)}</div>
+                          <label className="form-label fw-semibold">Notice Sent</label>
+                          <div className="form-control-plaintext">{petition.details?.rightToCure?.noticeSent ? 'Yes' : 'No'}</div>
                         </div>
                         <div className="col-md-6">
-                          <label className="form-label fw-semibold">Days Delinquent</label>
-                          <div className="form-control-plaintext">{petition.details?.days_delinquent || 'N/A'}</div>
+                          <label className="form-label fw-semibold">Notice Date</label>
+                          <div className="form-control-plaintext">{formatDate(petition.details?.rightToCure?.noticeDate)}</div>
+                        </div>
+                        <div className="col-md-6">
+                          <label className="form-label fw-semibold">Days Delinquent at Notice</label>
+                          <div className="form-control-plaintext">{petition.details?.rightToCure?.daysDelinquentAtNotice || 'N/A'}</div>
                         </div>
                         <div className="col-md-6">
                           <label className="form-label fw-semibold">Amount in Default</label>
-                          <div className="form-control-plaintext">{formatCurrency(petition.details?.amount_default)}</div>
+                          <div className="form-control-plaintext">{formatCurrency(petition.details?.rightToCure?.amountInDefault)}</div>
                         </div>
                         <div className="col-md-6">
                           <label className="form-label fw-semibold">Cure Expiration Date</label>
-                          <div className="form-control-plaintext">{formatDate(petition.details?.cure_expiration_date)}</div>
+                          <div className="form-control-plaintext">{formatDate(petition.details?.rightToCure?.cureExpirationDate)}</div>
+                        </div>
+                        <div className="col-md-6">
+                          <label className="form-label fw-semibold">Manual Override Reason</label>
+                          <div className="form-control-plaintext">{petition.details?.rightToCure?.manualOverrideReason || 'N/A'}</div>
                         </div>
                         <div className="col-12">
-                          <label className="form-label fw-semibold">Notice Mailing Address</label>
-                          <div className="form-control-plaintext">{petition.details?.notice_mailing_address || 'N/A'}</div>
-                        </div>
-                        <div className="col-12">
-                          <label className="form-label fw-semibold">Acceleration Date</label>
-                          <div className="form-control-plaintext">{formatDate(petition.details?.acceleration_date)}</div>
+                          <label className="form-label fw-semibold">Notice Address</label>
+                          <div className="form-control-plaintext">
+                            {petition.details?.rightToCure?.noticeAddressStreet1 && (
+                              <div>
+                                {petition.details.rightToCure.noticeAddressStreet1}
+                                {petition.details.rightToCure.noticeAddressCity && `, ${petition.details.rightToCure.noticeAddressCity}`}
+                                {petition.details.rightToCure.noticeAddressState && `, ${petition.details.rightToCure.noticeAddressState}`}
+                                {petition.details.rightToCure.noticeAddressZip && ` ${petition.details.rightToCure.noticeAddressZip}`}
+                              </div>
+                            )}
+                            {!petition.details?.rightToCure?.noticeAddressStreet1 && 'N/A'}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -520,12 +599,24 @@ const PetitionDetailModal = ({ petition, isOpen, onClose }) => {
                     <div className="card-body">
                       <div className="row g-3">
                         <div className="col-12">
-                          <label className="form-label fw-semibold">Form 35B Upload</label>
+                          <label className="form-label fw-semibold">Certain Mortgage Loan</label>
+                          <div className="form-control-plaintext">{petition.details?.affidavit?.certainMortgageLoan ? 'Yes' : 'No'}</div>
+                        </div>
+                        <div className="col-12">
+                          <label className="form-label fw-semibold">Form 35B Compliance Affidavit PDF</label>
                           <div className="form-control-plaintext">
-                            {petition.details?.form_35b_upload ? (
-                              <span className="text-success">
-                                Document uploaded
-                              </span>
+                            {petition.details?.affidavit?.form35bComplianceAffidavitPdf ? (
+                              <span className="text-success">Document uploaded</span>
+                            ) : (
+                              <span className="text-muted">No document uploaded</span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="col-12">
+                          <label className="form-label fw-semibold">Form 35B Non-Applicability Affidavit PDF</label>
+                          <div className="form-control-plaintext">
+                            {petition.details?.affidavit?.form35bNonApplicabilityAffidavitPdf ? (
+                              <span className="text-success">Document uploaded</span>
                             ) : (
                               <span className="text-muted">No document uploaded</span>
                             )}
@@ -533,19 +624,15 @@ const PetitionDetailModal = ({ petition, isOpen, onClose }) => {
                         </div>
                         <div className="col-md-6">
                           <label className="form-label fw-semibold">Affiant Name</label>
-                          <div className="form-control-plaintext">{petition.details?.affiant_name || 'N/A'}</div>
+                          <div className="form-control-plaintext">{petition.details?.affidavit?.affiantName || 'N/A'}</div>
                         </div>
                         <div className="col-md-6">
                           <label className="form-label fw-semibold">Affiant Title</label>
-                          <div className="form-control-plaintext">{petition.details?.affiant_title || 'N/A'}</div>
+                          <div className="form-control-plaintext">{petition.details?.affidavit?.affiantTitle || 'N/A'}</div>
                         </div>
                         <div className="col-md-6">
-                          <label className="form-label fw-semibold">Affidavit Date</label>
-                          <div className="form-control-plaintext">{formatDate(petition.details?.affidavit_date)}</div>
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label fw-semibold">Notary Information</label>
-                          <div className="form-control-plaintext">{petition.details?.notary_info || 'N/A'}</div>
+                          <label className="form-label fw-semibold">Affidavit Execution Date</label>
+                          <div className="form-control-plaintext">{formatDate(petition.details?.affidavit?.affidavitExecutionDate)}</div>
                         </div>
                       </div>
                     </div>
@@ -557,67 +644,70 @@ const PetitionDetailModal = ({ petition, isOpen, onClose }) => {
                       <h5 className="mb-3 fw-bold text-dark border-bottom pb-2">Loan Assignees</h5>
                     </div>
                     <div className="card-body">
-                      <div className="row g-3">
-                        <div className="col-12">
-                          <label className="form-label fw-semibold">Lender Name</label>
-                          <div className="form-control-plaintext">{petition.details?.assignee_lender_name_1 || 'N/A'}</div>
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label fw-semibold">Lender Type</label>
-                          <div className="form-control-plaintext">{petition.details?.assignee_lender_type_1 || 'N/A'}</div>
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label fw-semibold">Originator Name</label>
-                          <div className="form-control-plaintext">{petition.details?.assignee_originator_name_1 || 'N/A'}</div>
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label fw-semibold">License Number</label>
-                          <div className="form-control-plaintext">{petition.details?.assignee_license_number_1 || 'N/A'}</div>
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label fw-semibold">License State</label>
-                          <div className="form-control-plaintext">{petition.details?.assignee_license_state_1 || 'N/A'}</div>
-                        </div>
-                        <div className="col-12">
-                          <label className="form-label fw-semibold">Lender Address</label>
-                          <div className="form-control-plaintext">{petition.details?.assignee_lender_address_1 || 'N/A'}</div>
-                        </div>
-                      </div>
+                      {petition.details?.loanAssignees && petition.details.loanAssignees.length > 0 ? (
+                        petition.details.loanAssignees.map((assignee, index) => (
+                          <div key={index} className="border rounded p-3 mb-3">
+                            <h6 className="mb-3 fw-semibold">Assignee {index + 1}</h6>
+                            <div className="row g-3">
+                              <div className="col-md-6">
+                                <label className="form-label fw-semibold">Assignee Name</label>
+                                <div className="form-control-plaintext">{assignee.assigneeName || 'N/A'}</div>
+                              </div>
+                              <div className="col-md-6">
+                                <label className="form-label fw-semibold">Contact Email</label>
+                                <div className="form-control-plaintext">{assignee.contactEmail || 'N/A'}</div>
+                              </div>
+                              <div className="col-md-6">
+                                <label className="form-label fw-semibold">Contact Phone</label>
+                                <div className="form-control-plaintext">{assignee.contactPhone || 'N/A'}</div>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                        ) : (
+                          <p className="text-muted">No assignee information available</p>
+                        )}
+                      
                     </div>
                   </div>
 
-                  {/* Petition Attestation */}
+                  {/* Signatures */}
                   <div className="card mb-4 border-0 shadow-sm">
                     <div className="card-header bg-transparent border-0 pb-0">
-                      <h5 className="mb-3 fw-bold text-dark border-bottom pb-2">Petition Attestation</h5>
+                      <h5 className="mb-3 fw-bold text-dark border-bottom pb-2">Signatures</h5>
                     </div>
                     <div className="card-body">
-                      <div className="row g-3">
-                        <div className="col-md-4">
-                          <label className="form-label fw-semibold">Attester First Name</label>
-                          <div className="form-control-plaintext">{petition.details?.attester_first_name || 'N/A'}</div>
-                        </div>
-                        <div className="col-md-4">
-                          <label className="form-label fw-semibold">Middle Initial</label>
-                          <div className="form-control-plaintext">{petition.details?.attester_middle_initial || 'N/A'}</div>
-                        </div>
-                        <div className="col-md-4">
-                          <label className="form-label fw-semibold">Attester Last Name</label>
-                          <div className="form-control-plaintext">{petition.details?.attester_last_name || 'N/A'}</div>
-                        </div>
-                        <div className="col-12">
-                          <label className="form-label fw-semibold">Certification</label>
-                          <div className="form-control-plaintext">
-                            {petition.details?.certification_check ? (
-                              <span className="text-success">
-                                Certified
-                              </span>
-                            ) : (
-                              <span className="text-muted">Not certified</span>
-                            )}
+                      {petition.details?.signatures && petition.details.signatures.length > 0 ? (
+                        petition.details.signatures.map((signature, index) => (
+                          <div key={index} className="border rounded p-3 mb-3">
+                            <h6 className="mb-3 fw-semibold">Signature {index + 1}</h6>
+                            <div className="row g-3">
+                              <div className="col-md-6">
+                                <label className="form-label fw-semibold">Signer Full Name</label>
+                                <div className="form-control-plaintext">{signature.signerFullName || 'N/A'}</div>
+                              </div>
+                              <div className="col-md-6">
+                                <label className="form-label fw-semibold">Signer Title</label>
+                                <div className="form-control-plaintext">{signature.signerTitle || 'N/A'}</div>
+                              </div>
+                              <div className="col-md-6">
+                                <label className="form-label fw-semibold">Signer Email</label>
+                                <div className="form-control-plaintext">{signature.signerEmail || 'N/A'}</div>
+                              </div>
+                              <div className="col-md-6">
+                                <label className="form-label fw-semibold">E-Sign Consent</label>
+                                <div className="form-control-plaintext">{signature.esignConsent ? 'Yes' : 'No'}</div>
+                              </div>
+                              <div className="col-md-6">
+                                <label className="form-label fw-semibold">Signed At</label>
+                                <div className="form-control-plaintext">{formatDate(signature.signedAt)}</div>
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      </div>
+                        ))
+                      ) : (
+                        <p className="text-muted">No signature information available</p>
+                      )}
                     </div>
                   </div>
                 </div>

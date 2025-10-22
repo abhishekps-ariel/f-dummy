@@ -1577,29 +1577,35 @@ input, textarea, select {
     text-align: center;
     min-width: 92px;
 }
-.status-Accepted {
-    background-color: #d1e7dd;
-    color: #198754;
+/* Draft: Gray */
+.status-Draft {
+    background-color: #f8f9fa;
+    color: #6c757d;
 }
+/* Submitted: Blue */
 .status-Submitted {
     background-color: #cfe2ff;
     color: #0d6efd;
 }
+/* Returned: Orange */
 .status-Returned {
     background-color: #ffeaa7;
     color: #e67e22;
 }
+/* Resubmitted: Purple */
 .status-Resubmitted {
     background-color: #e2d9ff;
     color: #8e44ad;
 }
-.status-Draft {
-    background-color: #f0f3ff;
-    color: #6c757d;
+/* Accepted: Green */
+.status-Accepted {
+    background-color: #d1e7dd;
+    color: #198754;
 }
+/* Closed: Dark Gray */
 .status-Closed {
-    background-color: #f8f9fa;
-    color: #495057;
+    background-color: #495057;
+    color: #ffffff;
 }
 .stat-card {
     padding: 1.5rem 2.25rem;

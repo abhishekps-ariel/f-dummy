@@ -104,22 +104,65 @@ class PetitionApiService {
     // Handle both single petition and array of petitions
     const petitions = Array.isArray(apiResponse.data) ? apiResponse.data : [apiResponse.data];
 
-    return petitions.map(petition => ({
-      id: petition.id || petition.petitionNumber || 'N/A',
-      petitionNumber: petition.petitionNumber || 'N/A',
-      propertyAddress: `${petition.property?.propertyStreet1 || ''}, ${petition.property?.propertyCity || ''}, ${petition.property?.propertyState || ''} ${petition.property?.propertyZip || ''}`,
-      status: petition.status || 'Unknown',
-      filingDate: petition.createdAt || new Date().toISOString().split('T')[0],
-      lastUpdated: petition.updatedAt || new Date().toISOString(),
-      borrower: petition.borrowers && petition.borrowers.length > 0 
-        ? `${petition.borrowers[0].firstName || ''} ${petition.borrowers[0].lastName || ''}`.trim() 
-        : 'N/A',
-      loanAmount: petition.loan?.currentPrincipalBalance 
-        ? `$${parseFloat(petition.loan.currentPrincipalBalance).toLocaleString()}` 
-        : 'N/A',
-      county: petition.property?.propertyCounty || 'N/A',
-      details: petition // Store full details for modal view
-    }));
+    return petitions.map(petition => {
+      // Map status number to readable status
+      const getStatusDisplay = (status) => {
+        switch (status) {
+          case "0": return { text: "Draft", class: "Draft" };
+          case "1": return { text: "Submitted", class: "Submitted" };
+          case "2": return { text: "Returned", class: "Returned" };
+          case "3": return { text: "Resubmitted", class: "Resubmitted" };
+          case "4": return { text: "Accepted", class: "Accepted" };
+          case "5": return { text: "Closed", class: "Closed" };
+          default: return { text: "Unknown", class: "Unknown" };
+        }
+      };
+
+      const statusInfo = getStatusDisplay(petition.status);
+
+      // Get borrower name from the first borrower
+      let borrowerName = 'N/A';
+      if (petition.borrowers && petition.borrowers.length > 0) {
+        const borrower = petition.borrowers[0];
+        const nameParts = [borrower.firstName, borrower.middleName, borrower.lastName, borrower.suffix]
+          .filter(part => part && part.trim())
+          .map(part => part.trim());
+        borrowerName = nameParts.join(' ') || 'N/A';
+      }
+
+      // Format loan amount
+      let loanAmount = 'N/A';
+      if (petition.loan?.currentPrincipalBalance) {
+        loanAmount = `$${parseFloat(petition.loan.currentPrincipalBalance).toLocaleString()}`;
+      } else if (petition.loan?.originalPrincipalAmount) {
+        loanAmount = `$${parseFloat(petition.loan.originalPrincipalAmount).toLocaleString()}`;
+      }
+
+      // Format property address
+      const addressParts = [
+        petition.property?.propertyStreet1,
+        petition.property?.propertyStreet2,
+        petition.property?.propertyCity,
+        petition.property?.propertyState,
+        petition.property?.propertyZip
+      ].filter(part => part && part.trim());
+      const propertyAddress = addressParts.join(', ') || 'N/A';
+
+      return {
+        id: petition.id,
+        petitionNumber: petition.petitionNumber || 'N/A',
+        propertyAddress,
+        status: statusInfo.text,
+        statusClass: statusInfo.class,
+        statusValue: petition.status,
+        filingDate: petition.createdAt || new Date().toISOString().split('T')[0],
+        lastUpdated: petition.updatedAt || new Date().toISOString(),
+        borrower: borrowerName,
+        loanAmount,
+        county: petition.property?.propertyCounty || 'N/A',
+        details: petition // Store full details for modal view
+      };
+    });
   }
 }
 
