@@ -828,7 +828,10 @@ function Dashboard() {
                   </thead>
                   <tbody>
                     {petitions.length > 0 ? (
-                      petitions.slice(0, 5).map((petition) => (
+                      petitions
+                        .sort((a, b) => new Date(b.lastUpdated) - new Date(a.lastUpdated))
+                        .slice(0, 5)
+                        .map((petition) => (
                         <tr
                           key={petition.id}
                           className="petition-row"

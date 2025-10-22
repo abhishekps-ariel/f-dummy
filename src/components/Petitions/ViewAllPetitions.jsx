@@ -64,7 +64,9 @@ const ViewAllPetitions = ({ onBack }) => {
         searchText: searchQuery.trim() || "",
         status: getStatusValue(statusFilter),
         fromDate: getFromDate(),
-        toDate: getToDate()
+        toDate: getToDate(),
+        sortBy: sortBy,
+        sortOrder: sortOrder
       };
 
       console.log('Sending pagination params:', paginationParams);
@@ -134,16 +136,16 @@ const ViewAllPetitions = ({ onBack }) => {
     if (searchQuery.trim()) {
       const searchLower = searchQuery.toLowerCase();
       filtered = filtered.filter(petition =>
-        petition.petitionNumber.toLowerCase().includes(searchLower) ||
-        petition.propertyAddress.toLowerCase().includes(searchLower) ||
-        petition.borrower.toLowerCase().includes(searchLower)
+        (petition.petitionNumber || '').toLowerCase().includes(searchLower) ||
+        (petition.propertyAddress || '').toLowerCase().includes(searchLower) ||
+        (petition.borrower || '').toLowerCase().includes(searchLower)
       );
     }
 
     // Apply status filter
     if (statusFilter !== 'all') {
       filtered = filtered.filter(petition => 
-        petition.status.toLowerCase() === statusFilter.toLowerCase()
+        petition.statusValue === statusFilter
       );
     }
 
@@ -155,21 +157,21 @@ const ViewAllPetitions = ({ onBack }) => {
       switch (dateFilter) {
         case 'today':
           filtered = filtered.filter(petition => {
-            const petitionDate = new Date(petition.filingDate);
+            const petitionDate = new Date(petition.details.createdDate);
             return petitionDate.toDateString() === today.toDateString();
           });
           break;
         case 'week':
           filterDate.setDate(today.getDate() - 7);
           filtered = filtered.filter(petition => {
-            const petitionDate = new Date(petition.filingDate);
+            const petitionDate = new Date(petition.details.createdDate);
             return petitionDate >= filterDate;
           });
           break;
         case 'month':
           filterDate.setMonth(today.getMonth() - 1);
           filtered = filtered.filter(petition => {
-            const petitionDate = new Date(petition.filingDate);
+            const petitionDate = new Date(petition.details.createdDate);
             return petitionDate >= filterDate;
           });
           break;
@@ -180,7 +182,7 @@ const ViewAllPetitions = ({ onBack }) => {
             toDate.setHours(23, 59, 59, 999);
             
             filtered = filtered.filter(petition => {
-              const petitionDate = new Date(petition.filingDate);
+              const petitionDate = new Date(petition.details.createdDate);
               return petitionDate >= fromDate && petitionDate <= toDate;
             });
           }
@@ -195,15 +197,18 @@ const ViewAllPetitions = ({ onBack }) => {
       let aValue = a[sortBy];
       let bValue = b[sortBy];
 
-      if (sortBy === 'filingDate' || sortBy === 'lastUpdated') {
-        aValue = new Date(aValue);
-        bValue = new Date(bValue);
+      if (sortBy === 'filingDate') {
+        aValue = new Date(a.details.createdDate);
+        bValue = new Date(b.details.createdDate);
+      } else if (sortBy === 'lastUpdated') {
+        aValue = new Date(a.details.modifiedDate);
+        bValue = new Date(b.details.modifiedDate);
       }
 
       if (sortOrder === 'asc') {
         return aValue > bValue ? 1 : -1;
       } else {
-        return aValue < bValue ? 1 : -1;
+        return aValue > bValue ? -1 : 1;
       }
     });
 
@@ -416,6 +421,14 @@ const ViewAllPetitions = ({ onBack }) => {
       fetchPetitions(1);
     }
   }, [customDateFrom, customDateTo, dateFilter, organization?.id]);
+
+  // Handle sorting changes
+  useEffect(() => {
+    if (organization?.id) {
+      setPagination(prev => ({ ...prev, currentPage: 1 }));
+      fetchPetitions(1);
+    }
+  }, [sortBy, sortOrder]);
 
   // Handle click outside to close dropdown
   useEffect(() => {
@@ -873,13 +886,13 @@ const ViewAllPetitions = ({ onBack }) => {
               {Array.from({ length: Math.min(pagination.totalPages, 5) }, (_, i) => {
                 const page = i + 1;
                 return (
-                  <button 
-                    key={page}
-                    className={`pagination-page ${page === pagination.currentPage ? 'active' : ''}`}
+                <button 
+                  key={page}
+                  className={`pagination-page ${page === pagination.currentPage ? 'active' : ''}`}
                     onClick={() => fetchPetitions(page)}
-                  >
-                    {page}
-                  </button>
+                >
+                  {page}
+                </button>
                 );
               })}
             </div>

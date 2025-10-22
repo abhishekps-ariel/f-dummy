@@ -38,7 +38,9 @@ class PetitionApiService {
         searchText: paginationParams.searchText || "",
         status: paginationParams.status || 0,
         fromDate: paginationParams.fromDate,
-        toDate: paginationParams.toDate
+        toDate: paginationParams.toDate,
+        sortBy: paginationParams.sortBy || 'filingDate',
+        sortOrder: paginationParams.sortOrder || 'desc'
       };
       
       console.log('API Service - Validated params:', validatedParams);
@@ -232,8 +234,22 @@ class PetitionApiService {
         status: statusInfo.text,
         statusClass: statusInfo.class,
         statusValue: petition.status,
-        filingDate: petition.createdDate ? new Date(petition.createdDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-        lastUpdated: petition.modifiedDate || new Date().toISOString(),
+        filingDate: petition.createdDate ? new Date(petition.createdDate).toLocaleDateString() : new Date().toLocaleDateString(),
+        lastUpdated: petition.modifiedDate ? new Date(petition.modifiedDate).toLocaleString('en-US', { 
+          year: 'numeric', 
+          month: '2-digit', 
+          day: '2-digit', 
+          hour: '2-digit', 
+          minute: '2-digit', 
+          hour12: true 
+        }) : new Date().toLocaleString('en-US', { 
+          year: 'numeric', 
+          month: '2-digit', 
+          day: '2-digit', 
+          hour: '2-digit', 
+          minute: '2-digit', 
+          hour12: true 
+        }),
         borrower: borrowerName,
         loanAmount,
         county: petition.property?.propertyCounty || 'N/A',
