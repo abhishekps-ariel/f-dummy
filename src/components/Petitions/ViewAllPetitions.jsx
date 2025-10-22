@@ -20,7 +20,7 @@ const ViewAllPetitions = ({ onBack }) => {
     currentPage: 1,
     totalPages: 1,
     totalCount: 0,
-    limit: 10
+    limit: 5
   });
   const [showPetitionDetail, setShowPetitionDetail] = useState(false);
   const [selectedPetition, setSelectedPetition] = useState(null);
@@ -274,9 +274,11 @@ const ViewAllPetitions = ({ onBack }) => {
     setPagination(prev => ({
       ...prev,
       totalPages,
-      totalCount: filteredAndSortedPetitions.length
+      totalCount: filteredAndSortedPetitions.length,
+      hasPrevPage: prev.currentPage > 1,
+      hasNextPage: prev.currentPage < totalPages
     }));
-  }, [filteredAndSortedPetitions.length, pagination.limit]);
+  }, [filteredAndSortedPetitions.length, pagination.limit, pagination.currentPage]);
 
   // Handle click outside to close dropdown
   useEffect(() => {
@@ -713,7 +715,15 @@ const ViewAllPetitions = ({ onBack }) => {
           <div className="pagination-minimal">
             <button 
               className={`pagination-btn ${!pagination.hasPrevPage ? 'disabled' : ''}`}
-              onClick={() => setPagination(prev => ({ ...prev, currentPage: prev.currentPage - 1 }))}
+              onClick={() => setPagination(prev => {
+                const newPage = prev.currentPage - 1;
+                return { 
+                  ...prev, 
+                  currentPage: newPage,
+                  hasPrevPage: newPage > 1,
+                  hasNextPage: newPage < prev.totalPages
+                };
+              })}
               disabled={!pagination.hasPrevPage}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -727,7 +737,12 @@ const ViewAllPetitions = ({ onBack }) => {
                 <button 
                   key={page}
                   className={`pagination-page ${page === pagination.currentPage ? 'active' : ''}`}
-                  onClick={() => setPagination(prev => ({ ...prev, currentPage: page }))}
+                  onClick={() => setPagination(prev => ({ 
+                    ...prev, 
+                    currentPage: page,
+                    hasPrevPage: page > 1,
+                    hasNextPage: page < prev.totalPages
+                  }))}
                 >
                   {page}
                 </button>
@@ -736,7 +751,15 @@ const ViewAllPetitions = ({ onBack }) => {
             
             <button 
               className={`pagination-btn ${!pagination.hasNextPage ? 'disabled' : ''}`}
-              onClick={() => setPagination(prev => ({ ...prev, currentPage: prev.currentPage + 1 }))}
+              onClick={() => setPagination(prev => {
+                const newPage = prev.currentPage + 1;
+                return { 
+                  ...prev, 
+                  currentPage: newPage,
+                  hasPrevPage: newPage > 1,
+                  hasNextPage: newPage < prev.totalPages
+                };
+              })}
               disabled={!pagination.hasNextPage}
             >
               Next
