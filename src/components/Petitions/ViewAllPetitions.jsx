@@ -565,8 +565,8 @@ const ViewAllPetitions = ({ onBack }) => {
         </div>
       </div>
       {/* Search and Filter Controls */}
-      <div className="row mb-4">
-        <div className="col-md-6">
+      <div className="row mb-4 g-3">
+        <div className="col-12 col-md-4">
           <div className="input-group">
             <span className="input-group-text bg-white border-end-0">
               <i className="fas fa-search"></i>
@@ -580,7 +580,7 @@ const ViewAllPetitions = ({ onBack }) => {
             />
           </div>
         </div>
-        <div className="col-md-2">
+        <div className="col-6 col-md-2">
           <select 
             className="form-select"
             value={statusFilter}
@@ -595,7 +595,7 @@ const ViewAllPetitions = ({ onBack }) => {
             <option value="closed">Closed</option>
           </select>
         </div>
-        <div className="col-md-2">
+        <div className="col-6 col-md-2">
           <select 
             className="form-select"
             value={dateFilter}
@@ -610,33 +610,33 @@ const ViewAllPetitions = ({ onBack }) => {
             <option value="custom">Custom Range</option>
           </select>
         </div>
-        <div className="col-md-2">
-          <div className="d-flex gap-2">
-            <select 
-              className="form-select"
-              value={`${sortBy}-${sortOrder}`}
-              onChange={(e) => {
-                const [field, order] = e.target.value.split('-');
-                setSortBy(field);
-                setSortOrder(order);
-              }}
-            >
-              <option value="filingDate-desc">Newest First</option>
-              <option value="filingDate-asc">Oldest First</option>
-              <option value="lastUpdated-desc">Recently Updated</option>
-              <option value="lastUpdated-asc">Least Updated</option>
-            </select>
-            <button
-              className="dashboard-btn-refresh"
-              onClick={handleRefresh}
-              disabled={loading}
-              title="Reset all filters and refresh"
-            >
-              <i
-                className={`fa-solid fa-refresh ${loading ? "fa-spin" : ""}`}
-              ></i>
-            </button>
-          </div>
+        <div className="col-8 col-md-3">
+          <select 
+            className="form-select"
+            value={`${sortBy}-${sortOrder}`}
+            onChange={(e) => {
+              const [field, order] = e.target.value.split('-');
+              setSortBy(field);
+              setSortOrder(order);
+            }}
+          >
+            <option value="filingDate-desc">Newest First</option>
+            <option value="filingDate-asc">Oldest First</option>
+            <option value="lastUpdated-desc">Recently Updated</option>
+            <option value="lastUpdated-asc">Least Updated</option>
+          </select>
+        </div>
+        <div className="col-4 col-md-1">
+          <button
+            className="dashboard-btn-refresh w-100"
+            onClick={handleRefresh}
+            disabled={loading}
+            title="Reset all filters and refresh"
+          >
+            <i
+              className={`fa-solid fa-refresh ${loading ? "fa-spin" : ""}`}
+            ></i>
+          </button>
         </div>
       </div>
 
@@ -704,12 +704,12 @@ const ViewAllPetitions = ({ onBack }) => {
       </div>
 
       {/* Petitions Table */}
-      <div className="table-responsive petition-table-container">
-        <table className="table table-hover w-100">
+      <div className="table-responsive petition-table-container" style={{ maxHeight: '500px', overflowY: 'auto' }}>
+        <table className="table table-hover w-100 mb-0">
           <thead className="table-light">
             <tr>
               <th 
-                style={{ width: '12%' }} 
+                style={{ width: '18%', minWidth: '160px' }} 
                 className="sortable-header"
                 onClick={() => handleSort('id')}
               >
@@ -718,9 +718,9 @@ const ViewAllPetitions = ({ onBack }) => {
                   <i className={`fas fa-sort-${sortOrder === 'asc' ? 'up' : 'down'} ms-1`}></i>
                 )}
               </th>
-              <th style={{ width: '35%' }}>Property Address</th>
+              <th style={{ width: '32%', minWidth: '280px' }}>Property Address</th>
               <th 
-                style={{ width: '15%' }} 
+                style={{ width: '14%', minWidth: '110px' }} 
                 className="sortable-header"
                 onClick={() => handleSort('borrower')}
               >
@@ -730,7 +730,7 @@ const ViewAllPetitions = ({ onBack }) => {
                 )}
               </th>
               <th 
-                style={{ width: '12%' }} 
+                style={{ width: '11%', minWidth: '90px' }} 
                 className="sortable-header"
                 onClick={() => handleSort('status')}
               >
@@ -740,7 +740,7 @@ const ViewAllPetitions = ({ onBack }) => {
                 )}
               </th>
               <th 
-                style={{ width: '13%' }} 
+                style={{ width: '13%', minWidth: '110px' }} 
                 className="sortable-header"
                 onClick={() => handleSort('filingDate')}
               >
@@ -750,7 +750,7 @@ const ViewAllPetitions = ({ onBack }) => {
                 )}
               </th>
               <th 
-                style={{ width: '13%' }} 
+                style={{ width: '13%', minWidth: '120px' }} 
                 className="sortable-header"
                 onClick={() => handleSort('lastUpdated')}
               >
