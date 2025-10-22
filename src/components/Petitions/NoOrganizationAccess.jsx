@@ -16,7 +16,6 @@ const NoOrganizationAccess = () => {
             
             <p className="text-muted mb-4">
               You need to be part of an organization to access the Petition Dashboard. 
-              This ensures that petitions are properly managed and associated with the correct organization.
             </p>
             
             <div className="card border-0 shadow-sm">

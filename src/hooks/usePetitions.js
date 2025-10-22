@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import petitionApiService from '../services/petitionApiService';
-import { getUserJoinRequests } from '../services/organizationService';
+import { getUserJoinRequests, getOrganizationById } from '../services/organizationService';
 import { toast } from 'react-toastify';
 
 export const usePetitions = () => {
@@ -25,15 +25,14 @@ export const usePetitions = () => {
 
     try {
       const response = await getUserJoinRequests();
+      
       if (response.isSuccess && response.data) {
         // Look for approved join request (status: 1)
         const approvedRequest = response.data.find(request => request.status === 1);
         if (approvedRequest) {
           setUserOrganizationId(approvedRequest.organizationId);
-          console.log('usePetitions - User is part of organization:', approvedRequest.organizationId);
         } else {
           setUserOrganizationId(null);
-          console.log('usePetitions - User is not part of any organization');
         }
       } else {
         setUserOrganizationId(null);
@@ -47,13 +46,6 @@ export const usePetitions = () => {
     }
   };
 
-  // Debug logging to see what's happening
-  console.log('usePetitions Debug:', {
-    isAuthenticated,
-    organization,
-    userOrganizationId,
-    hasOrganizationAccess
-  });
 
   // Fetch petitions for the user's organization
   const fetchPetitions = async () => {
@@ -66,7 +58,6 @@ export const usePetitions = () => {
     setError(null);
 
     try {
-      console.log('usePetitions - Using organization ID:', userOrganizationId);
       const response = await petitionApiService.getPetitionsByOrganization(userOrganizationId);
       
       if (response.success) {
@@ -96,7 +87,15 @@ export const usePetitions = () => {
     setError(null);
 
     try {
-      const apiData = petitionApiService.transformFormDataToApiFormat(formData, userOrganizationId);
+      // Get the organization ID from the user's organization details
+      let organizationId = userOrganizationId;
+      
+      if (!organizationId) {
+        throw new Error('Organization ID not found. Please ensure you are part of an organization.');
+      }
+      
+      const apiData = petitionApiService.transformFormDataToApiFormat(formData, organizationId);
+      
       const response = await petitionApiService.submitPetition(apiData);
       
       if (response.success) {

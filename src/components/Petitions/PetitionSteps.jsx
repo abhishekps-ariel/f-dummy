@@ -94,13 +94,25 @@ const PetitionSteps = ({ isOpen, onClose }) => {
           // Find the most recent draft for the current step
           const currentStepDraft = savedDrafts.find(draft => draft.step === currentStep);
           if (currentStepDraft && currentStepDraft.formData) {
-            // Merge saved data with current form data
-            setFormData(prev => ({
-              ...prev,
-              ...currentStepDraft.formData
-            }));
-            setHasSavedDraft(true);
-            console.log(`Loaded saved draft for step ${currentStep}`);
+            // Only load draft if current form data is empty (first time opening)
+            setFormData(prev => {
+              // Check if current form data is mostly empty
+              const hasData = Object.values(prev).some(value => 
+                value !== '' && value !== 0 && value !== false && 
+                !Array.isArray(value) && value !== null
+              );
+              
+              if (!hasData) {
+                setHasSavedDraft(true);
+                return {
+                  ...prev,
+                  ...currentStepDraft.formData
+                };
+              } else {
+                setHasSavedDraft(false);
+                return prev;
+              }
+            });
           } else {
             setHasSavedDraft(false);
           }
@@ -114,6 +126,8 @@ const PetitionSteps = ({ isOpen, onClose }) => {
     };
 
     if (isOpen) {
+      // Clear any existing drafts to prevent interference
+      localStorage.removeItem('petitionDrafts');
       loadSavedDrafts();
     }
   }, [isOpen, currentStep]);
@@ -591,6 +605,8 @@ const PetitionSteps = ({ isOpen, onClose }) => {
 
   const handleInputChange = (e) => {
     const { name, value, type, checked, files } = e.target;
+    
+    
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : type === 'file' ? files[0] : value
@@ -883,6 +899,7 @@ const PetitionSteps = ({ isOpen, onClose }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
     
     // Only validate certification if we're actually on the last step and trying to submit
     if (currentStep !== totalSteps || !isIntentionalSubmit) {
@@ -1514,57 +1531,79 @@ const PetitionSteps = ({ isOpen, onClose }) => {
             <p className="text-muted small mb-3">Provide the organization and contact details for the party submitting this petition.</p>
             <div className="row g-3">
               <div className="col-12">
-                <label htmlFor="organization_name" className="form-label">Organization Name</label>
+                <label htmlFor="filingEntityLegalName" className="form-label">Organization Name</label>
                 <input 
                   type="text" 
-                  id="organization_name" 
-                  name="organization_name" 
+                  id="filingEntityLegalName" 
+                  name="filingEntityLegalName" 
                   className="form-control form-control-lg"
-                  value={formData.organization_name}
+                  value={formData.filingEntityLegalName}
                   onChange={handleInputChange}
                 />
               </div>
               <div className="col-md-6">
-                <label htmlFor="contact_first_name" className="form-label">Contact First Name</label>
+                <label htmlFor="filingContactName" className="form-label">Contact Name</label>
                 <input 
                   type="text" 
-                  id="contact_first_name" 
-                  name="contact_first_name" 
+                  id="filingContactName" 
+                  name="filingContactName" 
                   className="form-control"
-                  value={formData.contact_first_name}
+                  value={formData.filingContactName}
                   onChange={handleInputChange}
                 />
               </div>
               <div className="col-md-6">
-                <label htmlFor="contact_last_name" className="form-label">Contact Last Name</label>
-                <input 
-                  type="text" 
-                  id="contact_last_name" 
-                  name="contact_last_name" 
-                  className="form-control"
-                  value={formData.contact_last_name}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div className="col-md-6">
-                <label htmlFor="contact_phone" className="form-label">Contact Phone Number</label>
+                <label htmlFor="filingContactPhone" className="form-label">Contact Phone Number</label>
                 <input 
                   type="tel" 
-                  id="contact_phone" 
-                  name="contact_phone" 
+                  id="filingContactPhone" 
+                  name="filingContactPhone" 
                   className="form-control"
-                  value={formData.contact_phone}
+                  value={formData.filingContactPhone}
                   onChange={handleInputChange}
                 />
               </div>
-              <div className="col-md-6">
-                <label htmlFor="contact_email" className="form-label">Contact Email Address</label>
+              <div className="col-12">
+                <label htmlFor="filingContactEmail" className="form-label">Contact Email Address</label>
                 <input 
                   type="email" 
-                  id="contact_email" 
-                  name="contact_email" 
+                  id="filingContactEmail" 
+                  name="filingContactEmail" 
                   className="form-control"
-                  value={formData.contact_email}
+                  value={formData.filingContactEmail}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div className="col-md-4">
+                <label htmlFor="nmlsLicenseNumber" className="form-label">NMLS License Number</label>
+                <input 
+                  type="text" 
+                  id="nmlsLicenseNumber" 
+                  name="nmlsLicenseNumber" 
+                  className="form-control"
+                  value={formData.nmlsLicenseNumber}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div className="col-md-4">
+                <label htmlFor="stateLicenseNumber" className="form-label">State License Number</label>
+                <input 
+                  type="text" 
+                  id="stateLicenseNumber" 
+                  name="stateLicenseNumber" 
+                  className="form-control"
+                  value={formData.stateLicenseNumber}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div className="col-md-4">
+                <label htmlFor="stateLicenseState" className="form-label">License State</label>
+                <input 
+                  type="text" 
+                  id="stateLicenseState" 
+                  name="stateLicenseState" 
+                  className="form-control"
+                  value={formData.stateLicenseState}
                   onChange={handleInputChange}
                 />
               </div>
@@ -1578,74 +1617,131 @@ const PetitionSteps = ({ isOpen, onClose }) => {
             <h2 className="theme-color font-med mb-1">5. Right-to-Cure (§35A)</h2>
             <p className="text-muted small mb-3">Enter details proving the §35A notice was properly issued to the borrower.</p>
             <div className="row g-3">
-              <div className="col-md-6">
-                <label htmlFor="notice_date" className="form-label">Notice Date</label>
-                <input 
-                  type="date" 
-                  id="notice_date" 
-                  name="notice_date" 
-                  className="form-control"
-                  value={formData.notice_date}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div className="col-md-6">
-                <label htmlFor="days_delinquent" className="form-label">Days Delinquent on Notice Date</label>
-                <input 
-                  type="number" 
-                  id="days_delinquent" 
-                  name="days_delinquent" 
-                  min="1" 
-                  className="form-control"
-                  value={formData.days_delinquent}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div className="col-md-6">
-                <label htmlFor="amount_default" className="form-label">Amount in Default ($)</label>
-                <input 
-                  type="number" 
-                  step="0.01" 
-                  id="amount_default" 
-                  name="amount_default" 
-                  className="form-control"
-                  value={formData.amount_default}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div className="col-md-6">
-                <label htmlFor="cure_expiration_date" className="form-label">Cure Expiration Date</label>
-                <input 
-                  type="date" 
-                  id="cure_expiration_date" 
-                  name="cure_expiration_date" 
-                  className="form-control"
-                  value={formData.cure_expiration_date}
-                  onChange={handleInputChange}
-                />
-              </div>
               <div className="col-12">
-                <label htmlFor="notice_mailing_address" className="form-label">Notice Mailing Address</label>
-                <textarea 
-                  id="notice_mailing_address" 
-                  name="notice_mailing_address" 
-                  rows="3" 
-                  className="form-control"
-                  value={formData.notice_mailing_address}
-                  onChange={handleInputChange}
-                ></textarea>
+                <div className="form-check mb-3">
+                  <input 
+                    className="form-check-input" 
+                    type="checkbox" 
+                    id="noticeSent" 
+                    name="noticeSent"
+                    checked={formData.noticeSent}
+                    onChange={handleInputChange}
+                  />
+                  <label className="form-check-label" htmlFor="noticeSent">
+                    Right-to-Cure Notice was sent
+                  </label>
+                </div>
               </div>
-              <div className="col-12 border-top pt-4">
-                <label htmlFor="acceleration_date" className="form-label text-muted">Acceleration Date (If NO Right-to-Cure notice was issued)</label>
-                <input 
-                  type="date" 
-                  id="acceleration_date" 
-                  name="acceleration_date" 
-                  className="form-control"
-                  value={formData.acceleration_date}
-                  onChange={handleInputChange}
-                />
-              </div>
+              
+              {formData.noticeSent && (
+                <>
+                  <div className="col-md-6">
+                    <label htmlFor="noticeDate" className="form-label">Notice Date</label>
+                    <input 
+                      type="date" 
+                      id="noticeDate" 
+                      name="noticeDate" 
+                      className="form-control"
+                      value={formData.noticeDate}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label htmlFor="daysDelinquentAtNotice" className="form-label">Days Delinquent on Notice Date</label>
+                    <input 
+                      type="number" 
+                      id="daysDelinquentAtNotice" 
+                      name="daysDelinquentAtNotice" 
+                      min="0" 
+                      className="form-control"
+                      value={formData.daysDelinquentAtNotice}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label htmlFor="amountInDefault" className="form-label">Amount in Default ($)</label>
+                    <input 
+                      type="number" 
+                      step="0.01" 
+                      id="amountInDefault" 
+                      name="amountInDefault" 
+                      className="form-control"
+                      value={formData.amountInDefault}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label htmlFor="cureExpirationDate" className="form-label">Cure Expiration Date</label>
+                    <input 
+                      type="date" 
+                      id="cureExpirationDate" 
+                      name="cureExpirationDate" 
+                      className="form-control"
+                      value={formData.cureExpirationDate}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  <div className="col-12">
+                    <label htmlFor="noticeAddressStreet1" className="form-label">Notice Mailing Address</label>
+                    <input 
+                      type="text" 
+                      id="noticeAddressStreet1" 
+                      name="noticeAddressStreet1" 
+                      className="form-control"
+                      value={formData.noticeAddressStreet1}
+                      onChange={handleInputChange}
+                      placeholder="Street address"
+                    />
+                  </div>
+                  <div className="col-md-4">
+                    <label htmlFor="noticeAddressCity" className="form-label">City</label>
+                    <input 
+                      type="text" 
+                      id="noticeAddressCity" 
+                      name="noticeAddressCity" 
+                      className="form-control"
+                      value={formData.noticeAddressCity}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  <div className="col-md-4">
+                    <label htmlFor="noticeAddressState" className="form-label">State</label>
+                    <input 
+                      type="text" 
+                      id="noticeAddressState" 
+                      name="noticeAddressState" 
+                      className="form-control"
+                      value={formData.noticeAddressState}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  <div className="col-md-4">
+                    <label htmlFor="noticeAddressZip" className="form-label">ZIP Code</label>
+                    <input 
+                      type="text" 
+                      id="noticeAddressZip" 
+                      name="noticeAddressZip" 
+                      className="form-control"
+                      value={formData.noticeAddressZip}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                </>
+              )}
+              
+              {!formData.noticeSent && (
+                <div className="col-12">
+                  <label htmlFor="manualOverrideReason" className="form-label">Acceleration Date (If NO Right-to-Cure notice was issued)</label>
+                  <input 
+                    type="date" 
+                    id="manualOverrideReason" 
+                    name="manualOverrideReason" 
+                    className="form-control"
+                    value={formData.manualOverrideReason}
+                    onChange={handleInputChange}
+                  />
+                </div>
+              )}
             </div>
           </div>
         );
@@ -1660,58 +1756,81 @@ const PetitionSteps = ({ isOpen, onClose }) => {
             </div>
             <div className="row g-3">
               <div className="col-12">
-                <label htmlFor="form_35b_upload" className="form-label">Upload Form 35B Affidavit (PDF only)</label>
-                <input 
-                  type="file" 
-                  id="form_35b_upload" 
-                  name="form_35b_upload" 
-                  accept=".pdf" 
-                  className="form-control"
-                  onChange={handleInputChange}
-                />
+                <div className="form-check mb-3">
+                  <input 
+                    className="form-check-input" 
+                    type="checkbox" 
+                    id="certainMortgageLoan" 
+                    name="certainMortgageLoan"
+                    checked={formData.certainMortgageLoan}
+                    onChange={handleInputChange}
+                  />
+                  <label className="form-check-label" htmlFor="certainMortgageLoan">
+                    This loan qualifies as a "certain mortgage loan" (Interest-Only, Subprime, Low-Doc, etc.)
+                  </label>
+                </div>
               </div>
+              
+              {formData.certainMortgageLoan && (
+                <>
+                  <div className="col-12">
+                    <label htmlFor="form35bComplianceAffidavitPdf" className="form-label">Upload Form 35B Compliance Affidavit (PDF only)</label>
+                    <input 
+                      type="file" 
+                      id="form35bComplianceAffidavitPdf" 
+                      name="form35bComplianceAffidavitPdf" 
+                      accept=".pdf" 
+                      className="form-control"
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                </>
+              )}
+              
+              {!formData.certainMortgageLoan && (
+                <div className="col-12">
+                  <label htmlFor="form35bNonApplicabilityAffidavitPdf" className="form-label">Upload Form 35B Non-Applicability Affidavit (PDF only) - Optional</label>
+                  <input 
+                    type="file" 
+                    id="form35bNonApplicabilityAffidavitPdf" 
+                    name="form35bNonApplicabilityAffidavitPdf" 
+                    accept=".pdf" 
+                    className="form-control"
+                    onChange={handleInputChange}
+                  />
+                </div>
+              )}
+              
               <div className="col-md-6">
-                <label htmlFor="affiant_name" className="form-label">Affiant Name</label>
+                <label htmlFor="affiantName" className="form-label">Affiant Name</label>
                 <input 
                   type="text" 
-                  id="affiant_name" 
-                  name="affiant_name" 
+                  id="affiantName" 
+                  name="affiantName" 
                   className="form-control"
-                  value={formData.affiant_name}
+                  value={formData.affiantName}
                   onChange={handleInputChange}
                 />
               </div>
               <div className="col-md-6">
-                <label htmlFor="affiant_title" className="form-label">Affiant Title</label>
+                <label htmlFor="affiantTitle" className="form-label">Affiant Title</label>
                 <input 
                   type="text" 
-                  id="affiant_title" 
-                  name="affiant_title" 
+                  id="affiantTitle" 
+                  name="affiantTitle" 
                   className="form-control"
-                  value={formData.affiant_title}
+                  value={formData.affiantTitle}
                   onChange={handleInputChange}
                 />
               </div>
-              <div className="col-md-6">
-                <label htmlFor="affidavit_date" className="form-label">Date of Affidavit</label>
+              <div className="col-12">
+                <label htmlFor="affidavitExecutionDate" className="form-label">Date of Affidavit Execution</label>
                 <input 
                   type="date" 
-                  id="affidavit_date" 
-                  name="affidavit_date" 
+                  id="affidavitExecutionDate" 
+                  name="affidavitExecutionDate" 
                   className="form-control"
-                  value={formData.affidavit_date}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div className="col-md-6">
-                <label htmlFor="notary_info" className="form-label">Notary Information</label>
-                <input 
-                  type="text" 
-                  id="notary_info" 
-                  name="notary_info" 
-                  placeholder="Name, Commission Expiry" 
-                  className="form-control"
-                  value={formData.notary_info}
+                  value={formData.affidavitExecutionDate}
                   onChange={handleInputChange}
                 />
               </div>
