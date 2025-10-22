@@ -84,12 +84,12 @@ const PetitionDetailModal = ({ petition, isOpen, onClose }) => {
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
     const propertyData = [
-      ['Street Address', petition.details?.street_address_line_1 || 'N/A'],
-      ['Address Line 2', petition.details?.street_address_line_2 || 'N/A'],
-      ['City', petition.details?.city || 'N/A'],
-      ['State', petition.details?.state || 'N/A'],
-      ['ZIP Code', petition.details?.zip_code || 'N/A'],
-      ['County', petition.details?.county || 'N/A']
+      ['Street Address', petition.details?.property?.propertyStreet1 || 'N/A'],
+      ['Address Line 2', petition.details?.property?.propertyStreet2 || 'N/A'],
+      ['City', petition.details?.property?.propertyCity || 'N/A'],
+      ['State', petition.details?.property?.propertyState || 'N/A'],
+      ['ZIP Code', petition.details?.property?.propertyZip || 'N/A'],
+      ['County', petition.details?.property?.propertyCounty || 'N/A']
     ];
 
     autoTable(doc, {
@@ -111,14 +111,16 @@ const PetitionDetailModal = ({ petition, isOpen, onClose }) => {
     yPosition += 10;
 
     const loanData = [
-      ['Loan Account Number', petition.details?.loan_account_number || 'N/A'],
-      ['Lien Position', petition.details?.lien_position || 'N/A'],
-      ['Loan Type', petition.details?.loan_type_term || 'N/A'],
-      ['Year Originated', petition.details?.year_originated || 'N/A'],
-      ['Original Amount', formatCurrency(petition.details?.original_amount)],
-      ['Current Amount', formatCurrency(petition.details?.current_amount)],
-      ['Original Rate', petition.details?.original_rate ? `${petition.details.original_rate}%` : 'N/A'],
-      ['Current Rate', petition.details?.current_rate ? `${petition.details.current_rate}%` : 'N/A']
+      ['MIN Number', petition.details?.loan?.minNumber || 'N/A'],
+      ['Loan Number', petition.details?.loan?.loanNumber || 'N/A'],
+      ['Loan Type', petition.details?.loan?.petitionLoanTypeName || 'N/A'],
+      ['Lien Position', petition.details?.loan?.lienPosition || 'N/A'],
+      ['Origination Date', formatDate(petition.details?.loan?.originationDate)],
+      ['Original Amount', formatCurrency(petition.details?.loan?.originalPrincipalAmount)],
+      ['Current Amount', formatCurrency(petition.details?.loan?.currentPrincipalBalance)],
+      ['Interest Rate', petition.details?.loan?.interestRatePercent ? `${petition.details.loan.interestRatePercent}%` : 'N/A'],
+      ['Monthly Payment', formatCurrency(petition.details?.loan?.monthlyPaymentAmount)],
+      ['Delinquency Days', petition.details?.loan?.delinquencyDaysAtFiling || 'N/A']
     ];
 
     autoTable(doc, {
@@ -142,9 +144,13 @@ const PetitionDetailModal = ({ petition, isOpen, onClose }) => {
 
       petition.details.borrowers.forEach((borrower, index) => {
         const borrowerData = [
-          ['First Name', borrower.first_name || 'N/A'],
-          ['Middle Initial', borrower.middle_initial || 'N/A'],
-          ['Last Name', borrower.last_name || 'N/A']
+          ['First Name', borrower.firstName || 'N/A'],
+          ['Middle Name', borrower.middleName || 'N/A'],
+          ['Last Name', borrower.lastName || 'N/A'],
+          ['Suffix', borrower.suffix || 'N/A'],
+          ['Primary Borrower', borrower.borrowerIsPrimary ? 'Yes' : 'No'],
+          ['Email', borrower.email || 'N/A'],
+          ['Phone', borrower.phone || 'N/A']
         ];
 
         autoTable(doc, {
@@ -168,11 +174,13 @@ const PetitionDetailModal = ({ petition, isOpen, onClose }) => {
     yPosition += 10;
 
     const filingEntityData = [
-      ['Organization Name', petition.details?.organization_name || 'N/A'],
-      ['Contact First Name', petition.details?.contact_first_name || 'N/A'],
-      ['Contact Last Name', petition.details?.contact_last_name || 'N/A'],
-      ['Contact Phone', petition.details?.contact_phone || 'N/A'],
-      ['Contact Email', petition.details?.contact_email || 'N/A']
+      ['Filing Entity Legal Name', petition.details?.filingEntity?.filingEntityLegalName || 'N/A'],
+      ['Contact Name', petition.details?.filingEntity?.filingContactName || 'N/A'],
+      ['Contact Phone', petition.details?.filingEntity?.filingContactPhone || 'N/A'],
+      ['Contact Email', petition.details?.filingEntity?.filingContactEmail || 'N/A'],
+      ['NMLS License Number', petition.details?.filingEntity?.nmlsLicenseNumber || 'N/A'],
+      ['State License Number', petition.details?.filingEntity?.stateLicenseNumber || 'N/A'],
+      ['State License State', petition.details?.filingEntity?.stateLicenseState || 'N/A']
     ];
 
     autoTable(doc, {
@@ -194,12 +202,13 @@ const PetitionDetailModal = ({ petition, isOpen, onClose }) => {
     yPosition += 10;
 
     const rightToCureData = [
-      ['Notice Date', formatDate(petition.details?.notice_date)],
-      ['Days Delinquent', petition.details?.days_delinquent || 'N/A'],
-      ['Amount in Default', formatCurrency(petition.details?.amount_default)],
-      ['Cure Expiration Date', formatDate(petition.details?.cure_expiration_date)],
-      ['Notice Mailing Address', petition.details?.notice_mailing_address || 'N/A'],
-      ['Acceleration Date', formatDate(petition.details?.acceleration_date)]
+      ['Notice Sent', petition.details?.rightToCure?.noticeSent ? 'Yes' : 'No'],
+      ['Notice Date', formatDate(petition.details?.rightToCure?.noticeDate)],
+      ['Days Delinquent at Notice', petition.details?.rightToCure?.daysDelinquentAtNotice || 'N/A'],
+      ['Amount in Default', formatCurrency(petition.details?.rightToCure?.amountInDefault)],
+      ['Cure Expiration Date', formatDate(petition.details?.rightToCure?.cureExpirationDate)],
+      ['Manual Override Reason', petition.details?.rightToCure?.manualOverrideReason || 'N/A'],
+      ['Notice Address', petition.details?.rightToCure?.noticeAddressStreet1 || 'N/A']
     ];
 
     autoTable(doc, {
@@ -221,11 +230,12 @@ const PetitionDetailModal = ({ petition, isOpen, onClose }) => {
     yPosition += 10;
 
     const form35BData = [
-      ['Form 35B Upload', petition.details?.form_35b_upload ? 'Document uploaded' : 'No document uploaded'],
-      ['Affiant Name', petition.details?.affiant_name || 'N/A'],
-      ['Affiant Title', petition.details?.affiant_title || 'N/A'],
-      ['Affidavit Date', formatDate(petition.details?.affidavit_date)],
-      ['Notary Information', petition.details?.notary_info || 'N/A']
+      ['Certain Mortgage Loan', petition.details?.affidavit?.certainMortgageLoan ? 'Yes' : 'No'],
+      ['Form 35B Compliance Affidavit', petition.details?.affidavit?.form35bComplianceAffidavitPdf ? 'Document uploaded' : 'No document uploaded'],
+      ['Form 35B Non-Applicability Affidavit', petition.details?.affidavit?.form35bNonApplicabilityAffidavitPdf ? 'Document uploaded' : 'No document uploaded'],
+      ['Affiant Name', petition.details?.affidavit?.affiantName || 'N/A'],
+      ['Affiant Title', petition.details?.affidavit?.affiantTitle || 'N/A'],
+      ['Affidavit Execution Date', formatDate(petition.details?.affidavit?.affidavitExecutionDate)]
     ];
 
     autoTable(doc, {
@@ -246,26 +256,47 @@ const PetitionDetailModal = ({ petition, isOpen, onClose }) => {
     doc.text('Loan Assignees', 20, yPosition);
     yPosition += 10;
 
-    const assigneeData = [
-      ['Lender Name', petition.details?.assignee_lender_name_1 || 'N/A'],
-      ['Lender Type', petition.details?.assignee_lender_type_1 || 'N/A'],
-      ['Originator Name', petition.details?.assignee_originator_name_1 || 'N/A'],
-      ['License Number', petition.details?.assignee_license_number_1 || 'N/A'],
-      ['License State', petition.details?.assignee_license_state_1 || 'N/A'],
-      ['Lender Address', petition.details?.assignee_lender_address_1 || 'N/A']
-    ];
+    // Loan Assignees
+    if (petition.details?.loanAssignees && petition.details.loanAssignees.length > 0) {
+      petition.details.loanAssignees.forEach((assignee, index) => {
+        const assigneeData = [
+          ['Assignee Name', assignee.assigneeName || 'N/A'],
+          ['Assignee Type ID', assignee.assigneeTypeId || 'N/A'],
+          ['Assignee Role ID', assignee.assigneeRoleId || 'N/A'],
+          ['Contact Email', assignee.contactEmail || 'N/A'],
+          ['Contact Phone', assignee.contactPhone || 'N/A']
+        ];
 
-    autoTable(doc, {
-      startY: yPosition,
-      head: [['Field', 'Value']],
-      body: assigneeData,
-      theme: 'grid',
-      headStyles: { fillColor: [52, 73, 94] },
-      styles: { fontSize: 9 },
-      columnStyles: { 0: { cellWidth: 60 }, 1: { cellWidth: 120 } }
-    });
+        autoTable(doc, {
+          startY: yPosition,
+          head: [[`Assignee ${index + 1}`, '']],
+          body: assigneeData,
+          theme: 'grid',
+          headStyles: { fillColor: [70, 130, 180] },
+          styles: { fontSize: 9 },
+          columnStyles: { 0: { cellWidth: 60 }, 1: { cellWidth: 120 } }
+        });
 
-    yPosition = doc.lastAutoTable.finalY + 15;
+        yPosition = doc.lastAutoTable.finalY + 10;
+      });
+    } else {
+      const assigneeData = [
+        ['No assignee information available', '']
+      ];
+
+      autoTable(doc, {
+        startY: yPosition,
+        head: [['Loan Assignees', '']],
+        body: assigneeData,
+        theme: 'grid',
+        headStyles: { fillColor: [52, 73, 94] },
+        styles: { fontSize: 9 },
+        columnStyles: { 0: { cellWidth: 60 }, 1: { cellWidth: 120 } }
+      });
+
+      yPosition = doc.lastAutoTable.finalY + 15;
+    }
+
 
     // Petition Attestation
     doc.setFontSize(12);
@@ -273,22 +304,48 @@ const PetitionDetailModal = ({ petition, isOpen, onClose }) => {
     doc.text('Petition Attestation', 20, yPosition);
     yPosition += 10;
 
-    const attestationData = [
-      ['Attester First Name', petition.details?.attester_first_name || 'N/A'],
-      ['Middle Initial', petition.details?.attester_middle_initial || 'N/A'],
-      ['Attester Last Name', petition.details?.attester_last_name || 'N/A'],
-      ['Certification', petition.details?.certification_check ? 'Certified' : 'Not certified']
-    ];
+    // Signatures
+    if (petition.details?.signatures && petition.details.signatures.length > 0) {
+      petition.details.signatures.forEach((signature, index) => {
+        const signatureData = [
+          ['Signer Full Name', signature.signerFullName || 'N/A'],
+          ['Signer Title', signature.signerTitle || 'N/A'],
+          ['Signer Email', signature.signerEmail || 'N/A'],
+          ['E-Sign Consent', signature.esignConsent ? 'Yes' : 'No'],
+          ['Signed At', formatDate(signature.signedAt)],
+          ['Signer IP', signature.signerIp || 'N/A']
+        ];
 
-    autoTable(doc, {
-      startY: yPosition,
-      head: [['Field', 'Value']],
-      body: attestationData,
-      theme: 'grid',
-      headStyles: { fillColor: [52, 73, 94] },
-      styles: { fontSize: 9 },
-      columnStyles: { 0: { cellWidth: 60 }, 1: { cellWidth: 120 } }
-    });
+        autoTable(doc, {
+          startY: yPosition,
+          head: [[`Signature ${index + 1}`, '']],
+          body: signatureData,
+          theme: 'grid',
+          headStyles: { fillColor: [70, 130, 180] },
+          styles: { fontSize: 9 },
+          columnStyles: { 0: { cellWidth: 60 }, 1: { cellWidth: 120 } }
+        });
+
+        yPosition = doc.lastAutoTable.finalY + 10;
+      });
+    } else {
+      const signatureData = [
+        ['No signature information available', '']
+      ];
+
+      autoTable(doc, {
+        startY: yPosition,
+        head: [['Signatures', '']],
+        body: signatureData,
+        theme: 'grid',
+        headStyles: { fillColor: [52, 73, 94] },
+        styles: { fontSize: 9 },
+        columnStyles: { 0: { cellWidth: 60 }, 1: { cellWidth: 120 } }
+      });
+
+      yPosition = doc.lastAutoTable.finalY + 15;
+    }
+
 
       // Save the PDF
       doc.save(`petition-${petition.petitionNumber}-details.pdf`);
