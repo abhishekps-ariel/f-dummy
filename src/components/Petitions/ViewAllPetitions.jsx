@@ -693,7 +693,11 @@ const ViewAllPetitions = ({ onBack }) => {
       <div className="d-flex justify-content-between align-items-center mb-3">
         <div>
           <span className="text-muted">
-            Showing {petitions.length} of {pagination.totalCount} petitions
+            {(() => {
+              const startIndex = (pagination.currentPage - 1) * pagination.pageSize + 1;
+              const endIndex = Math.min(pagination.currentPage * pagination.pageSize, pagination.totalCount);
+              return `Showing ${startIndex}-${endIndex} of ${pagination.totalCount} petitions`;
+            })()}
             {loading && <span className="ms-2">(Loading...)</span>}
           </span>
         </div>
