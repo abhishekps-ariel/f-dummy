@@ -92,7 +92,7 @@ export const register = async (formData, inviteData = null) => {
     lastName: formData.lastName,
     email: formData.email,
     password: formData.password,
-    role: "Normal User",
+    role: "FILIR",
     phone: formData.phoneNumber,
   };
 

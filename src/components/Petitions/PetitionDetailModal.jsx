@@ -178,6 +178,7 @@ const PetitionDetailModal = ({ petition, isOpen, onClose }) => {
       ['Contact Name', petition.details?.filingEntity?.filingContactName || 'N/A'],
       ['Contact Phone', petition.details?.filingEntity?.filingContactPhone || 'N/A'],
       ['Contact Email', petition.details?.filingEntity?.filingContactEmail || 'N/A'],
+      ['Address', `${petition.details?.filingEntity?.filingEntityStreet1 || 'N/A'}${petition.details?.filingEntity?.filingEntityStreet2 ? ', ' + petition.details.filingEntity.filingEntityStreet2 : ''}, ${petition.details?.filingEntity?.filingEntityCity || 'N/A'}, ${petition.details?.filingEntity?.filingEntityState || 'N/A'} ${petition.details?.filingEntity?.filingEntityZip || 'N/A'}`],
       ['NMLS License Number', petition.details?.filingEntity?.nmlsLicenseNumber || 'N/A'],
       ['State License Number', petition.details?.filingEntity?.stateLicenseNumber || 'N/A'],
       ['State License State', petition.details?.filingEntity?.stateLicenseState || 'N/A']
@@ -263,8 +264,9 @@ const PetitionDetailModal = ({ petition, isOpen, onClose }) => {
           ['Assignee Name', assignee.assigneeName || 'N/A'],
           ['Assignee Type ID', assignee.assigneeTypeId || 'N/A'],
           ['Assignee Role ID', assignee.assigneeRoleId || 'N/A'],
-          ['Contact Email', assignee.contactEmail || 'N/A'],
-          ['Contact Phone', assignee.contactPhone || 'N/A']
+          ['Address', `${assignee.street1 || 'N/A'}${assignee.street2 ? ', ' + assignee.street2 : ''}, ${assignee.city || 'N/A'}, ${assignee.addressState || 'N/A'} ${assignee.zip || 'N/A'}`],
+          ['License Number', assignee.licenseNumber || 'N/A'],
+          ['License State', assignee.licenseState || 'N/A']
         ];
 
         autoTable(doc, {
@@ -595,6 +597,16 @@ const PetitionDetailModal = ({ petition, isOpen, onClose }) => {
                           <label className="form-label fw-semibold">NMLS License Number</label>
                           <div className="form-control-plaintext">{petition.details?.filingEntity?.nmlsLicenseNumber || 'N/A'}</div>
                         </div>
+                        <div className="col-12">
+                          <label className="form-label fw-semibold">Address</label>
+                          <div className="form-control-plaintext">
+                            {petition.details?.filingEntity?.filingEntityStreet1 || 'N/A'}
+                            {petition.details?.filingEntity?.filingEntityStreet2 && (
+                              <><br/>{petition.details.filingEntity.filingEntityStreet2}</>
+                            )}
+                            <br/>{petition.details?.filingEntity?.filingEntityCity || 'N/A'}, {petition.details?.filingEntity?.filingEntityState || 'N/A'} {petition.details?.filingEntity?.filingEntityZip || 'N/A'}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -711,13 +723,33 @@ const PetitionDetailModal = ({ petition, isOpen, onClose }) => {
                                 <div className="form-control-plaintext">{assignee.assigneeName || 'N/A'}</div>
                               </div>
                               <div className="col-md-6">
-                                <label className="form-label fw-semibold">Contact Email</label>
-                                <div className="form-control-plaintext">{assignee.contactEmail || 'N/A'}</div>
+                                <label className="form-label fw-semibold">Assignee Type ID</label>
+                                <div className="form-control-plaintext">{assignee.assigneeTypeId || 'N/A'}</div>
                               </div>
                               <div className="col-md-6">
-                                <label className="form-label fw-semibold">Contact Phone</label>
-                                <div className="form-control-plaintext">{assignee.contactPhone || 'N/A'}</div>
+                                <label className="form-label fw-semibold">Assignee Role ID</label>
+                                <div className="form-control-plaintext">{assignee.assigneeRoleId || 'N/A'}</div>
                               </div>
+                              <div className="col-12">
+                                <label className="form-label fw-semibold">Address</label>
+                                <div className="form-control-plaintext">
+                                  {assignee.street1 || 'N/A'}
+                                  {assignee.street2 && <><br/>{assignee.street2}</>}
+                                  <br/>{assignee.city || 'N/A'}, {assignee.addressState || 'N/A'} {assignee.zip || 'N/A'}
+                                </div>
+                              </div>
+                              {assignee.licenseNumber && (
+                                <div className="col-md-6">
+                                  <label className="form-label fw-semibold">License Number</label>
+                                  <div className="form-control-plaintext">{assignee.licenseNumber}</div>
+                                </div>
+                              )}
+                              {assignee.licenseState && (
+                                <div className="col-md-6">
+                                  <label className="form-label fw-semibold">License State</label>
+                                  <div className="form-control-plaintext">{assignee.licenseState}</div>
+                                </div>
+                              )}
                             </div>
                           </div>
                         ))

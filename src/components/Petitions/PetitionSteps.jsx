@@ -11,7 +11,7 @@ import { getFilingEntityTypes } from '../../services/commonService';
 // Static libraries array to prevent LoadScript reload
 const LIBRARIES = ['places'];
 
-const PetitionSteps = ({ isOpen, onClose }) => {
+const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [isIntentionalSubmit, setIsIntentionalSubmit] = useState(false);
   const totalSteps = 9;
@@ -93,6 +93,45 @@ const PetitionSteps = ({ isOpen, onClose }) => {
     
     loadUserProfileAndTypes();
   }, [user?.id]);
+
+  // Load organization details and prefill filing entity fields
+  useEffect(() => {
+    if (organization) {
+      try {
+        // Parse the address to extract components
+        // Expected format: "9 Maple Brook Dr, Rutland, MA 01543, USA"
+        const addressParts = organization.address ? organization.address.split(', ') : [];
+        let street1 = '';
+        let city = '';
+        let state = '';
+        let zip = '';
+        
+        if (addressParts.length >= 3) {
+          street1 = addressParts[0] || ''; // "9 Maple Brook Dr"
+          city = addressParts[1] || ''; // "Rutland"
+          const stateZip = addressParts[2] || ''; // "MA 01543"
+          const stateZipParts = stateZip.split(' ');
+          if (stateZipParts.length >= 2) {
+            state = stateZipParts[0] || ''; // "MA"
+            zip = stateZipParts[1] || ''; // "01543"
+          }
+        }
+        
+        // Prefill filing entity fields with organization data
+        setFormData(prev => ({
+          ...prev,
+          filingEntityLegalName: organization.name || '',
+          filingEntityStreet1: street1,
+          filingEntityCity: city,
+          filingEntityState: state,
+          filingEntityZip: zip
+        }));
+      } catch (error) {
+        console.error('Error parsing organization details:', error);
+        // Don't show error toast as this is not critical
+      }
+    }
+  }, [organization]);
 
   // Initialize Google Maps API with React library
   const { isLoaded, loadError } = useJsApiLoader({
@@ -227,7 +266,8 @@ const PetitionSteps = ({ isOpen, onClose }) => {
     // Step 4: Filing Entity
     filingEntityLegalName: '',
     filingEntityRole: '',
-    filingEntityStreet: '',
+    filingEntityStreet1: '',
+    filingEntityStreet2: '',
     filingEntityCity: '',
     filingEntityState: '',
     filingEntityZip: '',
@@ -264,8 +304,13 @@ const PetitionSteps = ({ isOpen, onClose }) => {
         assigneeName: '',
         assigneeTypeId: '',
         assigneeRoleId: '',
-        contactEmail: '',
-        contactPhone: ''
+        street1: '',
+        street2: '',
+        city: '',
+        addressState: '',
+        zip: '',
+        licenseNumber: '',
+        licenseState: ''
       }
     ],
     
@@ -1086,8 +1131,8 @@ const PetitionSteps = ({ isOpen, onClose }) => {
     
     // Filing Entity Role is read-only from profile, no validation needed
     
-    if (!formData.filingEntityStreet || formData.filingEntityStreet.trim() === '') {
-      errors.filingEntityStreet = 'Street Address is required';
+    if (!formData.filingEntityStreet1 || formData.filingEntityStreet1.trim() === '') {
+      errors.filingEntityStreet1 = 'Street Address Line 1 is required';
       hasErrors = true;
     }
     
@@ -1376,6 +1421,12 @@ const PetitionSteps = ({ isOpen, onClose }) => {
       // Submit petition using API
       await submitPetition(formData);
       setIsIntentionalSubmit(false); // Reset the flag
+      
+      // Notify parent component that petition was submitted successfully
+      if (onPetitionSubmitted) {
+        onPetitionSubmitted();
+      }
+      
       onClose();
     } catch (error) {
       console.error('Error submitting petition:', error);
@@ -2151,20 +2202,33 @@ const PetitionSteps = ({ isOpen, onClose }) => {
 
               {/* Address Fields */}
               <div className="col-12">
-                <label htmlFor="filingEntityStreet" className="form-label">Street Address *</label>
+                <label htmlFor="filingEntityStreet1" className="form-label">Street Address Line 1 *</label>
                 <input 
                   type="text" 
-                  id="filingEntityStreet" 
-                  name="filingEntityStreet" 
-                  className={`form-control ${fieldErrors.filingEntityStreet ? 'is-invalid' : ''}`}
-                  value={formData.filingEntityStreet}
+                  id="filingEntityStreet1" 
+                  name="filingEntityStreet1" 
+                  className={`form-control ${fieldErrors.filingEntityStreet1 ? 'is-invalid' : ''}`}
+                  value={formData.filingEntityStreet1}
                   onChange={handleInputChange}
                 />
-                {fieldErrors.filingEntityStreet && (
+                {fieldErrors.filingEntityStreet1 && (
                   <div className="text-danger small mt-1">
-                    {fieldErrors.filingEntityStreet}
+                    {fieldErrors.filingEntityStreet1}
                   </div>
                 )}
+              </div>
+              
+              <div className="col-12">
+                <label htmlFor="filingEntityStreet2" className="form-label">Street Address Line 2 (Optional)</label>
+                <input 
+                  type="text" 
+                  id="filingEntityStreet2" 
+                  name="filingEntityStreet2" 
+                  className="form-control"
+                  value={formData.filingEntityStreet2}
+                  onChange={handleInputChange}
+                  placeholder="Apartment, suite, unit, building, floor, etc."
+                />
               </div>
               
               <div className="col-md-4">
@@ -2654,7 +2718,7 @@ const PetitionSteps = ({ isOpen, onClose }) => {
       case 7:
         return (
           <div>
-            <h2 className="theme-color font-med mb-1">7. Loan Assignees (Optional)</h2>
+            <h2 className="theme-color font-med mb-1">7. Loan Assignees</h2>
             <p className="text-muted small mb-3">List any prior holders or assignees of the loan.</p>
             
             {commonDataError && (
@@ -2744,24 +2808,74 @@ const PetitionSteps = ({ isOpen, onClose }) => {
                       </div>
                     )}
                   </div>
-                  <div className="col-md-6">
-                    <label className="form-label">Contact Email</label>
+                  <div className="col-12">
+                    <label className="form-label">Street Address Line 1 *</label>
                     <input 
-                      type="email" 
+                      type="text" 
                       className="form-control"
-                      value={assignee.contactEmail}
-                      onChange={(e) => updateLoanAssignee(index, 'contactEmail', e.target.value)}
-                      placeholder="Enter contact email"
+                      value={assignee.street1}
+                      onChange={(e) => updateLoanAssignee(index, 'street1', e.target.value)}
+                      placeholder="Enter street address"
+                    />
+                  </div>
+                  <div className="col-12">
+                    <label className="form-label">Street Address Line 2 (Optional)</label>
+                    <input 
+                      type="text" 
+                      className="form-control"
+                      value={assignee.street2}
+                      onChange={(e) => updateLoanAssignee(index, 'street2', e.target.value)}
+                      placeholder="Apartment, suite, unit, building, floor, etc."
+                    />
+                  </div>
+                  <div className="col-md-4">
+                    <label className="form-label">City *</label>
+                    <input 
+                      type="text" 
+                      className="form-control"
+                      value={assignee.city}
+                      onChange={(e) => updateLoanAssignee(index, 'city', e.target.value)}
+                      placeholder="Enter city"
+                    />
+                  </div>
+                  <div className="col-md-4">
+                    <label className="form-label">State *</label>
+                    <input 
+                      type="text" 
+                      className="form-control"
+                      value={assignee.addressState}
+                      onChange={(e) => updateLoanAssignee(index, 'addressState', e.target.value)}
+                      placeholder="Enter state"
+                    />
+                  </div>
+                  <div className="col-md-4">
+                    <label className="form-label">ZIP Code *</label>
+                    <input 
+                      type="text" 
+                      className="form-control"
+                      value={assignee.zip}
+                      onChange={(e) => updateLoanAssignee(index, 'zip', e.target.value)}
+                      placeholder="Enter ZIP code"
                     />
                   </div>
                   <div className="col-md-6">
-                    <label className="form-label">Contact Phone</label>
+                    <label className="form-label">License Number (Optional)</label>
                     <input 
-                      type="tel" 
+                      type="text" 
                       className="form-control"
-                      value={assignee.contactPhone}
-                      onChange={(e) => updateLoanAssignee(index, 'contactPhone', e.target.value)}
-                      placeholder="Enter contact phone"
+                      value={assignee.licenseNumber}
+                      onChange={(e) => updateLoanAssignee(index, 'licenseNumber', e.target.value)}
+                      placeholder="Enter license number"
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">License State (Optional)</label>
+                    <input 
+                      type="text" 
+                      className="form-control"
+                      value={assignee.licenseState}
+                      onChange={(e) => updateLoanAssignee(index, 'licenseState', e.target.value)}
+                      placeholder="Enter license state"
                     />
                   </div>
                 </div>
@@ -2885,7 +2999,7 @@ const PetitionSteps = ({ isOpen, onClose }) => {
                 <div className="review-content">
                   <div className="row g-3">
                     <div className="col-md-6">
-                      <strong>Loan Type:</strong> {formData.petitionLoanTypeName}
+                      <strong>Loan Type:</strong> {getLoanTypes().find(type => type.id === formData.petitionLoanTypeId)?.name || formData.petitionLoanTypeName || 'N/A'}
                     </div>
                     <div className="col-md-6">
                       <strong>Original Loan Amount:</strong> ${formData.originalPrincipalAmount}
@@ -2900,7 +3014,7 @@ const PetitionSteps = ({ isOpen, onClose }) => {
                       <strong>Loan Number:</strong> {formData.loanNumber}
                     </div>
                     <div className="col-md-6">
-                      <strong>Lien Position:</strong> {formData.lienPosition}
+                      <strong>Lien Position:</strong> {getLienPositions().find(position => position.value === formData.lienPosition)?.name || formData.lienPosition}
                     </div>
                   </div>
                 </div>
@@ -2953,7 +3067,9 @@ const PetitionSteps = ({ isOpen, onClose }) => {
                       <strong>Entity Type:</strong> {filingEntityTypes.find(type => type.id === formData.filingEntityTypeId)?.name || 'N/A'}
                     </div>
                     <div className="col-md-6">
-                      <strong>Address:</strong> {formData.filingEntityStreet}, {formData.filingEntityCity}, {formData.filingEntityState} {formData.filingEntityZip}
+                      <strong>Address:</strong> {formData.filingEntityStreet1}
+                      {formData.filingEntityStreet2 && <><br/><span className="text-muted">{formData.filingEntityStreet2}</span></>}
+                      <br/>{formData.filingEntityCity}, {formData.filingEntityState} {formData.filingEntityZip}
                     </div>
                     <div className="col-md-6">
                       <strong>Contact Name:</strong> {formData.filingContactName}
@@ -3054,17 +3170,26 @@ const PetitionSteps = ({ isOpen, onClose }) => {
                           <strong>Name:</strong> {assignee.assigneeName}
                         </div>
                         <div className="col-md-6">
-                          <strong>Type:</strong> {assignee.assigneeTypeId}
+                          <strong>Type:</strong> {getAssigneeTypes().find(type => type.id === assignee.assigneeTypeId)?.name || assignee.assigneeTypeId}
                         </div>
                         <div className="col-md-6">
-                          <strong>Role:</strong> {assignee.assigneeRoleId}
+                          <strong>Role:</strong> {getAssigneeRoles().find(role => role.id === assignee.assigneeRoleId)?.name || assignee.assigneeRoleId}
                         </div>
-                        <div className="col-md-6">
-                          <strong>Contact Email:</strong> {assignee.contactEmail}
+                        <div className="col-12">
+                          <strong>Address:</strong> {assignee.street1}
+                          {assignee.street2 && <><br/><span className="text-muted">{assignee.street2}</span></>}
+                          <br/>{assignee.city}, {assignee.addressState} {assignee.zip}
                         </div>
-                        <div className="col-md-6">
-                          <strong>Contact Phone:</strong> {assignee.contactPhone}
-                        </div>
+                        {assignee.licenseNumber && (
+                          <div className="col-md-6">
+                            <strong>License Number:</strong> {assignee.licenseNumber}
+                          </div>
+                        )}
+                        {assignee.licenseState && (
+                          <div className="col-md-6">
+                            <strong>License State:</strong> {assignee.licenseState}
+                          </div>
+                        )}
                       </div>
                     ))
                   ) : (

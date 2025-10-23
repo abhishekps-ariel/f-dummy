@@ -521,7 +521,7 @@ function Profile() {
                     {user.firstName} {user.lastName}
                   </p>
                   <p className="font-sm mb-0 text-gray-dark">
-                    {user.role || "User"}
+                    {user.role || "FILIR"}
                   </p>
                 </div>
                 <i className="fas fa-chevron-down small ms-2 text-secondary d-none d-lg-block"></i>
@@ -589,7 +589,7 @@ function Profile() {
                       </p>
                       <p className="text-muted mb-0">
                         <i className="fas fa-user-tag me-2"></i>
-                        {user.role || "User"}
+                        {user.role || "FILIR"}
                       </p>
                     </div>
                     <div className="d-flex gap-2">
@@ -599,6 +599,7 @@ function Profile() {
                             className="dashboard-btn-create" 
                             onClick={handleSave}
                             disabled={isSaving}
+                            style={{ minHeight: '40px', padding: '10px 20px' }}
                           >
                             {isSaving ? (
                               <>
@@ -611,12 +612,20 @@ function Profile() {
                               </>
                             )}
                           </button>
-                          <button className="btn btn-outline-secondary" onClick={handleCancel}>
-                            <i className="fa-solid fa-times me-1"></i> Cancel
+                          <button 
+                            className="btn btn-sm btn-outline-secondary" 
+                            onClick={handleCancel}
+                            style={{ minHeight: '40px', padding: '8px 16px' }}
+                          >
+                            Cancel
                           </button>
                         </>
                       ) : (
-                        <button className="dashboard-btn-create" onClick={handleEditProfile}>
+                        <button 
+                          className="dashboard-btn-create" 
+                          onClick={handleEditProfile}
+                          style={{ minHeight: '40px', padding: '10px 20px' }}
+                        >
                           <i className="fa-solid fa-edit me-1"></i> Edit Profile
                         </button>
                       )}
@@ -735,7 +744,7 @@ function Profile() {
                     <div className="col-sm-6">
                       <label className="form-label text-muted small">Role</label>
                       <p className="fw-medium mb-0">
-                        <span className="badge bg-primary fs-6">{user.role || "Normal User"}</span>
+                        <span className="badge bg-primary fs-6">{user.role || "FILIR"}</span>
                       </p>
                     </div>
                     <div className="col-sm-6">
@@ -743,6 +752,46 @@ function Profile() {
                       <p className="fw-medium mb-0">
                         <span className="badge bg-success fs-6">Active</span>
                       </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Digital Signature Section */}
+              <div className="col-12 mb-3">
+                <div className="stat-card p-4">
+                  <h4 className="fw-medium mb-4">
+                    <i className="fas fa-signature me-2 text-secondary"></i>
+                     Signature
+                  </h4>
+                  <div className="row g-3">
+                    <div className="col-12">
+                      <label className="form-label text-muted small">Signature Preview</label>
+                      <div className="border rounded p-3 bg-light text-center" style={{ minHeight: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <div className="signature-preview">
+                          <i className="fas fa-signature text-muted me-2" style={{ fontSize: '1.5rem' }}></i>
+                          <span className="text-muted">No signature captured</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="col-12">
+                      <label className="form-label text-muted small">Signature Status</label>
+                      <p className="fw-medium mb-0">
+                        <span className="badge bg-warning fs-6">
+                          <i className="fa-solid fa-clock me-1"></i>
+                          Pending
+                        </span>
+                      </p>
+                    </div>
+                    <div className="col-12">
+                      <label className="form-label text-muted small">Last Updated</label>
+                      <p className="fw-medium mb-0 text-muted small">Never</p>
+                    </div>
+                    <div className="col-12 mt-3">
+                      <button className="dashboard-btn-create w-100">
+                        <i className="fa-solid fa-pen-to-square me-1"></i>
+                        Capture Digital Signature
+                      </button>
                     </div>
                   </div>
                 </div>

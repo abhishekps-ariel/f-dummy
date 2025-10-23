@@ -100,8 +100,17 @@ function Dashboard() {
     loadJoinRequests();
     
     // Check if we should show organizations section
+    // Only set to organizations if explicitly requested via navigation
     if (location.state?.activeSection === 'organizations') {
       setActiveSection('organizations');
+    } else {
+      // Default to dashboard section on page load
+      setActiveSection('dashboard');
+    }
+    
+    // Clear location state to prevent it from persisting on page reload
+    if (location.state) {
+      window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, [navigate]);
 
@@ -355,7 +364,7 @@ function Dashboard() {
         name: orgFormData.orgName,
         type: orgFormData.orgType,
         address: `${orgFormData.addressStreet}, ${orgFormData.addressCity}, ${orgFormData.addressState} ${orgFormData.addressZip}`,
-        primaryContact: `${orgFormData.contactName} (${orgFormData.contactEmail}, ${orgFormData.contactPhone})`,
+        primaryContact: `${orgFormData.addressStreet}, ${orgFormData.addressCity}, ${orgFormData.addressState} ${orgFormData.addressZip}`,
       };
 
       // Create new organization
@@ -730,7 +739,7 @@ function Dashboard() {
                     {user.firstName} {user.lastName}
                   </p>
                   <p className="font-sm mb-0 text-gray-dark">
-                    {user.role || "User"}
+                    {user.role || "FILIR"}
                   </p>
                 </div>
                 <i className="fas fa-chevron-down small ms-2 text-secondary d-none d-lg-block"></i>
@@ -867,7 +876,7 @@ function Dashboard() {
                       </p>
                       <p className="text-muted small mb-1">
                         <i className="fa-solid fa-user-tag me-1"></i>
-                        Role: {user.role || "User"}
+                        Role: {user.role || "FILIR"}
                       </p>
                       {userOrganization && (
                         <>
@@ -1481,7 +1490,8 @@ function Dashboard() {
         {/* Petition Steps Modal */}
         <PetitionSteps 
           isOpen={showPetitionSteps} 
-          onClose={() => setShowPetitionSteps(false)} 
+          onClose={() => setShowPetitionSteps(false)}
+          organization={userOrganization}
         />
 
         {/* Petition Detail Modal */}

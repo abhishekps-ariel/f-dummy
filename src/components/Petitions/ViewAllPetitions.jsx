@@ -21,7 +21,7 @@ const ViewAllPetitions = ({ onBack }) => {
     currentPage: 1, // API uses 1-based indexing
     totalPages: 1,
     totalCount: 0,
-    pageSize: 5
+    pageSize: 10
   });
   const [showPetitionDetail, setShowPetitionDetail] = useState(false);
   const [selectedPetition, setSelectedPetition] = useState(null);
@@ -60,7 +60,7 @@ const ViewAllPetitions = ({ onBack }) => {
       const paginationParams = {
         organizationId: organization.id,
         pageNumber: page, // Send current page number (1-based)
-        pageSize: 5, // 5 petitions per page
+        pageSize: 10, // 10 petitions per page
         searchText: searchQuery.trim() || "",
         status: getStatusValue(statusFilter),
         fromDate: getFromDate(),
@@ -84,7 +84,7 @@ const ViewAllPetitions = ({ onBack }) => {
           setPagination(prev => ({
             ...prev,
             currentPage: page,
-            totalPages: Math.ceil(response.totalRecords / 5),
+            totalPages: Math.ceil(response.totalRecords / 10),
             totalCount: response.totalRecords
           }));
           return;
@@ -102,8 +102,8 @@ const ViewAllPetitions = ({ onBack }) => {
           const filteredPetitions = applyClientSideFilters(allPetitions);
           
           // Apply client-side pagination
-          const startIndex = (page - 1) * 5;
-          const paginatedPetitions = filteredPetitions.slice(startIndex, startIndex + 5);
+          const startIndex = (page - 1) * 10;
+          const paginatedPetitions = filteredPetitions.slice(startIndex, startIndex + 10);
           
           setPetitions(paginatedPetitions);
           
@@ -111,7 +111,7 @@ const ViewAllPetitions = ({ onBack }) => {
           setPagination(prev => ({
             ...prev,
             currentPage: page,
-            totalPages: Math.ceil(filteredPetitions.length / 5),
+            totalPages: Math.ceil(filteredPetitions.length / 10),
             totalCount: filteredPetitions.length
           }));
         } else {
@@ -970,7 +970,7 @@ const ViewAllPetitions = ({ onBack }) => {
       </div>
 
       {/* Pagination */}
-      {pagination.totalPages > 1 && (
+      {pagination.totalPages >= 1 && (
         <div className="d-flex justify-content-center mt-4">
           <div className="pagination-minimal">
             <button 

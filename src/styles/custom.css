@@ -37,6 +37,28 @@ html {
     font-weight: 600;
 }
 
+/* Profile button clickability fixes */
+.d-flex.gap-2 button {
+    position: relative;
+    z-index: 10;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+.d-flex.gap-2 button * {
+    pointer-events: none;
+}
+
+.d-flex.gap-2 button {
+    pointer-events: auto;
+}
+
 body {
     scroll-behavior: smooth;
 }
@@ -1306,8 +1328,6 @@ form.search-form input:focus {
     padding: 8px 12px;
     font-size: 14px;
     color: #666;
-    cursor: pointer;
-    transition: all 0.2s;
 }
 
 .dashboard-btn-refresh:hover:not(:disabled) {
