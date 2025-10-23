@@ -3,6 +3,40 @@ html {
     scroll-padding-top: 100px;
 }
 
+/* Petition Review Summary Styles */
+.petition-review-summary {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.review-section {
+    background-color: white;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    padding: 1.25rem;
+}
+
+.review-section-title {
+    color: #495057;
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.review-content {
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.review-content strong {
+    color: #495057;
+    font-weight: 600;
+}
+
 body {
     scroll-behavior: smooth;
 }

@@ -14,7 +14,7 @@ const LIBRARIES = ['places'];
 const PetitionSteps = ({ isOpen, onClose }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [isIntentionalSubmit, setIsIntentionalSubmit] = useState(false);
-  const totalSteps = 8;
+  const totalSteps = 9;
   
   // User profile and filing entity type state
   const [userProfile, setUserProfile] = useState(null);
@@ -2846,6 +2846,282 @@ const PetitionSteps = ({ isOpen, onClose }) => {
           </div>
         );
 
+      case 9:
+        return (
+          <div>
+            <h2 className="theme-color font-med mb-1">9. Review & Submit Petition</h2>
+            <p className="text-muted small mb-3">Please review all entered petition details before final submission.</p>
+            
+            {/* Read-only Summary */}
+            <div className="petition-review-summary">
+              {/* Property Information */}
+              <div className="review-section mb-4">
+                <h5 className="review-section-title">Property Information</h5>
+                <div className="review-content">
+                  <div className="row g-3">
+                    <div className="col-md-6">
+                      <strong>Street Address:</strong> {formData.propertyStreet1}
+                      {formData.propertyStreet2 && <><br/><span className="text-muted">{formData.propertyStreet2}</span></>}
+                    </div>
+                    <div className="col-md-3">
+                      <strong>City:</strong> {formData.propertyCity}
+                    </div>
+                    <div className="col-md-3">
+                      <strong>State:</strong> {formData.propertyState}
+                    </div>
+                    <div className="col-md-3">
+                      <strong>ZIP Code:</strong> {formData.propertyZip}
+                    </div>
+                    <div className="col-md-3">
+                      <strong>County:</strong> {formData.propertyCounty}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Loan Information */}
+              <div className="review-section mb-4">
+                <h5 className="review-section-title">Loan Information</h5>
+                <div className="review-content">
+                  <div className="row g-3">
+                    <div className="col-md-6">
+                      <strong>Loan Type:</strong> {formData.petitionLoanTypeName}
+                    </div>
+                    <div className="col-md-6">
+                      <strong>Original Loan Amount:</strong> ${formData.originalPrincipalAmount}
+                    </div>
+                    <div className="col-md-6">
+                      <strong>Current Balance:</strong> ${formData.currentPrincipalBalance}
+                    </div>
+                    <div className="col-md-6">
+                      <strong>Interest Rate:</strong> {formData.interestRatePercent}%
+                    </div>
+                    <div className="col-md-6">
+                      <strong>Loan Number:</strong> {formData.loanNumber}
+                    </div>
+                    <div className="col-md-6">
+                      <strong>Lien Position:</strong> {formData.lienPosition}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Borrower Information */}
+              <div className="review-section mb-4">
+                <h5 className="review-section-title">Borrower Information</h5>
+                <div className="review-content">
+                  {formData.borrowers && formData.borrowers.length > 0 ? (
+                    formData.borrowers.map((borrower, index) => (
+                      <div key={borrower.id} className="row g-3 mb-3">
+                        <div className="col-12">
+                          <strong>Borrower {index + 1}:</strong>
+                        </div>
+                        <div className="col-md-6">
+                          <strong>Name:</strong> {borrower.firstName} {borrower.middleName} {borrower.lastName} {borrower.suffix}
+                        </div>
+                        <div className="col-md-6">
+                          <strong>Phone:</strong> {borrower.phone}
+                        </div>
+                        <div className="col-md-6">
+                          <strong>Email:</strong> {borrower.email}
+                        </div>
+                        <div className="col-md-6">
+                          <strong>Primary:</strong> {borrower.borrowerIsPrimary ? 'Yes' : 'No'}
+                        </div>
+                        {borrower.mailingStreet1 && (
+                          <div className="col-12">
+                            <strong>Mailing Address:</strong> {borrower.mailingStreet1}, {borrower.mailingCity}, {borrower.mailingState} {borrower.mailingZip}
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-muted">No borrower information available</div>
+                  )}
+                </div>
+              </div>
+
+              {/* Filing Entity Information */}
+              <div className="review-section mb-4">
+                <h5 className="review-section-title">Filing Entity Information</h5>
+                <div className="review-content">
+                  <div className="row g-3">
+                    <div className="col-md-6">
+                      <strong>Entity Name:</strong> {formData.filingEntityLegalName}
+                    </div>
+                    <div className="col-md-6">
+                      <strong>Entity Type:</strong> {filingEntityTypes.find(type => type.id === formData.filingEntityTypeId)?.name || 'N/A'}
+                    </div>
+                    <div className="col-md-6">
+                      <strong>Address:</strong> {formData.filingEntityStreet}, {formData.filingEntityCity}, {formData.filingEntityState} {formData.filingEntityZip}
+                    </div>
+                    <div className="col-md-6">
+                      <strong>Contact Name:</strong> {formData.filingContactName}
+                    </div>
+                    <div className="col-md-6">
+                      <strong>Contact Email:</strong> {formData.filingContactEmail}
+                    </div>
+                    <div className="col-md-6">
+                      <strong>Contact Phone:</strong> {formData.filingContactPhone}
+                    </div>
+                    {formData.nmlsLicenseNumber && (
+                      <div className="col-md-6">
+                        <strong>NMLS License:</strong> {formData.nmlsLicenseNumber}
+                      </div>
+                    )}
+                    {formData.stateLicenseNumber && (
+                      <div className="col-md-6">
+                        <strong>State License:</strong> {formData.stateLicenseNumber} ({formData.stateLicenseState})
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Right-to-Cure (35A) Proofs */}
+              <div className="review-section mb-4">
+                <h5 className="review-section-title">Right-to-Cure (35A) Proofs</h5>
+                <div className="review-content">
+                  <div className="row g-3">
+                    <div className="col-12">
+                      <strong>35A Notice Sent:</strong> {formData.noticeSent ? 'Yes' : 'No'}
+                    </div>
+                    {formData.noticeSent && (
+                      <>
+                        <div className="col-md-6">
+                          <strong>Notice Date:</strong> {formData.noticeDate}
+                        </div>
+                        <div className="col-md-6">
+                          <strong>Amount in Default:</strong> ${formData.amountInDefault}
+                        </div>
+                        <div className="col-md-6">
+                          <strong>Days Delinquent:</strong> {formData.daysDelinquentAtNotice}
+                        </div>
+                        <div className="col-md-6">
+                          <strong>Cure Expiration:</strong> {formData.cureExpirationDate}
+                        </div>
+                        <div className="col-12">
+                          <strong>Notice Address:</strong> {formData.noticeAddressStreet1}, {formData.noticeAddressCity}, {formData.noticeAddressState} {formData.noticeAddressZip}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Form 35B Information */}
+              <div className="review-section mb-4">
+                <h5 className="review-section-title">Form 35B Information</h5>
+                <div className="review-content">
+                  <div className="row g-3">
+                    <div className="col-12">
+                      <strong>35B Filed:</strong> {formData.certainMortgageLoan ? 'Yes' : 'No'}
+                    </div>
+                    {formData.certainMortgageLoan && (
+                      <>
+                        <div className="col-md-6">
+                          <strong>Affiant Name:</strong> {formData.affiantName}
+                        </div>
+                        <div className="col-md-6">
+                          <strong>Affiant Title:</strong> {formData.affiantTitle}
+                        </div>
+                        <div className="col-md-6">
+                          <strong>Execution Date:</strong> {formData.affidavitExecutionDate}
+                        </div>
+                        <div className="col-md-6">
+                          <strong>Compliance Affidavit:</strong> {formData.form35bComplianceAffidavitPdf ? 'Uploaded' : 'Not uploaded'}
+                        </div>
+                        <div className="col-md-6">
+                          <strong>Non-Applicability Affidavit:</strong> {formData.form35bNonApplicabilityAffidavitPdf ? 'Uploaded' : 'Not uploaded'}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Loan Assignees */}
+              <div className="review-section mb-4">
+                <h5 className="review-section-title">Loan Assignees</h5>
+                <div className="review-content">
+                  {formData.loanAssignees && formData.loanAssignees.length > 0 ? (
+                    formData.loanAssignees.map((assignee, index) => (
+                      <div key={index} className="row g-3 mb-3">
+                        <div className="col-12">
+                          <strong>Assignee {index + 1}:</strong>
+                        </div>
+                        <div className="col-md-6">
+                          <strong>Name:</strong> {assignee.assigneeName}
+                        </div>
+                        <div className="col-md-6">
+                          <strong>Type:</strong> {assignee.assigneeTypeId}
+                        </div>
+                        <div className="col-md-6">
+                          <strong>Role:</strong> {assignee.assigneeRoleId}
+                        </div>
+                        <div className="col-md-6">
+                          <strong>Contact Email:</strong> {assignee.contactEmail}
+                        </div>
+                        <div className="col-md-6">
+                          <strong>Contact Phone:</strong> {assignee.contactPhone}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-muted">No assignee information available</div>
+                  )}
+                </div>
+              </div>
+
+              {/* Attestation Data */}
+              <div className="review-section mb-4">
+                <h5 className="review-section-title">Attestation Data</h5>
+                <div className="review-content">
+                  {formData.signatures && formData.signatures.length > 0 ? (
+                    formData.signatures.map((signature, index) => (
+                      <div key={index} className="row g-3 mb-3">
+                        <div className="col-12">
+                          <strong>Signer {index + 1}:</strong>
+                        </div>
+                        <div className="col-md-6">
+                          <strong>Name:</strong> {signature.signerFullName}
+                        </div>
+                        <div className="col-md-6">
+                          <strong>Title:</strong> {signature.signerTitle}
+                        </div>
+                        <div className="col-md-6">
+                          <strong>Email:</strong> {signature.signerEmail}
+                        </div>
+                        <div className="col-md-6">
+                          <strong>E-sign Consent:</strong> {signature.esignConsent ? 'Yes' : 'No'}
+                        </div>
+                        <div className="col-md-6">
+                          <strong>Signature:</strong> {signature.signatureDrawnOrTyped ? 'Provided' : 'Not provided'}
+                        </div>
+                        <div className="col-md-6">
+                          <strong>Signed At:</strong> {signature.signedAt || 'Not signed'}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-muted">No signature information available</div>
+                  )}
+                  
+                  {/* Legacy attestation fields */}
+                  <div className="row g-3 mt-3">
+                    <div className="col-12">
+                      <strong>Attester:</strong> {formData.attester_first_name} {formData.attester_middle_initial} {formData.attester_last_name}
+                    </div>
+                    <div className="col-12">
+                      <strong>Certification:</strong> {formData.certification_check ? 'Certified' : 'Not Certified'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
       default:
         return null;
     }
@@ -2916,7 +3192,7 @@ const PetitionSteps = ({ isOpen, onClose }) => {
             <div className="modal-body">
             <div className="container">
               <header className="border-bottom mb-3">
-                <p className="font-base text-muted">Complete the 8 steps below to submit your foreclosure petition details.</p>
+                <p className="font-base text-muted">Complete the 9 steps below to submit your foreclosure petition details.</p>
               </header>
 
               <div className="position-relative">
@@ -2957,14 +3233,22 @@ const PetitionSteps = ({ isOpen, onClose }) => {
                           )}
                         </button>
                         
-                        {/* Next Step or Submit Button */}
-                        {currentStep < totalSteps ? (
+                        {/* Next Step, Review, or Submit Button */}
+                        {currentStep < 8 ? (
                           <button 
                             type="button" 
                             className="dashboard-btn-create"
                             onClick={() => nextStep(1)}
                           >
                             Next Step
+                          </button>
+                        ) : currentStep === 8 ? (
+                          <button 
+                            type="button" 
+                            className="dashboard-btn-create"
+                            onClick={() => nextStep(1)}
+                          >
+                            Review Petition
                           </button>
                         ) : (
                           <button 
@@ -2990,3 +3274,4 @@ const PetitionSteps = ({ isOpen, onClose }) => {
 };
 
 export default PetitionSteps;
+
