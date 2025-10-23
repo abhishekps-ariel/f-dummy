@@ -173,7 +173,6 @@ const handleSubmit = async (e) => {
   e.preventDefault();
 
   if (!validateForm()) {
-    toast.error("Please fix the errors below");
     return;
   }
 
@@ -209,7 +208,12 @@ const handleSubmit = async (e) => {
       toast.error(response.msg || "Registration failed!");
     }
   } catch (err) {
-    toast.error(err.message || "Registration failed!");
+    // Handle specific error messages from API response
+    if (err.response?.data?.message) {
+      toast.error(err.response.data.message);
+    } else {
+      toast.error(err.message || "Registration failed!");
+    }
     console.error("Registration error:", err);
   } finally {
     setIsSubmitting(false);

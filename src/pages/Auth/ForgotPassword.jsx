@@ -59,7 +59,12 @@ function ForgotPassword() {
         toast.error(response.msg || "Failed to send reset email. Please try again.");
       }
     } catch (error) {
-      toast.error("Failed to send reset email. Please try again.");
+      // Handle specific error messages from API response
+      if (error.response?.data?.message) {
+        toast.error(error.response.data.message);
+      } else {
+        toast.error("Failed to send reset email. Please try again.");
+      }
       console.error("Forgot password error:", error);
     } finally {
       setIsSubmitting(false);

@@ -70,7 +70,14 @@ function Login() {
       const mfaResponse = await checkMfa(formData.email, formData.password);
       
       if (!mfaResponse.isSuccess) {
-        toast.error(mfaResponse.msg || "Login failed");
+        // Handle specific error messages
+        if (mfaResponse.msg && mfaResponse.msg.toLowerCase().includes('user not found')) {
+          toast.error("User not found");
+        } else if (mfaResponse.msg && mfaResponse.msg.toLowerCase().includes('invalid email or password')) {
+          toast.error("Incorrect password");
+        } else {
+          toast.error(mfaResponse.msg || "Login failed");
+        }
         return;
       }
 
@@ -84,7 +91,19 @@ function Login() {
         setShowMfaSelection(true);
       }
     } catch (error) {
-      toast.error("Login failed. Please try again.");
+      // Handle specific error messages from API response
+      if (error.response?.data?.message) {
+        const errorMessage = error.response.data.message.toLowerCase();
+        if (errorMessage.includes('user not found')) {
+          toast.error("User not found");
+        } else if (errorMessage.includes('invalid email or password')) {
+          toast.error("Incorrect password");
+        } else {
+          toast.error(error.response.data.message);
+        }
+      } else {
+        toast.error("Login failed. Please try again.");
+      }
       console.error("Login error:", error);
     } finally {
       setIsSubmitting(false);
@@ -103,10 +122,29 @@ function Login() {
         const from = location.state?.from?.pathname || ROUTES.DASHBOARD;
         navigate(from, { replace: true });
       } else {
-        toast.error(response.msg || "Login failed");
+        // Handle specific error messages for direct login
+        if (response.msg && response.msg.toLowerCase().includes('user not found')) {
+          toast.error("User not found");
+        } else if (response.msg && response.msg.toLowerCase().includes('invalid email or password')) {
+          toast.error("Incorrect password");
+        } else {
+          toast.error(response.msg || "Login failed");
+        }
       }
     } catch (error) {
-      toast.error("Login failed. Please try again.");
+      // Handle specific error messages from API response
+      if (error.response?.data?.message) {
+        const errorMessage = error.response.data.message.toLowerCase();
+        if (errorMessage.includes('user not found')) {
+          toast.error("User not found");
+        } else if (errorMessage.includes('invalid email or password')) {
+          toast.error("Incorrect password");
+        } else {
+          toast.error(error.response.data.message);
+        }
+      } else {
+        toast.error("Login failed. Please try again.");
+      }
       console.error("Direct login error:", error);
     }
   };
@@ -133,10 +171,29 @@ function Login() {
           } 
         });
       } else {
-        toast.error(response.msg || "Failed to send OTP");
+        // Handle specific error messages for OTP sending
+        if (response.msg && response.msg.toLowerCase().includes('user not found')) {
+          toast.error("User not found");
+        } else if (response.msg && response.msg.toLowerCase().includes('invalid email or password')) {
+          toast.error("Incorrect password");
+        } else {
+          toast.error(response.msg || "Failed to send OTP");
+        }
       }
     } catch (error) {
-      toast.error("Failed to send OTP. Please try again.");
+      // Handle specific error messages from API response
+      if (error.response?.data?.message) {
+        const errorMessage = error.response.data.message.toLowerCase();
+        if (errorMessage.includes('user not found')) {
+          toast.error("User not found");
+        } else if (errorMessage.includes('invalid email or password')) {
+          toast.error("Incorrect password");
+        } else {
+          toast.error(error.response.data.message);
+        }
+      } else {
+        toast.error("Failed to send OTP. Please try again.");
+      }
       console.error("Send OTP error:", error);
     } finally {
       setIsSubmitting(false);

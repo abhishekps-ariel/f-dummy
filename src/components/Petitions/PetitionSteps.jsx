@@ -195,7 +195,7 @@ const PetitionSteps = ({ isOpen, onClose }) => {
     loanNumber: '',
     petitionLoanTypeId: '',
     petitionLoanTypeName: '',
-    lienPosition: 0,
+    lienPosition: '',
     originationDate: '',
     originalPrincipalAmount: 0,
     currentPrincipalBalance: 0,
@@ -724,10 +724,21 @@ const PetitionSteps = ({ isOpen, onClose }) => {
 
   const removeBorrower = (borrowerId) => {
     if (formData.borrowers.length > 1) {
-      setFormData(prev => ({
-        ...prev,
-        borrowers: prev.borrowers.filter(borrower => borrower.id !== borrowerId)
-      }));
+      const isRemovingPrimary = formData.borrowers.find(b => b.id === borrowerId)?.borrowerIsPrimary;
+      
+      setFormData(prev => {
+        const newBorrowers = prev.borrowers.filter(borrower => borrower.id !== borrowerId);
+        
+        // If we're removing the primary borrower, make the first remaining borrower primary
+        if (isRemovingPrimary && newBorrowers.length > 0) {
+          newBorrowers[0].borrowerIsPrimary = true;
+        }
+        
+        return {
+          ...prev,
+          borrowers: newBorrowers
+        };
+      });
     }
   };
 
@@ -777,28 +788,88 @@ const PetitionSteps = ({ isOpen, onClose }) => {
     }));
   };
 
+  // Validate loan details
+  const validateLoanDetails = () => {
+    const errors = {};
+    let hasErrors = false;
+    
+    if (!formData.minNumber.trim()) {
+      errors.minNumber = 'MIN Number is required';
+      hasErrors = true;
+    }
+    
+    if (!formData.loanNumber.trim()) {
+      errors.loanNumber = 'Loan Number is required';
+      hasErrors = true;
+    }
+    
+    if (!formData.petitionLoanTypeId) {
+      errors.petitionLoanTypeId = 'Loan Type is required';
+      hasErrors = true;
+    }
+    
+    if (!formData.lienPosition || formData.lienPosition === '' || formData.lienPosition === 0) {
+      errors.lienPosition = 'Lien Position is required';
+      hasErrors = true;
+    }
+    
+    if (!formData.originationDate.trim()) {
+      errors.originationDate = 'Origination Date is required';
+      hasErrors = true;
+    }
+    
+    if (!formData.originalPrincipalAmount || formData.originalPrincipalAmount <= 0) {
+      errors.originalPrincipalAmount = 'Original Principal Amount is required and must be greater than 0';
+      hasErrors = true;
+    }
+    
+    if (!formData.currentPrincipalBalance || formData.currentPrincipalBalance <= 0) {
+      errors.currentPrincipalBalance = 'Current Principal Balance is required and must be greater than 0';
+      hasErrors = true;
+    }
+    
+    if (!formData.interestRatePercent || formData.interestRatePercent <= 0) {
+      errors.interestRatePercent = 'Interest Rate is required and must be greater than 0';
+      hasErrors = true;
+    }
+    
+    if (!formData.monthlyPaymentAmount || formData.monthlyPaymentAmount <= 0) {
+      errors.monthlyPaymentAmount = 'Monthly Payment Amount is required and must be greater than 0';
+      hasErrors = true;
+    }
+    
+    if (formData.delinquencyDaysAtFiling === '' || formData.delinquencyDaysAtFiling < 0) {
+      errors.delinquencyDaysAtFiling = 'Delinquency Days at Filing is required and must be 0 or greater';
+      hasErrors = true;
+    }
+    
+    setFieldErrors(errors);
+    return { hasErrors, errors };
+  };
+
   // Validate borrower details
   const validateBorrowerDetails = () => {
-    const errors = [];
+    const errors = {};
+    let hasErrors = false;
     
     if (!formData.borrowers || formData.borrowers.length === 0) {
-      errors.push('At least one borrower must be entered');
-      return { isValid: false, errors };
+      errors.borrowers = 'At least one borrower must be entered';
+      hasErrors = true;
+    } else {
+      formData.borrowers.forEach((borrower, index) => {
+        if (!borrower.firstName.trim()) {
+          errors[`borrower_${borrower.id}_firstName`] = 'First name is required';
+          hasErrors = true;
+        }
+        if (!borrower.lastName.trim()) {
+          errors[`borrower_${borrower.id}_lastName`] = 'Last name is required';
+          hasErrors = true;
+        }
+      });
     }
 
-    formData.borrowers.forEach((borrower, index) => {
-      if (!borrower.firstName.trim()) {
-        errors.push(`Borrower ${index + 1}: First name is required`);
-      }
-      if (!borrower.lastName.trim()) {
-        errors.push(`Borrower ${index + 1}: Last name is required`);
-      }
-    });
-
-    return {
-      isValid: errors.length === 0,
-      errors
-    };
+    setFieldErrors(errors);
+    return { hasErrors, errors };
   };
 
   // Auto-save current step data (no validation, no modal close)
@@ -907,11 +978,18 @@ const PetitionSteps = ({ isOpen, onClose }) => {
       }
     }
     
+    // Validate Loan Details step before proceeding
+    if (currentStep === 2 && direction === 1) {
+      const validation = validateLoanDetails();
+      if (validation.hasErrors) {
+        return;
+      }
+    }
+    
     // Validate Borrower Details step before proceeding
     if (currentStep === 3 && direction === 1) {
       const validation = validateBorrowerDetails();
-      if (!validation.isValid) {
-        toast.error(`Please fix the following errors: ${validation.errors.join(', ')}`);
+      if (validation.hasErrors) {
         return;
       }
     }
@@ -1226,35 +1304,45 @@ const PetitionSteps = ({ isOpen, onClose }) => {
             
             <div className="row g-3">
               <div className="col-md-6">
-                <label htmlFor="minNumber" className="form-label">MIN Number</label>
+                <label htmlFor="minNumber" className="form-label">MIN Number *</label>
                 <input 
                   type="text" 
                   id="minNumber" 
                   name="minNumber" 
-                  className="form-control"
+                  className={`form-control ${fieldErrors.minNumber ? 'is-invalid' : ''}`}
                   value={formData.minNumber}
                   onChange={handleInputChange}
                   placeholder="Enter MIN number"
                 />
+                {fieldErrors.minNumber && (
+                  <div className="text-danger small mt-1">
+                    {fieldErrors.minNumber}
+                  </div>
+                )}
               </div>
               <div className="col-md-6">
-                <label htmlFor="loanNumber" className="form-label">Loan Number</label>
+                <label htmlFor="loanNumber" className="form-label">Loan Number *</label>
                 <input 
                   type="text" 
                   id="loanNumber" 
                   name="loanNumber" 
-                  className="form-control"
+                  className={`form-control ${fieldErrors.loanNumber ? 'is-invalid' : ''}`}
                   value={formData.loanNumber}
                   onChange={handleInputChange}
                   placeholder="Enter loan number"
                 />
+                {fieldErrors.loanNumber && (
+                  <div className="text-danger small mt-1">
+                    {fieldErrors.loanNumber}
+                  </div>
+                )}
               </div>
               <div className="col-md-6">
-                <label htmlFor="petitionLoanTypeId" className="form-label">Loan Type</label>
+                <label htmlFor="petitionLoanTypeId" className="form-label">Loan Type *</label>
                 <select 
                   id="petitionLoanTypeId" 
                   name="petitionLoanTypeId" 
-                  className="form-select"
+                  className={`form-select ${fieldErrors.petitionLoanTypeId ? 'is-invalid' : ''}`}
                   value={formData.petitionLoanTypeId}
                   onChange={handleInputChange}
                   disabled={commonDataLoading}
@@ -1266,6 +1354,11 @@ const PetitionSteps = ({ isOpen, onClose }) => {
                     </option>
                   ))}
                 </select>
+                {fieldErrors.petitionLoanTypeId && (
+                  <div className="text-danger small mt-1">
+                    {fieldErrors.petitionLoanTypeId}
+                  </div>
+                )}
                 {commonDataLoading && (
                   <div className="form-text">
                     <i className="fas fa-spinner fa-spin me-1"></i>
@@ -1274,11 +1367,11 @@ const PetitionSteps = ({ isOpen, onClose }) => {
                 )}
               </div>
               <div className="col-md-6">
-                <label htmlFor="lienPosition" className="form-label">Lien Position</label>
+                <label htmlFor="lienPosition" className="form-label">Lien Position *</label>
                 <select 
                   id="lienPosition" 
                   name="lienPosition" 
-                  className="form-select"
+                  className={`form-select ${fieldErrors.lienPosition ? 'is-invalid' : ''}`}
                   value={formData.lienPosition}
                   onChange={handleInputChange}
                   disabled={commonDataLoading}
@@ -1290,6 +1383,11 @@ const PetitionSteps = ({ isOpen, onClose }) => {
                     </option>
                   ))}
                 </select>
+                {fieldErrors.lienPosition && (
+                  <div className="text-danger small mt-1">
+                    {fieldErrors.lienPosition}
+                  </div>
+                )}
                 {commonDataLoading && (
                   <div className="form-text">
                     <i className="fas fa-spinner fa-spin me-1"></i>
@@ -1298,75 +1396,105 @@ const PetitionSteps = ({ isOpen, onClose }) => {
                 )}
               </div>
               <div className="col-md-6">
-                <label htmlFor="originationDate" className="form-label">Origination Date</label>
+                <label htmlFor="originationDate" className="form-label">Origination Date *</label>
                 <input 
                   type="date" 
                   id="originationDate" 
                   name="originationDate" 
-                  className="form-control"
+                  className={`form-control ${fieldErrors.originationDate ? 'is-invalid' : ''}`}
                   value={formData.originationDate}
                   onChange={handleInputChange}
                 />
+                {fieldErrors.originationDate && (
+                  <div className="text-danger small mt-1">
+                    {fieldErrors.originationDate}
+                  </div>
+                )}
               </div>
               <div className="col-md-6">
-                <label htmlFor="originalPrincipalAmount" className="form-label">Original Principal Amount ($)</label>
+                <label htmlFor="originalPrincipalAmount" className="form-label">Original Principal Amount ($) *</label>
                 <input 
                   type="number" 
                   step="0.01" 
                   id="originalPrincipalAmount" 
                   name="originalPrincipalAmount" 
-                  className="form-control"
+                  className={`form-control ${fieldErrors.originalPrincipalAmount ? 'is-invalid' : ''}`}
                   value={formData.originalPrincipalAmount}
                   onChange={handleInputChange}
                 />
+                {fieldErrors.originalPrincipalAmount && (
+                  <div className="text-danger small mt-1">
+                    {fieldErrors.originalPrincipalAmount}
+                  </div>
+                )}
               </div>
               <div className="col-md-6">
-                <label htmlFor="currentPrincipalBalance" className="form-label">Current Principal Balance ($)</label>
+                <label htmlFor="currentPrincipalBalance" className="form-label">Current Principal Balance ($) *</label>
                 <input 
                   type="number" 
                   step="0.01" 
                   id="currentPrincipalBalance" 
                   name="currentPrincipalBalance" 
-                  className="form-control"
+                  className={`form-control ${fieldErrors.currentPrincipalBalance ? 'is-invalid' : ''}`}
                   value={formData.currentPrincipalBalance}
                   onChange={handleInputChange}
                 />
+                {fieldErrors.currentPrincipalBalance && (
+                  <div className="text-danger small mt-1">
+                    {fieldErrors.currentPrincipalBalance}
+                  </div>
+                )}
               </div>
               <div className="col-md-6">
-                <label htmlFor="interestRatePercent" className="form-label">Interest Rate (%)</label>
+                <label htmlFor="interestRatePercent" className="form-label">Interest Rate (%) *</label>
                 <input 
                   type="number" 
                   step="0.001" 
                   id="interestRatePercent" 
                   name="interestRatePercent" 
-                  className="form-control"
+                  className={`form-control ${fieldErrors.interestRatePercent ? 'is-invalid' : ''}`}
                   value={formData.interestRatePercent}
                   onChange={handleInputChange}
                 />
+                {fieldErrors.interestRatePercent && (
+                  <div className="text-danger small mt-1">
+                    {fieldErrors.interestRatePercent}
+                  </div>
+                )}
               </div>
               <div className="col-md-6">
-                <label htmlFor="monthlyPaymentAmount" className="form-label">Monthly Payment Amount ($)</label>
+                <label htmlFor="monthlyPaymentAmount" className="form-label">Monthly Payment Amount ($) *</label>
                 <input 
                   type="number" 
                   step="0.01" 
                   id="monthlyPaymentAmount" 
                   name="monthlyPaymentAmount" 
-                  className="form-control"
+                  className={`form-control ${fieldErrors.monthlyPaymentAmount ? 'is-invalid' : ''}`}
                   value={formData.monthlyPaymentAmount}
                   onChange={handleInputChange}
                 />
+                {fieldErrors.monthlyPaymentAmount && (
+                  <div className="text-danger small mt-1">
+                    {fieldErrors.monthlyPaymentAmount}
+                  </div>
+                )}
               </div>
               <div className="col-md-6">
-                <label htmlFor="delinquencyDaysAtFiling" className="form-label">Delinquency Days at Filing</label>
+                <label htmlFor="delinquencyDaysAtFiling" className="form-label">Delinquency Days at Filing *</label>
                 <input 
                   type="number" 
                   id="delinquencyDaysAtFiling" 
                   name="delinquencyDaysAtFiling" 
                   min="0"
-                  className="form-control"
+                  className={`form-control ${fieldErrors.delinquencyDaysAtFiling ? 'is-invalid' : ''}`}
                   value={formData.delinquencyDaysAtFiling}
                   onChange={handleInputChange}
                 />
+                {fieldErrors.delinquencyDaysAtFiling && (
+                  <div className="text-danger small mt-1">
+                    {fieldErrors.delinquencyDaysAtFiling}
+                  </div>
+                )}
               </div>
               <div className="col-12">
                 <div className="row">
@@ -1434,11 +1562,22 @@ const PetitionSteps = ({ isOpen, onClose }) => {
                   {formData.borrowers.length > 1 && (
                     <button
                       type="button"
-                      className="btn btn-outline-danger btn-sm"
+                      className="btn btn-sm border-0"
+                      style={{ 
+                        background: '#dc3545', 
+                        color: '#ffffff',
+                        border: '1px solid #dc3545',
+                        borderRadius: '4px',
+                        width: '32px',
+                        height: '32px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
                       onClick={() => removeBorrower(borrower.id)}
                       title="Remove this borrower"
                     >
-                      <i className="fas fa-trash"></i>
+                      <i className="fas fa-times" style={{ fontSize: '12px' }}></i>
                     </button>
                   )}
                 </div>
@@ -1447,11 +1586,26 @@ const PetitionSteps = ({ isOpen, onClose }) => {
                     <label className="form-label">First Name *</label>
                     <input 
                       type="text" 
-                      className="form-control"
+                      className={`form-control ${fieldErrors[`borrower_${borrower.id}_firstName`] ? 'is-invalid' : ''}`}
                       value={borrower.firstName}
-                      onChange={(e) => updateBorrower(borrower.id, 'firstName', e.target.value)}
+                      onChange={(e) => {
+                        updateBorrower(borrower.id, 'firstName', e.target.value);
+                        // Clear field error when user starts typing
+                        if (fieldErrors[`borrower_${borrower.id}_firstName`]) {
+                          setFieldErrors(prev => {
+                            const newErrors = { ...prev };
+                            delete newErrors[`borrower_${borrower.id}_firstName`];
+                            return newErrors;
+                          });
+                        }
+                      }}
                       placeholder="Enter first name"
                     />
+                    {fieldErrors[`borrower_${borrower.id}_firstName`] && (
+                      <div className="text-danger small mt-1">
+                        {fieldErrors[`borrower_${borrower.id}_firstName`]}
+                      </div>
+                    )}
                   </div>
                   <div className="col-md-2">
                     <label className="form-label">Middle Name</label>
@@ -1467,11 +1621,26 @@ const PetitionSteps = ({ isOpen, onClose }) => {
                     <label className="form-label">Last Name *</label>
                     <input 
                       type="text" 
-                      className="form-control"
+                      className={`form-control ${fieldErrors[`borrower_${borrower.id}_lastName`] ? 'is-invalid' : ''}`}
                       value={borrower.lastName}
-                      onChange={(e) => updateBorrower(borrower.id, 'lastName', e.target.value)}
+                      onChange={(e) => {
+                        updateBorrower(borrower.id, 'lastName', e.target.value);
+                        // Clear field error when user starts typing
+                        if (fieldErrors[`borrower_${borrower.id}_lastName`]) {
+                          setFieldErrors(prev => {
+                            const newErrors = { ...prev };
+                            delete newErrors[`borrower_${borrower.id}_lastName`];
+                            return newErrors;
+                          });
+                        }
+                      }}
                       placeholder="Enter last name"
                     />
+                    {fieldErrors[`borrower_${borrower.id}_lastName`] && (
+                      <div className="text-danger small mt-1">
+                        {fieldErrors[`borrower_${borrower.id}_lastName`]}
+                      </div>
+                    )}
                   </div>
                   <div className="col-md-2">
                     <label className="form-label">Suffix</label>
@@ -1488,9 +1657,21 @@ const PetitionSteps = ({ isOpen, onClose }) => {
                     <div className="form-check">
                       <input 
                         className="form-check-input" 
-                        type="checkbox" 
+                        type="radio" 
+                        name="primaryBorrower"
                         checked={borrower.borrowerIsPrimary}
-                        onChange={(e) => updateBorrower(borrower.id, 'borrowerIsPrimary', e.target.checked)}
+                        onChange={(e) => {
+                          // Set all borrowers to not primary first
+                          setFormData(prev => ({
+                            ...prev,
+                            borrowers: prev.borrowers.map(b => ({
+                              ...b,
+                              borrowerIsPrimary: false
+                            }))
+                          }));
+                          // Then set the selected one as primary
+                          updateBorrower(borrower.id, 'borrowerIsPrimary', true);
+                        }}
                       />
                       <label className="form-check-label">
                         Primary
