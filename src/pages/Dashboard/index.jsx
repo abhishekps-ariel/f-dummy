@@ -600,6 +600,14 @@ function Dashboard() {
                 onClick={(e) => {
                   e.preventDefault();
                   setActiveSection("dashboard");
+                  // Close mobile sidebar if open
+                  const mobileSidebar = document.getElementById("mobileSidebar");
+                  if (mobileSidebar) {
+                    const bsOffcanvas = window.bootstrap.Offcanvas.getInstance(mobileSidebar);
+                    if (bsOffcanvas) {
+                      bsOffcanvas.hide();
+                    }
+                  }
                 }}
               >
                 <i className="fa-solid fa-box me-2"></i>
@@ -616,6 +624,14 @@ function Dashboard() {
                 onClick={(e) => {
                   e.preventDefault();
                   setActiveSection("organizations");
+                  // Close mobile sidebar if open
+                  const mobileSidebar = document.getElementById("mobileSidebar");
+                  if (mobileSidebar) {
+                    const bsOffcanvas = window.bootstrap.Offcanvas.getInstance(mobileSidebar);
+                    if (bsOffcanvas) {
+                      bsOffcanvas.hide();
+                    }
+                  }
                 }}
               >
                 <i className="fa-solid fa-building me-2"></i>
@@ -798,36 +814,6 @@ function Dashboard() {
 
               {/* New Information Cards */}
               <div className="row mb-4">
-                {/* User Details Card */}
-                <div className="col-md-4 mb-3">
-                  <div className="stat-card h-100">
-                    <h5 className="stat-count mb-3" style={{ fontSize: '1.2rem' }}>User Details</h5>
-                    <div className="user-info">
-                      <h6 className="mb-2 fw-bold">{user.firstName} {user.lastName}</h6>
-                      <p className="text-muted small mb-1">
-                        <i className="fa-solid fa-envelope me-1"></i>
-                        Email: {user.email}
-                      </p>
-                      <p className="text-muted small mb-1">
-                        <i className="fa-solid fa-user-tag me-1"></i>
-                        Role: {user.role || "User"}
-                      </p>
-                      {userOrganization && (
-                        <>
-                          <p className="text-muted small mb-1">
-                            <i className="fa-solid fa-building me-1"></i>
-                            Organization: {userOrganization.name}
-                          </p>
-                          <p className="text-muted small mb-0">
-                            <i className="fa-solid fa-tag me-1"></i>
-                            Entity Type: {userOrganization.type || "Attorney"}
-                          </p>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
                 {/* Recent Filed Petition Card */}
                 <div className="col-md-4 mb-3">
                   <div className="stat-card h-100">
@@ -866,6 +852,36 @@ function Dashboard() {
                         <p className="text-muted small mb-0">No petitions filed yet</p>
                       </div>
                     )}
+                  </div>
+                </div>
+
+                {/* User Details Card */}
+                <div className="col-md-4 mb-3">
+                  <div className="stat-card h-100">
+                    <h5 className="stat-count mb-3" style={{ fontSize: '1.2rem' }}>User Details</h5>
+                    <div className="user-info">
+                      <h6 className="mb-2 fw-bold">{user.firstName} {user.lastName}</h6>
+                      <p className="text-muted small mb-1">
+                        <i className="fa-solid fa-envelope me-1"></i>
+                        Email: {user.email}
+                      </p>
+                      <p className="text-muted small mb-1">
+                        <i className="fa-solid fa-user-tag me-1"></i>
+                        Role: {user.role || "User"}
+                      </p>
+                      {userOrganization && (
+                        <>
+                          <p className="text-muted small mb-1">
+                            <i className="fa-solid fa-building me-1"></i>
+                            Organization: {userOrganization.name}
+                          </p>
+                          <p className="text-muted small mb-0">
+                            <i className="fa-solid fa-tag me-1"></i>
+                            Entity Type: {userOrganization.type || "Attorney"}
+                          </p>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
 

@@ -226,8 +226,8 @@ const PetitionSteps = ({ isOpen, onClose }) => {
     
     // Step 4: Filing Entity
     filingEntityLegalName: '',
-    filingEntityTypeId: '',
-    filingEntityStreet1: '',
+    filingEntityRole: '',
+    filingEntityStreet: '',
     filingEntityCity: '',
     filingEntityState: '',
     filingEntityZip: '',
@@ -786,6 +786,16 @@ const PetitionSteps = ({ isOpen, onClose }) => {
         i === index ? { ...assignee, [field]: value } : assignee
       )
     }));
+
+    // Clear field error when user starts typing
+    const errorKey = `loanAssignees.${index}.${field}`;
+    if (fieldErrors[errorKey]) {
+      setFieldErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[errorKey];
+        return newErrors;
+      });
+    }
   };
 
   // Validate loan details
@@ -1038,8 +1048,107 @@ const PetitionSteps = ({ isOpen, onClose }) => {
       }
     }
     
+    // Validate affiant details if any affidavit is uploaded (regardless of certain mortgage loan status)
+    if (formData.form35bComplianceAffidavitPdf || formData.form35bNonApplicabilityAffidavitPdf) {
+      if (!formData.affiantName || formData.affiantName.trim() === '') {
+        errors.affiantName = 'Affiant Name is required when an affidavit is uploaded';
+        hasErrors = true;
+      }
+      
+      if (!formData.affiantTitle || formData.affiantTitle.trim() === '') {
+        errors.affiantTitle = 'Affiant Title is required when an affidavit is uploaded';
+        hasErrors = true;
+      }
+      
+      if (!formData.affidavitExecutionDate || formData.affidavitExecutionDate.trim() === '') {
+        errors.affidavitExecutionDate = 'Date of Affidavit Execution is required when an affidavit is uploaded';
+        hasErrors = true;
+      }
+    }
+    
     // If loan does not qualify, non-applicability affidavit is optional
     // No validation needed for optional field
+
+    setFieldErrors(errors);
+    return { hasErrors, errors };
+  };
+
+  // Validate Filing Entity details
+  const validateFilingEntity = () => {
+    const errors = {};
+    let hasErrors = false;
+    
+    // Validate required fields
+    if (!formData.filingEntityLegalName || formData.filingEntityLegalName.trim() === '') {
+      errors.filingEntityLegalName = 'Filing Entity Legal Name is required';
+      hasErrors = true;
+    }
+    
+    // Filing Entity Role is read-only from profile, no validation needed
+    
+    if (!formData.filingEntityStreet || formData.filingEntityStreet.trim() === '') {
+      errors.filingEntityStreet = 'Street Address is required';
+      hasErrors = true;
+    }
+    
+    if (!formData.filingEntityCity || formData.filingEntityCity.trim() === '') {
+      errors.filingEntityCity = 'City is required';
+      hasErrors = true;
+    }
+    
+    if (!formData.filingEntityState || formData.filingEntityState.trim() === '') {
+      errors.filingEntityState = 'State is required';
+      hasErrors = true;
+    }
+    
+    if (!formData.filingEntityZip || formData.filingEntityZip.trim() === '') {
+      errors.filingEntityZip = 'ZIP Code is required';
+      hasErrors = true;
+    }
+    
+    if (!formData.filingContactName || formData.filingContactName.trim() === '') {
+      errors.filingContactName = 'Filing Contact Name is required';
+      hasErrors = true;
+    }
+    
+    if (!formData.filingContactEmail || formData.filingContactEmail.trim() === '') {
+      errors.filingContactEmail = 'Filing Contact Email is required';
+      hasErrors = true;
+    } else {
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.filingContactEmail)) {
+        errors.filingContactEmail = 'Please enter a valid email address';
+        hasErrors = true;
+      }
+    }
+    
+    if (!formData.filingContactPhone || formData.filingContactPhone.trim() === '') {
+      errors.filingContactPhone = 'Filing Contact Phone is required';
+      hasErrors = true;
+    }
+
+    setFieldErrors(errors);
+    return { hasErrors, errors };
+  };
+
+  // Validate Loan Assignees details
+  const validateLoanAssignees = () => {
+    const errors = {};
+    let hasErrors = false;
+    
+    // Validate each assignee
+    formData.loanAssignees.forEach((assignee, index) => {
+      if (!assignee.assigneeTypeId || assignee.assigneeTypeId.trim() === '') {
+        errors[`loanAssignees.${index}.assigneeTypeId`] = 'Assignee Type is required';
+        hasErrors = true;
+      }
+      
+      if (!assignee.assigneeRoleId || assignee.assigneeRoleId.trim() === '') {
+        errors[`loanAssignees.${index}.assigneeRoleId`] = 'Assignee Role is required';
+        hasErrors = true;
+      }
+    });
 
     setFieldErrors(errors);
     return { hasErrors, errors };
@@ -1158,10 +1267,18 @@ const PetitionSteps = ({ isOpen, onClose }) => {
         return;
       }
     }
-    
+
     // Validate Borrower Details step before proceeding
     if (currentStep === 3 && direction === 1) {
       const validation = validateBorrowerDetails();
+      if (validation.hasErrors) {
+        return;
+      }
+    }
+
+    // Validate Filing Entity step before proceeding
+    if (currentStep === 4 && direction === 1) {
+      const validation = validateFilingEntity();
       if (validation.hasErrors) {
         return;
       }
@@ -1178,6 +1295,14 @@ const PetitionSteps = ({ isOpen, onClose }) => {
     // Validate Form 35B Compliance step before proceeding
     if (currentStep === 6 && direction === 1) {
       const validation = validateForm35BCompliance();
+      if (validation.hasErrors) {
+        return;
+      }
+    }
+
+    // Validate Loan Assignees step before proceeding
+    if (currentStep === 7 && direction === 1) {
+      const validation = validateLoanAssignees();
       if (validation.hasErrors) {
         return;
       }
@@ -1985,20 +2110,25 @@ const PetitionSteps = ({ isOpen, onClose }) => {
             <p className="text-muted small mb-3">Provide the organization and contact details for the party submitting this petition.</p>
             <div className="row g-3">
               <div className="col-12">
-                <label htmlFor="filingEntityLegalName" className="form-label">Organization Name</label>
+                <label htmlFor="filingEntityLegalName" className="form-label">Filing Entity Legal Name *</label>
                 <input 
                   type="text" 
                   id="filingEntityLegalName" 
                   name="filingEntityLegalName" 
-                  className="form-control form-control-lg"
+                  className={`form-control form-control-lg ${fieldErrors.filingEntityLegalName ? 'is-invalid' : ''}`}
                   value={formData.filingEntityLegalName}
                   onChange={handleInputChange}
                 />
+                {fieldErrors.filingEntityLegalName && (
+                  <div className="text-danger small mt-1">
+                    {fieldErrors.filingEntityLegalName}
+                  </div>
+                )}
               </div>
               
-              {/* Filing Entity Type - Read Only from Profile */}
+              {/* Filing Entity Role - Read Only from Profile */}
               <div className="col-12">
-                <label htmlFor="filingEntityTypeId" className="form-label">Filing Entity Type</label>
+                <label htmlFor="filingEntityRole" className="form-label">Filing Entity Role</label>
                 {profileLoading ? (
                   <div className="form-control form-control-lg bg-light">
                     <span className="text-muted">Loading...</span>
@@ -2018,38 +2148,122 @@ const PetitionSteps = ({ isOpen, onClose }) => {
                   </div>
                 )}
               </div>
+
+              {/* Address Fields */}
+              <div className="col-12">
+                <label htmlFor="filingEntityStreet" className="form-label">Street Address *</label>
+                <input 
+                  type="text" 
+                  id="filingEntityStreet" 
+                  name="filingEntityStreet" 
+                  className={`form-control ${fieldErrors.filingEntityStreet ? 'is-invalid' : ''}`}
+                  value={formData.filingEntityStreet}
+                  onChange={handleInputChange}
+                />
+                {fieldErrors.filingEntityStreet && (
+                  <div className="text-danger small mt-1">
+                    {fieldErrors.filingEntityStreet}
+                  </div>
+                )}
+              </div>
+              
+              <div className="col-md-4">
+                <label htmlFor="filingEntityCity" className="form-label">City *</label>
+                <input 
+                  type="text" 
+                  id="filingEntityCity" 
+                  name="filingEntityCity" 
+                  className={`form-control ${fieldErrors.filingEntityCity ? 'is-invalid' : ''}`}
+                  value={formData.filingEntityCity}
+                  onChange={handleInputChange}
+                />
+                {fieldErrors.filingEntityCity && (
+                  <div className="text-danger small mt-1">
+                    {fieldErrors.filingEntityCity}
+                  </div>
+                )}
+              </div>
+              
+              <div className="col-md-4">
+                <label htmlFor="filingEntityState" className="form-label">State *</label>
+                <input 
+                  type="text" 
+                  id="filingEntityState" 
+                  name="filingEntityState" 
+                  className={`form-control ${fieldErrors.filingEntityState ? 'is-invalid' : ''}`}
+                  value={formData.filingEntityState}
+                  onChange={handleInputChange}
+                />
+                {fieldErrors.filingEntityState && (
+                  <div className="text-danger small mt-1">
+                    {fieldErrors.filingEntityState}
+                  </div>
+                )}
+              </div>
+              
+              <div className="col-md-4">
+                <label htmlFor="filingEntityZip" className="form-label">ZIP Code *</label>
+                <input 
+                  type="text" 
+                  id="filingEntityZip" 
+                  name="filingEntityZip" 
+                  className={`form-control ${fieldErrors.filingEntityZip ? 'is-invalid' : ''}`}
+                  value={formData.filingEntityZip}
+                  onChange={handleInputChange}
+                />
+                {fieldErrors.filingEntityZip && (
+                  <div className="text-danger small mt-1">
+                    {fieldErrors.filingEntityZip}
+                  </div>
+                )}
+              </div>
               <div className="col-md-6">
-                <label htmlFor="filingContactName" className="form-label">Contact Name</label>
+                <label htmlFor="filingContactName" className="form-label">Filing Contact Name *</label>
                 <input 
                   type="text" 
                   id="filingContactName" 
                   name="filingContactName" 
-                  className="form-control"
+                  className={`form-control ${fieldErrors.filingContactName ? 'is-invalid' : ''}`}
                   value={formData.filingContactName}
                   onChange={handleInputChange}
                 />
+                {fieldErrors.filingContactName && (
+                  <div className="text-danger small mt-1">
+                    {fieldErrors.filingContactName}
+                  </div>
+                )}
               </div>
               <div className="col-md-6">
-                <label htmlFor="filingContactPhone" className="form-label">Contact Phone Number</label>
+                <label htmlFor="filingContactPhone" className="form-label">Filing Contact Phone *</label>
                 <input 
                   type="tel" 
                   id="filingContactPhone" 
                   name="filingContactPhone" 
-                  className="form-control"
+                  className={`form-control ${fieldErrors.filingContactPhone ? 'is-invalid' : ''}`}
                   value={formData.filingContactPhone}
                   onChange={handleInputChange}
                 />
+                {fieldErrors.filingContactPhone && (
+                  <div className="text-danger small mt-1">
+                    {fieldErrors.filingContactPhone}
+                  </div>
+                )}
               </div>
               <div className="col-12">
-                <label htmlFor="filingContactEmail" className="form-label">Contact Email Address</label>
+                <label htmlFor="filingContactEmail" className="form-label">Filing Contact Email *</label>
                 <input 
                   type="email" 
                   id="filingContactEmail" 
                   name="filingContactEmail" 
-                  className="form-control"
+                  className={`form-control ${fieldErrors.filingContactEmail ? 'is-invalid' : ''}`}
                   value={formData.filingContactEmail}
                   onChange={handleInputChange}
                 />
+                {fieldErrors.filingContactEmail && (
+                  <div className="text-danger small mt-1">
+                    {fieldErrors.filingContactEmail}
+                  </div>
+                )}
               </div>
               <div className="col-md-4">
                 <label htmlFor="nmlsLicenseNumber" className="form-label">NMLS License Number</label>
@@ -2376,8 +2590,13 @@ const PetitionSteps = ({ isOpen, onClose }) => {
                 </div>
               )}
               
-              {formData.certainMortgageLoan === true && (
+              {/* Show affiant fields if any affidavit is uploaded */}
+              {(formData.form35bComplianceAffidavitPdf || formData.form35bNonApplicabilityAffidavitPdf) && (
                 <>
+                  <div className="col-12">
+                    <hr className="my-3" />
+                    <h6 className="text-muted mb-3">Affidavit Details</h6>
+                  </div>
                   <div className="col-md-6">
                     <label htmlFor="affiantName" className="form-label">Affiant Name *</label>
                     <input 
@@ -2472,9 +2691,9 @@ const PetitionSteps = ({ isOpen, onClose }) => {
                     />
                   </div>
                   <div className="col-md-6">
-                    <label className="form-label">Assignee Type</label>
+                    <label className="form-label">Assignee Type *</label>
                     <select 
-                      className="form-select"
+                      className={`form-select ${fieldErrors[`loanAssignees.${index}.assigneeTypeId`] ? 'is-invalid' : ''}`}
                       value={assignee.assigneeTypeId}
                       onChange={(e) => updateLoanAssignee(index, 'assigneeTypeId', e.target.value)}
                       disabled={commonDataLoading}
@@ -2486,6 +2705,11 @@ const PetitionSteps = ({ isOpen, onClose }) => {
                         </option>
                       ))}
                     </select>
+                    {fieldErrors[`loanAssignees.${index}.assigneeTypeId`] && (
+                      <div className="text-danger small mt-1">
+                        {fieldErrors[`loanAssignees.${index}.assigneeTypeId`]}
+                      </div>
+                    )}
                     {commonDataLoading && (
                       <div className="form-text">
                         <i className="fas fa-spinner fa-spin me-1"></i>
@@ -2494,9 +2718,9 @@ const PetitionSteps = ({ isOpen, onClose }) => {
                     )}
                   </div>
                   <div className="col-md-6">
-                    <label className="form-label">Assignee Role</label>
+                    <label className="form-label">Assignee Role *</label>
                     <select 
-                      className="form-select"
+                      className={`form-select ${fieldErrors[`loanAssignees.${index}.assigneeRoleId`] ? 'is-invalid' : ''}`}
                       value={assignee.assigneeRoleId}
                       onChange={(e) => updateLoanAssignee(index, 'assigneeRoleId', e.target.value)}
                       disabled={commonDataLoading}
@@ -2508,6 +2732,11 @@ const PetitionSteps = ({ isOpen, onClose }) => {
                         </option>
                       ))}
                     </select>
+                    {fieldErrors[`loanAssignees.${index}.assigneeRoleId`] && (
+                      <div className="text-danger small mt-1">
+                        {fieldErrors[`loanAssignees.${index}.assigneeRoleId`]}
+                      </div>
+                    )}
                     {commonDataLoading && (
                       <div className="form-text">
                         <i className="fas fa-spinner fa-spin me-1"></i>

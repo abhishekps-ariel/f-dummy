@@ -1521,6 +1521,11 @@ input, textarea, select {
         width: 100%;
         left: 0;
     }
+    
+    /* Mobile sidebar width reduction to 75% */
+    .offcanvas-start {
+        width: 75% !important;
+    }
 }
 
 /* Search Form Wrapper and Dropdown Styles */
