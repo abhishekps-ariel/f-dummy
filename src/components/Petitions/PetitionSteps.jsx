@@ -1009,16 +1009,32 @@ const PetitionSteps = ({ isOpen, onClose }) => {
     
     // If loan qualifies as certain mortgage loan, compliance affidavit is required
     if (formData.certainMortgageLoan === true) {
-      if (!formData.form35bComplianceAffidavitPdf) {
+      if (!formData.form35bComplianceAffidavitPdf || formData.form35bComplianceAffidavitPdf === null || formData.form35bComplianceAffidavitPdf === undefined) {
         errors.form35bComplianceAffidavitPdf = 'Form 35B Compliance Affidavit is required for certain mortgage loans';
         hasErrors = true;
       } else {
         // Validate file type
         const fileName = formData.form35bComplianceAffidavitPdf.name;
-        if (!fileName.toLowerCase().endsWith('.pdf')) {
+        if (!fileName || !fileName.toLowerCase().endsWith('.pdf')) {
           errors.form35bComplianceAffidavitPdf = 'File must be in PDF format';
           hasErrors = true;
         }
+      }
+      
+      // Validate affiant details for certain mortgage loans
+      if (!formData.affiantName || formData.affiantName.trim() === '') {
+        errors.affiantName = 'Affiant Name is required for certain mortgage loans';
+        hasErrors = true;
+      }
+      
+      if (!formData.affiantTitle || formData.affiantTitle.trim() === '') {
+        errors.affiantTitle = 'Affiant Title is required for certain mortgage loans';
+        hasErrors = true;
+      }
+      
+      if (!formData.affidavitExecutionDate || formData.affidavitExecutionDate.trim() === '') {
+        errors.affidavitExecutionDate = 'Date of Affidavit Execution is required for certain mortgage loans';
+        hasErrors = true;
       }
     }
     
@@ -2281,7 +2297,7 @@ const PetitionSteps = ({ isOpen, onClose }) => {
             <h2 className="theme-color font-med mb-1">6. Form 35B Compliance</h2>
             <p className="text-muted small mb-3">Determine if this loan qualifies as a "certain mortgage loan" and upload the appropriate affidavit.</p>
             <div className="alert alert-info small" role="alert">
-              <strong>Certain mortgage loans</strong> include Interest-Only, Subprime, Low-Doc, and other high-risk loan types that require Form 35B compliance.
+              <strong>Examples of "Certain Mortgage Loans"</strong> include Interest-Only Mortgages, Payment-Option or Negative Amortization Loans, High Loan-to-Value Mortgages (e.g., 90%+ with limited documentation), Low-Doc / No-Doc Mortgages, and Subprime Loans.
             </div>
             <div className="row g-3">
               <div className="col-12">
@@ -2360,39 +2376,58 @@ const PetitionSteps = ({ isOpen, onClose }) => {
                 </div>
               )}
               
-              <div className="col-md-6">
-                <label htmlFor="affiantName" className="form-label">Affiant Name</label>
-                <input 
-                  type="text" 
-                  id="affiantName" 
-                  name="affiantName" 
-                  className="form-control"
-                  value={formData.affiantName}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div className="col-md-6">
-                <label htmlFor="affiantTitle" className="form-label">Affiant Title</label>
-                <input 
-                  type="text" 
-                  id="affiantTitle" 
-                  name="affiantTitle" 
-                  className="form-control"
-                  value={formData.affiantTitle}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div className="col-12">
-                <label htmlFor="affidavitExecutionDate" className="form-label">Date of Affidavit Execution</label>
-                <input 
-                  type="date" 
-                  id="affidavitExecutionDate" 
-                  name="affidavitExecutionDate" 
-                  className="form-control"
-                  value={formData.affidavitExecutionDate}
-                  onChange={handleInputChange}
-                />
-              </div>
+              {formData.certainMortgageLoan === true && (
+                <>
+                  <div className="col-md-6">
+                    <label htmlFor="affiantName" className="form-label">Affiant Name *</label>
+                    <input 
+                      type="text" 
+                      id="affiantName" 
+                      name="affiantName" 
+                      className={`form-control ${fieldErrors.affiantName ? 'is-invalid' : ''}`}
+                      value={formData.affiantName}
+                      onChange={handleInputChange}
+                    />
+                    {fieldErrors.affiantName && (
+                      <div className="text-danger small mt-1">
+                        {fieldErrors.affiantName}
+                      </div>
+                    )}
+                  </div>
+                  <div className="col-md-6">
+                    <label htmlFor="affiantTitle" className="form-label">Affiant Title *</label>
+                    <input 
+                      type="text" 
+                      id="affiantTitle" 
+                      name="affiantTitle" 
+                      className={`form-control ${fieldErrors.affiantTitle ? 'is-invalid' : ''}`}
+                      value={formData.affiantTitle}
+                      onChange={handleInputChange}
+                    />
+                    {fieldErrors.affiantTitle && (
+                      <div className="text-danger small mt-1">
+                        {fieldErrors.affiantTitle}
+                      </div>
+                    )}
+                  </div>
+                  <div className="col-12">
+                    <label htmlFor="affidavitExecutionDate" className="form-label">Date of Affidavit Execution *</label>
+                    <input 
+                      type="date" 
+                      id="affidavitExecutionDate" 
+                      name="affidavitExecutionDate" 
+                      className={`form-control ${fieldErrors.affidavitExecutionDate ? 'is-invalid' : ''}`}
+                      value={formData.affidavitExecutionDate}
+                      onChange={handleInputChange}
+                    />
+                    {fieldErrors.affidavitExecutionDate && (
+                      <div className="text-danger small mt-1">
+                        {fieldErrors.affidavitExecutionDate}
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           </div>
         );
