@@ -1943,6 +1943,92 @@ input, textarea, select {
     cursor: pointer;
 }
 
+/* Mobile Petition Rows */
+.petition-mobile-row {
+    background: #fff;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    padding: 8px 12px;
+    margin-bottom: 6px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    transition: box-shadow 0.2s ease;
+}
+
+.petition-mobile-row:hover {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.petition-main-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.petition-number {
+    font-size: 0.9rem;
+    color: var(--theme-color);
+}
+
+.petition-details-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 2px;
+}
+
+.petition-details-row .small {
+    font-size: 0.75rem;
+    line-height: 1.2;
+    color: #6c757d;
+}
+
+.petition-details-row .small:not(:last-child)::after {
+    content: "•";
+    margin-left: 8px;
+    color: #adb5bd;
+}
+
+/* Action buttons styling */
+.petition-action-buttons {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 3px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    min-width: 80px;
+    padding: 2px 0;
+    white-space: nowrap;
+}
+
+.petition-action-buttons .btn {
+    display: block;
+    width: 100%;
+    text-align: center;
+    padding: 4px 8px;
+    border: none;
+    background: none;
+    font-size: 0.7rem;
+    color: #495057;
+    transition: background-color 0.2s;
+    line-height: 1.2;
+}
+
+.petition-action-buttons .btn:hover {
+    background-color: #f8f9fa;
+}
+
+.petition-action-buttons .btn-delete {
+    color: #dc3545;
+    font-size: 0.7rem;
+}
+
+.petition-action-buttons .btn-delete:hover {
+    background-color: #f8d7da;
+}
+
 /* Google Places Autocomplete Styles */
 .address-autocomplete-container {
     position: relative;

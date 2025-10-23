@@ -703,8 +703,8 @@ const ViewAllPetitions = ({ onBack }) => {
         </div>
       </div>
 
-      {/* Petitions Table */}
-      <div className="table-responsive petition-table-container" style={{ maxHeight: '500px', overflowY: 'auto' }}>
+      {/* Desktop Table View */}
+      <div className="d-none d-lg-block table-responsive petition-table-container" style={{ maxHeight: '500px', overflowY: 'auto' }}>
         <table className="table table-hover w-100 mb-0">
           <thead className="table-light">
             <tr>
@@ -865,6 +865,108 @@ const ViewAllPetitions = ({ onBack }) => {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile Card View */}
+      <div className="d-lg-none">
+        {loading ? (
+          <div className="text-center py-4">
+            <div className="spinner-border text-primary" role="status">
+              <span className="visually-hidden">Loading...</span>
+            </div>
+            <p className="mt-2 text-muted">Loading petitions...</p>
+          </div>
+        ) : petitions.length > 0 ? (
+          <div className="row g-3">
+            {petitions.map((petition) => (
+              <div key={petition.id} className="col-12">
+                <div className="petition-mobile-row">
+                  <div className="d-flex justify-content-between align-items-center">
+                    <div className="petition-main-info">
+                      <div className="d-flex align-items-center gap-2 mb-1">
+                        <a 
+                          href={`#details-${petition.id}`}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handlePetitionClick(petition);
+                          }}
+                          className="text-decoration-none fw-medium petition-number"
+                          style={{ cursor: 'pointer' }}
+                        >
+                          {petition.petitionNumber}
+                        </a>
+                        <span className={getStatusBadgeClass(petition.status, petition.statusClass)}>
+                          {petition.status}
+                        </span>
+                      </div>
+                      <div className="petition-details-row">
+                        <span className="small text-muted">{petition.propertyAddress}</span>
+                        <span className="small text-muted">• {petition.borrower}</span>
+                        <span className="small text-muted">• {petition.filingDate}</span>
+                      </div>
+                    </div>
+                    <div className="petition-action-expansion">
+                      <button
+                        className="btn btn-sm border-0"
+                        type="button"
+                        style={{ background: 'transparent', color: '#6c757d' }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenDropdownId(openDropdownId === petition.id ? null : petition.id);
+                        }}
+                        title="Actions"
+                      >
+                        <i className="fas fa-ellipsis-v"></i>
+                      </button>
+                      {openDropdownId === petition.id && (
+                        <div className="petition-action-buttons">
+                          <button 
+                            className="btn btn-view"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setOpenDropdownId(null);
+                              handlePetitionClick(petition);
+                            }}
+                          >
+                            View
+                          </button>
+                          <button 
+                            className="btn btn-resume"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setOpenDropdownId(null);
+                              // TODO: Implement resume functionality
+                              console.log('Resume petition:', petition.id);
+                            }}
+                          >
+                            Resume
+                          </button>
+                          <button 
+                            className="btn btn-delete"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setOpenDropdownId(null);
+                              // TODO: Implement delete functionality
+                              console.log('Delete petition:', petition.id);
+                            }}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-4">
+            <i className="fa-solid fa-search text-muted mb-3" style={{ fontSize: '2rem' }}></i>
+            <p className="text-muted mb-0">No petitions found matching your criteria</p>
+            <small className="text-muted">Try adjusting your search or filter settings</small>
+          </div>
+        )}
       </div>
 
       {/* Pagination */}
