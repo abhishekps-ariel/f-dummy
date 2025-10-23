@@ -793,51 +793,73 @@ const PetitionSteps = ({ isOpen, onClose }) => {
     const errors = {};
     let hasErrors = false;
     
-    if (!formData.minNumber.trim()) {
-      errors.minNumber = 'MIN Number is required';
+    // MIN Number is required if Loan Number is not provided
+    if (!formData.minNumber.trim() && !formData.loanNumber.trim()) {
+      errors.minNumber = 'Either MIN Number or Loan Number is required';
       hasErrors = true;
     }
     
-    if (!formData.loanNumber.trim()) {
-      errors.loanNumber = 'Loan Number is required';
+    // Loan Number is required if MIN Number is not provided
+    if (!formData.loanNumber.trim() && !formData.minNumber.trim()) {
+      errors.loanNumber = 'Either Loan Number or MIN Number is required';
       hasErrors = true;
     }
     
+    // Loan Type is required (from lookup)
     if (!formData.petitionLoanTypeId) {
       errors.petitionLoanTypeId = 'Loan Type is required';
       hasErrors = true;
     }
     
+    // Lien Position is required
     if (!formData.lienPosition || formData.lienPosition === '' || formData.lienPosition === 0) {
       errors.lienPosition = 'Lien Position is required';
       hasErrors = true;
     }
     
+    // Origination Date is required and must be in the past
     if (!formData.originationDate.trim()) {
       errors.originationDate = 'Origination Date is required';
       hasErrors = true;
+    } else {
+      const originationDate = new Date(formData.originationDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Reset time to start of day for comparison
+      
+      if (originationDate >= today) {
+        errors.originationDate = 'Origination Date must be in the past';
+        hasErrors = true;
+      }
     }
     
+    // Original Principal Amount is required and must be positive
     if (!formData.originalPrincipalAmount || formData.originalPrincipalAmount <= 0) {
       errors.originalPrincipalAmount = 'Original Principal Amount is required and must be greater than 0';
       hasErrors = true;
     }
     
+    // Current Principal Balance is required and must be positive
     if (!formData.currentPrincipalBalance || formData.currentPrincipalBalance <= 0) {
       errors.currentPrincipalBalance = 'Current Principal Balance is required and must be greater than 0';
       hasErrors = true;
     }
     
-    if (!formData.interestRatePercent || formData.interestRatePercent <= 0) {
-      errors.interestRatePercent = 'Interest Rate is required and must be greater than 0';
+    // Interest Rate is required and must be between 0-100%
+    if (formData.interestRatePercent === '' || formData.interestRatePercent === null || formData.interestRatePercent === undefined) {
+      errors.interestRatePercent = 'Interest Rate is required';
+      hasErrors = true;
+    } else if (formData.interestRatePercent < 0 || formData.interestRatePercent > 100) {
+      errors.interestRatePercent = 'Interest Rate must be between 0% and 100%';
       hasErrors = true;
     }
     
+    // Monthly Payment Amount is required and must be positive
     if (!formData.monthlyPaymentAmount || formData.monthlyPaymentAmount <= 0) {
       errors.monthlyPaymentAmount = 'Monthly Payment Amount is required and must be greater than 0';
       hasErrors = true;
     }
     
+    // Delinquency Days at Filing is required and must be non-negative
     if (formData.delinquencyDaysAtFiling === '' || formData.delinquencyDaysAtFiling < 0) {
       errors.delinquencyDaysAtFiling = 'Delinquency Days at Filing is required and must be 0 or greater';
       hasErrors = true;
@@ -852,6 +874,9 @@ const PetitionSteps = ({ isOpen, onClose }) => {
     const errors = {};
     let hasErrors = false;
     
+    // Valid name pattern: letters, spaces, hyphens, apostrophes only
+    const validNamePattern = /^[a-zA-Z\s\-']+$/;
+    
     if (!formData.borrowers || formData.borrowers.length === 0) {
       errors.borrowers = 'At least one borrower must be entered';
       hasErrors = true;
@@ -860,13 +885,145 @@ const PetitionSteps = ({ isOpen, onClose }) => {
         if (!borrower.firstName.trim()) {
           errors[`borrower_${borrower.id}_firstName`] = 'First name is required';
           hasErrors = true;
+        } else if (!validNamePattern.test(borrower.firstName.trim())) {
+          errors[`borrower_${borrower.id}_firstName`] = 'First name must contain only valid characters (no numbers or invalid symbols)';
+          hasErrors = true;
         }
+        
         if (!borrower.lastName.trim()) {
           errors[`borrower_${borrower.id}_lastName`] = 'Last name is required';
+          hasErrors = true;
+        } else if (!validNamePattern.test(borrower.lastName.trim())) {
+          errors[`borrower_${borrower.id}_lastName`] = 'Last name must contain only valid characters (no numbers or invalid symbols)';
+          hasErrors = true;
+        }
+        
+        // Validate middle name if provided
+        if (borrower.middleName.trim() && !validNamePattern.test(borrower.middleName.trim())) {
+          errors[`borrower_${borrower.id}_middleName`] = 'Middle name must contain only valid characters (no numbers or invalid symbols)';
+          hasErrors = true;
+        }
+        
+        // Validate suffix if provided
+        if (borrower.suffix.trim() && !validNamePattern.test(borrower.suffix.trim())) {
+          errors[`borrower_${borrower.id}_suffix`] = 'Suffix must contain only valid characters (no numbers or invalid symbols)';
           hasErrors = true;
         }
       });
     }
+
+    setFieldErrors(errors);
+    return { hasErrors, errors };
+  };
+
+  // Validate Right-to-Cure details
+  const validateRightToCureDetails = () => {
+    const errors = {};
+    let hasErrors = false;
+    
+    // Validate notice sent selection
+    if (formData.noticeSent === null || formData.noticeSent === undefined) {
+      errors.noticeSent = 'Please select whether the Right-to-Cure notice was sent';
+      hasErrors = true;
+    }
+    
+    if (formData.noticeSent === true) {
+      // Validate notice date
+      if (!formData.noticeDate.trim()) {
+        errors.noticeDate = 'Notice date is required';
+        hasErrors = true;
+      }
+      
+      // Validate amount in default
+      if (!formData.amountInDefault || formData.amountInDefault <= 0) {
+        errors.amountInDefault = 'Amount in default is required and must be greater than 0';
+        hasErrors = true;
+      }
+      
+      // Validate days delinquent
+      if (formData.daysDelinquentAtNotice === '' || formData.daysDelinquentAtNotice < 0) {
+        errors.daysDelinquentAtNotice = 'Days delinquent is required and must be 0 or greater';
+        hasErrors = true;
+      }
+      
+      // Validate cure expiration date
+      if (!formData.cureExpirationDate.trim()) {
+        errors.cureExpirationDate = 'Cure expiration date is required';
+        hasErrors = true;
+      } else if (formData.noticeDate && formData.cureExpirationDate && new Date(formData.cureExpirationDate) <= new Date(formData.noticeDate)) {
+        errors.cureExpirationDate = 'Cure expiration date must be after notice date';
+        hasErrors = true;
+      }
+      
+      // Validate notice address
+      if (!formData.noticeAddressStreet1.trim()) {
+        errors.noticeAddressStreet1 = 'Notice mailing address is required';
+        hasErrors = true;
+      }
+      
+      if (!formData.noticeAddressCity.trim()) {
+        errors.noticeAddressCity = 'City is required';
+        hasErrors = true;
+      }
+      
+      if (!formData.noticeAddressState.trim()) {
+        errors.noticeAddressState = 'State is required';
+        hasErrors = true;
+      }
+      
+      if (!formData.noticeAddressZip.trim()) {
+        errors.noticeAddressZip = 'ZIP code is required';
+        hasErrors = true;
+      }
+    } else if (formData.noticeSent === false) {
+      // Validate acceleration date for non-notice path
+      if (!formData.manualOverrideReason.trim()) {
+        errors.manualOverrideReason = 'Acceleration date is required';
+        hasErrors = true;
+      } else {
+        const accelerationDate = new Date(formData.manualOverrideReason);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Reset time to start of day for comparison
+        
+        if (accelerationDate >= today) {
+          errors.manualOverrideReason = 'Acceleration date must be in the past';
+          hasErrors = true;
+        }
+      }
+    }
+
+    setFieldErrors(errors);
+    return { hasErrors, errors };
+  };
+
+  // Validate Form 35B Compliance details
+  const validateForm35BCompliance = () => {
+    const errors = {};
+    let hasErrors = false;
+    
+    // Validate certain mortgage loan selection
+    if (formData.certainMortgageLoan === null || formData.certainMortgageLoan === undefined) {
+      errors.certainMortgageLoan = 'Please select whether this loan qualifies as a certain mortgage loan';
+      hasErrors = true;
+    }
+    
+    // If loan qualifies as certain mortgage loan, compliance affidavit is required
+    if (formData.certainMortgageLoan === true) {
+      if (!formData.form35bComplianceAffidavitPdf) {
+        errors.form35bComplianceAffidavitPdf = 'Form 35B Compliance Affidavit is required for certain mortgage loans';
+        hasErrors = true;
+      } else {
+        // Validate file type
+        const fileName = formData.form35bComplianceAffidavitPdf.name;
+        if (!fileName.toLowerCase().endsWith('.pdf')) {
+          errors.form35bComplianceAffidavitPdf = 'File must be in PDF format';
+          hasErrors = true;
+        }
+      }
+    }
+    
+    // If loan does not qualify, non-applicability affidavit is optional
+    // No validation needed for optional field
 
     setFieldErrors(errors);
     return { hasErrors, errors };
@@ -989,6 +1146,22 @@ const PetitionSteps = ({ isOpen, onClose }) => {
     // Validate Borrower Details step before proceeding
     if (currentStep === 3 && direction === 1) {
       const validation = validateBorrowerDetails();
+      if (validation.hasErrors) {
+        return;
+      }
+    }
+    
+    // Validate Right-to-Cure Details step before proceeding
+    if (currentStep === 5 && direction === 1) {
+      const validation = validateRightToCureDetails();
+      if (validation.hasErrors) {
+        return;
+      }
+    }
+    
+    // Validate Form 35B Compliance step before proceeding
+    if (currentStep === 6 && direction === 1) {
+      const validation = validateForm35BCompliance();
       if (validation.hasErrors) {
         return;
       }
@@ -1611,11 +1784,26 @@ const PetitionSteps = ({ isOpen, onClose }) => {
                     <label className="form-label">Middle Name</label>
                     <input 
                       type="text" 
-                      className="form-control"
+                      className={`form-control ${fieldErrors[`borrower_${borrower.id}_middleName`] ? 'is-invalid' : ''}`}
                       value={borrower.middleName}
-                      onChange={(e) => updateBorrower(borrower.id, 'middleName', e.target.value)}
+                      onChange={(e) => {
+                        updateBorrower(borrower.id, 'middleName', e.target.value);
+                        // Clear field error when user starts typing
+                        if (fieldErrors[`borrower_${borrower.id}_middleName`]) {
+                          setFieldErrors(prev => {
+                            const newErrors = { ...prev };
+                            delete newErrors[`borrower_${borrower.id}_middleName`];
+                            return newErrors;
+                          });
+                        }
+                      }}
                       placeholder="Middle"
                     />
+                    {fieldErrors[`borrower_${borrower.id}_middleName`] && (
+                      <div className="text-danger small mt-1">
+                        {fieldErrors[`borrower_${borrower.id}_middleName`]}
+                      </div>
+                    )}
                   </div>
                   <div className="col-md-3">
                     <label className="form-label">Last Name *</label>
@@ -1646,11 +1834,26 @@ const PetitionSteps = ({ isOpen, onClose }) => {
                     <label className="form-label">Suffix</label>
                     <input 
                       type="text" 
-                      className="form-control"
+                      className={`form-control ${fieldErrors[`borrower_${borrower.id}_suffix`] ? 'is-invalid' : ''}`}
                       value={borrower.suffix}
-                      onChange={(e) => updateBorrower(borrower.id, 'suffix', e.target.value)}
+                      onChange={(e) => {
+                        updateBorrower(borrower.id, 'suffix', e.target.value);
+                        // Clear field error when user starts typing
+                        if (fieldErrors[`borrower_${borrower.id}_suffix`]) {
+                          setFieldErrors(prev => {
+                            const newErrors = { ...prev };
+                            delete newErrors[`borrower_${borrower.id}_suffix`];
+                            return newErrors;
+                          });
+                        }
+                      }}
                       placeholder="Jr, Sr, III"
                     />
+                    {fieldErrors[`borrower_${borrower.id}_suffix`] && (
+                      <div className="text-danger small mt-1">
+                        {fieldErrors[`borrower_${borrower.id}_suffix`]}
+                      </div>
+                    )}
                   </div>
                   <div className="col-md-2">
                     <label className="form-label">Primary Borrower</label>
@@ -1876,128 +2079,196 @@ const PetitionSteps = ({ isOpen, onClose }) => {
             <p className="text-muted small mb-3">Enter details proving the §35A notice was properly issued to the borrower.</p>
             <div className="row g-3">
               <div className="col-12">
-                <div className="form-check mb-3">
-                  <input 
-                    className="form-check-input" 
-                    type="checkbox" 
-                    id="noticeSent" 
-                    name="noticeSent"
-                    checked={formData.noticeSent}
-                    onChange={handleInputChange}
-                  />
-                  <label className="form-check-label" htmlFor="noticeSent">
-                    Right-to-Cure Notice was sent
-                  </label>
+                <label className="form-label fw-bold">Was the Right-to-Cure notice sent? *</label>
+                <div className="d-flex gap-4">
+                  <div className="form-check">
+                    <input 
+                      className="form-check-input" 
+                      type="radio" 
+                      id="noticeSentYes" 
+                      name="noticeSent"
+                      value="yes"
+                      checked={formData.noticeSent === true}
+                      onChange={(e) => setFormData(prev => ({ ...prev, noticeSent: true }))}
+                    />
+                    <label className="form-check-label fw-medium" htmlFor="noticeSentYes">
+                      Yes
+                    </label>
+                  </div>
+                  <div className="form-check">
+                    <input 
+                      className="form-check-input" 
+                      type="radio" 
+                      id="noticeSentNo" 
+                      name="noticeSent"
+                      value="no"
+                      checked={formData.noticeSent === false}
+                      onChange={(e) => setFormData(prev => ({ ...prev, noticeSent: false }))}
+                    />
+                    <label className="form-check-label fw-medium" htmlFor="noticeSentNo">
+                      No
+                    </label>
+                  </div>
                 </div>
+                {fieldErrors.noticeSent && (
+                  <div className="text-danger small mt-1">
+                    {fieldErrors.noticeSent}
+                  </div>
+                )}
               </div>
               
               {formData.noticeSent && (
                 <>
                   <div className="col-md-6">
-                    <label htmlFor="noticeDate" className="form-label">Notice Date</label>
+                    <label htmlFor="noticeDate" className="form-label">Notice Date *</label>
                     <input 
                       type="date" 
                       id="noticeDate" 
                       name="noticeDate" 
-                      className="form-control"
+                      className={`form-control ${fieldErrors.noticeDate ? 'is-invalid' : ''}`}
                       value={formData.noticeDate}
                       onChange={handleInputChange}
                     />
+                    {fieldErrors.noticeDate && (
+                      <div className="text-danger small mt-1">
+                        {fieldErrors.noticeDate}
+                      </div>
+                    )}
                   </div>
                   <div className="col-md-6">
-                    <label htmlFor="daysDelinquentAtNotice" className="form-label">Days Delinquent on Notice Date</label>
+                    <label htmlFor="daysDelinquentAtNotice" className="form-label">Days Delinquent on Notice Date *</label>
                     <input 
                       type="number" 
                       id="daysDelinquentAtNotice" 
                       name="daysDelinquentAtNotice" 
                       min="0" 
-                      className="form-control"
+                      className={`form-control ${fieldErrors.daysDelinquentAtNotice ? 'is-invalid' : ''}`}
                       value={formData.daysDelinquentAtNotice}
                       onChange={handleInputChange}
                     />
+                    {fieldErrors.daysDelinquentAtNotice && (
+                      <div className="text-danger small mt-1">
+                        {fieldErrors.daysDelinquentAtNotice}
+                      </div>
+                    )}
                   </div>
                   <div className="col-md-6">
-                    <label htmlFor="amountInDefault" className="form-label">Amount in Default ($)</label>
+                    <label htmlFor="amountInDefault" className="form-label">Amount in Default ($) *</label>
                     <input 
                       type="number" 
                       step="0.01" 
                       id="amountInDefault" 
                       name="amountInDefault" 
-                      className="form-control"
+                      className={`form-control ${fieldErrors.amountInDefault ? 'is-invalid' : ''}`}
                       value={formData.amountInDefault}
                       onChange={handleInputChange}
                     />
+                    {fieldErrors.amountInDefault && (
+                      <div className="text-danger small mt-1">
+                        {fieldErrors.amountInDefault}
+                      </div>
+                    )}
                   </div>
                   <div className="col-md-6">
-                    <label htmlFor="cureExpirationDate" className="form-label">Cure Expiration Date</label>
+                    <label htmlFor="cureExpirationDate" className="form-label">Cure Expiration Date *</label>
                     <input 
                       type="date" 
                       id="cureExpirationDate" 
                       name="cureExpirationDate" 
-                      className="form-control"
+                      className={`form-control ${fieldErrors.cureExpirationDate ? 'is-invalid' : ''}`}
                       value={formData.cureExpirationDate}
                       onChange={handleInputChange}
                     />
+                    {fieldErrors.cureExpirationDate && (
+                      <div className="text-danger small mt-1">
+                        {fieldErrors.cureExpirationDate}
+                      </div>
+                    )}
                   </div>
                   <div className="col-12">
-                    <label htmlFor="noticeAddressStreet1" className="form-label">Notice Mailing Address</label>
+                    <label htmlFor="noticeAddressStreet1" className="form-label">Notice Mailing Address *</label>
                     <input 
                       type="text" 
                       id="noticeAddressStreet1" 
                       name="noticeAddressStreet1" 
-                      className="form-control"
+                      className={`form-control ${fieldErrors.noticeAddressStreet1 ? 'is-invalid' : ''}`}
                       value={formData.noticeAddressStreet1}
                       onChange={handleInputChange}
                       placeholder="Street address"
                     />
+                    {fieldErrors.noticeAddressStreet1 && (
+                      <div className="text-danger small mt-1">
+                        {fieldErrors.noticeAddressStreet1}
+                      </div>
+                    )}
                   </div>
                   <div className="col-md-4">
-                    <label htmlFor="noticeAddressCity" className="form-label">City</label>
+                    <label htmlFor="noticeAddressCity" className="form-label">City *</label>
                     <input 
                       type="text" 
                       id="noticeAddressCity" 
                       name="noticeAddressCity" 
-                      className="form-control"
+                      className={`form-control ${fieldErrors.noticeAddressCity ? 'is-invalid' : ''}`}
                       value={formData.noticeAddressCity}
                       onChange={handleInputChange}
                     />
+                    {fieldErrors.noticeAddressCity && (
+                      <div className="text-danger small mt-1">
+                        {fieldErrors.noticeAddressCity}
+                      </div>
+                    )}
                   </div>
                   <div className="col-md-4">
-                    <label htmlFor="noticeAddressState" className="form-label">State</label>
+                    <label htmlFor="noticeAddressState" className="form-label">State *</label>
                     <input 
                       type="text" 
                       id="noticeAddressState" 
                       name="noticeAddressState" 
-                      className="form-control"
+                      className={`form-control ${fieldErrors.noticeAddressState ? 'is-invalid' : ''}`}
                       value={formData.noticeAddressState}
                       onChange={handleInputChange}
                     />
+                    {fieldErrors.noticeAddressState && (
+                      <div className="text-danger small mt-1">
+                        {fieldErrors.noticeAddressState}
+                      </div>
+                    )}
                   </div>
                   <div className="col-md-4">
-                    <label htmlFor="noticeAddressZip" className="form-label">ZIP Code</label>
+                    <label htmlFor="noticeAddressZip" className="form-label">ZIP Code *</label>
                     <input 
                       type="text" 
                       id="noticeAddressZip" 
                       name="noticeAddressZip" 
-                      className="form-control"
+                      className={`form-control ${fieldErrors.noticeAddressZip ? 'is-invalid' : ''}`}
                       value={formData.noticeAddressZip}
                       onChange={handleInputChange}
                     />
+                    {fieldErrors.noticeAddressZip && (
+                      <div className="text-danger small mt-1">
+                        {fieldErrors.noticeAddressZip}
+                      </div>
+                    )}
                   </div>
                 </>
               )}
               
-              {!formData.noticeSent && (
+              {formData.noticeSent === false && (
                 <div className="col-12">
-                  <label htmlFor="manualOverrideReason" className="form-label">Acceleration Date (If NO Right-to-Cure notice was issued)</label>
+                  <label htmlFor="manualOverrideReason" className="form-label">Acceleration Date *</label>
                   <input 
                     type="date" 
                     id="manualOverrideReason" 
                     name="manualOverrideReason" 
-                    className="form-control"
+                    className={`form-control ${fieldErrors.manualOverrideReason ? 'is-invalid' : ''}`}
                     value={formData.manualOverrideReason}
                     onChange={handleInputChange}
                   />
+                  {fieldErrors.manualOverrideReason && (
+                    <div className="text-danger small mt-1">
+                      {fieldErrors.manualOverrideReason}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -2008,44 +2279,73 @@ const PetitionSteps = ({ isOpen, onClose }) => {
         return (
           <div>
             <h2 className="theme-color font-med mb-1">6. Form 35B Compliance</h2>
-            <p className="text-muted small mb-3">If applicable, upload the signed **Form 35B Affidavit of Compliance** and provide details.</p>
+            <p className="text-muted small mb-3">Determine if this loan qualifies as a "certain mortgage loan" and upload the appropriate affidavit.</p>
             <div className="alert alert-info small" role="alert">
-              Required for "certain mortgage loans" (e.g., Interest-Only, Subprime, Low-Doc).
+              <strong>Certain mortgage loans</strong> include Interest-Only, Subprime, Low-Doc, and other high-risk loan types that require Form 35B compliance.
             </div>
             <div className="row g-3">
               <div className="col-12">
-                <div className="form-check mb-3">
-                  <input 
-                    className="form-check-input" 
-                    type="checkbox" 
-                    id="certainMortgageLoan" 
-                    name="certainMortgageLoan"
-                    checked={formData.certainMortgageLoan}
-                    onChange={handleInputChange}
-                  />
-                  <label className="form-check-label" htmlFor="certainMortgageLoan">
-                    This loan qualifies as a "certain mortgage loan" (Interest-Only, Subprime, Low-Doc, etc.)
-                  </label>
+                <label className="form-label fw-bold">Does this loan qualify as a "certain mortgage loan"? *</label>
+                <div className="d-flex gap-4">
+                  <div className="form-check">
+                    <input 
+                      className="form-check-input" 
+                      type="radio" 
+                      id="certainMortgageLoanYes" 
+                      name="certainMortgageLoan"
+                      value="yes"
+                      checked={formData.certainMortgageLoan === true}
+                      onChange={(e) => setFormData(prev => ({ ...prev, certainMortgageLoan: true }))}
+                    />
+                    <label className="form-check-label fw-medium" htmlFor="certainMortgageLoanYes">
+                      Yes
+                    </label>
+                  </div>
+                  <div className="form-check">
+                    <input 
+                      className="form-check-input" 
+                      type="radio" 
+                      id="certainMortgageLoanNo" 
+                      name="certainMortgageLoan"
+                      value="no"
+                      checked={formData.certainMortgageLoan === false}
+                      onChange={(e) => setFormData(prev => ({ ...prev, certainMortgageLoan: false }))}
+                    />
+                    <label className="form-check-label fw-medium" htmlFor="certainMortgageLoanNo">
+                      No
+                    </label>
+                  </div>
                 </div>
+                {fieldErrors.certainMortgageLoan && (
+                  <div className="text-danger small mt-1">
+                    {fieldErrors.certainMortgageLoan}
+                  </div>
+                )}
               </div>
               
-              {formData.certainMortgageLoan && (
+              {formData.certainMortgageLoan === true && (
                 <>
                   <div className="col-12">
-                    <label htmlFor="form35bComplianceAffidavitPdf" className="form-label">Upload Form 35B Compliance Affidavit (PDF only)</label>
+                    <label htmlFor="form35bComplianceAffidavitPdf" className="form-label">Upload Form 35B Compliance Affidavit (PDF only) *</label>
                     <input 
                       type="file" 
                       id="form35bComplianceAffidavitPdf" 
                       name="form35bComplianceAffidavitPdf" 
                       accept=".pdf" 
-                      className="form-control"
+                      className={`form-control ${fieldErrors.form35bComplianceAffidavitPdf ? 'is-invalid' : ''}`}
                       onChange={handleInputChange}
                     />
+                    {fieldErrors.form35bComplianceAffidavitPdf && (
+                      <div className="text-danger small mt-1">
+                        {fieldErrors.form35bComplianceAffidavitPdf}
+                      </div>
+                    )}
+                    <div className="form-text">Required for certain mortgage loans. File must be in PDF format.</div>
                   </div>
                 </>
               )}
               
-              {!formData.certainMortgageLoan && (
+              {formData.certainMortgageLoan === false && (
                 <div className="col-12">
                   <label htmlFor="form35bNonApplicabilityAffidavitPdf" className="form-label">Upload Form 35B Non-Applicability Affidavit (PDF only) - Optional</label>
                   <input 
@@ -2056,6 +2356,7 @@ const PetitionSteps = ({ isOpen, onClose }) => {
                     className="form-control"
                     onChange={handleInputChange}
                   />
+                  <div className="form-text">Optional for loans that do not qualify as certain mortgage loans.</div>
                 </div>
               )}
               
