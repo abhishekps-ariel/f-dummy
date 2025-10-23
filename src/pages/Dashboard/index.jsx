@@ -796,6 +796,96 @@ function Dashboard() {
                 </div>
               </div>
 
+              {/* New Information Cards */}
+              <div className="row mb-4">
+                {/* User Details Card */}
+                <div className="col-md-4 mb-3">
+                  <div className="stat-card h-100">
+                    <h6 className="stat-count mb-3" style={{ fontSize: '1.1rem' }}>User Details</h6>
+                    <div className="user-info">
+                      <h6 className="mb-2">{user.firstName} {user.lastName}</h6>
+                      <p className="text-muted small mb-1">
+                        <i className="fa-solid fa-envelope me-1"></i>
+                        Email: {user.email}
+                      </p>
+                      <p className="text-muted small mb-1">
+                        <i className="fa-solid fa-user-tag me-1"></i>
+                        Role: {user.role || "User"}
+                      </p>
+                      {userOrganization && (
+                        <>
+                          <p className="text-muted small mb-1">
+                            <i className="fa-solid fa-building me-1"></i>
+                            Organization: {userOrganization.name}
+                          </p>
+                          <p className="text-muted small mb-0">
+                            <i className="fa-solid fa-tag me-1"></i>
+                            Entity Type: {userOrganization.type || "Attorney"}
+                          </p>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Recent Filed Petition Card */}
+                <div className="col-md-4 mb-3">
+                  <div className="stat-card h-100">
+                    <div className="d-flex align-items-center mb-3">
+                      <i className="fa-solid fa-file-circle-plus me-2 text-success"></i>
+                      <h6 className="stat-count mb-0" style={{ fontSize: '1.1rem' }}>Recent Petition</h6>
+                    </div>
+                    {petitions.length > 0 ? (
+                      (() => {
+                        const recentPetition = petitions
+                          .sort((a, b) => new Date(b.filingDate) - new Date(a.filingDate))[0];
+                        return (
+                          <div className="petition-info">
+                            <h6 className="mb-2">Petition Number: {recentPetition.petitionNumber}</h6>
+                            <p className="text-muted small mb-1">
+                              <i className="fa-solid fa-location-dot me-1"></i>
+                              Street Address: {recentPetition.propertyAddress}
+                            </p>
+                            <p className="text-muted small mb-1">
+                              <i className="fa-solid fa-user me-1"></i>
+                              Borrower: {recentPetition.borrower}
+                            </p>
+                            <p className="text-muted small mb-1">
+                              <i className="fa-solid fa-calendar me-1"></i>
+                              Filing Date: {recentPetition.filingDate}
+                            </p>
+                            <p className="text-muted small mb-2">
+                              <i className="fa-solid fa-clock me-1"></i>
+                              Last Updated: {recentPetition.lastUpdated}
+                            </p>
+                            <span className={`badge status-${recentPetition.statusClass || recentPetition.status.toLowerCase().replace(' ', '-')}`}>
+                              Status: {recentPetition.status}
+                            </span>
+                          </div>
+                        );
+                      })()
+                    ) : (
+                      <div className="text-center">
+                        <p className="text-muted small mb-0">No petitions filed yet</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Action Alerts Card */}
+                <div className="col-md-4 mb-3">
+                  <div className="stat-card h-100">
+                    <div className="d-flex align-items-center mb-3">
+                      <i className="fa-solid fa-bell me-2 text-muted" style={{ fontSize: "1.2rem" }}></i>
+                      <h6 className="stat-count mb-0" style={{ fontSize: '1.1rem' }}>Action Alerts</h6>
+                    </div>
+                    <div className="d-flex align-items-center justify-content-center h-100">
+                      <p className="text-muted small mb-0">All alerts will be displayed here</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
                 <div className="d-flex gap-3 align-items-center">
                   <button 
