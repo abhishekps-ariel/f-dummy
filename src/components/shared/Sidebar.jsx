@@ -1,0 +1,182 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { ROUTES } from "../../constants/routerConstants";
+import loginImg from "../../assets/logo-sample.png";
+
+const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
+  const navigate = useNavigate();
+
+  const handleNavigation = (section) => {
+    if (section === 'organizations') {
+      navigate(ROUTES.DASHBOARD, { state: { activeSection: 'organizations' } });
+    } else if (section === 'dashboard') {
+      navigate(ROUTES.DASHBOARD);
+    }
+    onSectionChange(section);
+  };
+
+  return (
+    <>
+      {/* Sidebar - Desktop Only */}
+      <aside className="dashboard-sidebar d-none d-lg-flex flex-column">
+        <div className="logo-box" style={{ padding: "0.8rem 1rem 2rem 1rem" }}>
+          {/* Logo */}
+          <div className="dashboard-logo">
+            <img
+              src={loginImg}
+              alt="FILIR Logo"
+              className="dashboard-logo-img"
+              style={{ width: "150px", height: "150px" }}
+            />
+          </div>
+        </div>
+
+        {/* Navigation Links */}
+        <nav className="flex-grow-1">
+          <ul
+            className="dashboard-nav list-unstyled"
+            style={{ display: "flex", flexDirection: "column", gap: "12px" }}
+          >
+            <li className="dashboard-nav-item">
+              <a
+                href="#"
+                className={`dashboard-nav-link ${activeSection === "dashboard" ? "dashboard-active-link" : ""
+                  }`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleNavigation("dashboard");
+                }}
+              >
+                <i className="fa-solid fa-box me-2"></i>
+                <span>Dashboard</span>
+              </a>
+            </li>
+            <li className="dashboard-nav-item">
+              <a
+                href="#"
+                className={`dashboard-nav-link ${activeSection === "organizations"
+                    ? "dashboard-active-link"
+                    : ""
+                  }`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleNavigation("organizations");
+                }}
+              >
+                <i className="fa-solid fa-building me-2"></i>
+                <span>Organizations</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+
+        {/* Sign Out Link */}
+        <div className="dashboard-sidebar-footer">
+          <a
+            href="#"
+            className="dashboard-nav-link"
+            onClick={(e) => {
+              e.preventDefault();
+              onLogout();
+            }}
+          >
+            <i className="fas fa-sign-out-alt me-2"></i>
+            <span>Sign Out</span>
+          </a>
+        </div>
+      </aside>
+
+      {/* Mobile Sidebar (Offcanvas) */}
+      <div
+        className="offcanvas offcanvas-start"
+        tabIndex="-1"
+        id="mobileSidebar"
+        aria-labelledby="mobileSidebarLabel"
+      >
+        <div className="offcanvas-header d-flex justify-content-between align-items-center" style={{ padding: "0.5rem 1rem" }}>
+          <img
+            src={loginImg}
+            alt="FILIR Logo"
+            className="dashboard-logo-img"
+            style={{ width: "180px", height: "100px" }}
+          />
+          <button
+            type="button"
+            className="btn-close"
+            data-bs-dismiss="offcanvas"
+            aria-label="Close"
+          ></button>
+        </div>
+        <div className="offcanvas-body">
+          <ul
+            className="dashboard-nav list-unstyled"
+            style={{ display: "flex", flexDirection: "column", gap: "12px" }}
+          >
+            <li className="dashboard-nav-item">
+              <a
+                href="#"
+                className={`dashboard-nav-link ${activeSection === "dashboard" ? "dashboard-active-link" : ""
+                  }`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleNavigation("dashboard");
+                  // Close mobile sidebar if open
+                  const mobileSidebar = document.getElementById("mobileSidebar");
+                  if (mobileSidebar) {
+                    const bsOffcanvas = window.bootstrap.Offcanvas.getInstance(mobileSidebar);
+                    if (bsOffcanvas) {
+                      bsOffcanvas.hide();
+                    }
+                  }
+                }}
+              >
+                <i className="fa-solid fa-box me-2"></i>
+                <span>Dashboard</span>
+              </a>
+            </li>
+            <li className="dashboard-nav-item">
+              <a
+                href="#"
+                className={`dashboard-nav-link ${activeSection === "organizations"
+                    ? "dashboard-active-link"
+                    : ""
+                  }`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleNavigation("organizations");
+                  // Close mobile sidebar if open
+                  const mobileSidebar = document.getElementById("mobileSidebar");
+                  if (mobileSidebar) {
+                    const bsOffcanvas = window.bootstrap.Offcanvas.getInstance(mobileSidebar);
+                    if (bsOffcanvas) {
+                      bsOffcanvas.hide();
+                    }
+                  }
+                }}
+              >
+                <i className="fa-solid fa-building me-2"></i>
+                <span>Organizations</span>
+              </a>
+            </li>
+          </ul>
+
+          <div className="mt-auto pt-4 border-top">
+            <a
+              href="#"
+              className="dashboard-nav-link"
+              onClick={(e) => {
+                e.preventDefault();
+                onLogout();
+              }}
+            >
+              <i className="fas fa-sign-out-alt me-2"></i>
+              <span>Sign Out</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
+export default Sidebar;

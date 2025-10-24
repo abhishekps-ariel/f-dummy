@@ -8,6 +8,8 @@ import { getFilingEntityTypes } from "../../services/commonService";
 import { getUserJoinRequests, getOrganizationById } from "../../services/organizationService";
 import { toast } from "react-toastify";
 import NotificationDropdown from "../../components/shared/NotificationDropdown";
+import Sidebar from "../../components/shared/Sidebar";
+import Header from "../../components/shared/Header";
 import "../../styles/custom.css";
 import loginImg from "../../assets/logo-sample.png";
 
@@ -310,253 +312,25 @@ function Profile() {
 
   return (
     <div className="dashboard-wrapper">
-      {/* Sidebar - Desktop Only */}
-      <aside className="dashboard-sidebar d-none d-lg-flex flex-column">
-        <div className="logo-box" style={{ padding: "0.8rem 1rem 2rem 1rem" }}>
-          {/* Logo */}
-          <div className="dashboard-logo">
-            <img
-              src={loginImg}
-              alt="FILIR Logo"
-              className="dashboard-logo-img"
-              style={{ width: "150px", height: "150px" }}
-            />
-          </div>
-        </div>
-
-        {/* Navigation Links */}
-        <nav className="flex-grow-1">
-          <ul
-            className="dashboard-nav list-unstyled"
-            style={{ display: "flex", flexDirection: "column", gap: "12px" }}
-          >
-            <li className="dashboard-nav-item">
-              <a
-                href="#"
-                className="dashboard-nav-link"
-                onClick={(e) => {
-                  e.preventDefault();
-                  navigate(ROUTES.DASHBOARD);
-                }}
-              >
-                <i className="fa-solid fa-box me-2"></i>
-                <span>Dashboard</span>
-              </a>
-            </li>
-            <li className="dashboard-nav-item">
-              <a
-                href="#"
-                className="dashboard-nav-link"
-                onClick={(e) => {
-                  e.preventDefault();
-                  navigate(ROUTES.DASHBOARD, { state: { activeSection: 'organizations' } });
-                }}
-              >
-                <i className="fa-solid fa-building me-2"></i>
-                <span>Organizations</span>
-              </a>
-            </li>
-          </ul>
-        </nav>
-
-        {/* Sign Out Link */}
-        <div className="dashboard-sidebar-footer">
-          <a
-            href="#"
-            className="dashboard-nav-link"
-            onClick={(e) => {
-              e.preventDefault();
-              handleLogout();
-            }}
-          >
-            <i className="fas fa-sign-out-alt me-2"></i>
-            <span>Sign Out</span>
-          </a>
-        </div>
-      </aside>
-
-      {/* Mobile Sidebar (Offcanvas) */}
-      <div
-        className="offcanvas offcanvas-start"
-        tabIndex="-1"
-        id="mobileSidebar"
-        aria-labelledby="mobileSidebarLabel"
-      >
-        <div className="offcanvas-header d-flex justify-content-between align-items-center" style={{ padding: "0.5rem 1rem" }}>
-          <img
-            src={loginImg}
-            alt="FILIR Logo"
-            className="dashboard-logo-img"
-            style={{ width: "180px", height: "100px" }}
-          />
-          <button
-            type="button"
-            className="btn-close"
-            data-bs-dismiss="offcanvas"
-            aria-label="Close"
-          ></button>
-        </div>
-        <div className="offcanvas-body">
-          <ul
-            className="dashboard-nav list-unstyled"
-            style={{ display: "flex", flexDirection: "column", gap: "12px" }}
-          >
-            <li className="dashboard-nav-item">
-              <a
-                href="#"
-                className="dashboard-nav-link"
-                onClick={(e) => {
-                  e.preventDefault();
-                  navigate(ROUTES.DASHBOARD);
-                }}
-              >
-                <i className="fa-solid fa-box me-2"></i>
-                <span>Dashboard</span>
-              </a>
-            </li>
-            <li className="dashboard-nav-item">
-              <a
-                href="#"
-                className="dashboard-nav-link"
-                onClick={(e) => {
-                  e.preventDefault();
-                  navigate(ROUTES.DASHBOARD, { state: { activeSection: 'organizations' } });
-                }}
-              >
-                <i className="fa-solid fa-building me-2"></i>
-                <span>Organizations</span>
-              </a>
-            </li>
-          </ul>
-
-          <div className="mt-auto pt-4 border-top">
-            <a
-              href="#"
-              className="dashboard-nav-link"
-              onClick={(e) => {
-                e.preventDefault();
-                handleLogout();
-              }}
-            >
-              <i className="fas fa-sign-out-alt me-2"></i>
-              <span>Sign Out</span>
-            </a>
-          </div>
-        </div>
-      </div>
+      <Sidebar 
+        activeSection="profile"
+        onSectionChange={(section) => {
+          if (section === 'dashboard') {
+            navigate(ROUTES.DASHBOARD);
+          } else if (section === 'organizations') {
+            navigate(ROUTES.DASHBOARD, { state: { activeSection: 'organizations' } });
+          }
+        }}
+        onLogout={handleLogout}
+      />
 
       {/* Main Content Area */}
       <main className="dashboard-main-area container-fluid">
-        {/* Header / Navbar */}
-        <div className="d-flex align-items-center justify-content-between dashboard-header">
-          <div className="d-flex align-items-center">
-            {/* Mobile Menu Button */}
-            <button
-              className="btn p-2 d-lg-none me-3"
-              type="button"
-              data-bs-toggle="offcanvas"
-              data-bs-target="#mobileSidebar"
-              aria-controls="mobileSidebar"
-            >
-              <i className="fas fa-bars"></i>
-            </button>
-            <div>
-              <h1 className="h4 mb-0 fw-bold theme-color">FILIR</h1>
-              <p className="small text-muted mb-0">Foreclosure Intake & Loan Information Resource</p>
-            </div>
-          </div>
-
-          <div className="d-flex align-items-center gap-3">
-            {/* Language Dropdown (Hidden on small screens) */}
-            <div className="dropdown d-none d-lg-block">
-              <button
-                className="btn btn-sm dropdown-toggle text-secondary border-0 font-xs"
-                type="button"
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
-              >
-                <i className="fa-solid fa-globe me-1"></i>
-                <span>Eng (US)</span>
-              </button>
-              {/* Dropdown Menu */}
-              <ul className="dropdown-menu dropdown-menu-end theme-dropdown">
-                <li>
-                  <a className="dropdown-item" href="#">
-                    English (US)
-                  </a>
-                </li>
-                <li>
-                  <a className="dropdown-item" href="#">
-                    Español (ES)
-                  </a>
-                </li>
-                <li>
-                  <a className="dropdown-item" href="#">
-                    Français (FR)
-                  </a>
-                </li>
-              </ul>
-            </div>
-
-            {/* Notification Dropdown */}
-            <NotificationDropdown />
-
-            {/* Profile Dropdown */}
-            <div className="dropdown">
-              <button
-                className="btn p-0 d-flex align-items-center border-0"
-                type="button"
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
-              >
-                <img
-                  className="rounded-circle object-fit-cover me-3"
-                  src="https://static.vecteezy.com/system/resources/thumbnails/003/337/584/small/default-avatar-photo-placeholder-profile-icon-vector.jpg"
-                  alt="User Avatar"
-                  style={{ width: "36px", height: "36px" }}
-                />
-                <div className="text-start d-none d-lg-block">
-                  <p className="font-base mb-0 fw-medium">
-                    {user.firstName} {user.lastName}
-                  </p>
-                  <p className="font-sm mb-0 text-gray-dark">
-                    {user.role || "FILIR"}
-                  </p>
-                </div>
-                <i className="fas fa-chevron-down small ms-2 text-secondary d-none d-lg-block"></i>
-              </button>
-
-              {/* Dropdown Menu */}
-              <ul className="dropdown-menu dropdown-menu-end">
-                <li>
-                  <Link className="dropdown-item" to="/profile">
-                    <i className="fas fa-user me-2"></i> Profile
-                  </Link>
-                </li>
-                <li>
-                  <a className="dropdown-item" href="#">
-                    <i className="fas fa-cog me-2"></i> Settings
-                  </a>
-                </li>
-                <li>
-                  <hr className="dropdown-divider" />
-                </li>
-                <li>
-                  <a
-                    className="dropdown-item"
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleLogout();
-                    }}
-                  >
-                    <i className="fas fa-sign-out-alt me-2"></i> Sign out
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
+        <Header 
+          user={user}
+          pageTitle="Profile"
+          onLogout={handleLogout}
+        />
 
         {/* Main Profile Content */}
         <div className="dashboard-content-section">
