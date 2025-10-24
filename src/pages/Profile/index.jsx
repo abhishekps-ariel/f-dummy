@@ -312,19 +312,14 @@ function Profile() {
     <div className="dashboard-wrapper">
       {/* Sidebar - Desktop Only */}
       <aside className="dashboard-sidebar d-none d-lg-flex flex-column">
-        <div className="logo-box">
-          <div>
-            <h3 className="fw-bold theme-color text-center logo-text-one">FILIR</h3>
-            <h4 className="logo-text-two theme-color text-center mb-3">
-              Foreclosure Intake & Loan Information Resource
-            </h4>
-          </div>
+        <div className="logo-box" style={{ padding: "0.8rem 1rem 2rem 1rem" }}>
           {/* Logo */}
           <div className="dashboard-logo">
             <img
               src={loginImg}
               alt="FILIR Logo"
               className="dashboard-logo-img"
+              style={{ width: "150px", height: "150px" }}
             />
           </div>
         </div>
@@ -387,11 +382,12 @@ function Profile() {
         id="mobileSidebar"
         aria-labelledby="mobileSidebarLabel"
       >
-        <div className="offcanvas-header">
+        <div className="offcanvas-header d-flex justify-content-between align-items-center" style={{ padding: "0.5rem 1rem" }}>
           <img
             src={loginImg}
             alt="FILIR Logo"
             className="dashboard-logo-img"
+            style={{ width: "180px", height: "100px" }}
           />
           <button
             type="button"
@@ -464,7 +460,10 @@ function Profile() {
             >
               <i className="fas fa-bars"></i>
             </button>
-            <h1 className="h4 mb-0">Profile</h1>
+            <div>
+              <h1 className="h4 mb-0 fw-bold theme-color">FILIR</h1>
+              <p className="small text-muted mb-0">Foreclosure Intake & Loan Information Resource</p>
+            </div>
           </div>
 
           <div className="d-flex align-items-center gap-3">
