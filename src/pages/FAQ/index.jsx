@@ -6,13 +6,11 @@ import { ROUTES } from '../../constants/routerConstants';
 import Sidebar from '../../components/shared/Sidebar';
 import Header from '../../components/shared/Header';
 import NoOrganizationAccess from '../../components/Petitions/NoOrganizationAccess';
-import { usePetitions } from '../../hooks/usePetitions';
 
 const FAQ = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, hasOrganizationAccess, organizationCheckComplete } = useAuth();
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState('faq');
-  const { hasOrganizationAccess } = usePetitions();
 
   const handleLogout = async () => {
     try {
@@ -56,7 +54,14 @@ const FAQ = () => {
 
         {/* Main FAQ Content */}
         <div className="dashboard-content-section">
-          {!hasOrganizationAccess ? (
+          {!organizationCheckComplete ? (
+            <div className="text-center py-5">
+              <div className="spinner-border text-primary" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </div>
+              <p className="mt-2 text-muted">Checking organization access...</p>
+            </div>
+          ) : !hasOrganizationAccess ? (
             <NoOrganizationAccess />
           ) : (
             <div className="shadow-custom bg-white org-search-box">

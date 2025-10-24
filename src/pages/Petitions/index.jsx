@@ -10,10 +10,10 @@ import NoOrganizationAccess from '../../components/Petitions/NoOrganizationAcces
 import { usePetitions } from '../../hooks/usePetitions';
 
 const Petitions = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, hasOrganizationAccess, organizationCheckComplete } = useAuth();
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState('petitions');
-  const { hasOrganizationAccess } = usePetitions();
+  const { petitions, loading, error, fetchPetitions, submitPetition } = usePetitions();
 
   const handleLogout = async () => {
     try {
@@ -57,7 +57,14 @@ const Petitions = () => {
 
         {/* Main Petitions Content */}
         <div className="dashboard-content-section">
-          {!hasOrganizationAccess ? (
+          {!organizationCheckComplete ? (
+            <div className="text-center py-5">
+              <div className="spinner-border text-primary" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </div>
+              <p className="mt-2 text-muted">Checking organization access...</p>
+            </div>
+          ) : !hasOrganizationAccess ? (
             <NoOrganizationAccess />
           ) : (
             <ViewAllPetitions />

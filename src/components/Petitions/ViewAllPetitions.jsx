@@ -397,7 +397,6 @@ const ViewAllPetitions = ({ onBack }) => {
 
   // Load initial data when component mounts
   useEffect(() => {
-    console.log('Organization check:', { organization, organizationCheckComplete });
     if (organization?.id && organizationCheckComplete) {
       fetchPetitions(1);
     }

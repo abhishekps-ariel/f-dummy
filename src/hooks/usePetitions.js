@@ -1,50 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import petitionApiService from '../services/petitionApiService';
-import { getUserJoinRequests, getOrganizationById } from '../services/organizationService';
+import { getOrganizationById } from '../services/organizationService';
 import { toast } from 'react-toastify';
 
 export const usePetitions = () => {
-  const { organization, isAuthenticated } = useAuth();
+  const { organization, isAuthenticated, hasOrganizationAccess, organizationCheckComplete } = useAuth();
   const [petitions, setPetitions] = useState([]);
-  const [loading, setLoading] = useState(true); // Start with loading true
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [userOrganizationId, setUserOrganizationId] = useState(null);
-  const [organizationCheckComplete, setOrganizationCheckComplete] = useState(false);
 
-  // Check if user has organization access by looking for approved join requests
-  const hasOrganizationAccess = isAuthenticated && userOrganizationId;
-
-  // Check user's join requests to determine organization membership
-  const checkOrganizationMembership = async () => {
-    if (!isAuthenticated) {
-      setOrganizationCheckComplete(true);
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const response = await getUserJoinRequests();
-      
-      if (response.isSuccess && response.data) {
-        // Look for approved join request (status: 1)
-        const approvedRequest = response.data.find(request => request.status === 1);
-        if (approvedRequest) {
-          setUserOrganizationId(approvedRequest.organizationId);
-        } else {
-          setUserOrganizationId(null);
-        }
-      } else {
-        setUserOrganizationId(null);
-      }
-    } catch (error) {
-      console.error('Error checking organization membership:', error);
-      setUserOrganizationId(null);
-    } finally {
-      setOrganizationCheckComplete(true);
-      setLoading(false);
-    }
-  };
+  // Get organization ID from the organization context
+  const userOrganizationId = organization?.id || null;
 
 
   // Fetch petitions for the user's organization
@@ -120,28 +87,15 @@ export const usePetitions = () => {
     }
   };
 
-  // Check organization membership when user authenticates
+  // Auto-fetch petitions when organization access is confirmed
   useEffect(() => {
-    if (isAuthenticated) {
-      checkOrganizationMembership();
-    } else {
-      setUserOrganizationId(null);
-      setPetitions([]);
-      setError(null);
-      setOrganizationCheckComplete(true);
-      setLoading(false);
-    }
-  }, [isAuthenticated]);
-
-  // Auto-fetch petitions when organization ID changes
-  useEffect(() => {
-    if (hasOrganizationAccess) {
+    if (organizationCheckComplete && hasOrganizationAccess && userOrganizationId) {
       fetchPetitions();
-    } else {
+    } else if (organizationCheckComplete && !hasOrganizationAccess) {
       setPetitions([]);
       setError(null);
     }
-  }, [userOrganizationId, isAuthenticated]);
+  }, [organizationCheckComplete, hasOrganizationAccess, userOrganizationId]);
 
   return {
     petitions,
@@ -150,7 +104,7 @@ export const usePetitions = () => {
     hasOrganizationAccess,
     fetchPetitions,
     submitPetition,
-    organization: userOrganizationId ? { id: userOrganizationId } : null,
+    organization: organization,
     userOrganizationId,
     organizationCheckComplete
   };
