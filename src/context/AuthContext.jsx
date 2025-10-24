@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { getAuthData } from '../utils/storage';
-import { getUserJoinRequests } from '../services/organizationService';
+import { getUserJoinRequests, getOrganizationById } from '../services/organizationService';
 
 const AuthContext = createContext();
 
@@ -36,8 +36,20 @@ export const AuthProvider = ({ children }) => {
         const approvedRequest = response.data.find(request => request.status === 1);
         if (approvedRequest) {
           setHasOrganizationAccess(true);
-          // Set organization with the ID from the approved request
-          setOrganization({ id: approvedRequest.organizationId });
+          // Fetch full organization details
+          try {
+            const orgResponse = await getOrganizationById(approvedRequest.organizationId);
+            if (orgResponse.isSuccess && orgResponse.data) {
+              setOrganization(orgResponse.data);
+            } else {
+              // Fallback to just ID if full details can't be fetched
+              setOrganization({ id: approvedRequest.organizationId });
+            }
+          } catch (error) {
+            console.error('Error fetching organization details:', error);
+            // Fallback to just ID if full details can't be fetched
+            setOrganization({ id: approvedRequest.organizationId });
+          }
         } else {
           setHasOrganizationAccess(false);
         }
