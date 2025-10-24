@@ -33,7 +33,7 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
   } = usePetitionCommonData();
 
   // Load petition API functions
-  const { submitPetition, hasOrganizationAccess } = usePetitions();
+  const { submitPetition, hasOrganizationAccess, loading: petitionLoading } = usePetitions();
   
   // Get user info from auth context
   const { user } = useAuth();
@@ -3380,8 +3380,20 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
                             type="submit" 
                             className="dashboard-btn-create"
                             onClick={() => setIsIntentionalSubmit(true)}
+                            disabled={petitionLoading}
                           >
-                            Submit Petition
+                            {petitionLoading ? (
+                              <>
+                                <span
+                                  className="spinner-border spinner-border-sm me-2"
+                                  role="status"
+                                  aria-hidden="true"
+                                ></span>
+                                Submitting...
+                              </>
+                            ) : (
+                              "Submit Petition"
+                            )}
                           </button>
                         )}
                       </div>

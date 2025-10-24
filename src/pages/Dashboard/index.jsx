@@ -35,7 +35,8 @@ function Dashboard() {
     loading: petitionsLoading, 
     hasOrganizationAccess,
     organization,
-    organizationCheckComplete
+    organizationCheckComplete,
+    fetchPetitions
   } = usePetitions();
   const [orgFormData, setOrgFormData] = useState({
     orgName: "",
@@ -232,6 +233,17 @@ function Dashboard() {
   const handlePetitionClick = (petition) => {
     setSelectedPetition(petition);
     setShowPetitionDetail(true);
+  };
+
+  const handlePetitionSubmitted = async () => {
+    // Reload petitions data to show the latest submitted petition
+    try {
+      await fetchPetitions();
+    } catch (error) {
+      console.error("Error reloading petitions:", error);
+      // Don't show error toast here as the submission was successful
+      // The user will see the success message from the submission itself
+    }
   };
 
   const loadJoinRequests = async () => {
@@ -1492,6 +1504,7 @@ function Dashboard() {
           isOpen={showPetitionSteps} 
           onClose={() => setShowPetitionSteps(false)}
           organization={userOrganization}
+          onPetitionSubmitted={handlePetitionSubmitted}
         />
 
         {/* Petition Detail Modal */}
