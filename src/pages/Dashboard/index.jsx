@@ -4,6 +4,8 @@ import { getAuthData, clearAuthData } from "../../utils/storage";
 import { useAuth } from "../../context/AuthContext";
 import { ROUTES } from "../../constants/routerConstants";
 import { logout as logoutApi } from "../../services/authService";
+import { getUserJoinRequests, getOrganizationById } from "../../services/organizationService";
+import { getFilingEntityTypes } from "../../services/commonService";
 import PetitionDetailModal from "../../components/Petitions/PetitionDetailModal";
 import OrganizationActions from "../../components/Petitions/OrganizationActions";
 import Sidebar from "../../components/shared/Sidebar";
@@ -26,6 +28,10 @@ function Dashboard() {
     fetchPetitions
   } = usePetitions();
   const [userOrganization, setUserOrganization] = useState(null);
+  const [isLoadingOrgData, setIsLoadingOrgData] = useState(false);
+  const [hasLoadedOrgData, setHasLoadedOrgData] = useState(false);
+  const [filingEntityTypes, setFilingEntityTypes] = useState([]);
+  const [isLoadingFilingEntityTypes, setIsLoadingFilingEntityTypes] = useState(false);
   const [showPetitionDetail, setShowPetitionDetail] = useState(false);
   const [selectedPetition, setSelectedPetition] = useState(null);
   const [dashboardPetitions, setDashboardPetitions] = useState([]);
@@ -69,6 +75,82 @@ function Dashboard() {
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, [navigate]);
+
+  // Load organization data when user is available
+  useEffect(() => {
+    if (user) {
+      loadOrganizationData();
+      loadFilingEntityTypes();
+    }
+  }, [user]);
+
+  const loadOrganizationData = async () => {
+    setIsLoadingOrgData(true);
+    try {
+      const response = await getUserJoinRequests();
+      if (response.isSuccess) {
+        const requests = response.data || [];
+
+        // Sort requests by date
+        const sortedRequests = requests.sort((a, b) => {
+          return new Date(b.requestedOn) - new Date(a.requestedOn);
+        });
+
+        // Fetch organization details for each request
+        const requestsWithOrgNames = await Promise.all(
+          sortedRequests.map(async (request) => {
+            try {
+              const orgResponse = await getOrganizationById(request.organizationId);
+              if (orgResponse.isSuccess && orgResponse.data) {
+                return {
+                  ...request,
+                  organizationName: orgResponse.data.name,
+                  organizationType: orgResponse.data.type,
+                  organizationAddress: orgResponse.data.address,
+                  primaryContact: orgResponse.data.primaryContact,
+                };
+              }
+              return request;
+            } catch (error) {
+              console.error(`Error fetching organization ${request.organizationId}:`, error);
+              return request;
+            }
+          })
+        );
+        
+        // Check if user has any approved requests and load their organization
+        const approvedRequest = requestsWithOrgNames.find(request => request.status === 1);
+        if (approvedRequest) {
+          setUserOrganization(approvedRequest);
+        }
+      } else {
+        console.error("Failed to load join requests:", response.msg);
+      }
+    } catch (error) {
+      console.error("Error loading organization data:", error);
+    } finally {
+      setIsLoadingOrgData(false);
+      setHasLoadedOrgData(true);
+    }
+  };
+
+  const loadFilingEntityTypes = async () => {
+    setIsLoadingFilingEntityTypes(true);
+    try {
+      const response = await getFilingEntityTypes();
+      if (response.isSuccess) {
+        setFilingEntityTypes(response.data || []);
+      } else {
+        console.error("Failed to load filing entity types:", response.msg);
+        setFilingEntityTypes([]);
+      }
+    } catch (error) {
+      console.error("Error loading filing entity types:", error);
+      setFilingEntityTypes([]);
+    } finally {
+      setIsLoadingFilingEntityTypes(false);
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -183,17 +265,24 @@ function Dashboard() {
                 <div className="col-md-4 mb-3">
                   <div className="stat-card h-100">
                     <h5 className="stat-count mb-3" style={{ fontSize: '1.2rem' }}>Organization Details</h5>
-                    {userOrganization ? (
+                    {isLoadingOrgData ? (
+                      <div className="text-center py-3">
+                        <div className="spinner-border spinner-border-sm text-primary" role="status">
+                          <span className="visually-hidden">Loading...</span>
+                        </div>
+                        <p className="mt-2 text-muted small">Loading organization details...</p>
+                      </div>
+                    ) : userOrganization ? (
                       <div className="organization-info">
-                        <h6 className="mb-2 fw-bold">{userOrganization.name}</h6>
+                        <h6 className="mb-2 fw-bold">{userOrganization.organizationName || userOrganization.name}</h6>
                         <p className="text-muted small mb-1">
                           <i className="fa-solid fa-tag me-1"></i>
-                          Type: {userOrganization.type || "N/A"}
+                          Type: {userOrganization.organizationType || userOrganization.type || "N/A"}
                         </p>
-                        {userOrganization.address && (
+                        {userOrganization.organizationAddress && (
                             <p className="text-muted small mb-1">
                               <i className="fa-solid fa-location-dot me-1"></i>
-                            Address: {userOrganization.address}
+                            Address: {userOrganization.organizationAddress}
                             </p>
                         )}
                         {userOrganization.primaryContact && (
@@ -228,19 +317,17 @@ function Dashboard() {
                       <p className="text-muted small mb-1">
                         <i className="fa-solid fa-user-tag me-1"></i>
                         Role: {user.role || "FILIR"}
-                      </p>
-                      {userOrganization && (
-                        <>
-                          <p className="text-muted small mb-1">
-                            <i className="fa-solid fa-building me-1"></i>
-                            Organization: {userOrganization.name}
                           </p>
                           <p className="text-muted small mb-0">
                             <i className="fa-solid fa-tag me-1"></i>
-                            Entity Type: {userOrganization.type || "Attorney"}
-                          </p>
-                        </>
-                      )}
+                        Filing Entity Type: {
+                          user.filingEntityTypeId && filingEntityTypes.length > 0 
+                            ? filingEntityTypes.find(et => et.id === user.filingEntityTypeId)?.name || "Not Set"
+                            : isLoadingFilingEntityTypes 
+                              ? "Loading..." 
+                              : "Not Set"
+                        }
+                      </p>
                     </div>
                   </div>
                 </div>
