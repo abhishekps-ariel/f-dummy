@@ -3,6 +3,7 @@ import { toast } from 'react-toastify';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import PetitionDetailModal from './PetitionDetailModal';
+import PetitionSteps from './PetitionSteps';
 import { usePetitions } from '../../hooks/usePetitions';
 import NoOrganizationAccess from './NoOrganizationAccess';
 import petitionApiService from '../../services/petitionApiService';
@@ -28,6 +29,7 @@ const ViewAllPetitions = ({ onBack }) => {
   const [openDropdownId, setOpenDropdownId] = useState(null);
   const [petitions, setPetitions] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [showPetitionSteps, setShowPetitionSteps] = useState(false);
 
   // Use the petitions hook for organization access
   const {
@@ -477,6 +479,17 @@ const ViewAllPetitions = ({ onBack }) => {
     setShowPetitionDetail(true);
   };
 
+  const handlePetitionSubmitted = async () => {
+    // Reload petitions data to show the latest submitted petition
+    try {
+      await fetchPetitions(pagination.currentPage);
+    } catch (error) {
+      console.error("Error reloading petitions:", error);
+      // Don't show error toast here as the submission was successful
+      // The user will see the success message from the submission itself
+    }
+  };
+
   const handleSort = (field) => {
     if (sortBy === field) {
       // Toggle sort order if same field
@@ -510,58 +523,62 @@ const ViewAllPetitions = ({ onBack }) => {
   return (
     <div className="shadow-custom bg-white org-search-box">
       <div className="d-flex align-items-center justify-content-between mb-4">
-        <button 
-          className="btn btn-link text-decoration-none me-3"
-          onClick={onBack}
-        >
-          <i className="fa-solid fa-arrow-left me-2"></i>
-          Back to Dashboard
-        </button>
+        <h2 className="font-med mb-0">Petitions</h2>
         
-        {/* Export Dropdown */}
-        <div className="dropdown">
+        <div className="d-flex gap-3 align-items-center">
+          {/* Create New Petition Button */}
           <button
-            className="dashboard-btn-refresh"
-            type="button"
-            data-bs-toggle="dropdown"
-            aria-expanded="false"
-            title="Export petitions"
-            disabled={exporting}
+            className="dashboard-btn-create"
+            onClick={() => setShowPetitionSteps(true)}
           >
-            {exporting ? (
-              <>
-                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                Exporting...
-              </>
-            ) : (
-              <>
-                <i className="fa-solid fa-download me-2"></i>
-                Export
-              </>
-            )}
+            <i className="fa-solid fa-plus me-1"></i> Create New Petition
           </button>
-          <ul className="dropdown-menu dropdown-menu-end">
-            <li>
-              <button 
-                className="dropdown-item" 
-                onClick={() => handleExport('csv')}
-                disabled={exporting}
-              >
-                <i className="fa-solid fa-file-csv me-2"></i>
-                Export as CSV
-              </button>
-            </li>
-            <li>
-              <button 
-                className="dropdown-item" 
-                onClick={() => handleExport('pdf')}
-                disabled={exporting}
-              >
-                <i className="fa-solid fa-file-pdf me-2"></i>
-                Export as PDF
-              </button>
-            </li>
-          </ul>
+          
+          {/* Export Dropdown */}
+          <div className="dropdown">
+            <button
+              className="dashboard-btn-refresh"
+              type="button"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
+              title="Export petitions"
+              disabled={exporting}
+            >
+              {exporting ? (
+                <>
+                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  Exporting...
+                </>
+              ) : (
+                <>
+                  <i className="fa-solid fa-download me-2"></i>
+                  Export
+                </>
+              )}
+            </button>
+            <ul className="dropdown-menu dropdown-menu-end">
+              <li>
+                <button 
+                  className="dropdown-item" 
+                  onClick={() => handleExport('csv')}
+                  disabled={exporting}
+                >
+                  <i className="fa-solid fa-file-csv me-2"></i>
+                  Export as CSV
+                </button>
+              </li>
+              <li>
+                <button 
+                  className="dropdown-item" 
+                  onClick={() => handleExport('pdf')}
+                  disabled={exporting}
+                >
+                  <i className="fa-solid fa-file-pdf me-2"></i>
+                  Export as PDF
+                </button>
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
       {/* Search and Filter Controls */}
@@ -1020,6 +1037,14 @@ const ViewAllPetitions = ({ onBack }) => {
           </div>
         </div>
       )}
+
+      {/* Petition Steps Modal */}
+      <PetitionSteps 
+        isOpen={showPetitionSteps} 
+        onClose={() => setShowPetitionSteps(false)}
+        organization={organization}
+        onPetitionSubmitted={handlePetitionSubmitted}
+      />
 
       {/* Petition Detail Modal */}
       {showPetitionDetail && (

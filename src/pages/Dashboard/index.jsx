@@ -15,8 +15,6 @@ import { logout as logoutApi } from "../../services/authService";
 import { useDebounce } from "../../hooks/useDebounce";
 import { toast } from "react-toastify";
 import { formatDate } from "../../utils/dateUtils";
-import PetitionSteps from "../../components/Petitions/PetitionSteps";
-import ViewAllPetitions from "../../components/Petitions/ViewAllPetitions";
 import PetitionDetailModal from "../../components/Petitions/PetitionDetailModal";
 import NoOrganizationAccess from "../../components/Petitions/NoOrganizationAccess";
 import Sidebar from "../../components/shared/Sidebar";
@@ -65,8 +63,6 @@ function Dashboard() {
   const [isLoadingUserOrganization, setIsLoadingUserOrganization] = useState(false);
 
   const [isCreatingOrg, setIsCreatingOrg] = useState(false);
-  const [showPetitionSteps, setShowPetitionSteps] = useState(false);
-  const [showViewAllPetitions, setShowViewAllPetitions] = useState(false);
   const [showPetitionDetail, setShowPetitionDetail] = useState(false);
   const [selectedPetition, setSelectedPetition] = useState(null);
   const [dashboardPetitions, setDashboardPetitions] = useState([]);
@@ -235,16 +231,6 @@ function Dashboard() {
     setShowPetitionDetail(true);
   };
 
-  const handlePetitionSubmitted = async () => {
-    // Reload petitions data to show the latest submitted petition
-    try {
-      await fetchPetitions();
-    } catch (error) {
-      console.error("Error reloading petitions:", error);
-      // Don't show error toast here as the submission was successful
-      // The user will see the success message from the submission itself
-    }
-  };
 
   const loadJoinRequests = async () => {
     setIsLoadingJoinRequests(true);
@@ -529,15 +515,8 @@ function Dashboard() {
 
         {/* Main Dashboard Content */}
         <div className="dashboard-content-section">
-          {/* View All Petitions Section */}
-          {activeSection === "dashboard" && showViewAllPetitions && (
-            <ViewAllPetitions 
-              onBack={() => setShowViewAllPetitions(false)} 
-            />
-          )}
-
           {/* Petition Dashboard Section */}
-          {activeSection === "dashboard" && !showViewAllPetitions && (
+          {activeSection === "dashboard" && (
             (petitionsLoading || !organizationCheckComplete) ? (
               <div className="shadow-custom bg-white org-search-box">
                 <div className="text-center py-5">
@@ -655,22 +634,6 @@ function Dashboard() {
                 </div>
               </div>
 
-              <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-                <div className="d-flex gap-3 align-items-center">
-                  <button 
-                    className="btn btn-link text-decoration-hover p-0"
-                    onClick={() => setShowViewAllPetitions(true)}
-                  >
-                    View all Petitions
-                  </button>
-                  <button
-                    className="dashboard-btn-create"
-                    onClick={() => setShowPetitionSteps(true)}
-                  >
-                    <i className="fa-solid fa-plus me-1"></i> Create New Petition
-                  </button>
-                </div>
-              </div>
 
               {/* Desktop Table View */}
               <div className="d-none d-lg-block table-responsive petition-table-container dashboard-petition-table">
@@ -1237,13 +1200,6 @@ function Dashboard() {
             )}
         </div>
 
-        {/* Petition Steps Modal */}
-        <PetitionSteps 
-          isOpen={showPetitionSteps} 
-          onClose={() => setShowPetitionSteps(false)}
-          organization={userOrganization}
-          onPetitionSubmitted={handlePetitionSubmitted}
-        />
 
         {/* Petition Detail Modal */}
         {showPetitionDetail && (
