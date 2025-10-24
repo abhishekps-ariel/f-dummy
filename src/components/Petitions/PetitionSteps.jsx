@@ -53,6 +53,34 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
   const [hasSavedDraft, setHasSavedDraft] = useState(false);
   const [showAddressValidationDialog, setShowAddressValidationDialog] = useState(false);
   const [addressValidationMessage, setAddressValidationMessage] = useState('');
+  
+  // Additional address fields state
+  const [borrowerAddressValidationErrors, setBorrowerAddressValidationErrors] = useState({});
+  const [noticeAddressValidationErrors, setNoticeAddressValidationErrors] = useState({});
+  const [loanAssigneeAddressValidationErrors, setLoanAssigneeAddressValidationErrors] = useState({});
+  const [showBorrowerAddressValidationDialog, setShowBorrowerAddressValidationDialog] = useState(false);
+  const [showNoticeAddressValidationDialog, setShowNoticeAddressValidationDialog] = useState(false);
+  const [showLoanAssigneeAddressValidationDialog, setShowLoanAssigneeAddressValidationDialog] = useState(false);
+  const [borrowerAddressValidationMessage, setBorrowerAddressValidationMessage] = useState('');
+  const [noticeAddressValidationMessage, setNoticeAddressValidationMessage] = useState('');
+  const [loanAssigneeAddressValidationMessage, setLoanAssigneeAddressValidationMessage] = useState('');
+  
+  // Autocomplete state for different address fields
+  const [borrowerPredictions, setBorrowerPredictions] = useState({});
+  const [showBorrowerPredictions, setShowBorrowerPredictions] = useState({});
+  const [selectedBorrowerPredictionIndex, setSelectedBorrowerPredictionIndex] = useState({});
+  const [isLoadingBorrowerPredictions, setIsLoadingBorrowerPredictions] = useState({});
+  
+  const [noticePredictions, setNoticePredictions] = useState([]);
+  const [showNoticePredictions, setShowNoticePredictions] = useState(false);
+  const [selectedNoticePredictionIndex, setSelectedNoticePredictionIndex] = useState(-1);
+  const [isLoadingNoticePredictions, setIsLoadingNoticePredictions] = useState(false);
+  
+  const [loanAssigneePredictions, setLoanAssigneePredictions] = useState({});
+  const [showLoanAssigneePredictions, setShowLoanAssigneePredictions] = useState({});
+  const [selectedLoanAssigneePredictionIndex, setSelectedLoanAssigneePredictionIndex] = useState({});
+  const [isLoadingLoanAssigneePredictions, setIsLoadingLoanAssigneePredictions] = useState({});
+  
   const autocompleteRef = useRef(null);
   const placesServiceRef = useRef(null);
   const autocompleteServiceRef = useRef(null);
@@ -472,6 +500,252 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
         setSelectedPredictionIndex(-1);
         break;
     }
+  };
+
+  // Handle borrower address input for autocomplete
+  const handleBorrowerAddressInput = (borrowerId, value) => {
+    if (!autocompleteServiceRef.current || !value.trim()) {
+      setBorrowerPredictions(prev => ({ ...prev, [borrowerId]: [] }));
+      setShowBorrowerPredictions(prev => ({ ...prev, [borrowerId]: false }));
+      return;
+    }
+
+    setIsLoadingBorrowerPredictions(prev => ({ ...prev, [borrowerId]: true }));
+
+    const request = {
+      input: value,
+      types: ['address'],
+      componentRestrictions: { country: 'us' }
+    };
+
+    try {
+      autocompleteServiceRef.current.getPlacePredictions(request, (predictions, status) => {
+        setIsLoadingBorrowerPredictions(prev => ({ ...prev, [borrowerId]: false }));
+        
+        if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
+          setBorrowerPredictions(prev => ({ ...prev, [borrowerId]: predictions }));
+          setShowBorrowerPredictions(prev => ({ ...prev, [borrowerId]: true }));
+          setSelectedBorrowerPredictionIndex(prev => ({ ...prev, [borrowerId]: -1 }));
+        } else {
+          setBorrowerPredictions(prev => ({ ...prev, [borrowerId]: [] }));
+          setShowBorrowerPredictions(prev => ({ ...prev, [borrowerId]: false }));
+        }
+      });
+    } catch (error) {
+      console.error('Error calling Google Places API for borrower address:', error);
+      setIsLoadingBorrowerPredictions(prev => ({ ...prev, [borrowerId]: false }));
+    }
+  };
+
+  // Handle notice address input for autocomplete
+  const handleNoticeAddressInput = (value) => {
+    if (!autocompleteServiceRef.current || !value.trim()) {
+      setNoticePredictions([]);
+      setShowNoticePredictions(false);
+      return;
+    }
+
+    setIsLoadingNoticePredictions(true);
+
+    const request = {
+      input: value,
+      types: ['address'],
+      componentRestrictions: { country: 'us' }
+    };
+
+    try {
+      autocompleteServiceRef.current.getPlacePredictions(request, (predictions, status) => {
+        setIsLoadingNoticePredictions(false);
+        
+        if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
+          setNoticePredictions(predictions);
+          setShowNoticePredictions(true);
+          setSelectedNoticePredictionIndex(-1);
+        } else {
+          setNoticePredictions([]);
+          setShowNoticePredictions(false);
+        }
+      });
+    } catch (error) {
+      console.error('Error calling Google Places API for notice address:', error);
+      setIsLoadingNoticePredictions(false);
+    }
+  };
+
+  // Handle loan assignee address input for autocomplete
+  const handleLoanAssigneeAddressInput = (assigneeIndex, value) => {
+    if (!autocompleteServiceRef.current || !value.trim()) {
+      setLoanAssigneePredictions(prev => ({ ...prev, [assigneeIndex]: [] }));
+      setShowLoanAssigneePredictions(prev => ({ ...prev, [assigneeIndex]: false }));
+      return;
+    }
+
+    setIsLoadingLoanAssigneePredictions(prev => ({ ...prev, [assigneeIndex]: true }));
+
+    const request = {
+      input: value,
+      types: ['address'],
+      componentRestrictions: { country: 'us' }
+    };
+
+    try {
+      autocompleteServiceRef.current.getPlacePredictions(request, (predictions, status) => {
+        setIsLoadingLoanAssigneePredictions(prev => ({ ...prev, [assigneeIndex]: false }));
+        
+        if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
+          setLoanAssigneePredictions(prev => ({ ...prev, [assigneeIndex]: predictions }));
+          setShowLoanAssigneePredictions(prev => ({ ...prev, [assigneeIndex]: true }));
+          setSelectedLoanAssigneePredictionIndex(prev => ({ ...prev, [assigneeIndex]: -1 }));
+        } else {
+          setLoanAssigneePredictions(prev => ({ ...prev, [assigneeIndex]: [] }));
+          setShowLoanAssigneePredictions(prev => ({ ...prev, [assigneeIndex]: false }));
+        }
+      });
+    } catch (error) {
+      console.error('Error calling Google Places API for loan assignee address:', error);
+      setIsLoadingLoanAssigneePredictions(prev => ({ ...prev, [assigneeIndex]: false }));
+    }
+  };
+
+  // Handle borrower address prediction click
+  const handleBorrowerPredictionClick = (borrowerId, prediction) => {
+    if (!placesServiceRef.current) return;
+
+    const request = {
+      placeId: prediction.place_id,
+      fields: ['address_components', 'formatted_address']
+    };
+
+    placesServiceRef.current.getDetails(request, (place, status) => {
+      if (status === window.google.maps.places.PlacesServiceStatus.OK && place) {
+        const addressComponents = place.address_components;
+        let streetNumber = '';
+        let route = '';
+        let city = '';
+        let state = '';
+        let zipCode = '';
+
+        addressComponents.forEach(component => {
+          const types = component.types;
+          if (types.includes('street_number')) {
+            streetNumber = component.long_name;
+          } else if (types.includes('route')) {
+            route = component.long_name;
+          } else if (types.includes('locality')) {
+            city = component.long_name;
+          } else if (types.includes('administrative_area_level_1')) {
+            state = component.short_name;
+          } else if (types.includes('postal_code')) {
+            zipCode = component.long_name;
+          }
+        });
+
+        const fullAddress = `${streetNumber} ${route}`.trim();
+        
+        updateBorrower(borrowerId, 'mailingStreet1', fullAddress);
+        updateBorrower(borrowerId, 'mailingCity', city);
+        updateBorrower(borrowerId, 'mailingState', state);
+        updateBorrower(borrowerId, 'mailingZip', zipCode);
+
+        setShowBorrowerPredictions(prev => ({ ...prev, [borrowerId]: false }));
+        setBorrowerPredictions(prev => ({ ...prev, [borrowerId]: [] }));
+      }
+    });
+  };
+
+  // Handle notice address prediction click
+  const handleNoticePredictionClick = (prediction) => {
+    if (!placesServiceRef.current) return;
+
+    const request = {
+      placeId: prediction.place_id,
+      fields: ['address_components', 'formatted_address']
+    };
+
+    placesServiceRef.current.getDetails(request, (place, status) => {
+      if (status === window.google.maps.places.PlacesServiceStatus.OK && place) {
+        const addressComponents = place.address_components;
+        let streetNumber = '';
+        let route = '';
+        let city = '';
+        let state = '';
+        let zipCode = '';
+
+        addressComponents.forEach(component => {
+          const types = component.types;
+          if (types.includes('street_number')) {
+            streetNumber = component.long_name;
+          } else if (types.includes('route')) {
+            route = component.long_name;
+          } else if (types.includes('locality')) {
+            city = component.long_name;
+          } else if (types.includes('administrative_area_level_1')) {
+            state = component.short_name;
+          } else if (types.includes('postal_code')) {
+            zipCode = component.long_name;
+          }
+        });
+
+        const fullAddress = `${streetNumber} ${route}`.trim();
+        
+        setFormData(prev => ({
+          ...prev,
+          noticeAddressStreet1: fullAddress,
+          noticeAddressCity: city,
+          noticeAddressState: state,
+          noticeAddressZip: zipCode
+        }));
+
+        setShowNoticePredictions(false);
+        setNoticePredictions([]);
+      }
+    });
+  };
+
+  // Handle loan assignee address prediction click
+  const handleLoanAssigneePredictionClick = (assigneeIndex, prediction) => {
+    if (!placesServiceRef.current) return;
+
+    const request = {
+      placeId: prediction.place_id,
+      fields: ['address_components', 'formatted_address']
+    };
+
+    placesServiceRef.current.getDetails(request, (place, status) => {
+      if (status === window.google.maps.places.PlacesServiceStatus.OK && place) {
+        const addressComponents = place.address_components;
+        let streetNumber = '';
+        let route = '';
+        let city = '';
+        let state = '';
+        let zipCode = '';
+
+        addressComponents.forEach(component => {
+          const types = component.types;
+          if (types.includes('street_number')) {
+            streetNumber = component.long_name;
+          } else if (types.includes('route')) {
+            route = component.long_name;
+          } else if (types.includes('locality')) {
+            city = component.long_name;
+          } else if (types.includes('administrative_area_level_1')) {
+            state = component.short_name;
+          } else if (types.includes('postal_code')) {
+            zipCode = component.long_name;
+          }
+        });
+
+        const fullAddress = `${streetNumber} ${route}`.trim();
+        
+        updateLoanAssignee(assigneeIndex, 'street1', fullAddress);
+        updateLoanAssignee(assigneeIndex, 'city', city);
+        updateLoanAssignee(assigneeIndex, 'addressState', state);
+        updateLoanAssignee(assigneeIndex, 'zip', zipCode);
+
+        setShowLoanAssigneePredictions(prev => ({ ...prev, [assigneeIndex]: false }));
+        setLoanAssigneePredictions(prev => ({ ...prev, [assigneeIndex]: [] }));
+      }
+    });
   };
 
   // Validate address using Geocoding API
@@ -1199,6 +1473,11 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
     
     // Validate each assignee
     formData.loanAssignees.forEach((assignee, index) => {
+      if (!assignee.assigneeName || assignee.assigneeName.trim() === '') {
+        errors[`loanAssignees.${index}.assigneeName`] = 'Assignee Name is required';
+        hasErrors = true;
+      }
+      
       if (!assignee.assigneeTypeId || assignee.assigneeTypeId.trim() === '') {
         errors[`loanAssignees.${index}.assigneeTypeId`] = 'Assignee Type is required';
         hasErrors = true;
@@ -1208,10 +1487,272 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
         errors[`loanAssignees.${index}.assigneeRoleId`] = 'Assignee Role is required';
         hasErrors = true;
       }
+      
+      if (!assignee.street1 || assignee.street1.trim() === '') {
+        errors[`loanAssignees.${index}.street1`] = 'Street Address is required';
+        hasErrors = true;
+      }
+      
+      if (!assignee.city || assignee.city.trim() === '') {
+        errors[`loanAssignees.${index}.city`] = 'City is required';
+        hasErrors = true;
+      }
+      
+      if (!assignee.addressState || assignee.addressState.trim() === '') {
+        errors[`loanAssignees.${index}.addressState`] = 'State is required';
+        hasErrors = true;
+      }
+      
+      if (!assignee.zip || assignee.zip.trim() === '') {
+        errors[`loanAssignees.${index}.zip`] = 'ZIP Code is required';
+        hasErrors = true;
+      }
     });
 
     setFieldErrors(errors);
     return { hasErrors, errors };
+  };
+
+  // Validate borrower address with Google Geocoding API
+  const validateBorrowerAddressWithGeocoding = async (borrowerId) => {
+    const borrower = formData.borrowers.find(b => b.id === borrowerId);
+    if (!borrower || !borrower.mailingStreet1 || !borrower.mailingCity || !borrower.mailingState || !borrower.mailingZip) {
+      return { isValid: false, error: 'Incomplete address information' };
+    }
+
+    if (!geocoderRef.current) {
+      return { isValid: false, error: 'Geocoding service not available' };
+    }
+
+    return new Promise((resolve) => {
+      const address = `${borrower.mailingStreet1}, ${borrower.mailingCity}, ${borrower.mailingState} ${borrower.mailingZip}`;
+      
+      geocoderRef.current.geocode({ address }, (results, status) => {
+        if (status === window.google.maps.GeocoderStatus.OK && results && results.length > 0) {
+          const result = results[0];
+          const addressComponents = result.address_components;
+          
+          let foundCity = false;
+          let foundState = false;
+          let foundZip = false;
+          let actualState = '';
+          
+          addressComponents.forEach(component => {
+            const types = component.types;
+            if (types.includes('locality') || types.includes('administrative_area_level_2')) {
+              if (component.long_name.toLowerCase().includes(borrower.mailingCity.toLowerCase())) {
+                foundCity = true;
+              }
+            }
+            if (types.includes('administrative_area_level_1')) {
+              actualState = component.short_name;
+              if (component.short_name === 'MA') {
+                foundState = true;
+              }
+            }
+            if (types.includes('postal_code')) {
+              if (component.long_name === borrower.mailingZip) {
+                foundZip = true;
+              }
+            }
+          });
+
+          if (actualState && actualState !== 'MA') {
+            setBorrowerAddressValidationErrors(prev => ({
+              ...prev,
+              [`borrower_${borrowerId}_mailingAddress`]: `This address is in ${actualState}, but this system only accepts Massachusetts addresses.`
+            }));
+            resolve({ isValid: false, error: 'Address is not in Massachusetts' });
+            return;
+          }
+
+          if (!foundCity || !foundState || !foundZip) {
+            const errorMessage = 'Address validation failed. Please ensure the address is complete and accurate.';
+            setBorrowerAddressValidationErrors(prev => ({
+              ...prev,
+              [`borrower_${borrowerId}_mailingAddress`]: errorMessage
+            }));
+            resolve({ isValid: false, error: errorMessage });
+            return;
+          }
+
+          setBorrowerAddressValidationErrors(prev => {
+            const newErrors = { ...prev };
+            delete newErrors[`borrower_${borrowerId}_mailingAddress`];
+            return newErrors;
+          });
+          resolve({ isValid: true });
+        } else {
+          const errorMessage = 'Invalid address. Please enter a valid address.';
+          setBorrowerAddressValidationErrors(prev => ({
+            ...prev,
+            [`borrower_${borrowerId}_mailingAddress`]: errorMessage
+          }));
+          resolve({ isValid: false, error: errorMessage });
+        }
+      });
+    });
+  };
+
+  // Validate notice address with Google Geocoding API
+  const validateNoticeAddressWithGeocoding = async () => {
+    if (!formData.noticeAddressStreet1 || !formData.noticeAddressCity || !formData.noticeAddressState || !formData.noticeAddressZip) {
+      return { isValid: false, error: 'Incomplete address information' };
+    }
+
+    if (!geocoderRef.current) {
+      return { isValid: false, error: 'Geocoding service not available' };
+    }
+
+    return new Promise((resolve) => {
+      const address = `${formData.noticeAddressStreet1}, ${formData.noticeAddressCity}, ${formData.noticeAddressState} ${formData.noticeAddressZip}`;
+      
+      geocoderRef.current.geocode({ address }, (results, status) => {
+        if (status === window.google.maps.GeocoderStatus.OK && results && results.length > 0) {
+          const result = results[0];
+          const addressComponents = result.address_components;
+          
+          let foundCity = false;
+          let foundState = false;
+          let foundZip = false;
+          let actualState = '';
+          
+          addressComponents.forEach(component => {
+            const types = component.types;
+            if (types.includes('locality') || types.includes('administrative_area_level_2')) {
+              if (component.long_name.toLowerCase().includes(formData.noticeAddressCity.toLowerCase())) {
+                foundCity = true;
+              }
+            }
+            if (types.includes('administrative_area_level_1')) {
+              actualState = component.short_name;
+              if (component.short_name === 'MA') {
+                foundState = true;
+              }
+            }
+            if (types.includes('postal_code')) {
+              if (component.long_name === formData.noticeAddressZip) {
+                foundZip = true;
+              }
+            }
+          });
+
+          if (actualState && actualState !== 'MA') {
+            setNoticeAddressValidationErrors(prev => ({
+              ...prev,
+              noticeAddress: `This address is in ${actualState}, but this system only accepts Massachusetts addresses.`
+            }));
+            resolve({ isValid: false, error: 'Address is not in Massachusetts' });
+            return;
+          }
+
+          if (!foundCity || !foundState || !foundZip) {
+            const errorMessage = 'Address validation failed. Please ensure the address is complete and accurate.';
+            setNoticeAddressValidationErrors(prev => ({
+              ...prev,
+              noticeAddress: errorMessage
+            }));
+            resolve({ isValid: false, error: errorMessage });
+            return;
+          }
+
+          setNoticeAddressValidationErrors(prev => {
+            const newErrors = { ...prev };
+            delete newErrors.noticeAddress;
+            return newErrors;
+          });
+          resolve({ isValid: true });
+        } else {
+          const errorMessage = 'Invalid address. Please enter a valid address.';
+          setNoticeAddressValidationErrors(prev => ({
+            ...prev,
+            noticeAddress: errorMessage
+          }));
+          resolve({ isValid: false, error: errorMessage });
+        }
+      });
+    });
+  };
+
+  // Validate loan assignee address with Google Geocoding API
+  const validateLoanAssigneeAddressWithGeocoding = async (assigneeIndex) => {
+    const assignee = formData.loanAssignees[assigneeIndex];
+    if (!assignee || !assignee.street1 || !assignee.city || !assignee.addressState || !assignee.zip) {
+      return { isValid: false, error: 'Incomplete address information' };
+    }
+
+    if (!geocoderRef.current) {
+      return { isValid: false, error: 'Geocoding service not available' };
+    }
+
+    return new Promise((resolve) => {
+      const address = `${assignee.street1}, ${assignee.city}, ${assignee.addressState} ${assignee.zip}`;
+      
+      geocoderRef.current.geocode({ address }, (results, status) => {
+        if (status === window.google.maps.GeocoderStatus.OK && results && results.length > 0) {
+          const result = results[0];
+          const addressComponents = result.address_components;
+          
+          let foundCity = false;
+          let foundState = false;
+          let foundZip = false;
+          let actualState = '';
+          
+          addressComponents.forEach(component => {
+            const types = component.types;
+            if (types.includes('locality') || types.includes('administrative_area_level_2')) {
+              if (component.long_name.toLowerCase().includes(assignee.city.toLowerCase())) {
+                foundCity = true;
+              }
+            }
+            if (types.includes('administrative_area_level_1')) {
+              actualState = component.short_name;
+              if (component.short_name === 'MA') {
+                foundState = true;
+              }
+            }
+            if (types.includes('postal_code')) {
+              if (component.long_name === assignee.zip) {
+                foundZip = true;
+              }
+            }
+          });
+
+          if (actualState && actualState !== 'MA') {
+            setLoanAssigneeAddressValidationErrors(prev => ({
+              ...prev,
+              [`assignee_${assigneeIndex}_address`]: `This address is in ${actualState}, but this system only accepts Massachusetts addresses.`
+            }));
+            resolve({ isValid: false, error: 'Address is not in Massachusetts' });
+            return;
+          }
+
+          if (!foundCity || !foundState || !foundZip) {
+            const errorMessage = 'Address validation failed. Please ensure the address is complete and accurate.';
+            setLoanAssigneeAddressValidationErrors(prev => ({
+              ...prev,
+              [`assignee_${assigneeIndex}_address`]: errorMessage
+            }));
+            resolve({ isValid: false, error: errorMessage });
+            return;
+          }
+
+          setLoanAssigneeAddressValidationErrors(prev => {
+            const newErrors = { ...prev };
+            delete newErrors[`assignee_${assigneeIndex}_address`];
+            return newErrors;
+          });
+          resolve({ isValid: true });
+        } else {
+          const errorMessage = 'Invalid address. Please enter a valid address.';
+          setLoanAssigneeAddressValidationErrors(prev => ({
+            ...prev,
+            [`assignee_${assigneeIndex}_address`]: errorMessage
+          }));
+          resolve({ isValid: false, error: errorMessage });
+        }
+      });
+    });
   };
 
   // Auto-save current step data (no validation, no modal close)
@@ -1334,6 +1875,23 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
       if (validation.hasErrors) {
         return;
       }
+      
+      // Validate borrower addresses
+      let hasAddressErrors = false;
+      for (const borrower of formData.borrowers) {
+        if (borrower.mailingStreet1 && borrower.mailingCity && borrower.mailingState && borrower.mailingZip) {
+          const addressValidation = await validateBorrowerAddressWithGeocoding(borrower.id);
+          if (!addressValidation.isValid) {
+            hasAddressErrors = true;
+          }
+        }
+      }
+      
+      if (hasAddressErrors) {
+        setBorrowerAddressValidationMessage('One or more borrower addresses could not be validated. Please check the addresses and try again.');
+        setShowBorrowerAddressValidationDialog(true);
+        return;
+      }
     }
 
     // Validate Filing Entity step before proceeding
@@ -1350,6 +1908,16 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
       if (validation.hasErrors) {
         return;
       }
+      
+      // Validate notice address if notice was sent
+      if (formData.noticeSent === true && formData.noticeAddressStreet1 && formData.noticeAddressCity && formData.noticeAddressState && formData.noticeAddressZip) {
+        const addressValidation = await validateNoticeAddressWithGeocoding();
+        if (!addressValidation.isValid) {
+          setNoticeAddressValidationMessage(addressValidation.error || 'Notice address validation failed. Please check the address and try again.');
+          setShowNoticeAddressValidationDialog(true);
+          return;
+        }
+      }
     }
     
     // Validate Form 35B Compliance step before proceeding
@@ -1364,6 +1932,24 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
     if (currentStep === 7 && direction === 1) {
       const validation = validateLoanAssignees();
       if (validation.hasErrors) {
+        return;
+      }
+      
+      // Validate loan assignee addresses
+      let hasAddressErrors = false;
+      for (let i = 0; i < formData.loanAssignees.length; i++) {
+        const assignee = formData.loanAssignees[i];
+        if (assignee.street1 && assignee.city && assignee.addressState && assignee.zip) {
+          const addressValidation = await validateLoanAssigneeAddressWithGeocoding(i);
+          if (!addressValidation.isValid) {
+            hasAddressErrors = true;
+          }
+        }
+      }
+      
+      if (hasAddressErrors) {
+        setLoanAssigneeAddressValidationMessage('One or more loan assignee addresses could not be validated. Please check the addresses and try again.');
+        setShowLoanAssigneeAddressValidationDialog(true);
         return;
       }
     }
@@ -1391,6 +1977,69 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
   const handleAddressValidationProceed = async () => {
     setShowAddressValidationDialog(false);
     setAddressValidationMessage('');
+    // Proceed to next step without validation
+    const newStep = currentStep + 1;
+    if (newStep >= 1 && newStep <= totalSteps) {
+      // Auto-save current step before proceeding
+      await autoSaveCurrentStep();
+      
+      setCurrentStep(newStep);
+      // Scroll to top on step change for better mobile UX
+      window.scrollTo(0, 0);
+    }
+  };
+
+  // Handle borrower address validation dialog actions
+  const handleBorrowerAddressValidationEdit = () => {
+    setShowBorrowerAddressValidationDialog(false);
+    setBorrowerAddressValidationMessage('');
+  };
+
+  const handleBorrowerAddressValidationProceed = async () => {
+    setShowBorrowerAddressValidationDialog(false);
+    setBorrowerAddressValidationMessage('');
+    // Proceed to next step without validation
+    const newStep = currentStep + 1;
+    if (newStep >= 1 && newStep <= totalSteps) {
+      // Auto-save current step before proceeding
+      await autoSaveCurrentStep();
+      
+      setCurrentStep(newStep);
+      // Scroll to top on step change for better mobile UX
+      window.scrollTo(0, 0);
+    }
+  };
+
+  // Handle notice address validation dialog actions
+  const handleNoticeAddressValidationEdit = () => {
+    setShowNoticeAddressValidationDialog(false);
+    setNoticeAddressValidationMessage('');
+  };
+
+  const handleNoticeAddressValidationProceed = async () => {
+    setShowNoticeAddressValidationDialog(false);
+    setNoticeAddressValidationMessage('');
+    // Proceed to next step without validation
+    const newStep = currentStep + 1;
+    if (newStep >= 1 && newStep <= totalSteps) {
+      // Auto-save current step before proceeding
+      await autoSaveCurrentStep();
+      
+      setCurrentStep(newStep);
+      // Scroll to top on step change for better mobile UX
+      window.scrollTo(0, 0);
+    }
+  };
+
+  // Handle loan assignee address validation dialog actions
+  const handleLoanAssigneeAddressValidationEdit = () => {
+    setShowLoanAssigneeAddressValidationDialog(false);
+    setLoanAssigneeAddressValidationMessage('');
+  };
+
+  const handleLoanAssigneeAddressValidationProceed = async () => {
+    setShowLoanAssigneeAddressValidationDialog(false);
+    setLoanAssigneeAddressValidationMessage('');
     // Proceed to next step without validation
     const newStep = currentStep + 1;
     if (newStep >= 1 && newStep <= totalSteps) {
@@ -2092,13 +2741,67 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
                 <div className="row g-3 mt-2">
                   <div className="col-md-6">
                     <label className="form-label">Mailing Address</label>
-                    <input 
-                      type="text" 
-                      className="form-control"
-                      value={borrower.mailingStreet1}
-                      onChange={(e) => updateBorrower(borrower.id, 'mailingStreet1', e.target.value)}
-                      placeholder="Street address"
-                    />
+                    <div className="position-relative">
+                      <input 
+                        type="text" 
+                        className={`form-control ${borrowerAddressValidationErrors[`borrower_${borrower.id}_mailingAddress`] ? 'is-invalid' : ''}`}
+                        value={borrower.mailingStreet1}
+                        onChange={(e) => {
+                          updateBorrower(borrower.id, 'mailingStreet1', e.target.value);
+                          handleBorrowerAddressInput(borrower.id, e.target.value);
+                        }}
+                        onBlur={() => {
+                          setTimeout(() => setShowBorrowerPredictions(prev => ({ ...prev, [borrower.id]: false })), 300);
+                        }}
+                        onFocus={() => {
+                          if (borrowerPredictions[borrower.id] && borrowerPredictions[borrower.id].length > 0) {
+                            setShowBorrowerPredictions(prev => ({ ...prev, [borrower.id]: true }));
+                          }
+                        }}
+                        placeholder="Street address"
+                        autoComplete="off"
+                      />
+                      
+                      {/* Loading indicator */}
+                      {isLoadingBorrowerPredictions[borrower.id] && (
+                        <div className="position-absolute top-50 end-0 translate-middle-y me-3">
+                          <div className="spinner-border spinner-border-sm text-primary" role="status">
+                            <span className="visually-hidden">Loading...</span>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Predictions dropdown */}
+                      {showBorrowerPredictions[borrower.id] && borrowerPredictions[borrower.id] && borrowerPredictions[borrower.id].length > 0 && (
+                        <div className="position-absolute w-100 bg-white border rounded shadow-lg" style={{ zIndex: 1000, top: '100%' }}>
+                          {borrowerPredictions[borrower.id].map((prediction, index) => (
+                            <div
+                              key={prediction.place_id}
+                              className="p-2 cursor-pointer hover-bg-light"
+                              style={{
+                                backgroundColor: selectedBorrowerPredictionIndex[borrower.id] === index ? '#f8f9fa' : 'transparent',
+                                cursor: 'pointer'
+                              }}
+                              onClick={() => handleBorrowerPredictionClick(borrower.id, prediction)}
+                              onMouseEnter={() => setSelectedBorrowerPredictionIndex(prev => ({ ...prev, [borrower.id]: index }))}
+                            >
+                              <div className="d-flex align-items-center">
+                                <i className="fas fa-map-marker-alt text-muted me-2"></i>
+                                <div>
+                                  <div className="fw-medium">{prediction.structured_formatting.main_text}</div>
+                                  <div className="text-muted small">{prediction.structured_formatting.secondary_text}</div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    {borrowerAddressValidationErrors[`borrower_${borrower.id}_mailingAddress`] && (
+                      <div className="text-danger small mt-1">
+                        {borrowerAddressValidationErrors[`borrower_${borrower.id}_mailingAddress`]}
+                      </div>
+                    )}
                   </div>
                   <div className="col-md-3">
                     <label className="form-label">City</label>
@@ -2496,18 +3199,72 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
                   </div>
                   <div className="col-12">
                     <label htmlFor="noticeAddressStreet1" className="form-label">Notice Mailing Address *</label>
-                    <input 
-                      type="text" 
-                      id="noticeAddressStreet1" 
-                      name="noticeAddressStreet1" 
-                      className={`form-control ${fieldErrors.noticeAddressStreet1 ? 'is-invalid' : ''}`}
-                      value={formData.noticeAddressStreet1}
-                      onChange={handleInputChange}
-                      placeholder="Street address"
-                    />
+                    <div className="position-relative">
+                      <input 
+                        type="text" 
+                        id="noticeAddressStreet1" 
+                        name="noticeAddressStreet1" 
+                        className={`form-control ${fieldErrors.noticeAddressStreet1 || noticeAddressValidationErrors.noticeAddress ? 'is-invalid' : ''}`}
+                        value={formData.noticeAddressStreet1}
+                        onChange={(e) => {
+                          handleInputChange(e);
+                          handleNoticeAddressInput(e.target.value);
+                        }}
+                        onBlur={() => {
+                          setTimeout(() => setShowNoticePredictions(false), 300);
+                        }}
+                        onFocus={() => {
+                          if (noticePredictions && noticePredictions.length > 0) {
+                            setShowNoticePredictions(true);
+                          }
+                        }}
+                        placeholder="Street address"
+                        autoComplete="off"
+                      />
+                      
+                      {/* Loading indicator */}
+                      {isLoadingNoticePredictions && (
+                        <div className="position-absolute top-50 end-0 translate-middle-y me-3">
+                          <div className="spinner-border spinner-border-sm text-primary" role="status">
+                            <span className="visually-hidden">Loading...</span>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Predictions dropdown */}
+                      {showNoticePredictions && noticePredictions && noticePredictions.length > 0 && (
+                        <div className="position-absolute w-100 bg-white border rounded shadow-lg" style={{ zIndex: 1000, top: '100%' }}>
+                          {noticePredictions.map((prediction, index) => (
+                            <div
+                              key={prediction.place_id}
+                              className="p-2 cursor-pointer hover-bg-light"
+                              style={{
+                                backgroundColor: selectedNoticePredictionIndex === index ? '#f8f9fa' : 'transparent',
+                                cursor: 'pointer'
+                              }}
+                              onClick={() => handleNoticePredictionClick(prediction)}
+                              onMouseEnter={() => setSelectedNoticePredictionIndex(index)}
+                            >
+                              <div className="d-flex align-items-center">
+                                <i className="fas fa-map-marker-alt text-muted me-2"></i>
+                                <div>
+                                  <div className="fw-medium">{prediction.structured_formatting.main_text}</div>
+                                  <div className="text-muted small">{prediction.structured_formatting.secondary_text}</div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                     {fieldErrors.noticeAddressStreet1 && (
                       <div className="text-danger small mt-1">
                         {fieldErrors.noticeAddressStreet1}
+                      </div>
+                    )}
+                    {noticeAddressValidationErrors.noticeAddress && (
+                      <div className="text-danger small mt-1">
+                        {noticeAddressValidationErrors.noticeAddress}
                       </div>
                     )}
                   </div>
@@ -2802,14 +3559,19 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
                 </div>
                 <div className="row g-3">
                   <div className="col-12">
-                    <label className="form-label">Assignee Name</label>
+                    <label className="form-label">Assignee Name *</label>
                     <input 
                       type="text" 
-                      className="form-control"
+                      className={`form-control ${fieldErrors[`loanAssignees.${index}.assigneeName`] ? 'is-invalid' : ''}`}
                       value={assignee.assigneeName}
                       onChange={(e) => updateLoanAssignee(index, 'assigneeName', e.target.value)}
                       placeholder="Enter assignee name"
                     />
+                    {fieldErrors[`loanAssignees.${index}.assigneeName`] && (
+                      <div className="text-danger small mt-1">
+                        {fieldErrors[`loanAssignees.${index}.assigneeName`]}
+                      </div>
+                    )}
                   </div>
                   <div className="col-md-6">
                     <label className="form-label">Assignee Type *</label>
@@ -2867,13 +3629,72 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
                   </div>
                   <div className="col-12">
                     <label className="form-label">Street Address Line 1 *</label>
-                    <input 
-                      type="text" 
-                      className="form-control"
-                      value={assignee.street1}
-                      onChange={(e) => updateLoanAssignee(index, 'street1', e.target.value)}
-                      placeholder="Enter street address"
-                    />
+                    <div className="position-relative">
+                      <input 
+                        type="text" 
+                        className={`form-control ${fieldErrors[`loanAssignees.${index}.street1`] || loanAssigneeAddressValidationErrors[`assignee_${index}_address`] ? 'is-invalid' : ''}`}
+                        value={assignee.street1}
+                        onChange={(e) => {
+                          updateLoanAssignee(index, 'street1', e.target.value);
+                          handleLoanAssigneeAddressInput(index, e.target.value);
+                        }}
+                        onBlur={() => {
+                          setTimeout(() => setShowLoanAssigneePredictions(prev => ({ ...prev, [index]: false })), 300);
+                        }}
+                        onFocus={() => {
+                          if (loanAssigneePredictions[index] && loanAssigneePredictions[index].length > 0) {
+                            setShowLoanAssigneePredictions(prev => ({ ...prev, [index]: true }));
+                          }
+                        }}
+                        placeholder="Enter street address"
+                        autoComplete="off"
+                      />
+                      
+                      {/* Loading indicator */}
+                      {isLoadingLoanAssigneePredictions[index] && (
+                        <div className="position-absolute top-50 end-0 translate-middle-y me-3">
+                          <div className="spinner-border spinner-border-sm text-primary" role="status">
+                            <span className="visually-hidden">Loading...</span>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Predictions dropdown */}
+                      {showLoanAssigneePredictions[index] && loanAssigneePredictions[index] && loanAssigneePredictions[index].length > 0 && (
+                        <div className="position-absolute w-100 bg-white border rounded shadow-lg" style={{ zIndex: 1000, top: '100%' }}>
+                          {loanAssigneePredictions[index].map((prediction, predIndex) => (
+                            <div
+                              key={prediction.place_id}
+                              className="p-2 cursor-pointer hover-bg-light"
+                              style={{
+                                backgroundColor: selectedLoanAssigneePredictionIndex[index] === predIndex ? '#f8f9fa' : 'transparent',
+                                cursor: 'pointer'
+                              }}
+                              onClick={() => handleLoanAssigneePredictionClick(index, prediction)}
+                              onMouseEnter={() => setSelectedLoanAssigneePredictionIndex(prev => ({ ...prev, [index]: predIndex }))}
+                            >
+                              <div className="d-flex align-items-center">
+                                <i className="fas fa-map-marker-alt text-muted me-2"></i>
+                                <div>
+                                  <div className="fw-medium">{prediction.structured_formatting.main_text}</div>
+                                  <div className="text-muted small">{prediction.structured_formatting.secondary_text}</div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    {fieldErrors[`loanAssignees.${index}.street1`] && (
+                      <div className="text-danger small mt-1">
+                        {fieldErrors[`loanAssignees.${index}.street1`]}
+                      </div>
+                    )}
+                    {loanAssigneeAddressValidationErrors[`assignee_${index}_address`] && (
+                      <div className="text-danger small mt-1">
+                        {loanAssigneeAddressValidationErrors[`assignee_${index}_address`]}
+                      </div>
+                    )}
                   </div>
                   <div className="col-12">
                     <label className="form-label">Street Address Line 2 (Optional)</label>
@@ -2889,31 +3710,46 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
                     <label className="form-label">City *</label>
                     <input 
                       type="text" 
-                      className="form-control"
+                      className={`form-control ${fieldErrors[`loanAssignees.${index}.city`] ? 'is-invalid' : ''}`}
                       value={assignee.city}
                       onChange={(e) => updateLoanAssignee(index, 'city', e.target.value)}
                       placeholder="Enter city"
                     />
+                    {fieldErrors[`loanAssignees.${index}.city`] && (
+                      <div className="text-danger small mt-1">
+                        {fieldErrors[`loanAssignees.${index}.city`]}
+                      </div>
+                    )}
                   </div>
                   <div className="col-md-4">
                     <label className="form-label">State *</label>
                     <input 
                       type="text" 
-                      className="form-control"
+                      className={`form-control ${fieldErrors[`loanAssignees.${index}.addressState`] ? 'is-invalid' : ''}`}
                       value={assignee.addressState}
                       onChange={(e) => updateLoanAssignee(index, 'addressState', e.target.value)}
                       placeholder="Enter state"
                     />
+                    {fieldErrors[`loanAssignees.${index}.addressState`] && (
+                      <div className="text-danger small mt-1">
+                        {fieldErrors[`loanAssignees.${index}.addressState`]}
+                      </div>
+                    )}
                   </div>
                   <div className="col-md-4">
                     <label className="form-label">ZIP Code *</label>
                     <input 
                       type="text" 
-                      className="form-control"
+                      className={`form-control ${fieldErrors[`loanAssignees.${index}.zip`] ? 'is-invalid' : ''}`}
                       value={assignee.zip}
                       onChange={(e) => updateLoanAssignee(index, 'zip', e.target.value)}
                       placeholder="Enter ZIP code"
                     />
+                    {fieldErrors[`loanAssignees.${index}.zip`] && (
+                      <div className="text-danger small mt-1">
+                        {fieldErrors[`loanAssignees.${index}.zip`]}
+                      </div>
+                    )}
                   </div>
                   <div className="col-md-6">
                     <label className="form-label">License Number (Optional)</label>
@@ -3348,6 +4184,141 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
                   type="button" 
                   className="dashboard-btn-create"
                   onClick={handleAddressValidationProceed}
+                >
+                  <i className="fas fa-arrow-right me-2"></i>
+                  Proceed Anyway
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Borrower Address Validation Dialog */}
+      {showBorrowerAddressValidationDialog && (
+        <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1060 }} tabIndex="-1">
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Borrower Address Validation</h5>
+                <button 
+                  type="button" 
+                  className="btn-close" 
+                  onClick={() => setShowBorrowerAddressValidationDialog(false)}
+                  aria-label="Close"
+                ></button>
+              </div>
+              <div className="modal-body">
+                <div className="text-center mb-3">
+                  <i className="fas fa-exclamation-triangle text-warning" style={{ fontSize: '3rem' }}></i>
+                </div>
+                <p className="text-center mb-3">
+                  {borrowerAddressValidationMessage}
+                </p>
+              </div>
+              <div className="modal-footer justify-content-center">
+                <button 
+                  type="button" 
+                  className="dashboard-btn-refresh me-2"
+                  onClick={handleBorrowerAddressValidationEdit}
+                >
+                  <i className="fas fa-edit me-2"></i>
+                  Edit Addresses
+                </button>
+                <button 
+                  type="button" 
+                  className="dashboard-btn-create"
+                  onClick={handleBorrowerAddressValidationProceed}
+                >
+                  <i className="fas fa-arrow-right me-2"></i>
+                  Proceed Anyway
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Notice Address Validation Dialog */}
+      {showNoticeAddressValidationDialog && (
+        <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1060 }} tabIndex="-1">
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Notice Address Validation</h5>
+                <button 
+                  type="button" 
+                  className="btn-close" 
+                  onClick={() => setShowNoticeAddressValidationDialog(false)}
+                  aria-label="Close"
+                ></button>
+              </div>
+              <div className="modal-body">
+                <div className="text-center mb-3">
+                  <i className="fas fa-exclamation-triangle text-warning" style={{ fontSize: '3rem' }}></i>
+                </div>
+                <p className="text-center mb-3">
+                  {noticeAddressValidationMessage}
+                </p>
+              </div>
+              <div className="modal-footer justify-content-center">
+                <button 
+                  type="button" 
+                  className="dashboard-btn-refresh me-2"
+                  onClick={handleNoticeAddressValidationEdit}
+                >
+                  <i className="fas fa-edit me-2"></i>
+                  Edit Address
+                </button>
+                <button 
+                  type="button" 
+                  className="dashboard-btn-create"
+                  onClick={handleNoticeAddressValidationProceed}
+                >
+                  <i className="fas fa-arrow-right me-2"></i>
+                  Proceed Anyway
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Loan Assignee Address Validation Dialog */}
+      {showLoanAssigneeAddressValidationDialog && (
+        <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1060 }} tabIndex="-1">
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Loan Assignee Address Validation</h5>
+                <button 
+                  type="button" 
+                  className="btn-close" 
+                  onClick={() => setShowLoanAssigneeAddressValidationDialog(false)}
+                  aria-label="Close"
+                ></button>
+              </div>
+              <div className="modal-body">
+                <div className="text-center mb-3">
+                  <i className="fas fa-exclamation-triangle text-warning" style={{ fontSize: '3rem' }}></i>
+                </div>
+                <p className="text-center mb-3">
+                  {loanAssigneeAddressValidationMessage}
+                </p>
+              </div>
+              <div className="modal-footer justify-content-center">
+                <button 
+                  type="button" 
+                  className="dashboard-btn-refresh me-2"
+                  onClick={handleLoanAssigneeAddressValidationEdit}
+                >
+                  <i className="fas fa-edit me-2"></i>
+                  Edit Addresses
+                </button>
+                <button 
+                  type="button" 
+                  className="dashboard-btn-create"
+                  onClick={handleLoanAssigneeAddressValidationProceed}
                 >
                   <i className="fas fa-arrow-right me-2"></i>
                   Proceed Anyway

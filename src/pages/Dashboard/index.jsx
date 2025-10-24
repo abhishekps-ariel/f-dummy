@@ -549,7 +549,7 @@ function Dashboard() {
               </div>
             ) : hasOrganizationAccess ? (
             <div className="shadow-custom bg-white org-search-box">
-              <h2 className="font-med mb-4">My Petition Dashboard</h2>
+              <h2 className="font-med mb-4">Dashboard</h2>
               <div className="row mb-5">
                 <div className="col-md-4 mb-3">
                   <div className="stat-card">
