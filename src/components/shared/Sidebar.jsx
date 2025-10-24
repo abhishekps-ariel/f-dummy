@@ -7,9 +7,7 @@ const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
   const navigate = useNavigate();
 
   const handleNavigation = (section) => {
-    if (section === 'organizations') {
-      navigate(ROUTES.DASHBOARD, { state: { activeSection: 'organizations' } });
-    } else if (section === 'dashboard') {
+    if (section === 'dashboard') {
       navigate(ROUTES.DASHBOARD);
     } else if (section === 'petitions') {
       navigate(ROUTES.PETITIONS);
@@ -57,22 +55,6 @@ const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
               >
                 <i className="fa-solid fa-box me-2"></i>
                 <span>Dashboard</span>
-              </a>
-            </li>
-            <li className="dashboard-nav-item">
-              <a
-                href="#"
-                className={`dashboard-nav-link ${activeSection === "organizations"
-                    ? "dashboard-active-link"
-                    : ""
-                  }`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleNavigation("organizations");
-                }}
-              >
-                <i className="fa-solid fa-building me-2"></i>
-                <span>Organizations</span>
               </a>
             </li>
             <li className="dashboard-nav-item">
@@ -192,30 +174,6 @@ const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
               >
                 <i className="fa-solid fa-box me-2"></i>
                 <span>Dashboard</span>
-              </a>
-            </li>
-            <li className="dashboard-nav-item">
-              <a
-                href="#"
-                className={`dashboard-nav-link ${activeSection === "organizations"
-                    ? "dashboard-active-link"
-                    : ""
-                  }`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleNavigation("organizations");
-                  // Close mobile sidebar if open
-                  const mobileSidebar = document.getElementById("mobileSidebar");
-                  if (mobileSidebar) {
-                    const bsOffcanvas = window.bootstrap.Offcanvas.getInstance(mobileSidebar);
-                    if (bsOffcanvas) {
-                      bsOffcanvas.hide();
-                    }
-                  }
-                }}
-              >
-                <i className="fa-solid fa-building me-2"></i>
-                <span>Organizations</span>
               </a>
             </li>
             <li className="dashboard-nav-item">

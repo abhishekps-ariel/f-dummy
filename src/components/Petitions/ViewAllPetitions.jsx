@@ -522,62 +522,130 @@ const ViewAllPetitions = ({ onBack }) => {
 
   return (
     <div className="shadow-custom bg-white org-search-box">
-      <div className="d-flex align-items-center justify-content-between mb-4">
-        <h2 className="font-med mb-0">Petitions</h2>
-        
-        <div className="d-flex gap-3 align-items-center">
-          {/* Create New Petition Button */}
-          <button
-            className="dashboard-btn-create"
-            onClick={() => setShowPetitionSteps(true)}
-          >
-            <i className="fa-solid fa-plus me-1"></i> Create New Petition
-          </button>
+      {/* Header Section - Responsive Layout */}
+      <div className="petitions-header-section mb-4">
+        {/* Desktop Layout */}
+        <div className="d-none d-md-flex align-items-center justify-content-between">
+          <h2 className="font-med mb-0">Petitions</h2>
           
-          {/* Export Dropdown */}
-          <div className="dropdown">
+          <div className="d-flex gap-3 align-items-center">
+            {/* Create New Petition Button */}
             <button
-              className="dashboard-btn-refresh"
-              type="button"
-              data-bs-toggle="dropdown"
-              aria-expanded="false"
-              title="Export petitions"
-              disabled={exporting}
+              className="dashboard-btn-create"
+              onClick={() => setShowPetitionSteps(true)}
             >
-              {exporting ? (
-                <>
-                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                  Exporting...
-                </>
-              ) : (
-                <>
-                  <i className="fa-solid fa-download me-2"></i>
-                  Export
-                </>
-              )}
+              <i className="fa-solid fa-plus me-1"></i> Create New Petition
             </button>
-            <ul className="dropdown-menu dropdown-menu-end">
-              <li>
-                <button 
-                  className="dropdown-item" 
-                  onClick={() => handleExport('csv')}
+            
+            {/* Export Dropdown */}
+            <div className="dropdown">
+              <button
+                className="dashboard-btn-refresh"
+                type="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+                title="Export petitions"
+                disabled={exporting}
+              >
+                {exporting ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    Exporting...
+                  </>
+                ) : (
+                  <>
+                    <i className="fa-solid fa-download me-2"></i>
+                    Export
+                  </>
+                )}
+              </button>
+              <ul className="dropdown-menu dropdown-menu-end">
+                <li>
+                  <button 
+                    className="dropdown-item" 
+                    onClick={() => handleExport('csv')}
+                    disabled={exporting}
+                  >
+                    <i className="fa-solid fa-file-csv me-2"></i>
+                    Export as CSV
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    className="dropdown-item" 
+                    onClick={() => handleExport('pdf')}
+                    disabled={exporting}
+                  >
+                    <i className="fa-solid fa-file-pdf me-2"></i>
+                    Export as PDF
+                  </button>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Layout */}
+        <div className="d-md-none">
+          <div className="d-flex align-items-center justify-content-between mb-3">
+            <h2 className="font-med mb-0">Petitions</h2>
+          </div>
+          
+          <div className="row g-2">
+            <div className="col-7">
+              <button
+                className="dashboard-btn-create w-100"
+                onClick={() => setShowPetitionSteps(true)}
+              >
+                <i className="fa-solid fa-plus me-1"></i> Create New Petition
+              </button>
+            </div>
+            <div className="col-4">
+              <div className="dropdown w-100">
+                <button
+                  className="dashboard-btn-refresh w-100"
+                  type="button"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false"
+                  title="Export petitions"
                   disabled={exporting}
                 >
-                  <i className="fa-solid fa-file-csv me-2"></i>
-                  Export as CSV
+                  {exporting ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                      <span className="d-none d-sm-inline">Exporting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <i className="fa-solid fa-download me-1"></i>
+                      <span className="d-none d-sm-inline">Export</span>
+                    </>
+                  )}
                 </button>
-              </li>
-              <li>
-                <button 
-                  className="dropdown-item" 
-                  onClick={() => handleExport('pdf')}
-                  disabled={exporting}
-                >
-                  <i className="fa-solid fa-file-pdf me-2"></i>
-                  Export as PDF
-                </button>
-              </li>
-            </ul>
+                <ul className="dropdown-menu dropdown-menu-end">
+                  <li>
+                    <button 
+                      className="dropdown-item" 
+                      onClick={() => handleExport('csv')}
+                      disabled={exporting}
+                    >
+                      <i className="fa-solid fa-file-csv me-2"></i>
+                      Export as CSV
+                    </button>
+                  </li>
+                  <li>
+                    <button 
+                      className="dropdown-item" 
+                      onClick={() => handleExport('pdf')}
+                      disabled={exporting}
+                    >
+                      <i className="fa-solid fa-file-pdf me-2"></i>
+                      Export as PDF
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            </div>
           </div>
         </div>
       </div>

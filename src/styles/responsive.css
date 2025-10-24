@@ -384,6 +384,41 @@
 	--text-xs: 11px;
 }
 
+/* Mobile Petitions Header Improvements */
+.petitions-header-section .dashboard-btn-create {
+    font-size: 14px;
+    padding: 10px 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.petitions-header-section .dashboard-btn-refresh {
+    font-size: 14px;
+    padding: 10px 12px;
+    min-width: auto;
+}
+
+/* Ensure buttons fit properly on mobile */
+@media (max-width: 575.98px) {
+    .petitions-header-section .dashboard-btn-create {
+        margin-left: 7px;
+        font-size: 13px;
+        padding: 8px 10px;
+    }
+    
+    .petitions-header-section .dashboard-btn-refresh {
+        font-size: 13px;
+        padding: 8px 10px;
+        margin-left: 10px;
+    }
+    
+    /* Hide text on very small screens for export button */
+    .petitions-header-section .dashboard-btn-refresh .d-none.d-sm-inline {
+        display: none !important;
+    }
+}
+
   .date-block-container {
     display: none;
   }
