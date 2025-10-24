@@ -11,6 +11,14 @@ const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
       navigate(ROUTES.DASHBOARD, { state: { activeSection: 'organizations' } });
     } else if (section === 'dashboard') {
       navigate(ROUTES.DASHBOARD);
+    } else if (section === 'petitions') {
+      navigate(ROUTES.PETITIONS);
+    } else if (section === 'messages') {
+      navigate(ROUTES.MESSAGES);
+    } else if (section === 'faq') {
+      navigate(ROUTES.FAQ);
+    } else if (section === 'training') {
+      navigate(ROUTES.TRAINING);
     }
     onSectionChange(section);
   };
@@ -65,6 +73,58 @@ const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
               >
                 <i className="fa-solid fa-building me-2"></i>
                 <span>Organizations</span>
+              </a>
+            </li>
+            <li className="dashboard-nav-item">
+              <a
+                href="#"
+                className={`dashboard-nav-link ${activeSection === "petitions" ? "dashboard-active-link" : ""}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleNavigation("petitions");
+                }}
+              >
+                <i className="fa-solid fa-file-contract me-2"></i>
+                <span>Petitions</span>
+              </a>
+            </li>
+            <li className="dashboard-nav-item">
+              <a
+                href="#"
+                className={`dashboard-nav-link ${activeSection === "messages" ? "dashboard-active-link" : ""}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleNavigation("messages");
+                }}
+              >
+                <i className="fa-solid fa-envelope me-2"></i>
+                <span>Messages</span>
+              </a>
+            </li>
+            <li className="dashboard-nav-item">
+              <a
+                href="#"
+                className={`dashboard-nav-link ${activeSection === "faq" ? "dashboard-active-link" : ""}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleNavigation("faq");
+                }}
+              >
+                <i className="fa-solid fa-question-circle me-2"></i>
+                <span>FAQ</span>
+              </a>
+            </li>
+            <li className="dashboard-nav-item">
+              <a
+                href="#"
+                className={`dashboard-nav-link ${activeSection === "training" ? "dashboard-active-link" : ""}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleNavigation("training");
+                }}
+              >
+                <i className="fa-solid fa-graduation-cap me-2"></i>
+                <span>Training</span>
               </a>
             </li>
           </ul>
@@ -156,6 +216,90 @@ const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
               >
                 <i className="fa-solid fa-building me-2"></i>
                 <span>Organizations</span>
+              </a>
+            </li>
+            <li className="dashboard-nav-item">
+              <a
+                href="#"
+                className={`dashboard-nav-link ${activeSection === "petitions" ? "dashboard-active-link" : ""}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleNavigation("petitions");
+                  // Close mobile sidebar if open
+                  const mobileSidebar = document.getElementById("mobileSidebar");
+                  if (mobileSidebar) {
+                    const bsOffcanvas = window.bootstrap.Offcanvas.getInstance(mobileSidebar);
+                    if (bsOffcanvas) {
+                      bsOffcanvas.hide();
+                    }
+                  }
+                }}
+              >
+                <i className="fa-solid fa-file-contract me-2"></i>
+                <span>Petitions</span>
+              </a>
+            </li>
+            <li className="dashboard-nav-item">
+              <a
+                href="#"
+                className={`dashboard-nav-link ${activeSection === "messages" ? "dashboard-active-link" : ""}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleNavigation("messages");
+                  // Close mobile sidebar if open
+                  const mobileSidebar = document.getElementById("mobileSidebar");
+                  if (mobileSidebar) {
+                    const bsOffcanvas = window.bootstrap.Offcanvas.getInstance(mobileSidebar);
+                    if (bsOffcanvas) {
+                      bsOffcanvas.hide();
+                    }
+                  }
+                }}
+              >
+                <i className="fa-solid fa-envelope me-2"></i>
+                <span>Messages</span>
+              </a>
+            </li>
+            <li className="dashboard-nav-item">
+              <a
+                href="#"
+                className={`dashboard-nav-link ${activeSection === "faq" ? "dashboard-active-link" : ""}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleNavigation("faq");
+                  // Close mobile sidebar if open
+                  const mobileSidebar = document.getElementById("mobileSidebar");
+                  if (mobileSidebar) {
+                    const bsOffcanvas = window.bootstrap.Offcanvas.getInstance(mobileSidebar);
+                    if (bsOffcanvas) {
+                      bsOffcanvas.hide();
+                    }
+                  }
+                }}
+              >
+                <i className="fa-solid fa-question-circle me-2"></i>
+                <span>FAQ</span>
+              </a>
+            </li>
+            <li className="dashboard-nav-item">
+              <a
+                href="#"
+                className={`dashboard-nav-link ${activeSection === "training" ? "dashboard-active-link" : ""}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleNavigation("training");
+                  // Close mobile sidebar if open
+                  const mobileSidebar = document.getElementById("mobileSidebar");
+                  if (mobileSidebar) {
+                    const bsOffcanvas = window.bootstrap.Offcanvas.getInstance(mobileSidebar);
+                    if (bsOffcanvas) {
+                      bsOffcanvas.hide();
+                    }
+                  }
+                }}
+              >
+                <i className="fa-solid fa-graduation-cap me-2"></i>
+                <span>Training</span>
               </a>
             </li>
           </ul>

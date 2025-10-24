@@ -7,12 +7,9 @@ import { logout as logoutApi, updateUser, getUserById } from "../../services/aut
 import { getFilingEntityTypes } from "../../services/commonService";
 import { getUserJoinRequests, getOrganizationById } from "../../services/organizationService";
 import { toast } from "react-toastify";
-import NotificationDropdown from "../../components/shared/NotificationDropdown";
 import Sidebar from "../../components/shared/Sidebar";
 import Header from "../../components/shared/Header";
 import "../../styles/custom.css";
-import loginImg from "../../assets/logo-sample.png";
-
 
 function Profile() {
   const [user, setUser] = useState(null);

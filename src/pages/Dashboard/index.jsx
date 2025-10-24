@@ -15,7 +15,6 @@ import { logout as logoutApi } from "../../services/authService";
 import { useDebounce } from "../../hooks/useDebounce";
 import { toast } from "react-toastify";
 import { formatDate } from "../../utils/dateUtils";
-import NotificationDropdown from "../../components/shared/NotificationDropdown";
 import PetitionSteps from "../../components/Petitions/PetitionSteps";
 import ViewAllPetitions from "../../components/Petitions/ViewAllPetitions";
 import PetitionDetailModal from "../../components/Petitions/PetitionDetailModal";
@@ -24,7 +23,6 @@ import Sidebar from "../../components/shared/Sidebar";
 import Header from "../../components/shared/Header";
 import { usePetitions } from "../../hooks/usePetitions";
 import "../../styles/custom.css";
-import loginImg from "../../assets/logo-sample.png";
 
 
 function Dashboard() {
