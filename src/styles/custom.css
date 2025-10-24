@@ -1347,9 +1347,7 @@ form.search-form input:focus {
 }
 
 /* Join Requests Section */
-.join-requests-section {
-    margin-top: 24px;
-}
+
 
 .join-requests-list {
     display: flex;

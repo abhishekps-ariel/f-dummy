@@ -312,157 +312,162 @@ const NoOrganizationAccess = () => {
 
   return (
     <div className="shadow-custom bg-white org-search-box">
-      <div className="d-flex align-items-center justify-content-between mb-3">
-        <h2 className="h5 mb-0">Organization Required</h2>
-        <button
-          className="dashboard-btn-create"
-          data-bs-toggle="modal"
-          data-bs-target="#createorganizationModal"
-        >
-          <i className="fa-solid fa-plus me-1"></i> Create Organization
-        </button>
-      </div>
+      {/* Show organization search section only if user has no join requests */}
+      {hasLoadedJoinRequests && joinRequests.length === 0 && (
+        <>
+          <div className="d-flex align-items-center justify-content-between mb-3">
+            <h2 className="h5 mb-0">Organization Required</h2>
+            <button
+              className="dashboard-btn-create"
+              data-bs-toggle="modal"
+              data-bs-target="#createorganizationModal"
+            >
+              <i className="fa-solid fa-plus me-1"></i> Create Organization
+            </button>
+          </div>
 
-      <p className="text-muted mb-4">
-        You need to be part of an organization to access the Petition Dashboard. You can either join an existing organization or create a new organization.
-      </p>
+          <p className="text-muted mb-4">
+            You need to be part of an organization to access the Petition Dashboard. You can either join an existing organization or create a new organization.
+          </p>
 
-      {/* Organization Search */}
-      <div className="search-form-wrapper mb-4" ref={searchRef}>
-        <form
-          className="search-form"
-          role="search"
-          onSubmit={handleJoinRequest}
-        >
-          {/* Selected Organization Display */}
-          {selectedOrganization ? (
-            <div className="selected-org-container">
-              <div className="selected-org-badge">
-                <div className="selected-org-icon">
-                  <i className="fa-solid fa-building"></i>
-                </div>
-                <div className="selected-org-info">
-                  <div className="selected-org-name">
-                    {selectedOrganization.name}
-                  </div>
-                  <div className="selected-org-details">
-                    {selectedOrganization.type && (
-                      <span className="selected-org-type">
-                        {selectedOrganization.type}
-                      </span>
-                    )}
-                    {selectedOrganization.address && (
-                      <span className="selected-org-address">
-                        {" "}
-                        • {selectedOrganization.address}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  className="selected-org-remove"
-                  onClick={handleRemoveOrganization}
-                  title="Remove selection"
-                >
-                  <i className="fa-solid fa-times"></i>
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="search-input-container">
-              <input
-                className="form-control"
-                type="search"
-                placeholder="Search by organization name or EIN"
-                aria-label="Search"
-                value={searchQuery}
-                onChange={handleSearchInputChange}
-                onFocus={handleSearchFocus}
-              />
-
-              {/* Search Dropdown */}
-              {showDropdown && (
-                <div className="org-search-dropdown">
-                  {isLoadingOrgs ? (
-                    <div className="org-search-loading">
-                      <div
-                        className="spinner-border spinner-border-sm text-primary me-2"
-                        role="status"
-                      >
-                        <span className="visually-hidden">Loading...</span>
+          {/* Organization Search */}
+          <div className="search-form-wrapper mb-4" ref={searchRef}>
+            <form
+              className="search-form"
+              role="search"
+              onSubmit={handleJoinRequest}
+            >
+              {/* Selected Organization Display */}
+              {selectedOrganization ? (
+                <div className="selected-org-container">
+                  <div className="selected-org-badge">
+                    <div className="selected-org-icon">
+                      <i className="fa-solid fa-building"></i>
+                    </div>
+                    <div className="selected-org-info">
+                      <div className="selected-org-name">
+                        {selectedOrganization.name}
                       </div>
-                      <span>Loading organizations...</span>
+                      <div className="selected-org-details">
+                        {selectedOrganization.type && (
+                          <span className="selected-org-type">
+                            {selectedOrganization.type}
+                          </span>
+                        )}
+                        {selectedOrganization.address && (
+                          <span className="selected-org-address">
+                            {" "}
+                            • {selectedOrganization.address}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  ) : organizations.length > 0 ? (
-                    <div className="org-search-results">
-                      {organizations.map((org) => (
-                        <div
-                          key={org.id}
-                          className="org-search-item"
-                          onClick={() => handleOrganizationSelect(org)}
-                        >
-                          <div className="org-item-name">{org.name}</div>
-                          <div className="org-item-details">
-                            <span className="org-item-type">
-                              <i className="fa-solid fa-building me-1"></i>
-                              {org.type || "N/A"}
-                            </span>
-                            {org.address && (
-                              <span className="org-item-address ms-3">
-                                <i className="fa-solid fa-location-dot me-1"></i>
-                                {org.address}
-                              </span>
-                            )}
+                    <button
+                      type="button"
+                      className="selected-org-remove"
+                      onClick={handleRemoveOrganization}
+                      title="Remove selection"
+                    >
+                      <i className="fa-solid fa-times"></i>
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="search-input-container">
+                  <input
+                    className="form-control"
+                    type="search"
+                    placeholder="Search by organization name or EIN"
+                    aria-label="Search"
+                    value={searchQuery}
+                    onChange={handleSearchInputChange}
+                    onFocus={handleSearchFocus}
+                  />
+
+                  {/* Search Dropdown */}
+                  {showDropdown && (
+                    <div className="org-search-dropdown">
+                      {isLoadingOrgs ? (
+                        <div className="org-search-loading">
+                          <div
+                            className="spinner-border spinner-border-sm text-primary me-2"
+                            role="status"
+                          >
+                            <span className="visually-hidden">Loading...</span>
                           </div>
-                          {org.primaryContact && (
-                            <div className="org-item-contact">
-                              <i className="fa-solid fa-user me-1"></i>
-                              {org.primaryContact}
-                            </div>
-                          )}
+                          <span>Loading organizations...</span>
                         </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="org-search-no-results">
-                      <i className="fa-solid fa-search me-2"></i>
-                      No organizations found.
+                      ) : organizations.length > 0 ? (
+                        <div className="org-search-results">
+                          {organizations.map((org) => (
+                            <div
+                              key={org.id}
+                              className="org-search-item"
+                              onClick={() => handleOrganizationSelect(org)}
+                            >
+                              <div className="org-item-name">{org.name}</div>
+                              <div className="org-item-details">
+                                <span className="org-item-type">
+                                  <i className="fa-solid fa-building me-1"></i>
+                                  {org.type || "N/A"}
+                                </span>
+                                {org.address && (
+                                  <span className="org-item-address ms-3">
+                                    <i className="fa-solid fa-location-dot me-1"></i>
+                                    {org.address}
+                                  </span>
+                                )}
+                              </div>
+                              {org.primaryContact && (
+                                <div className="org-item-contact">
+                                  <i className="fa-solid fa-user me-1"></i>
+                                  {org.primaryContact}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="org-search-no-results">
+                          <i className="fa-solid fa-search me-2"></i>
+                          No organizations found.
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
               )}
-            </div>
-          )}
 
-          <div className="mt-3">
-            <button
-              className="dashboard-btn-submit"
-              type="submit"
-              disabled={!selectedOrganization || isSubmittingJoinRequest}
-            >
-              {isSubmittingJoinRequest ? (
-                <>
-                  <span
-                    className="spinner-border spinner-border-sm me-2"
-                    role="status"
-                    aria-hidden="true"
-                  ></span>
-                  Submitting...
-                </>
-              ) : (
-                "Submit Join Request"
-              )}
-            </button>
+              <div className="mt-3">
+                <button
+                  className="dashboard-btn-submit"
+                  type="submit"
+                  disabled={!selectedOrganization || isSubmittingJoinRequest}
+                >
+                  {isSubmittingJoinRequest ? (
+                    <>
+                      <span
+                        className="spinner-border spinner-border-sm me-2"
+                        role="status"
+                        aria-hidden="true"
+                      ></span>
+                      Submitting...
+                    </>
+                  ) : (
+                    "Submit Join Request"
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
-        </form>
-      </div>
+        </>
+      )}
 
       {/* Join Request Status */}
       {hasLoadedJoinRequests && joinRequests.length > 0 && (
         <div className="join-requests-section">
-          <div className="d-flex align-items-center justify-content-between mb-3">
-            <h3 className="h6 mb-0">Request Status</h3>
+          <div className="d-flex align-items-center justify-content-between mb-4">
+            <h2 className="h4 mb-0 fw-bold">Request Status</h2>
             <button
               className="dashboard-btn-refresh"
               onClick={loadJoinRequests}
@@ -474,58 +479,79 @@ const NoOrganizationAccess = () => {
             </button>
           </div>
 
+          {/* Status Message */}
+          <div className="alert alert-info mb-4" role="alert">
+            <div className="d-flex align-items-center">
+              <i className="fa-solid fa-info-circle me-3 fs-5"></i>
+              <div>
+                <h6 className="alert-heading mb-1">Join Request Already Sent</h6>
+                <p className="mb-0 fs-6">Your request has been submitted successfully. Please wait for organization approval.</p>
+              </div>
+            </div>
+          </div>
+
           {isLoadingJoinRequests ? (
             <div className="text-center py-4">
               <div className="spinner-border text-primary" role="status">
                 <span className="visually-hidden">Loading...</span>
               </div>
-              <p className="mt-2 text-muted">Loading join requests...</p>
+              <p className="mt-2 text-muted fs-6">Loading join requests...</p>
             </div>
           ) : (
             <div className="join-requests-list">
               {joinRequests.map((request) => {
                 const statusInfo = getStatusInfo(request.status);
                 return (
-                  <div key={request.id} className="join-request-item">
-                    <div className="join-request-header">
+                  <div key={request.id} className="join-request-item p-4 border rounded-3 mb-3">
+                    <div className="join-request-header d-flex justify-content-between align-items-start mb-3">
                       <div className="join-request-org">
-                        <i className="fa-solid fa-building me-2"></i>
-                        <span className="org-name">
+                        <i className="fa-solid fa-building me-2 fs-5"></i>
+                        <span className="org-name fs-5 fw-bold">
                           {request.organizationName || "Organization"}
                         </span>
                       </div>
-                      <div className={`join-request-status ${statusInfo.class}`}>
-                        <i className={`fa-solid ${statusInfo.icon} me-1`}></i>
-                        {statusInfo.text}
+                      <div className={`join-request-status ${statusInfo.class} px-3 py-2 rounded-pill`}>
+                        <i className={`fa-solid ${statusInfo.icon} me-2`}></i>
+                        <span className="fw-semibold">{statusInfo.text}</span>
                       </div>
                     </div>
                     <div className="join-request-details">
                       {request.organizationType && (
-                        <div className="join-request-org-details">
-                          <i className="fa-solid fa-tag me-1"></i>
-                          Type: {request.organizationType}
+                        <div className="join-request-org-details mb-2">
+                          <i className="fa-solid fa-tag me-2 text-muted"></i>
+                          <span className="fs-6">
+                            <strong>Type:</strong> {request.organizationType}
+                          </span>
                         </div>
                       )}
                       {request.organizationAddress && (
-                        <div className="join-request-org-details">
-                          <i className="fa-solid fa-location-dot me-1"></i>
-                          {request.organizationAddress}
+                        <div className="join-request-org-details mb-2">
+                          <i className="fa-solid fa-location-dot me-2 text-muted"></i>
+                          <span className="fs-6">
+                            <strong>Address:</strong> {request.organizationAddress}
+                          </span>
                         </div>
                       )}
-                      <div className="join-request-date">
-                        <i className="fa-solid fa-calendar me-1"></i>
-                        Requested: {formatDate(request.requestedOn)}
+                      <div className="join-request-date mb-2">
+                        <i className="fa-solid fa-calendar me-2 text-muted"></i>
+                        <span className="fs-6">
+                          <strong>Requested:</strong> {formatDate(request.requestedOn)}
+                        </span>
                       </div>
                       {request.respondedOn && (
-                        <div className="join-request-response-date">
-                          <i className="fa-solid fa-check me-1"></i>
-                          Responded: {formatDate(request.respondedOn)}
+                        <div className="join-request-response-date mb-2">
+                          <i className="fa-solid fa-check me-2 text-muted"></i>
+                          <span className="fs-6">
+                            <strong>Responded:</strong> {formatDate(request.respondedOn)}
+                          </span>
                         </div>
                       )}
                       {request.adminComment && (
-                        <div className="join-request-comment">
-                          <i className="fa-solid fa-comment me-1"></i>
-                          <strong>Admin Comment:</strong> {request.adminComment}
+                        <div className="join-request-comment mt-3 p-3 bg-light rounded">
+                          <i className="fa-solid fa-comment me-2 text-muted"></i>
+                          <span className="fs-6">
+                            <strong>Admin Comment:</strong> {request.adminComment}
+                          </span>
                         </div>
                       )}
                     </div>
@@ -684,6 +710,7 @@ const NoOrganizationAccess = () => {
                       onChange={handleOrgFormChange}
                     />
                   </div>
+
                 </div>
 
                 <div className="mt-4">
@@ -716,3 +743,4 @@ const NoOrganizationAccess = () => {
 };
 
 export default NoOrganizationAccess;
+
