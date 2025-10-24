@@ -58,12 +58,10 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
   const [borrowerAddressValidationErrors, setBorrowerAddressValidationErrors] = useState({});
   const [noticeAddressValidationErrors, setNoticeAddressValidationErrors] = useState({});
   const [loanAssigneeAddressValidationErrors, setLoanAssigneeAddressValidationErrors] = useState({});
-  const [showBorrowerAddressValidationDialog, setShowBorrowerAddressValidationDialog] = useState(false);
-  const [showNoticeAddressValidationDialog, setShowNoticeAddressValidationDialog] = useState(false);
-  const [showLoanAssigneeAddressValidationDialog, setShowLoanAssigneeAddressValidationDialog] = useState(false);
-  const [borrowerAddressValidationMessage, setBorrowerAddressValidationMessage] = useState('');
-  const [noticeAddressValidationMessage, setNoticeAddressValidationMessage] = useState('');
-  const [loanAssigneeAddressValidationMessage, setLoanAssigneeAddressValidationMessage] = useState('');
+  
+  // Single address validation modal state
+  const [addressValidationType, setAddressValidationType] = useState(''); // 'property', 'borrower', 'notice', 'loanAssignee'
+  const [addressValidationContext, setAddressValidationContext] = useState(null); // Additional context like borrowerId or assigneeIndex
   
   // Autocomplete state for different address fields
   const [borrowerPredictions, setBorrowerPredictions] = useState({});
@@ -1888,8 +1886,10 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
       }
       
       if (hasAddressErrors) {
-        setBorrowerAddressValidationMessage('One or more borrower addresses could not be validated. Please check the addresses and try again.');
-        setShowBorrowerAddressValidationDialog(true);
+        setAddressValidationType('borrower');
+        setAddressValidationContext({ hasAddressErrors: true });
+        setAddressValidationMessage('One or more borrower addresses could not be validated. Please check the addresses and try again.');
+        setShowAddressValidationDialog(true);
         return;
       }
     }
@@ -1913,8 +1913,10 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
       if (formData.noticeSent === true && formData.noticeAddressStreet1 && formData.noticeAddressCity && formData.noticeAddressState && formData.noticeAddressZip) {
         const addressValidation = await validateNoticeAddressWithGeocoding();
         if (!addressValidation.isValid) {
-          setNoticeAddressValidationMessage(addressValidation.error || 'Notice address validation failed. Please check the address and try again.');
-          setShowNoticeAddressValidationDialog(true);
+          setAddressValidationType('notice');
+          setAddressValidationContext({ addressValidation });
+          setAddressValidationMessage(addressValidation.error || 'Notice address validation failed. Please check the address and try again.');
+          setShowAddressValidationDialog(true);
           return;
         }
       }
@@ -1948,8 +1950,10 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
       }
       
       if (hasAddressErrors) {
-        setLoanAssigneeAddressValidationMessage('One or more loan assignee addresses could not be validated. Please check the addresses and try again.');
-        setShowLoanAssigneeAddressValidationDialog(true);
+        setAddressValidationType('loanAssignee');
+        setAddressValidationContext({ hasAddressErrors: true });
+        setAddressValidationMessage('One or more loan assignee addresses could not be validated. Please check the addresses and try again.');
+        setShowAddressValidationDialog(true);
         return;
       }
     }
@@ -1968,15 +1972,22 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
   const handleAddressValidationEdit = () => {
     setShowAddressValidationDialog(false);
     setAddressValidationMessage('');
-    // Focus on the address input field
-    if (autocompleteRef.current) {
+    setAddressValidationType('');
+    setAddressValidationContext(null);
+    
+    // Focus on the appropriate address input field based on type
+    if (addressValidationType === 'property' && autocompleteRef.current) {
       autocompleteRef.current.focus();
     }
+    // For other address types, the user will need to manually navigate to the fields
   };
 
   const handleAddressValidationProceed = async () => {
     setShowAddressValidationDialog(false);
     setAddressValidationMessage('');
+    setAddressValidationType('');
+    setAddressValidationContext(null);
+    
     // Proceed to next step without validation
     const newStep = currentStep + 1;
     if (newStep >= 1 && newStep <= totalSteps) {
@@ -1989,68 +2000,6 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
     }
   };
 
-  // Handle borrower address validation dialog actions
-  const handleBorrowerAddressValidationEdit = () => {
-    setShowBorrowerAddressValidationDialog(false);
-    setBorrowerAddressValidationMessage('');
-  };
-
-  const handleBorrowerAddressValidationProceed = async () => {
-    setShowBorrowerAddressValidationDialog(false);
-    setBorrowerAddressValidationMessage('');
-    // Proceed to next step without validation
-    const newStep = currentStep + 1;
-    if (newStep >= 1 && newStep <= totalSteps) {
-      // Auto-save current step before proceeding
-      await autoSaveCurrentStep();
-      
-      setCurrentStep(newStep);
-      // Scroll to top on step change for better mobile UX
-      window.scrollTo(0, 0);
-    }
-  };
-
-  // Handle notice address validation dialog actions
-  const handleNoticeAddressValidationEdit = () => {
-    setShowNoticeAddressValidationDialog(false);
-    setNoticeAddressValidationMessage('');
-  };
-
-  const handleNoticeAddressValidationProceed = async () => {
-    setShowNoticeAddressValidationDialog(false);
-    setNoticeAddressValidationMessage('');
-    // Proceed to next step without validation
-    const newStep = currentStep + 1;
-    if (newStep >= 1 && newStep <= totalSteps) {
-      // Auto-save current step before proceeding
-      await autoSaveCurrentStep();
-      
-      setCurrentStep(newStep);
-      // Scroll to top on step change for better mobile UX
-      window.scrollTo(0, 0);
-    }
-  };
-
-  // Handle loan assignee address validation dialog actions
-  const handleLoanAssigneeAddressValidationEdit = () => {
-    setShowLoanAssigneeAddressValidationDialog(false);
-    setLoanAssigneeAddressValidationMessage('');
-  };
-
-  const handleLoanAssigneeAddressValidationProceed = async () => {
-    setShowLoanAssigneeAddressValidationDialog(false);
-    setLoanAssigneeAddressValidationMessage('');
-    // Proceed to next step without validation
-    const newStep = currentStep + 1;
-    if (newStep >= 1 && newStep <= totalSteps) {
-      // Auto-save current step before proceeding
-      await autoSaveCurrentStep();
-      
-      setCurrentStep(newStep);
-      // Scroll to top on step change for better mobile UX
-      window.scrollTo(0, 0);
-    }
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -4155,7 +4104,13 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">Address Validation</h5>
+                <h5 className="modal-title">
+                  {addressValidationType === 'property' && 'Property Address Validation'}
+                  {addressValidationType === 'borrower' && 'Borrower Address Validation'}
+                  {addressValidationType === 'notice' && 'Notice Address Validation'}
+                  {addressValidationType === 'loanAssignee' && 'Loan Assignee Address Validation'}
+                  {!addressValidationType && 'Address Validation'}
+                </h5>
                 <button 
                   type="button" 
                   className="btn-close" 
@@ -4168,7 +4123,7 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
                   <i className="fas fa-exclamation-triangle text-warning" style={{ fontSize: '3rem' }}></i>
                 </div>
                 <p className="text-center mb-3">
-                  We couldn't verify the address you entered. Would you like to correct it, or continue to the next step with the current address?
+                  {addressValidationMessage || 'We couldn\'t verify the address you entered. Would you like to correct it, or continue to the next step with the current address?'}
                 </p>
               </div>
               <div className="modal-footer justify-content-center">
@@ -4178,7 +4133,7 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
                   onClick={handleAddressValidationEdit}
                 >
                   <i className="fas fa-edit me-2"></i>
-                  Edit Address
+                  {addressValidationType === 'borrower' || addressValidationType === 'loanAssignee' ? 'Edit Addresses' : 'Edit Address'}
                 </button>
                 <button 
                   type="button" 
@@ -4194,140 +4149,6 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
         </div>
       )}
 
-      {/* Borrower Address Validation Dialog */}
-      {showBorrowerAddressValidationDialog && (
-        <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1060 }} tabIndex="-1">
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Borrower Address Validation</h5>
-                <button 
-                  type="button" 
-                  className="btn-close" 
-                  onClick={() => setShowBorrowerAddressValidationDialog(false)}
-                  aria-label="Close"
-                ></button>
-              </div>
-              <div className="modal-body">
-                <div className="text-center mb-3">
-                  <i className="fas fa-exclamation-triangle text-warning" style={{ fontSize: '3rem' }}></i>
-                </div>
-                <p className="text-center mb-3">
-                  {borrowerAddressValidationMessage}
-                </p>
-              </div>
-              <div className="modal-footer justify-content-center">
-                <button 
-                  type="button" 
-                  className="dashboard-btn-refresh me-2"
-                  onClick={handleBorrowerAddressValidationEdit}
-                >
-                  <i className="fas fa-edit me-2"></i>
-                  Edit Addresses
-                </button>
-                <button 
-                  type="button" 
-                  className="dashboard-btn-create"
-                  onClick={handleBorrowerAddressValidationProceed}
-                >
-                  <i className="fas fa-arrow-right me-2"></i>
-                  Proceed Anyway
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Notice Address Validation Dialog */}
-      {showNoticeAddressValidationDialog && (
-        <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1060 }} tabIndex="-1">
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Notice Address Validation</h5>
-                <button 
-                  type="button" 
-                  className="btn-close" 
-                  onClick={() => setShowNoticeAddressValidationDialog(false)}
-                  aria-label="Close"
-                ></button>
-              </div>
-              <div className="modal-body">
-                <div className="text-center mb-3">
-                  <i className="fas fa-exclamation-triangle text-warning" style={{ fontSize: '3rem' }}></i>
-                </div>
-                <p className="text-center mb-3">
-                  {noticeAddressValidationMessage}
-                </p>
-              </div>
-              <div className="modal-footer justify-content-center">
-                <button 
-                  type="button" 
-                  className="dashboard-btn-refresh me-2"
-                  onClick={handleNoticeAddressValidationEdit}
-                >
-                  <i className="fas fa-edit me-2"></i>
-                  Edit Address
-                </button>
-                <button 
-                  type="button" 
-                  className="dashboard-btn-create"
-                  onClick={handleNoticeAddressValidationProceed}
-                >
-                  <i className="fas fa-arrow-right me-2"></i>
-                  Proceed Anyway
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Loan Assignee Address Validation Dialog */}
-      {showLoanAssigneeAddressValidationDialog && (
-        <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1060 }} tabIndex="-1">
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Loan Assignee Address Validation</h5>
-                <button 
-                  type="button" 
-                  className="btn-close" 
-                  onClick={() => setShowLoanAssigneeAddressValidationDialog(false)}
-                  aria-label="Close"
-                ></button>
-              </div>
-              <div className="modal-body">
-                <div className="text-center mb-3">
-                  <i className="fas fa-exclamation-triangle text-warning" style={{ fontSize: '3rem' }}></i>
-                </div>
-                <p className="text-center mb-3">
-                  {loanAssigneeAddressValidationMessage}
-                </p>
-              </div>
-              <div className="modal-footer justify-content-center">
-                <button 
-                  type="button" 
-                  className="dashboard-btn-refresh me-2"
-                  onClick={handleLoanAssigneeAddressValidationEdit}
-                >
-                  <i className="fas fa-edit me-2"></i>
-                  Edit Addresses
-                </button>
-                <button 
-                  type="button" 
-                  className="dashboard-btn-create"
-                  onClick={handleLoanAssigneeAddressValidationProceed}
-                >
-                  <i className="fas fa-arrow-right me-2"></i>
-                  Proceed Anyway
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Main Modal */}
       <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} tabIndex="-1">
