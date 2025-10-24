@@ -6,11 +6,14 @@ import { ROUTES } from '../../constants/routerConstants';
 import Sidebar from '../../components/shared/Sidebar';
 import Header from '../../components/shared/Header';
 import ViewAllPetitions from '../../components/Petitions/ViewAllPetitions';
+import NoOrganizationAccess from '../../components/Petitions/NoOrganizationAccess';
+import { usePetitions } from '../../hooks/usePetitions';
 
 const Petitions = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState('petitions');
+  const { hasOrganizationAccess } = usePetitions();
 
   const handleLogout = async () => {
     try {
@@ -54,8 +57,11 @@ const Petitions = () => {
 
         {/* Main Petitions Content */}
         <div className="dashboard-content-section">
-          {/* View All Petitions Component */}
-          <ViewAllPetitions />
+          {!hasOrganizationAccess ? (
+            <NoOrganizationAccess />
+          ) : (
+            <ViewAllPetitions />
+          )}
         </div>
       </main>
     </div>

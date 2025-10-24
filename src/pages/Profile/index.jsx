@@ -9,6 +9,7 @@ import { getUserJoinRequests, getOrganizationById } from "../../services/organiz
 import { toast } from "react-toastify";
 import Sidebar from "../../components/shared/Sidebar";
 import Header from "../../components/shared/Header";
+import SignatureCapture from "../../components/shared/SignatureCapture";
 import "../../styles/custom.css";
 
 function Profile() {
@@ -28,6 +29,11 @@ function Profile() {
   const [userOrganization, setUserOrganization] = useState(null);
   const [isLoadingOrgData, setIsLoadingOrgData] = useState(false);
   const [hasLoadedOrgData, setHasLoadedOrgData] = useState(false);
+
+  // Signature capture state
+  const [showSignatureModal, setShowSignatureModal] = useState(false);
+  const [signatureData, setSignatureData] = useState(null);
+  const [signatureStatus, setSignatureStatus] = useState('pending'); // pending, captured, saved
   const navigate = useNavigate();
   const { logout: authLogout, login } = useAuth();
 
@@ -297,6 +303,21 @@ function Profile() {
     setIsEditMode(false);
   };
 
+  const handleSignatureCapture = () => {
+    setShowSignatureModal(true);
+  };
+
+  const handleSignatureSave = (signatureDataUrl) => {
+    setSignatureData(signatureDataUrl);
+    setSignatureStatus('saved');
+    toast.success('Signature captured successfully!');
+    setShowSignatureModal(false);
+  };
+
+  const handleSignatureClose = () => {
+    setShowSignatureModal(false);
+  };
+
   if (!user) {
     return (
       <div className="d-flex justify-content-center align-items-center" style={{ height: "100vh" }}>
@@ -538,29 +559,51 @@ function Profile() {
                     <div className="col-12">
                       <label className="form-label text-muted small">Signature Preview</label>
                       <div className="border rounded p-3 bg-light text-center" style={{ minHeight: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <div className="signature-preview">
-                          <i className="fas fa-signature text-muted me-2" style={{ fontSize: '1.5rem' }}></i>
-                          <span className="text-muted">No signature captured</span>
-                        </div>
+                        {signatureData ? (
+                          <div className="signature-preview">
+                            <img 
+                              src={signatureData} 
+                              alt="Digital Signature" 
+                              style={{ maxWidth: '100%', maxHeight: '60px' }}
+                            />
+                          </div>
+                        ) : (
+                          <div className="signature-preview">
+                            <i className="fas fa-signature text-muted me-2" style={{ fontSize: '1.5rem' }}></i>
+                            <span className="text-muted">No signature captured</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="col-12">
                       <label className="form-label text-muted small">Signature Status</label>
                       <p className="fw-medium mb-0">
-                        <span className="badge bg-warning fs-6">
-                          <i className="fa-solid fa-clock me-1"></i>
-                          Pending
-                        </span>
+                        {signatureStatus === 'saved' ? (
+                          <span className="badge bg-success fs-6">
+                            <i className="fa-solid fa-check-circle me-1"></i>
+                            Captured
+                          </span>
+                        ) : (
+                          <span className="badge bg-warning fs-6">
+                            <i className="fa-solid fa-clock me-1"></i>
+                            Pending
+                          </span>
+                        )}
                       </p>
                     </div>
                     <div className="col-12">
                       <label className="form-label text-muted small">Last Updated</label>
-                      <p className="fw-medium mb-0 text-muted small">Never</p>
+                      <p className="fw-medium mb-0 text-muted small">
+                        {signatureStatus === 'saved' ? new Date().toLocaleDateString() : 'Never'}
+                      </p>
                     </div>
                     <div className="col-12 mt-3">
-                      <button className="dashboard-btn-create w-100">
+                      <button 
+                        className="dashboard-btn-create w-100"
+                        onClick={handleSignatureCapture}
+                      >
                         <i className="fa-solid fa-pen-to-square me-1"></i>
-                        Capture Digital Signature
+                        {signatureStatus === 'saved' ? 'Update Digital Signature' : 'Capture Digital Signature'}
                       </button>
                     </div>
                   </div>
@@ -714,6 +757,13 @@ function Profile() {
           </div>
         </div>
       </main>
+
+      {/* Signature Capture Modal */}
+      <SignatureCapture
+        isOpen={showSignatureModal}
+        onClose={handleSignatureClose}
+        onSave={handleSignatureSave}
+      />
     </div>
   );
 }

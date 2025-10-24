@@ -5,7 +5,6 @@ import autoTable from 'jspdf-autotable';
 import PetitionDetailModal from './PetitionDetailModal';
 import PetitionSteps from './PetitionSteps';
 import { usePetitions } from '../../hooks/usePetitions';
-import NoOrganizationAccess from './NoOrganizationAccess';
 import petitionApiService from '../../services/petitionApiService';
 
 const ViewAllPetitions = ({ onBack }) => {
@@ -515,10 +514,7 @@ const ViewAllPetitions = ({ onBack }) => {
     );
   }
 
-  // Check organization access only after organization check is complete
-  if (!hasOrganizationAccess) {
-    return <NoOrganizationAccess />;
-  }
+  // Organization access check is now handled at the page level
 
   return (
     <div className="shadow-custom bg-white org-search-box">

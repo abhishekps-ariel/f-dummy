@@ -5,7 +5,7 @@ import { useAuth } from "../../context/AuthContext";
 import { ROUTES } from "../../constants/routerConstants";
 import { logout as logoutApi } from "../../services/authService";
 import PetitionDetailModal from "../../components/Petitions/PetitionDetailModal";
-import NoOrganizationAccess from "../../components/Petitions/NoOrganizationAccess";
+import OrganizationActions from "../../components/Petitions/OrganizationActions";
 import Sidebar from "../../components/shared/Sidebar";
 import Header from "../../components/shared/Header";
 import { usePetitions } from "../../hooks/usePetitions";
@@ -466,7 +466,7 @@ function Dashboard() {
               </div>
             </div>
             ) : (
-              <NoOrganizationAccess />
+              <OrganizationActions />
             )
           )}
 

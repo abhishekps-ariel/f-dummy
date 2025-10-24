@@ -2304,3 +2304,15 @@ input, textarea, select {
         padding: 12px;
     }
 }
+
+/* Signature Capture Styles */
+.signature-canvas {
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    cursor: crosshair;
+}
+
+.signature-preview img {
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
