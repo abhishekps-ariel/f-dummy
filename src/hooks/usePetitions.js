@@ -94,7 +94,7 @@ export const usePetitions = () => {
         throw new Error('Organization ID not found. Please ensure you are part of an organization.');
       }
       
-      const apiData = petitionApiService.transformFormDataToApiFormat(formData, organizationId);
+      const apiData = await petitionApiService.transformFormDataToApiFormat(formData, organizationId);
       
       const response = await petitionApiService.submitPetition(apiData);
       

@@ -742,6 +742,21 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
     }
   };
 
+  const handleRemoveFile = (fileFieldName) => {
+    setFormData(prev => ({
+      ...prev,
+      [fileFieldName]: null
+    }));
+    
+    // Clear any field errors for this file
+    if (fieldErrors[fileFieldName]) {
+      setFieldErrors(prev => ({
+        ...prev,
+        [fileFieldName]: ''
+      }));
+    }
+  };
+
   // Borrower management functions
   const addBorrower = () => {
     const newBorrowerId = Math.max(...formData.borrowers.map(b => b.id)) + 1;
@@ -2621,14 +2636,35 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
                 <>
                   <div className="col-12">
                     <label htmlFor="form35bComplianceAffidavitPdf" className="form-label">Upload Form 35B Compliance Affidavit (PDF only) *</label>
-                    <input 
-                      type="file" 
-                      id="form35bComplianceAffidavitPdf" 
-                      name="form35bComplianceAffidavitPdf" 
-                      accept=".pdf" 
-                      className={`form-control ${fieldErrors.form35bComplianceAffidavitPdf ? 'is-invalid' : ''}`}
-                      onChange={handleInputChange}
-                    />
+                    
+                    {!formData.form35bComplianceAffidavitPdf ? (
+                      <input 
+                        type="file" 
+                        id="form35bComplianceAffidavitPdf" 
+                        name="form35bComplianceAffidavitPdf" 
+                        accept=".pdf" 
+                        className={`form-control ${fieldErrors.form35bComplianceAffidavitPdf ? 'is-invalid' : ''}`}
+                        onChange={handleInputChange}
+                      />
+                    ) : (
+                      <div className="p-3 bg-light rounded border d-flex align-items-center justify-content-between">
+                        <div className="d-flex align-items-center">
+                          <i className="fas fa-file-pdf text-danger me-2"></i>
+                          <span className="text-muted">
+                            {formData.form35bComplianceAffidavitPdf.name}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-outline-danger p-1"
+                          onClick={() => handleRemoveFile('form35bComplianceAffidavitPdf')}
+                          title="Remove file"
+                        >
+                          <i className="fas fa-times"></i>
+                        </button>
+                      </div>
+                    )}
+                    
                     {fieldErrors.form35bComplianceAffidavitPdf && (
                       <div className="text-danger small mt-1">
                         {fieldErrors.form35bComplianceAffidavitPdf}
@@ -2642,14 +2678,35 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
               {formData.certainMortgageLoan === false && (
                 <div className="col-12">
                   <label htmlFor="form35bNonApplicabilityAffidavitPdf" className="form-label">Upload Form 35B Non-Applicability Affidavit (PDF only) - Optional</label>
-                  <input 
-                    type="file" 
-                    id="form35bNonApplicabilityAffidavitPdf" 
-                    name="form35bNonApplicabilityAffidavitPdf" 
-                    accept=".pdf" 
-                    className="form-control"
-                    onChange={handleInputChange}
-                  />
+                  
+                  {!formData.form35bNonApplicabilityAffidavitPdf ? (
+                    <input 
+                      type="file" 
+                      id="form35bNonApplicabilityAffidavitPdf" 
+                      name="form35bNonApplicabilityAffidavitPdf" 
+                      accept=".pdf" 
+                      className="form-control"
+                      onChange={handleInputChange}
+                    />
+                  ) : (
+                    <div className="p-3 bg-light rounded border d-flex align-items-center justify-content-between">
+                      <div className="d-flex align-items-center">
+                        <i className="fas fa-file-pdf text-danger me-2"></i>
+                        <span className="text-muted">
+                          {formData.form35bNonApplicabilityAffidavitPdf.name}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-outline-danger p-1"
+                        onClick={() => handleRemoveFile('form35bNonApplicabilityAffidavitPdf')}
+                        title="Remove file"
+                      >
+                        <i className="fas fa-times"></i>
+                      </button>
+                    </div>
+                  )}
+                  
                   <div className="form-text">Optional for loans that do not qualify as certain mortgage loans.</div>
                 </div>
               )}

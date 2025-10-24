@@ -64,7 +64,7 @@ class PetitionApiService {
   }
 
   // Transform form data to API format
-  transformFormDataToApiFormat(formData, organizationId) {
+  async transformFormDataToApiFormat(formData, organizationId) {
     // Helper function to safely convert dates
     const safeDateConversion = (dateString) => {
       if (!dateString) return null;
@@ -75,6 +75,27 @@ class PetitionApiService {
         console.error('Date conversion error:', error);
         return null;
       }
+    };
+
+    // Helper function to convert File object to base64 string
+    const fileToBase64 = (file) => {
+      if (!file || typeof file === 'string') {
+        return file || "";
+      }
+      
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          // Remove the data URL prefix (data:application/pdf;base64,) to get just the base64 string
+          const base64 = reader.result.split(',')[1];
+          resolve(base64);
+        };
+        reader.onerror = () => {
+          console.error('Error reading file:', file.name);
+          resolve("");
+        };
+        reader.readAsDataURL(file);
+      });
     };
 
     
@@ -120,8 +141,8 @@ class PetitionApiService {
       },
       affidavit: {
         certainMortgageLoan: formData.certainMortgageLoan || false,
-        form35bComplianceAffidavitPdf: formData.form35bComplianceAffidavitPdf || "",
-        form35bNonApplicabilityAffidavitPdf: formData.form35bNonApplicabilityAffidavitPdf || "",
+        form35bComplianceAffidavitPdf: await fileToBase64(formData.form35bComplianceAffidavitPdf),
+        form35bNonApplicabilityAffidavitPdf: await fileToBase64(formData.form35bNonApplicabilityAffidavitPdf),
         affiantName: formData.affiantName || "",
         affiantTitle: formData.affiantTitle || "",
         affidavitExecutionDate: safeDateConversion(formData.affidavitExecutionDate)
