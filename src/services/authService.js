@@ -287,3 +287,26 @@ export const getUserById = async (userId) => {
     data: response.data.data,
   };
 };
+
+export const uploadUserSignature = async (userId, signatureFile) => {
+  const formData = new FormData();
+  formData.append('UserId', userId);
+  formData.append('File', signatureFile);
+
+  const response = await client.post(
+    AUTH_ENDPOINTS.UPLOAD_USER_SIGNATURE,
+    formData,
+    {
+      headers: {
+        Accept: "text/plain",
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
+
+  return {
+    isSuccess: response.data.success,
+    msg: response.data.message,
+    data: response.data.data,
+  };
+};

@@ -24,24 +24,29 @@ class PetitionApiService {
     }
   }
 
-  // Get paginated petitions by organization ID with filters
+  /**
+   * Get paginated petitions by organization ID with filters, search, and sorting
+   * @param {Object} paginationParams - The pagination and filter parameters
+   * @param {string} paginationParams.organizationId - Required organization ID
+   * @param {number} [paginationParams.pageNumber=1] - Page number (1-based)
+   * @param {number} [paginationParams.pageSize=10] - Number of items per page
+   * @param {string} [paginationParams.searchText=""] - Search text for filtering
+   * @param {number} [paginationParams.status=0] - Status filter (0=all, 1=draft, 2=submitted, etc.)
+   * @param {string|Date} [paginationParams.fromDate] - Start date for date range filter
+   * @param {string|Date} [paginationParams.toDate] - End date for date range filter
+   * @param {string} [paginationParams.sortColumn="CreatedDate"] - Sort column (PetitionNumber, CreatedDate, ModifiedDate)
+   * @param {string} [paginationParams.sortDirection="desc"] - Sort direction (asc, desc)
+   * @returns {Promise<Object>} API response with paginated petition data
+   */
   async getPetitionsPaged(paginationParams) {
     try {
       console.log('API Service - Sending request to:', PETITION_ENDPOINTS.GET_PETITIONS_PAGED);
       console.log('API Service - Request body:', paginationParams);
+      console.log('API Service - Sort column:', paginationParams.sortColumn);
+      console.log('API Service - Sort direction:', paginationParams.sortDirection);
       
-      // Ensure all required parameters are present and valid
-      const validatedParams = {
-        organizationId: paginationParams.organizationId,
-        pageNumber: paginationParams.pageNumber || 1, // Default to page 1 (1-based)
-        pageSize: paginationParams.pageSize || 5,
-        searchText: paginationParams.searchText || "",
-        status: paginationParams.status || 0,
-        fromDate: paginationParams.fromDate,
-        toDate: paginationParams.toDate,
-        sortBy: paginationParams.sortBy || 'filingDate',
-        sortOrder: paginationParams.sortOrder || 'desc'
-      };
+      // Use the helper method to create validated parameters
+      const validatedParams = this.createPaginationParams(paginationParams);
       
       console.log('API Service - Validated params:', validatedParams);
       console.log('API Service - Base URL:', axiosInstance.defaults.baseURL);
@@ -61,6 +66,73 @@ class PetitionApiService {
       console.error('Error response:', error.response?.data);
       throw error;
     }
+  }
+
+  /**
+   * Helper method to create pagination parameters with validation
+   * @param {Object} options - The pagination options
+   * @param {string} options.organizationId - Required organization ID
+   * @param {number} [options.pageNumber=1] - Page number (1-based)
+   * @param {number} [options.pageSize=10] - Number of items per page
+   * @param {string} [options.searchText=""] - Search text for filtering
+   * @param {number} [options.status=0] - Status filter
+   * @param {string|Date} [options.fromDate] - Start date for date range filter
+   * @param {string|Date} [options.toDate] - End date for date range filter
+   * @param {string} [options.sortColumn="CreatedDate"] - Sort column
+   * @param {string} [options.sortDirection="desc"] - Sort direction
+   * @returns {Object} Validated pagination parameters
+   * @throws {Error} If organizationId is not provided
+   */
+  createPaginationParams(options = {}) {
+    const {
+      organizationId,
+      pageNumber = 1,
+      pageSize = 10,
+      searchText = "",
+      status = 0,
+      fromDate = null,
+      toDate = null,
+      sortColumn = "CreatedDate",
+      sortDirection = "desc"
+    } = options;
+
+    // Validate required parameters
+    if (!organizationId) {
+      throw new Error('organizationId is required');
+    }
+
+    // Validate sort column
+    const allowedSortColumns = ["PetitionNumber", "CreatedDate", "ModifiedDate"];
+    const validSortColumn = allowedSortColumns.includes(sortColumn) ? sortColumn : "CreatedDate";
+
+    // Validate sort direction
+    const allowedSortDirections = ["asc", "desc"];
+    const validSortDirection = allowedSortDirections.includes(sortDirection.toLowerCase()) ? sortDirection.toLowerCase() : "desc";
+
+    // Build parameters object
+    const params = {
+      organizationId,
+      pageNumber: Math.max(1, parseInt(pageNumber) || 1), // Ensure minimum page 1
+      pageSize: Math.max(1, parseInt(pageSize) || 10),
+      status: parseInt(status) || 0,
+      sortColumn: validSortColumn,
+      sortDirection: validSortDirection
+    };
+
+    // Add optional parameters only if they have values
+    if (searchText && searchText.trim()) {
+      params.searchText = searchText.trim();
+    }
+
+    if (fromDate) {
+      params.fromDate = new Date(fromDate).toISOString();
+    }
+
+    if (toDate) {
+      params.toDate = new Date(toDate).toISOString();
+    }
+
+    return params;
   }
 
   // Transform form data to API format
@@ -220,10 +292,18 @@ class PetitionApiService {
 
       const statusInfo = getStatusDisplay(petition.status);
 
-      // Get borrower name from the first borrower
+      // Get borrower name from the primary borrower
+      // This ensures that the borrower column in tables shows the primary borrower's name
       let borrowerName = 'N/A';
       if (petition.borrowers && petition.borrowers.length > 0) {
-        const borrower = petition.borrowers[0];
+        // Find the primary borrower first (borrowerIsPrimary === true)
+        let borrower = petition.borrowers.find(b => b.borrowerIsPrimary === true);
+        
+        // If no primary borrower found, fall back to the first borrower
+        if (!borrower) {
+          borrower = petition.borrowers[0];
+        }
+        
         const nameParts = [borrower.firstName, borrower.middleName, borrower.lastName, borrower.suffix]
           .filter(part => part && part.trim())
           .map(part => part.trim());

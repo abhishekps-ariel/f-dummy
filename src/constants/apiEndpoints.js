@@ -13,6 +13,7 @@ export const AUTH_ENDPOINTS = {
   RESET_PASSWORD: "/api/Account/reset-password",
   UPDATE_USER: "/api/Account/update-user",
   GET_USER_BY_ID: (userId) => `/api/Account/get-user-by-id/${userId}`,
+  UPLOAD_USER_SIGNATURE: "/api/Account/upload-user-signature",
 };
 
 export const ORGANIZATION_ENDPOINTS = {

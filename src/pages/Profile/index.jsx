@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { getAuthData, clearAuthData } from "../../utils/storage";
 import { useAuth } from "../../context/AuthContext";
 import { ROUTES } from "../../constants/routerConstants";
-import { logout as logoutApi, updateUser, getUserById } from "../../services/authService";
+import { logout as logoutApi, updateUser, getUserById, uploadUserSignature } from "../../services/authService";
 import { getFilingEntityTypes } from "../../services/commonService";
 import { getUserJoinRequests, getOrganizationById } from "../../services/organizationService";
 import { toast } from "react-toastify";
@@ -34,8 +34,10 @@ function Profile() {
   const [showSignatureModal, setShowSignatureModal] = useState(false);
   const [signatureData, setSignatureData] = useState(null);
   const [signatureStatus, setSignatureStatus] = useState('pending'); // pending, captured, saved
+  const [isUploadingSignature, setIsUploadingSignature] = useState(false);
+  const [isImageLoading, setIsImageLoading] = useState(false);
   const navigate = useNavigate();
-  const { logout: authLogout, login } = useAuth();
+  const { logout: authLogout, login, updateUserSignature } = useAuth();
 
   useEffect(() => {
     const { user: userData, token } = getAuthData();
@@ -57,6 +59,17 @@ function Profile() {
         lastName: userData.lastName || "",
       });
       setSelectedFilingEntityType(userData.filingEntityTypeId || "");
+      
+      // Initialize signature data
+      if (userData.signatureUrl) {
+        setSignatureData(userData.signatureUrl);
+        setSignatureStatus('saved');
+        setIsImageLoading(true); // Set loading state for existing signature
+      } else {
+        setSignatureData(null);
+        setSignatureStatus('pending');
+        setIsImageLoading(false);
+      }
     }
   }, [navigate]);
 
@@ -307,11 +320,55 @@ function Profile() {
     setShowSignatureModal(true);
   };
 
-  const handleSignatureSave = (signatureDataUrl) => {
-    setSignatureData(signatureDataUrl);
-    setSignatureStatus('saved');
-    toast.success('Signature captured successfully!');
-    setShowSignatureModal(false);
+  const handleSignatureSave = async (signatureDataUrl) => {
+    if (!user?.id) {
+      toast.error("User information not found");
+      return;
+    }
+
+    setIsUploadingSignature(true);
+    try {
+      // Convert data URL to blob
+      const response = await fetch(signatureDataUrl);
+      const blob = await response.blob();
+      
+      // Create a file from the blob
+      const file = new File([blob], 'signature.png', { type: 'image/png' });
+      
+      // Upload signature to API
+      const uploadResponse = await uploadUserSignature(user.id, file);
+      
+      if (uploadResponse.isSuccess) {
+        // Update local state with the API response URL
+        setSignatureData(uploadResponse.data.signatureUrl);
+        setSignatureStatus('saved');
+        
+        // Update user data in context and storage
+        const updatedUser = {
+          ...user,
+          signatureImageName: uploadResponse.data.signatureImageName,
+          signatureUrl: uploadResponse.data.signatureUrl,
+        };
+        setUser(updatedUser);
+        updateUserSignature(uploadResponse.data);
+        
+        // Update storage
+        const { token } = getAuthData();
+        clearAuthData();
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        
+        toast.success('Signature uploaded successfully!');
+        setShowSignatureModal(false);
+      } else {
+        toast.error(uploadResponse.msg || 'Failed to upload signature');
+      }
+    } catch (error) {
+      console.error('Error uploading signature:', error);
+      toast.error('Failed to upload signature. Please try again.');
+    } finally {
+      setIsUploadingSignature(false);
+    }
   };
 
   const handleSignatureClose = () => {
@@ -557,25 +614,6 @@ function Profile() {
                   </h4>
                   <div className="row g-3">
                     <div className="col-12">
-                      <label className="form-label text-muted small">Signature Preview</label>
-                      <div className="border rounded p-3 bg-light text-center" style={{ minHeight: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        {signatureData ? (
-                          <div className="signature-preview">
-                            <img 
-                              src={signatureData} 
-                              alt="Digital Signature" 
-                              style={{ maxWidth: '100%', maxHeight: '60px' }}
-                            />
-                          </div>
-                        ) : (
-                          <div className="signature-preview">
-                            <i className="fas fa-signature text-muted me-2" style={{ fontSize: '1.5rem' }}></i>
-                            <span className="text-muted">No signature captured</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <div className="col-12">
                       <label className="form-label text-muted small">Signature Status</label>
                       <p className="fw-medium mb-0">
                         {signatureStatus === 'saved' ? (
@@ -601,9 +639,19 @@ function Profile() {
                       <button 
                         className="dashboard-btn-create w-100"
                         onClick={handleSignatureCapture}
+                        disabled={isUploadingSignature}
                       >
-                        <i className="fa-solid fa-pen-to-square me-1"></i>
-                        {signatureStatus === 'saved' ? 'Update Digital Signature' : 'Capture Digital Signature'}
+                        {isUploadingSignature ? (
+                          <>
+                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            Uploading...
+                          </>
+                        ) : (
+                          <>
+                            <i className="fa-solid fa-pen-to-square me-1"></i>
+                            {signatureStatus === 'saved' ? 'Update Digital Signature' : 'Capture Digital Signature'}
+                          </>
+                        )}
                       </button>
                     </div>
                   </div>
@@ -763,6 +811,7 @@ function Profile() {
         isOpen={showSignatureModal}
         onClose={handleSignatureClose}
         onSave={handleSignatureSave}
+        isUploading={isUploadingSignature}
       />
     </div>
   );

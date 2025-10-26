@@ -133,6 +133,17 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const updateUserSignature = (signatureData) => {
+    if (user) {
+      const updatedUser = {
+        ...user,
+        signatureImageName: signatureData.signatureImageName,
+        signatureUrl: signatureData.signatureUrl,
+      };
+      setUser(updatedUser);
+    }
+  };
+
   const value = {
     isAuthenticated,
     user,
@@ -143,6 +154,7 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     updateOrganization,
+    updateUserSignature,
   };
 
   return (

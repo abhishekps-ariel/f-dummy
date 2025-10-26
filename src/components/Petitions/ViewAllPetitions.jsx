@@ -60,17 +60,20 @@ const ViewAllPetitions = ({ onBack }) => {
       // Try server-side pagination first
       const paginationParams = {
         organizationId: organization.id,
-        pageNumber: page, // Send current page number (1-based)
+        pageNumber: page, // Use 1-based pagination as expected by API
         pageSize: 10, // 10 petitions per page
         searchText: searchQuery.trim() || "",
         status: getStatusValue(statusFilter),
         fromDate: getFromDate(),
         toDate: getToDate(),
-        sortBy: sortBy,
-        sortOrder: sortOrder
+        sortColumn: getSortColumn(sortBy),
+        sortDirection: sortOrder
       };
 
       console.log('Sending pagination params:', paginationParams);
+      console.log('Page number being sent:', paginationParams.pageNumber);
+      console.log('Sort mapping - sortBy:', sortBy, '-> sortColumn:', getSortColumn(sortBy));
+      console.log('Sort direction:', sortOrder);
       
       try {
         const response = await petitionApiService.getPetitionsPaged(paginationParams);
@@ -85,8 +88,8 @@ const ViewAllPetitions = ({ onBack }) => {
           setPagination(prev => ({
             ...prev,
             currentPage: page,
-            totalPages: Math.ceil(response.totalRecords / 10),
-            totalCount: response.totalRecords
+            totalPages: Math.ceil((response.totalRecords || response.data?.length || 0) / 10),
+            totalCount: response.totalRecords || response.data?.length || 0
           }));
           return;
         }
@@ -228,6 +231,16 @@ const ViewAllPetitions = ({ onBack }) => {
       'closed': 5
     };
     return statusMap[status] || 0;
+  };
+
+  // Helper function to map frontend sort fields to API sort columns
+  const getSortColumn = (sortBy) => {
+    const sortColumnMap = {
+      'filingDate': 'CreatedDate',    // filingDate maps to CreatedDate
+      'lastUpdated': 'ModifiedDate',  // lastUpdated maps to ModifiedDate
+      'petitionNumber': 'PetitionNumber' // petitionNumber maps to PetitionNumber
+    };
+    return sortColumnMap[sortBy] || 'CreatedDate';
   };
 
   // Helper function to get from date
@@ -425,6 +438,8 @@ const ViewAllPetitions = ({ onBack }) => {
   // Handle sorting changes
   useEffect(() => {
     if (organization?.id) {
+      console.log('Sorting changed - sortBy:', sortBy, 'sortOrder:', sortOrder);
+      console.log('Mapped to API - sortColumn:', getSortColumn(sortBy), 'sortDirection:', sortOrder);
       setPagination(prev => ({ ...prev, currentPage: 1 }));
       fetchPetitions(1);
     }
@@ -700,10 +715,12 @@ const ViewAllPetitions = ({ onBack }) => {
               setSortOrder(order);
             }}
           >
-            <option value="filingDate-desc">Newest First</option>
-            <option value="filingDate-asc">Oldest First</option>
-            <option value="lastUpdated-desc">Recently Updated</option>
-            <option value="lastUpdated-asc">Least Updated</option>
+            <option value="filingDate-desc">Filing Date (Newest First)</option>
+            <option value="filingDate-asc">Filing Date (Oldest First)</option>
+            <option value="lastUpdated-desc">Last Updated (Most Recent)</option>
+            <option value="lastUpdated-asc">Last Updated (Least Recent)</option>
+            <option value="petitionNumber-asc">Petition Number (A-Z)</option>
+            <option value="petitionNumber-desc">Petition Number (Z-A)</option>
           </select>
         </div>
         <div className="col-4 col-md-1">

@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import SignatureCanvas from 'react-signature-canvas';
 
-const SignatureCapture = ({ isOpen, onClose, onSave }) => {
+const SignatureCapture = ({ isOpen, onClose, onSave, isUploading = false }) => {
   const signatureRef = useRef();
   const [isCaptured, setIsCaptured] = useState(false);
 
@@ -85,7 +85,7 @@ const SignatureCapture = ({ isOpen, onClose, onSave }) => {
               type="button" 
               className="dashboard-btn-refresh" 
               onClick={handleClear}
-              disabled={!isCaptured}
+              disabled={!isCaptured || isUploading}
               style={{ minWidth: '80px' }}
             >
               <i className="fas fa-eraser me-1"></i>
@@ -95,6 +95,7 @@ const SignatureCapture = ({ isOpen, onClose, onSave }) => {
               type="button" 
               className="dashboard-btn-refresh" 
               onClick={onClose}
+              disabled={isUploading}
               style={{ minWidth: '80px' }}
             >
               Cancel
@@ -103,11 +104,20 @@ const SignatureCapture = ({ isOpen, onClose, onSave }) => {
               type="button" 
               className="dashboard-btn-create" 
               onClick={handleSave}
-              disabled={!isCaptured}
+              disabled={!isCaptured || isUploading}
               style={{ minWidth: '120px' }}
             >
-              <i className="fas fa-save me-1"></i>
-              Save Signature
+              {isUploading ? (
+                <>
+                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  Uploading...
+                </>
+              ) : (
+                <>
+                  <i className="fas fa-save me-1"></i>
+                  Save Signature
+                </>
+              )}
             </button>
           </div>
         </div>
