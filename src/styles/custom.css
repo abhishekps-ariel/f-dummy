@@ -2316,3 +2316,56 @@ input, textarea, select {
     border-radius: 4px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
+
+/* Petition Steps Modal Styles */
+.petition-steps-modal-dialog {
+    max-width: 95vw;
+    width: 1200px;
+    margin: 1.75rem auto;
+}
+.petition-steps-modal-content {
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+    overflow: hidden;
+}
+.petition-steps-header {
+    flex-shrink: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+.petition-steps-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px !important;
+}
+.petition-steps-footer {
+    flex-shrink: 0;
+    border-top: 1px solid #dee2e6;
+    padding: 1rem;
+    background: white;
+}
+/* Adjust stepper container to scroll within modal */
+.petition-steps-modal .petition-stepper-container {
+    position: relative;
+    top: 0;
+    margin-bottom: 0;
+    max-height: calc(90vh - 200px);
+    overflow-y: auto;
+}
+/* Mobile responsive adjustments */
+@media (max-width: 991.98px) {
+    .petition-steps-modal-dialog {
+        max-width: 95vw;
+        width: 95vw;
+        margin: 0.5rem auto;
+    }
+    .petition-steps-modal-content {
+        max-height: 95vh;
+    }
+    .petition-steps-body {
+        padding: 16px !important;
+    }
+    .petition-steps-modal .petition-stepper-container {
+        max-height: none;
+    }
+}

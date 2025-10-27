@@ -5,16 +5,24 @@ import Config from '../../config/index';
 import { usePetitionCommonData } from '../../hooks/usePetitionCommonData';
 import { usePetitions } from '../../hooks/usePetitions';
 import { useAuth } from '../../context/AuthContext';
+import { usePetitionWizard } from '../../context/PetitionWizardContext';
 import { getUserById } from '../../services/authService';
 import { getFilingEntityTypes } from '../../services/commonService';
+import PetitionStepper from './PetitionStepper';
 
 // Static libraries array to prevent LoadScript reload
 const LIBRARIES = ['places'];
 
 const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) => {
+  const { currentStep: wizardCurrentStep, goToStep: wizardGoToStep, markStepCompleted, completedSteps } = usePetitionWizard();
   const [currentStep, setCurrentStep] = useState(1);
   const [isIntentionalSubmit, setIsIntentionalSubmit] = useState(false);
   const totalSteps = 9;
+
+  // Sync wizard state with component state
+  useEffect(() => {
+    setCurrentStep(wizardCurrentStep);
+  }, [wizardCurrentStep]);
   
   // User profile and filing entity type state
   const [userProfile, setUserProfile] = useState(null);
@@ -1959,10 +1967,18 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
     }
     
     if (newStep >= 1 && newStep <= totalSteps) {
+      // Mark current step as completed when moving forward
+      if (direction === 1) {
+        markStepCompleted(currentStep);
+      }
+      
       // Auto-save current step before moving to next step
       await autoSaveCurrentStep();
       
+      // Update both local and wizard state
       setCurrentStep(newStep);
+      wizardGoToStep(newStep);
+      
       // Scroll to top on step change for better mobile UX
       window.scrollTo(0, 0);
     }
@@ -1980,6 +1996,12 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
       autocompleteRef.current.focus();
     }
     // For other address types, the user will need to manually navigate to the fields
+  };
+
+  const handleEditSection = (stepNumber) => {
+    wizardGoToStep(stepNumber);
+    setCurrentStep(stepNumber);
+    window.scrollTo(0, 0);
   };
 
   const handleAddressValidationProceed = async () => {
@@ -3812,7 +3834,17 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
             <div className="petition-review-summary">
               {/* Property Information */}
               <div className="review-section mb-4">
-                <h5 className="review-section-title">Property Information</h5>
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <h5 className="review-section-title mb-0">Property Information</h5>
+                  <button 
+                    type="button" 
+                    className="dashboard-btn-create"
+                    onClick={() => handleEditSection(1)}
+                    style={{ padding: '6px 12px', fontSize: '13px' }}
+                  >
+                    <i className="fas fa-edit me-1"></i>Edit
+                  </button>
+                </div>
                 <div className="review-content">
                   <div className="row g-3">
                     <div className="col-md-6">
@@ -3837,7 +3869,17 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
 
               {/* Loan Information */}
               <div className="review-section mb-4">
-                <h5 className="review-section-title">Loan Information</h5>
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <h5 className="review-section-title mb-0">Loan Information</h5>
+                  <button 
+                    type="button" 
+                    className="dashboard-btn-create"
+                    onClick={() => handleEditSection(2)}
+                    style={{ padding: '6px 12px', fontSize: '13px' }}
+                  >
+                    <i className="fas fa-edit me-1"></i>Edit
+                  </button>
+                </div>
                 <div className="review-content">
                   <div className="row g-3">
                     <div className="col-md-6">
@@ -3864,7 +3906,17 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
 
               {/* Borrower Information */}
               <div className="review-section mb-4">
-                <h5 className="review-section-title">Borrower Information</h5>
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <h5 className="review-section-title mb-0">Borrower Information</h5>
+                  <button 
+                    type="button" 
+                    className="dashboard-btn-create"
+                    onClick={() => handleEditSection(3)}
+                    style={{ padding: '6px 12px', fontSize: '13px' }}
+                  >
+                    <i className="fas fa-edit me-1"></i>Edit
+                  </button>
+                </div>
                 <div className="review-content">
                   {formData.borrowers && formData.borrowers.length > 0 ? (
                     formData.borrowers.map((borrower, index) => (
@@ -3899,7 +3951,17 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
 
               {/* Filing Entity Information */}
               <div className="review-section mb-4">
-                <h5 className="review-section-title">Filing Entity Information</h5>
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <h5 className="review-section-title mb-0">Filing Entity Information</h5>
+                  <button 
+                    type="button" 
+                    className="dashboard-btn-create"
+                    onClick={() => handleEditSection(4)}
+                    style={{ padding: '6px 12px', fontSize: '13px' }}
+                  >
+                    <i className="fas fa-edit me-1"></i>Edit
+                  </button>
+                </div>
                 <div className="review-content">
                   <div className="row g-3">
                     <div className="col-md-6">
@@ -3938,7 +4000,17 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
 
               {/* Right-to-Cure (35A) Proofs */}
               <div className="review-section mb-4">
-                <h5 className="review-section-title">Right-to-Cure (35A) Proofs</h5>
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <h5 className="review-section-title mb-0">Right-to-Cure (35A) Proofs</h5>
+                  <button 
+                    type="button" 
+                    className="dashboard-btn-create"
+                    onClick={() => handleEditSection(5)}
+                    style={{ padding: '6px 12px', fontSize: '13px' }}
+                  >
+                    <i className="fas fa-edit me-1"></i>Edit
+                  </button>
+                </div>
                 <div className="review-content">
                   <div className="row g-3">
                     <div className="col-12">
@@ -3969,7 +4041,17 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
 
               {/* Form 35B Information */}
               <div className="review-section mb-4">
-                <h5 className="review-section-title">Form 35B Information</h5>
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <h5 className="review-section-title mb-0">Form 35B Information</h5>
+                  <button 
+                    type="button" 
+                    className="dashboard-btn-create"
+                    onClick={() => handleEditSection(6)}
+                    style={{ padding: '6px 12px', fontSize: '13px' }}
+                  >
+                    <i className="fas fa-edit me-1"></i>Edit
+                  </button>
+                </div>
                 <div className="review-content">
                   <div className="row g-3">
                     <div className="col-12">
@@ -4000,7 +4082,17 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
 
               {/* Loan Assignees */}
               <div className="review-section mb-4">
-                <h5 className="review-section-title">Loan Assignees</h5>
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <h5 className="review-section-title mb-0">Loan Assignees</h5>
+                  <button 
+                    type="button" 
+                    className="dashboard-btn-create"
+                    onClick={() => handleEditSection(7)}
+                    style={{ padding: '6px 12px', fontSize: '13px' }}
+                  >
+                    <i className="fas fa-edit me-1"></i>Edit
+                  </button>
+                </div>
                 <div className="review-content">
                   {formData.loanAssignees && formData.loanAssignees.length > 0 ? (
                     formData.loanAssignees.map((assignee, index) => (
@@ -4042,7 +4134,17 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
 
               {/* Attestation Data */}
               <div className="review-section mb-4">
-                <h5 className="review-section-title">Attestation Data</h5>
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <h5 className="review-section-title mb-0">Attestation Data</h5>
+                  <button 
+                    type="button" 
+                    className="dashboard-btn-create"
+                    onClick={() => handleEditSection(8)}
+                    style={{ padding: '6px 12px', fontSize: '13px' }}
+                  >
+                    <i className="fas fa-edit me-1"></i>Edit
+                  </button>
+                </div>
                 <div className="review-content">
                   {formData.signatures && formData.signatures.length > 0 ? (
                     formData.signatures.map((signature, index) => (
@@ -4151,10 +4253,10 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
 
 
       {/* Main Modal */}
-      <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} tabIndex="-1">
-        <div className="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-          <div className="modal-content">
-            <div className="modal-header text-white theme-bg">
+      <div className="modal fade show d-block petition-steps-modal" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} tabIndex="-1">
+        <div className="modal-dialog petition-steps-modal-dialog modal-dialog-centered">
+          <div className="modal-content petition-steps-modal-content">
+            <div className="modal-header text-white theme-bg petition-steps-header">
               <h5 className="modal-title">Foreclosure Petition Filing</h5>
               <button 
                 type="button" 
@@ -4163,21 +4265,40 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
                 aria-label="Close"
               ></button>
             </div>
-            <div className="modal-body">
-            <div className="container">
-              <header className="border-bottom mb-3">
-                <p className="font-base text-muted">Complete the 9 steps below to submit your foreclosure petition details.</p>
-              </header>
+            <div className="modal-body petition-steps-body">
+            <div className="container-fluid">
+              {/* Mobile Stepper */}
+              <div className="d-lg-none mb-3">
+                <PetitionStepper />
+              </div>
 
-              <div className="position-relative">
-                <p className="font-base fw-bold">Step {currentStep} of {totalSteps}</p>
+              <div className="row">
+                {/* Stepper Navigation Sidebar */}
+                <div className="col-lg-3 d-none d-lg-block">
+                  <PetitionStepper />
+                </div>
                 
-                <form onSubmit={handleSubmit}>
-                  {renderStep()}
+                {/* Main Form Content */}
+                <div className="col-lg-9">
+                  <header className="border-bottom mb-3">
+                    <p className="font-base text-muted">Complete the 9 steps below to submit your foreclosure petition details.</p>
+                  </header>
 
-                  {/* Navigation Buttons */}
-                  <div className="mt-4 pt-3 border-top">
-                    <div className="d-flex justify-content-between align-items-center">
+                  <div className="position-relative">
+                    <p className="font-base fw-bold">Step {currentStep} of {totalSteps}</p>
+                    
+                    <form onSubmit={handleSubmit}>
+                      {renderStep()}
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+            </div>
+            <div className="modal-footer petition-steps-footer">
+              {/* Navigation Buttons */}
+              <div className="container-fluid">
+                <div className="d-flex justify-content-between align-items-center">
                       <button 
                         type="button" 
                         className={`btn create-org-btn ${currentStep === 1 ? 'd-none' : ''}`}
@@ -4248,10 +4369,7 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
                       </div>
                     </div>
                   </div>
-                </form>
-              </div>
-            </div>
-            </div>
+                </div>
           </div>
         </div>
       </div>
