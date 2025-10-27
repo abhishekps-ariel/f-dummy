@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { usePetitionWizard } from '../../context/PetitionWizardContext';
 import './PetitionStepper.css';
 
@@ -17,6 +17,21 @@ const stepLabels = [
 const PetitionStepper = () => {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const { currentStep, completedSteps, goToStep, canAccessStep } = usePetitionWizard();
+  const stepperNavRef = useRef(null);
+
+  // Auto-scroll to current step
+  useEffect(() => {
+    if (stepperNavRef.current) {
+      const currentStepElement = stepperNavRef.current.querySelector(`[data-step="${currentStep}"]`);
+      if (currentStepElement) {
+        currentStepElement.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+          inline: 'nearest'
+        });
+      }
+    }
+  }, [currentStep]);
 
   const getStepStatus = (stepNumber) => {
     if (completedSteps.has(stepNumber)) {
@@ -49,7 +64,7 @@ const PetitionStepper = () => {
 
       <div className={`petition-stepper-container ${!isMobileOpen ? 'd-none d-lg-block' : ''}`}>
         <h5 className="stepper-title">Petition Form Progress</h5>
-      <div className="stepper-nav">
+      <div className="stepper-nav" ref={stepperNavRef}>
         {stepLabels.map((label, index) => {
           const stepNumber = index + 1;
           const status = getStepStatus(stepNumber);
@@ -58,6 +73,7 @@ const PetitionStepper = () => {
           return (
             <div
               key={stepNumber}
+              data-step={stepNumber}
               className={`stepper-item ${status} ${isClickable ? 'clickable' : ''}`}
               onClick={() => handleStepClick(stepNumber)}
               title={!isClickable ? 'Complete previous steps first' : label}
