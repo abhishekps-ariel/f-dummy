@@ -1965,6 +1965,21 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
         return;
       }
     }
+
+    // Validate Attestation step before proceeding to Review & Submit
+    if (currentStep === 8 && direction === 1) {
+      // Check if user has signature
+      if (!user?.signatureUrl) {
+        toast.error('You must upload a digital signature to your profile before proceeding to review.');
+        return;
+      }
+      
+      // Check if certification checkbox is checked
+      if (!formData.certification_check) {
+        toast.error('Please check the Electronic Certification checkbox before proceeding to review.');
+        return;
+      }
+    }
     
     if (newStep >= 1 && newStep <= totalSteps) {
       // Mark current step as completed when moving forward
@@ -3871,6 +3886,41 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
               </div>
             )}
 
+            {/* Digital Signature Requirement */}
+            {!user?.signatureUrl ? (
+              <div className="p-4 border border-danger bg-danger-subtle rounded mb-4">
+                <div className="d-flex align-items-center">
+                  <i className="fas fa-exclamation-triangle text-danger me-3" style={{ fontSize: '24px' }}></i>
+                  <div className="flex-grow-1">
+                    <h5 className="fw-bold text-danger mb-2">Digital Signature Required</h5>
+                    <p className="mb-3">You must upload a digital signature to your profile before you can proceed to review and submit the petition.</p>
+                    <button
+                      type="button"
+                      className="dashboard-btn-create"
+                      onClick={() => {
+                        // Close petition modal and navigate to profile
+                        onClose();
+                        window.location.href = '/profile';
+                      }}
+                    >
+                      <i className="fas fa-user me-2"></i>
+                      Go to Profile to Upload Signature
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="p-4 border border-success bg-success-subtle rounded mb-4">
+                <div className="d-flex align-items-center">
+                  <i className="fas fa-check-circle text-success me-3" style={{ fontSize: '24px' }}></i>
+                  <div className="flex-grow-1">
+                    <h5 className="fw-bold text-success mb-2">Digital Signature Available</h5>
+                    <p className="mb-0">Your digital signature is ready for petition submission.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="form-check mb-5">
               <input 
                 className="form-check-input" 
@@ -3879,9 +3929,13 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
                 name="certification_check"
                 checked={formData.certification_check}
                 onChange={handleInputChange}
+                disabled={!user?.signatureUrl}
               />
               <label className="form-check-label font-sm fw-medium" htmlFor="certification_check">
                 Electronic Certification: I solemnly certify under the pains and penalties of perjury that the information contained in this petition is true and correct to the best of my knowledge and belief.
+                {!user?.signatureUrl && (
+                  <span className="text-danger ms-2">(Signature required)</span>
+                )}
               </label>
             </div>
 
