@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 
 const PetitionWizardContext = createContext();
 
@@ -13,37 +13,6 @@ export const usePetitionWizard = () => {
 export const PetitionWizardProvider = ({ children }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [completedSteps, setCompletedSteps] = useState(new Set());
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Load state from localStorage on mount
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem('petitionWizardState');
-      if (saved) {
-        const { currentStep: savedStep, completedSteps: savedCompleted } = JSON.parse(saved);
-        setCurrentStep(savedStep || 1);
-        setCompletedSteps(new Set(savedCompleted || []));
-      }
-    } catch (error) {
-      console.error('Error loading petition wizard state:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  // Save state to localStorage whenever it changes
-  useEffect(() => {
-    if (!isLoading) {
-      try {
-        localStorage.setItem('petitionWizardState', JSON.stringify({
-          currentStep,
-          completedSteps: Array.from(completedSteps)
-        }));
-      } catch (error) {
-        console.error('Error saving petition wizard state:', error);
-      }
-    }
-  }, [currentStep, completedSteps, isLoading]);
 
   const markStepCompleted = (step) => {
     setCompletedSteps(prev => new Set([...prev, step]));
@@ -77,7 +46,6 @@ export const PetitionWizardProvider = ({ children }) => {
   const resetWizard = () => {
     setCurrentStep(1);
     setCompletedSteps(new Set());
-    localStorage.removeItem('petitionWizardState');
   };
 
   const value = {
@@ -88,7 +56,7 @@ export const PetitionWizardProvider = ({ children }) => {
     markStepIncomplete,
     canAccessStep,
     resetWizard,
-    isLoading
+    isLoading: false
   };
 
   return (

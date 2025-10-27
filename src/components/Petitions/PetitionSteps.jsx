@@ -2026,9 +2026,14 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    console.log('=== HANDLE SUBMIT CALLED ===');
+    console.log('Current step:', currentStep);
+    console.log('Total steps:', totalSteps);
+    console.log('Is intentional submit:', isIntentionalSubmit);
     
     // Only validate certification if we're actually on the last step and trying to submit
     if (currentStep !== totalSteps || !isIntentionalSubmit) {
+      console.log('Early return - not on last step or not intentional submit');
       return;
     }
     
@@ -4427,9 +4432,13 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
                           </button>
                         ) : (
                           <button 
-                            type="submit" 
+                            type="button" 
                             className="dashboard-btn-create"
-                            onClick={() => setIsIntentionalSubmit(true)}
+                            onClick={async () => {
+                              console.log('Submit button clicked!');
+                              setIsIntentionalSubmit(true);
+                              await handleSubmit({ preventDefault: () => {} });
+                            }}
                             disabled={petitionLoading}
                           >
                             {petitionLoading ? (
