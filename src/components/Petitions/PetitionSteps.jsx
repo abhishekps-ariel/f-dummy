@@ -2053,8 +2053,25 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
     }
 
     try {
+      // Prepare petition data with signature information
+      const petitionData = {
+        ...formData,
+        signatures: [
+          {
+            signerFullName: user?.fullName || `${user?.firstName || ''} ${user?.lastName || ''}`.trim(),
+            signerTitle: user?.role || 'FILIR User',
+            signerEmail: user?.email || '',
+            esignConsent: true,
+            signatureDrawnOrTyped: user?.signatureUrl || '',
+            signedAt: new Date().toISOString(),
+            signerIp: '', // Will be filled by backend
+            otpCode: '' // Will be filled by backend
+          }
+        ]
+      };
+      
       // Submit petition using API
-      await submitPetition(formData);
+      await submitPetition(petitionData);
       setIsIntentionalSubmit(false); // Reset the flag
       
       // Notify parent component that petition was submitted successfully
@@ -3804,6 +3821,51 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
               </div>
             </div>
 
+            {/* Digital Signature Section */}
+            {user?.signatureUrl && (
+              <div className="p-4 border border-info bg-info-subtle rounded mb-4">
+                <h5 className="fw-bold font-base mb-3">
+                  <i className="fas fa-signature me-2"></i>
+                  Digital Signature
+                </h5>
+                <div className="row g-3">
+                  <div className="col-md-6">
+                    <label className="form-label text-muted small">Signature Preview</label>
+                    <div className="signature-preview-container p-3 border rounded bg-light">
+                      <img 
+                        src={user.signatureUrl} 
+                        alt="Digital Signature" 
+                        className="signature-preview-img"
+                        style={{
+                          maxWidth: '100%',
+                          maxHeight: '100px',
+                          objectFit: 'contain',
+                          border: '1px solid #dee2e6',
+                          borderRadius: '4px',
+                          backgroundColor: 'white'
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label text-muted small">Signature Status</label>
+                    <p className="fw-medium mb-0">
+                      <span className="badge bg-success fs-6">
+                        <i className="fa-solid fa-check-circle me-1"></i>
+                        Available
+                      </span>
+                    </p>
+                    <div className="mt-2">
+                      <small className="text-muted">
+                        <i className="fa-solid fa-user me-1"></i>
+                        Signer: {user.fullName || `${user.firstName} ${user.lastName}`}
+                      </small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="form-check mb-5">
               <input 
                 className="form-check-input" 
@@ -4170,6 +4232,26 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
                         <div className="col-md-6">
                           <strong>Signed At:</strong> {signature.signedAt || 'Not signed'}
                         </div>
+                        {user?.signatureUrl && (
+                          <div className="col-12">
+                            <strong>Signature Preview:</strong>
+                            <div className="signature-preview-container p-2 border rounded bg-light mt-2" style={{ maxWidth: '300px' }}>
+                              <img 
+                                src={user.signatureUrl} 
+                                alt="Digital Signature" 
+                                className="signature-preview-img"
+                                style={{
+                                  maxWidth: '100%',
+                                  maxHeight: '80px',
+                                  objectFit: 'contain',
+                                  border: '1px solid #dee2e6',
+                                  borderRadius: '4px',
+                                  backgroundColor: 'white'
+                                }}
+                              />
+                            </div>
+                          </div>
+                        )}
                       </div>
                     ))
                   ) : (

@@ -791,6 +791,26 @@ const PetitionDetailModal = ({ petition, isOpen, onClose }) => {
                                 <label className="form-label fw-semibold">Signed At</label>
                                 <div className="form-control-plaintext">{formatDate(signature.signedAt)}</div>
                               </div>
+                              {signature.signatureDrawnOrTyped && (
+                                <div className="col-12">
+                                  <label className="form-label fw-semibold">Signature Preview</label>
+                                  <div className="signature-preview-container p-3 border rounded bg-light">
+                                    <img 
+                                      src={signature.signatureDrawnOrTyped} 
+                                      alt="Digital Signature" 
+                                      className="signature-preview-img"
+                                      style={{
+                                        maxWidth: '100%',
+                                        maxHeight: '120px',
+                                        objectFit: 'contain',
+                                        border: '1px solid #dee2e6',
+                                        borderRadius: '4px',
+                                        backgroundColor: 'white'
+                                      }}
+                                    />
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           </div>
                         ))

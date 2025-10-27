@@ -58,18 +58,16 @@ function Profile() {
         firstName: userData.firstName || "",
         lastName: userData.lastName || "",
       });
-      setSelectedFilingEntityType(userData.filingEntityTypeId || "");
       
-      // Initialize signature data
-      if (userData.signatureUrl) {
-        setSignatureData(userData.signatureUrl);
+      // Check for existing signature data
+      if (userData.signatureUrl && userData.signatureImageName) {
         setSignatureStatus('saved');
-        setIsImageLoading(true); // Set loading state for existing signature
+        setSignatureData(userData.signatureUrl);
+        setIsImageLoading(true);
       } else {
-        setSignatureData(null);
         setSignatureStatus('pending');
-        setIsImageLoading(false);
       }
+      setSelectedFilingEntityType(userData.filingEntityTypeId || "");
     }
   }, [navigate]);
 
@@ -629,6 +627,42 @@ function Profile() {
                         )}
                       </p>
                     </div>
+                    
+                    {/* Signature Preview */}
+                    {signatureStatus === 'saved' && user?.signatureUrl && (
+                      <div className="col-12">
+                        <label className="form-label text-muted small">Signature Preview</label>
+                        <div className="signature-preview-container p-3 border rounded bg-light">
+                          <img 
+                            src={user.signatureUrl} 
+                            alt="Digital Signature" 
+                            className="signature-preview-img"
+                            style={{
+                              maxWidth: '100%',
+                              maxHeight: '120px',
+                              objectFit: 'contain',
+                              border: '1px solid #dee2e6',
+                              borderRadius: '4px',
+                              backgroundColor: 'white'
+                            }}
+                            onLoad={() => setIsImageLoading(false)}
+                            onError={() => {
+                              setIsImageLoading(false);
+                              console.error('Failed to load signature image');
+                            }}
+                          />
+                          {isImageLoading && (
+                            <div className="text-center py-2">
+                              <div className="spinner-border spinner-border-sm text-primary" role="status">
+                                <span className="visually-hidden">Loading signature...</span>
+                              </div>
+                              <p className="mt-1 text-muted small">Loading signature...</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    
                     <div className="col-12">
                       <label className="form-label text-muted small">Last Updated</label>
                       <p className="fw-medium mb-0 text-muted small">
