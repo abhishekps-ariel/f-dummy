@@ -4266,20 +4266,19 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
               ></button>
             </div>
             <div className="modal-body petition-steps-body">
-            <div className="container-fluid">
-              {/* Mobile Stepper */}
-              <div className="d-lg-none mb-3">
+              {/* Desktop Sidebar */}
+              <div className="petition-steps-sidebar d-none d-lg-block">
                 <PetitionStepper />
               </div>
+              
+              {/* Form Content */}
+              <div className="petition-steps-form">
+                <div className="container-fluid">
+                  {/* Mobile Stepper */}
+                  <div className="d-lg-none mb-3">
+                    <PetitionStepper />
+                  </div>
 
-              <div className="row">
-                {/* Stepper Navigation Sidebar */}
-                <div className="col-lg-3 d-none d-lg-block">
-                  <PetitionStepper />
-                </div>
-                
-                {/* Main Form Content */}
-                <div className="col-lg-9">
                   <header className="border-bottom mb-3">
                     <p className="font-base text-muted">Complete the 9 steps below to submit your foreclosure petition details.</p>
                   </header>
@@ -4293,7 +4292,6 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
                   </div>
                 </div>
               </div>
-            </div>
             </div>
             <div className="modal-footer petition-steps-footer">
               {/* Navigation Buttons */}

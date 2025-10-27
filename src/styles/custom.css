@@ -2335,8 +2335,12 @@ input, textarea, select {
 }
 .petition-steps-body {
     flex: 1;
-    overflow-y: auto;
-    padding: 24px !important;
+    overflow: hidden;
+    padding: 0 !important;
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    height: calc(100vh - var(--header-height, 60px) - var(--footer-height, 80px));
+    max-height: calc(90vh - 140px);
 }
 .petition-steps-footer {
     flex-shrink: 0;
@@ -2344,13 +2348,32 @@ input, textarea, select {
     padding: 1rem;
     background: white;
 }
-/* Adjust stepper container to scroll within modal */
+/* Sidebar column */
+.petition-steps-sidebar {
+    overflow-y: auto;
+    height: 100%;
+    padding: 24px;
+    border-right: 1px solid #dee2e6;
+    background: #f8f9fa;
+}
+
+/* Form content column */
+.petition-steps-form {
+    overflow-y: auto;
+    height: 100%;
+    padding: 24px;
+    background: white;
+}
+
+/* Adjust stepper container to work within the new layout */
 .petition-steps-modal .petition-stepper-container {
     position: relative;
     top: 0;
     margin-bottom: 0;
-    max-height: calc(90vh - 200px);
-    overflow-y: auto;
+    max-height: none;
+    overflow: visible;
+    box-shadow: none;
+    background: transparent;
 }
 /* Mobile responsive adjustments */
 @media (max-width: 991.98px) {
@@ -2363,9 +2386,19 @@ input, textarea, select {
         max-height: 95vh;
     }
     .petition-steps-body {
-        padding: 16px !important;
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+        height: calc(95vh - 140px);
+        max-height: calc(95vh - 140px);
     }
-    .petition-steps-modal .petition-stepper-container {
-        max-height: none;
+    .petition-steps-sidebar {
+        padding: 16px;
+        border-right: none;
+        border-bottom: 1px solid #dee2e6;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+    .petition-steps-form {
+        padding: 16px;
     }
 }
