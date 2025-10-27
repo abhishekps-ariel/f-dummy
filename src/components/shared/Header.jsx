@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import NotificationDropdown from "./NotificationDropdown";
 
-const Header = ({ user, pageTitle, showMobileMenu = true }) => {
+const Header = ({ user, pageTitle, showMobileMenu = true, onLogout }) => {
   return (
     <div className="d-flex align-items-center justify-content-between dashboard-header">
       <div className="d-flex align-items-center">
@@ -104,7 +104,9 @@ const Header = ({ user, pageTitle, showMobileMenu = true }) => {
                 href="#"
                 onClick={(e) => {
                   e.preventDefault();
-                  // This will be handled by the parent component
+                  if (onLogout) {
+                    onLogout();
+                  }
                 }}
               >
                 <i className="fas fa-sign-out-alt me-2"></i> Sign out
