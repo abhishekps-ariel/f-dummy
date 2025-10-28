@@ -536,7 +536,7 @@ const ViewAllPetitions = ({ onBack }) => {
       <div className="petitions-header-section mb-4">
         {/* Desktop Layout */}
         <div className="d-none d-md-flex align-items-center justify-content-between">
-          <h2 className="font-med mb-0">Petitions</h2>
+          <h2 className="font-med mb-0">All Petitions</h2>
           
           <div className="d-flex gap-3 align-items-center">
             {/* Create New Petition Button */}
@@ -801,7 +801,7 @@ const ViewAllPetitions = ({ onBack }) => {
       </div>
 
       {/* Desktop Table View */}
-      <div className="d-none d-lg-block table-responsive petition-table-container" style={{ maxHeight: '500px', overflowY: 'auto' }}>
+      <div className="d-none d-lg-block table-responsive petition-table-container">
         <table className="table table-hover w-100 mb-0">
           <thead className="table-light">
             <tr>
