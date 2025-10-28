@@ -2,10 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import PetitionDetailModal from './PetitionDetailModal';
 import PetitionSteps from './PetitionSteps';
+import TabBar from './TabBar';
+import PetitionTabContent from './PetitionTabContent';
+import { useTabs } from '../../context/TabContext';
 import { usePetitions } from '../../hooks/usePetitions';
 import petitionApiService from '../../services/petitionApiService';
+import './TabbedWorkspace.css';
 
 const ViewAllPetitions = ({ onBack }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -23,8 +26,6 @@ const ViewAllPetitions = ({ onBack }) => {
     totalCount: 0,
     pageSize: 10
   });
-  const [showPetitionDetail, setShowPetitionDetail] = useState(false);
-  const [selectedPetition, setSelectedPetition] = useState(null);
   const [openDropdownId, setOpenDropdownId] = useState(null);
   const [petitions, setPetitions] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -36,6 +37,9 @@ const ViewAllPetitions = ({ onBack }) => {
     organization,
     organizationCheckComplete
   } = usePetitions();
+
+  // Use the tabs context
+  const { openTab, getActiveTab } = useTabs();
 
   // Handle date filter change
   const handleDateFilterChange = (value) => {
@@ -488,8 +492,7 @@ const ViewAllPetitions = ({ onBack }) => {
   };
 
   const handlePetitionClick = (petition) => {
-    setSelectedPetition(petition);
-    setShowPetitionDetail(true);
+    openTab(petition);
   };
 
   const handlePetitionSubmitted = async () => {
@@ -531,7 +534,19 @@ const ViewAllPetitions = ({ onBack }) => {
   // Organization access check is now handled at the page level
 
   return (
-    <div className="shadow-custom bg-white org-search-box">
+    <div className="petitions-workspace">
+      {/* Tab Bar */}
+      <TabBar />
+      
+      {/* Tab Content */}
+      <div className="tab-content-area">
+        {(() => {
+          const activeTab = getActiveTab();
+          if (!activeTab) return null;
+          
+          if (activeTab.type === 'all-petitions') {
+            return (
+              <div className="shadow-custom bg-white org-search-box">
       {/* Header Section - Responsive Layout */}
       <div className="petitions-header-section mb-4">
         {/* Desktop Layout */}
@@ -1118,6 +1133,16 @@ const ViewAllPetitions = ({ onBack }) => {
         </div>
       )}
 
+              </div>
+            );
+          } else if (activeTab.type === 'petition') {
+            return <PetitionTabContent petition={activeTab.data} />;
+          }
+          
+          return null;
+        })()}
+      </div>
+
       {/* Petition Steps Modal */}
       <PetitionSteps 
         isOpen={showPetitionSteps} 
@@ -1125,18 +1150,6 @@ const ViewAllPetitions = ({ onBack }) => {
         organization={organization}
         onPetitionSubmitted={handlePetitionSubmitted}
       />
-
-      {/* Petition Detail Modal */}
-      {showPetitionDetail && (
-        <PetitionDetailModal 
-          petition={selectedPetition}
-          isOpen={showPetitionDetail} 
-          onClose={() => {
-            setShowPetitionDetail(false);
-            setSelectedPetition(null);
-          }} 
-        />
-      )}
     </div>
   );
 };

@@ -8,6 +8,7 @@ import Header from '../../components/shared/Header';
 import ViewAllPetitions from '../../components/Petitions/ViewAllPetitions';
 import NoOrganizationAccess from '../../components/Petitions/NoOrganizationAccess';
 import { usePetitions } from '../../hooks/usePetitions';
+import { TabProvider } from '../../context/TabContext';
 
 const Petitions = () => {
   const { user, logout, hasOrganizationAccess, organizationCheckComplete } = useAuth();
@@ -67,7 +68,9 @@ const Petitions = () => {
           ) : !hasOrganizationAccess ? (
             <NoOrganizationAccess />
           ) : (
-            <ViewAllPetitions />
+            <TabProvider>
+              <ViewAllPetitions />
+            </TabProvider>
           )}
         </div>
       </main>

@@ -1,0 +1,138 @@
+/* Tabbed Workspace Styles */
+.petitions-workspace {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.tab-content-area {
+  flex: 1;
+  overflow-y: auto;
+  background-color: #ffffff;
+}
+
+/* Tab Bar Styles */
+.tab-bar-container {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+  margin-bottom: 0;
+  flex-shrink: 0;
+}
+
+.tab-bar {
+  display: flex;
+  background-color: #f8f9fa;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.tab-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  background-color: #e9ecef;
+  border-right: 1px solid #dee2e6;
+  cursor: pointer;
+  min-width: 120px;
+  max-width: 200px;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.tab:hover {
+  background-color: #f1f3f4;
+}
+
+.tab.active {
+  background-color: #ffffff;
+  border-bottom: 2px solid #007bff;
+  z-index: 1;
+}
+
+.tab.active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #007bff;
+}
+
+.tab-content {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  width: 100%;
+  min-width: 0;
+}
+
+.tab-title {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 13px;
+  color: #495057;
+  margin-right: 8px;
+}
+
+.tab.active .tab-title {
+  color: #007bff;
+  font-weight: 500;
+}
+
+.tab-close {
+  background: none;
+  border: none;
+  padding: 2px 4px;
+  cursor: pointer;
+  border-radius: 3px;
+  color: #6c757d;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.tab-close:hover {
+  background-color: #dc3545;
+  color: white;
+}
+
+.tab-close:focus {
+  outline: none;
+}
+
+/* Petition Tab Content Styles */
+.petition-tab-content {
+  padding: 20px;
+  height: 100%;
+  overflow-y: auto;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .tab {
+    min-width: 100px;
+    max-width: 150px;
+  }
+  
+  .tab-content {
+    padding: 6px 8px;
+  }
+  
+  .tab-title {
+    font-size: 12px;
+  }
+  
+  .petition-tab-content {
+    padding: 15px;
+  }
+}
