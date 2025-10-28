@@ -79,6 +79,14 @@
   font-size: 13px;
   color: #495057;
   margin-right: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tab-loading-spinner {
+  color: #007bff;
+  font-size: 12px;
 }
 
 .tab.active .tab-title {

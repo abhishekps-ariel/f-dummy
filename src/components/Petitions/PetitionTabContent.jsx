@@ -1,9 +1,36 @@
 import React from 'react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { useTabs } from '../../context/TabContext';
 
 const PetitionTabContent = ({ petition }) => {
+  const { loadingTabs, activeTabId } = useTabs();
+  
   if (!petition) return null;
+
+  // Check if this tab is currently loading
+  const isTabLoading = loadingTabs.has(activeTabId);
+
+  // Show loading state
+  if (isTabLoading) {
+    return (
+      <div className="petition-tab-content">
+        <div className="loading-container" style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          minHeight: '400px',
+          flexDirection: 'column',
+          gap: '1rem'
+        }}>
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+          <p className="text-muted">Loading petition details...</p>
+        </div>
+      </div>
+    );
+  }
 
   const formatCurrency = (amount) => {
     if (!amount) return 'N/A';
@@ -463,41 +490,10 @@ const PetitionTabContent = ({ petition }) => {
                     <label className="form-label fw-semibold">Certain Mortgage Loan</label>
                     <div className="form-control-plaintext">{petition.details?.affidavit?.certainMortgageLoan ? 'Yes' : 'No'}</div>
                   </div>
-                  <div className="col-12">
-                    <label className="form-label fw-semibold">Form 35B Compliance Affidavit PDF</label>
-                    <div className="form-control-plaintext">
-                      {petition.details?.affidavit?.form35bComplianceAffidavitPdf ? (
-                        <span className="text-success">Document uploaded</span>
-                      ) : (
-                        <span className="text-muted">No document uploaded</span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="col-12">
-                    <label className="form-label fw-semibold">Form 35B Non-Applicability Affidavit PDF</label>
-                    <div className="form-control-plaintext">
-                      {petition.details?.affidavit?.form35bNonApplicabilityAffidavitPdf ? (
-                        <span className="text-success">Document uploaded</span>
-                      ) : (
-                        <span className="text-muted">No document uploaded</span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label fw-semibold">Affiant Name</label>
-                    <div className="form-control-plaintext">{petition.details?.affidavit?.affiantName || 'N/A'}</div>
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label fw-semibold">Affiant Title</label>
-                    <div className="form-control-plaintext">{petition.details?.affidavit?.affiantTitle || 'N/A'}</div>
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label fw-semibold">Affidavit Execution Date</label>
-                    <div className="form-control-plaintext">{formatDate(petition.details?.affidavit?.affidavitExecutionDate)}</div>
-                  </div>
                 </div>
               </div>
             </div>
+
 
             {/* Loan Assignees */}
             <div className="card mb-4 border-0 shadow-sm">

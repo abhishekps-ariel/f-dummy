@@ -310,3 +310,22 @@ export const uploadUserSignature = async (userId, signatureFile) => {
     data: response.data.data,
   };
 };
+
+export const getSignatureById = async (userId) => {
+  const response = await client.post(
+    AUTH_ENDPOINTS.GET_SIGNATURE_BY_ID(userId),
+    {}, // Empty body as per API spec
+    {
+      headers: {
+        Accept: "text/plain",
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  return {
+    isSuccess: response.data.success,
+    msg: response.data.message,
+    data: response.data.data,
+  };
+};

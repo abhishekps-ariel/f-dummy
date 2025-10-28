@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { getAuthData, clearAuthData } from "../../utils/storage";
 import { useAuth } from "../../context/AuthContext";
 import { ROUTES } from "../../constants/routerConstants";
-import { logout as logoutApi, updateUser, getUserById, uploadUserSignature } from "../../services/authService";
+import { logout as logoutApi, updateUser, getUserById, uploadUserSignature, getSignatureById } from "../../services/authService";
 import { getFilingEntityTypes } from "../../services/commonService";
 import { getUserJoinRequests, getOrganizationById } from "../../services/organizationService";
 import { toast } from "react-toastify";
@@ -102,6 +102,38 @@ function Profile() {
       loadOrganizationData();
     }
   }, [user]);
+
+  // Load signature separately to avoid infinite loop
+  useEffect(() => {
+    if (user?.id) {
+      fetchUserSignature(user.id);
+    }
+  }, [user?.id]); // Only depend on user.id, not the entire user object
+
+  const fetchUserSignature = async (userId) => {
+    try {
+      const response = await getSignatureById(userId);
+      if (response.isSuccess && response.data) {
+        const signatureData = response.data;
+        setSignatureData(signatureData.signatureUrl);
+        setSignatureStatus('saved');
+        
+        // Update context only - don't update local user state to avoid infinite loop
+        updateUserSignature(signatureData);
+        
+        console.log('User signature loaded successfully:', signatureData);
+        return true;
+      } else {
+        console.log('No signature found for user:', response.msg);
+        setSignatureStatus('pending');
+        return false;
+      }
+    } catch (error) {
+      console.error('Error fetching user signature:', error);
+      setSignatureStatus('pending');
+      return false;
+    }
+  };
 
   const loadOrganizationData = async () => {
     setIsLoadingOrgData(true);

@@ -14,6 +14,7 @@ export const AUTH_ENDPOINTS = {
   UPDATE_USER: "/api/Account/update-user",
   GET_USER_BY_ID: (userId) => `/api/Account/get-user-by-id/${userId}`,
   UPLOAD_USER_SIGNATURE: "/api/Account/upload-user-signature",
+  GET_SIGNATURE_BY_ID: (userId) => `/api/Account/get-signature-by-id/${userId}`,
 };
 
 export const ORGANIZATION_ENDPOINTS = {
@@ -41,5 +42,6 @@ export const PETITION_ENDPOINTS = {
   SUBMIT_PETITION: "/api/Petition/submit",
   GET_PETITIONS_BY_ORGANIZATION: (organizationId) => `/api/Petition/organization/${organizationId}`,
   GET_PETITIONS_PAGED: "/api/Petition/organization/paged",
+  GET_PETITION_BY_ID: (petitionId) => `/api/Petition/${petitionId}`,
 };
 

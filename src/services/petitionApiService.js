@@ -46,6 +46,24 @@ class PetitionApiService {
     }
   }
 
+  // Get petition by ID
+  async getPetitionById(petitionId) {
+    try {
+      console.log('API Service - Fetching petition by ID:', petitionId);
+      const response = await axiosInstance.get(PETITION_ENDPOINTS.GET_PETITION_BY_ID(petitionId), {
+        headers: {
+          'Accept': 'text/plain'
+        }
+      });
+      
+      console.log('API Service - Petition by ID response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching petition by ID:', error);
+      throw error;
+    }
+  }
+
   /**
    * Get paginated petitions by organization ID with filters, search, and sorting
    * @param {Object} paginationParams - The pagination and filter parameters
@@ -285,6 +303,56 @@ class PetitionApiService {
 
     // Send data directly as dto parameter (not wrapped in object)
     return petitionData;
+  }
+
+  // Transform single petition API response to display format
+  transformSinglePetitionResponse(apiResponse) {
+    if (!apiResponse || !apiResponse.data) {
+      return null;
+    }
+
+    console.log('Transforming single petition API response:', apiResponse);
+    const petition = apiResponse.data;
+
+    // Map status number to readable status
+    const getStatusDisplay = (status) => {
+      switch (status) {
+        case "0": return { text: "Draft", class: "Draft" };
+        case "1": return { text: "Submitted", class: "Submitted" };
+        case "2": return { text: "Returned", class: "Returned" };
+        case "3": return { text: "Resubmitted", class: "Resubmitted" };
+        case "4": return { text: "Accepted", class: "Accepted" };
+        case "5": return { text: "Closed", class: "Closed" };
+        default: return { text: "Unknown", class: "Unknown" };
+      }
+    };
+
+    const statusDisplay = getStatusDisplay(petition.status);
+
+    return {
+      id: petition.id,
+      petitionNumber: petition.petitionNumber,
+      status: statusDisplay.text,
+      statusClass: statusDisplay.class,
+      createdDate: petition.createdDate,
+      modifiedDate: petition.modifiedDate,
+      createdById: petition.createdById,
+      modifiedById: petition.modifiedById,
+      isAllStepsCompleted: petition.isAllStepsCompleted,
+      organizationId: petition.organizationId,
+      duplicateHash: petition.duplicateHash,
+      details: {
+        property: petition.property,
+        loan: petition.loan,
+        rightToCure: petition.rightToCure,
+        affidavit: petition.affidavit,
+        filingEntity: petition.filingEntity,
+        signatures: petition.signatures,
+        borrowers: petition.borrowers,
+        loanAssignees: petition.loanAssignees,
+        documents: petition.documents
+      }
+    };
   }
 
   // Transform API response to display format

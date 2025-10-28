@@ -2,7 +2,7 @@ import React from 'react';
 import { useTabs } from '../../context/TabContext';
 
 const TabBar = () => {
-  const { tabs, activeTabId, switchToTab, closeTab } = useTabs();
+  const { tabs, activeTabId, switchToTab, closeTab, loadingTabs } = useTabs();
 
   return (
     <div className="tab-bar-container">
@@ -14,7 +14,14 @@ const TabBar = () => {
             onClick={() => switchToTab(tab.id)}
           >
             <div className="tab-content">
-              <span className="tab-title">{tab.title}</span>
+              <span className="tab-title">
+                {tab.title}
+                {loadingTabs.has(tab.id) && (
+                  <span className="tab-loading-spinner">
+                    <i className="fas fa-spinner fa-spin"></i>
+                  </span>
+                )}
+              </span>
               {tab.isClosable && (
                 <button
                   className="tab-close"

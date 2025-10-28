@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import petitionApiService from '../services/petitionApiService';
 
 const TabContext = createContext();
 
@@ -13,6 +14,7 @@ export const useTabs = () => {
 export const TabProvider = ({ children }) => {
   const [tabs, setTabs] = useState([]);
   const [activeTabId, setActiveTabId] = useState(null);
+  const [loadingTabs, setLoadingTabs] = useState(new Set());
 
   // Load tabs from localStorage on mount
   useEffect(() => {
@@ -80,7 +82,7 @@ export const TabProvider = ({ children }) => {
     }
   }, [activeTabId]);
 
-  const openTab = (petition) => {
+  const openTab = async (petition) => {
     const tabId = `petition-${petition.id}`;
     
     // Check if tab already exists
@@ -91,17 +93,63 @@ export const TabProvider = ({ children }) => {
       return;
     }
 
-    // Create new tab
+    // Create new tab with loading state
     const newTab = {
       id: tabId,
-      title: petition.petitionNumber,
+      title: petition.petitionNumber || 'Loading...',
       type: 'petition',
-      data: petition,
-      isClosable: true
+      data: petition, // Store basic petition data initially
+      isClosable: true,
+      isLoading: true
     };
 
     setTabs(prevTabs => [...prevTabs, newTab]);
     setActiveTabId(tabId);
+    setLoadingTabs(prev => new Set([...prev, tabId]));
+
+    try {
+      // Fetch detailed petition data
+      const response = await petitionApiService.getPetitionById(petition.id);
+      const detailedPetition = petitionApiService.transformSinglePetitionResponse(response);
+      
+      if (detailedPetition) {
+        // Update tab with detailed data
+        setTabs(prevTabs => 
+          prevTabs.map(tab => 
+            tab.id === tabId 
+              ? {
+                  ...tab,
+                  title: detailedPetition.petitionNumber,
+                  data: detailedPetition,
+                  isLoading: false
+                }
+              : tab
+          )
+        );
+      }
+    } catch (error) {
+      console.error('Error fetching petition details:', error);
+      // Update tab to show error state
+      setTabs(prevTabs => 
+        prevTabs.map(tab => 
+          tab.id === tabId 
+            ? {
+                ...tab,
+                title: petition.petitionNumber || 'Error',
+                data: petition, // Keep original data
+                isLoading: false,
+                hasError: true
+              }
+            : tab
+        )
+      );
+    } finally {
+      setLoadingTabs(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(tabId);
+        return newSet;
+      });
+    }
   };
 
   const closeTab = (tabId) => {
@@ -151,7 +199,8 @@ export const TabProvider = ({ children }) => {
     openTab,
     closeTab,
     switchToTab,
-    getActiveTab
+    getActiveTab,
+    loadingTabs
   };
 
   return (

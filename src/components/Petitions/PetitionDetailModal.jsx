@@ -1,8 +1,36 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { getSignatureById } from '../../services/authService';
+import { useAuth } from '../../context/AuthContext';
 
 const PetitionDetailModal = ({ petition, isOpen, onClose }) => {
+  const { user } = useAuth();
+  const [userSignature, setUserSignature] = useState(null);
+  const [signatureLoading, setSignatureLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchUserSignature = async () => {
+      if (!user?.id) return;
+      
+      setSignatureLoading(true);
+      try {
+        const response = await getSignatureById(user.id);
+        if (response.isSuccess && response.data) {
+          setUserSignature(response.data);
+        }
+      } catch (error) {
+        console.error('Error fetching user signature:', error);
+      } finally {
+        setSignatureLoading(false);
+      }
+    };
+
+    if (isOpen && user?.id) {
+      fetchUserSignature();
+    }
+  }, [isOpen, user?.id]);
+
   if (!isOpen || !petition) return null;
 
   const formatCurrency = (amount) => {
@@ -231,12 +259,7 @@ const PetitionDetailModal = ({ petition, isOpen, onClose }) => {
     yPosition += 10;
 
     const form35BData = [
-      ['Certain Mortgage Loan', petition.details?.affidavit?.certainMortgageLoan ? 'Yes' : 'No'],
-      ['Form 35B Compliance Affidavit', petition.details?.affidavit?.form35bComplianceAffidavitPdf ? 'Document uploaded' : 'No document uploaded'],
-      ['Form 35B Non-Applicability Affidavit', petition.details?.affidavit?.form35bNonApplicabilityAffidavitPdf ? 'Document uploaded' : 'No document uploaded'],
-      ['Affiant Name', petition.details?.affidavit?.affiantName || 'N/A'],
-      ['Affiant Title', petition.details?.affidavit?.affiantTitle || 'N/A'],
-      ['Affidavit Execution Date', formatDate(petition.details?.affidavit?.affidavitExecutionDate)]
+      ['Certain Mortgage Loan', petition.details?.affidavit?.certainMortgageLoan ? 'Yes' : 'No']
     ];
 
     autoTable(doc, {
@@ -671,43 +694,42 @@ const PetitionDetailModal = ({ petition, isOpen, onClose }) => {
                           <label className="form-label fw-semibold">Certain Mortgage Loan</label>
                           <div className="form-control-plaintext">{petition.details?.affidavit?.certainMortgageLoan ? 'Yes' : 'No'}</div>
                         </div>
-                        <div className="col-12">
-                          <label className="form-label fw-semibold">Form 35B Compliance Affidavit PDF</label>
-                          <div className="form-control-plaintext">
-                            {petition.details?.affidavit?.form35bComplianceAffidavitPdf ? (
-                              <span className="text-success">Document uploaded</span>
-                            ) : (
-                              <span className="text-muted">No document uploaded</span>
-                            )}
-                          </div>
-                        </div>
-                        <div className="col-12">
-                          <label className="form-label fw-semibold">Form 35B Non-Applicability Affidavit PDF</label>
-                          <div className="form-control-plaintext">
-                            {petition.details?.affidavit?.form35bNonApplicabilityAffidavitPdf ? (
-                              <span className="text-success">Document uploaded</span>
-                            ) : (
-                              <span className="text-muted">No document uploaded</span>
-                            )}
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label fw-semibold">Affiant Name</label>
-                          <div className="form-control-plaintext">{petition.details?.affidavit?.affiantName || 'N/A'}</div>
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label fw-semibold">Affiant Title</label>
-                          <div className="form-control-plaintext">{petition.details?.affidavit?.affiantTitle || 'N/A'}</div>
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label fw-semibold">Affidavit Execution Date</label>
-                          <div className="form-control-plaintext">{formatDate(petition.details?.affidavit?.affidavitExecutionDate)}</div>
-                        </div>
+                      </div>
+                    </div>
+            </div>
+
+            {/* User Profile Signature */}
+            {userSignature && (
+              <div className="card mb-4 border-0 shadow-sm">
+                <div className="card-header bg-transparent border-0 pb-0">
+                  <h5 className="mb-3 fw-bold text-dark border-bottom pb-2">User Profile Signature</h5>
+                </div>
+                <div className="card-body">
+                  <div className="row g-3">
+                    <div className="col-12">
+                      <label className="form-label fw-semibold">Digital Signature</label>
+                      <div className="signature-preview-container p-3 border rounded bg-light">
+                        <img 
+                          src={userSignature.signatureUrl} 
+                          alt="User Profile Signature" 
+                          className="signature-preview-img"
+                          style={{
+                            maxWidth: '100%',
+                            maxHeight: '120px',
+                            objectFit: 'contain',
+                            border: '1px solid #dee2e6',
+                            borderRadius: '4px',
+                            backgroundColor: 'white'
+                          }}
+                        />
                       </div>
                     </div>
                   </div>
+                </div>
+              </div>
+            )}
 
-                  {/* Loan Assignees */}
+            {/* Loan Assignees */}
                   <div className="card mb-4 border-0 shadow-sm">
                     <div className="card-header bg-transparent border-0 pb-0">
                       <h5 className="mb-3 fw-bold text-dark border-bottom pb-2">Loan Assignees</h5>

@@ -6,7 +6,7 @@ import { usePetitionCommonData } from '../../hooks/usePetitionCommonData';
 import { usePetitions } from '../../hooks/usePetitions';
 import { useAuth } from '../../context/AuthContext';
 import { usePetitionWizard } from '../../context/PetitionWizardContext';
-import { getUserById } from '../../services/authService';
+import { getUserById, getSignatureById } from '../../services/authService';
 import { getFilingEntityTypes } from '../../services/commonService';
 import { getOrganizationById } from '../../services/organizationService';
 import PetitionStepper from './PetitionStepper';
@@ -116,6 +116,24 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
           }));
         }
         
+        // Load user signature
+        try {
+          const signatureResponse = await getSignatureById(user.id);
+          if (signatureResponse.isSuccess && signatureResponse.data) {
+            // Update user profile with signature data
+            setUserProfile(prev => ({
+              ...prev,
+              signatureImageName: signatureResponse.data.signatureImageName,
+              signatureUrl: signatureResponse.data.signatureUrl
+            }));
+            console.log('User signature loaded in petition steps:', signatureResponse.data);
+          } else {
+            console.log('No signature found for user in petition steps:', signatureResponse.msg);
+          }
+        } catch (error) {
+          console.error('Error fetching user signature in petition steps:', error);
+        }
+        
         // Load filing entity types
         const typesResponse = await getFilingEntityTypes();
         if (typesResponse.isSuccess) {
@@ -207,7 +225,8 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
         signerFirstName: user.firstName || '',
         signerMiddleInitial: user.middleName ? user.middleName.charAt(0).toUpperCase() : '',
         signerLastName: user.lastName || '',
-        signerEmail: user.email || ''
+        signerEmail: user.email || '',
+        signerTitle: user.role || 'FILIR User'
       }));
     }
   }, [user]);
@@ -371,8 +390,8 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
     
     // Step 6: Form 35B Compliance
     certainMortgageLoan: false,
-    form35bComplianceAffidavitPdf: null,
-    form35bNonApplicabilityAffidavitPdf: null,
+    form35bComplianceAffidavitPdf: '',
+    form35bNonApplicabilityAffidavitPdf: '',
     affiantName: '',
     affiantTitle: '',
     affidavitExecutionDate: '',
@@ -416,6 +435,7 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
     signerMiddleInitial: '',
     signerLastName: '',
     signerEmail: '',
+    signerTitle: '',
   });
 
   // Handle address input and get predictions
@@ -1408,57 +1428,8 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
       hasErrors = true;
     }
     
-    // If loan qualifies as certain mortgage loan, compliance affidavit is required
-    if (formData.certainMortgageLoan === true) {
-      if (!formData.form35bComplianceAffidavitPdf || formData.form35bComplianceAffidavitPdf === null || formData.form35bComplianceAffidavitPdf === undefined) {
-        errors.form35bComplianceAffidavitPdf = 'Form 35B Compliance Affidavit is required for certain mortgage loans';
-        hasErrors = true;
-      } else {
-        // Validate file type
-        const fileName = formData.form35bComplianceAffidavitPdf.name;
-        if (!fileName || !fileName.toLowerCase().endsWith('.pdf')) {
-          errors.form35bComplianceAffidavitPdf = 'File must be in PDF format';
-          hasErrors = true;
-        }
-      }
-      
-      // Validate affiant details for certain mortgage loans
-      if (!formData.affiantName || formData.affiantName.trim() === '') {
-        errors.affiantName = 'Affiant Name is required for certain mortgage loans';
-        hasErrors = true;
-      }
-      
-      if (!formData.affiantTitle || formData.affiantTitle.trim() === '') {
-        errors.affiantTitle = 'Affiant Title is required for certain mortgage loans';
-        hasErrors = true;
-      }
-      
-      if (!formData.affidavitExecutionDate || formData.affidavitExecutionDate.trim() === '') {
-        errors.affidavitExecutionDate = 'Date of Affidavit Execution is required for certain mortgage loans';
-        hasErrors = true;
-      }
-    }
-    
-    // Validate affiant details if any affidavit is uploaded (regardless of certain mortgage loan status)
-    if (formData.form35bComplianceAffidavitPdf || formData.form35bNonApplicabilityAffidavitPdf) {
-      if (!formData.affiantName || formData.affiantName.trim() === '') {
-        errors.affiantName = 'Affiant Name is required when an affidavit is uploaded';
-        hasErrors = true;
-      }
-      
-      if (!formData.affiantTitle || formData.affiantTitle.trim() === '') {
-        errors.affiantTitle = 'Affiant Title is required when an affidavit is uploaded';
-        hasErrors = true;
-      }
-      
-      if (!formData.affidavitExecutionDate || formData.affidavitExecutionDate.trim() === '') {
-        errors.affidavitExecutionDate = 'Date of Affidavit Execution is required when an affidavit is uploaded';
-        hasErrors = true;
-      }
-    }
-    
-    // If loan does not qualify, non-applicability affidavit is optional
-    // No validation needed for optional field
+    // No file validation needed - just yes/no question
+    // API will receive empty strings for file fields
 
     setFieldErrors(errors);
     return { hasErrors, errors };
@@ -2020,7 +1991,7 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
     // Validate Attestation step before proceeding to Review & Submit
     if (currentStep === 8 && direction === 1) {
       // Check if user has signature
-      if (!user?.signatureUrl) {
+      if (!userProfile?.signatureUrl) {
         toast.error('You must upload a digital signature to your profile before proceeding to review.');
         return;
       }
@@ -2127,10 +2098,10 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
         signatures: [
           {
             signerFullName: `${formData.signerFirstName || ''} ${formData.signerMiddleInitial || ''} ${formData.signerLastName || ''}`.trim(),
-            signerTitle: user?.role || 'FILIR User',
+            signerTitle: formData.signerTitle || user?.role || 'FILIR User',
             signerEmail: formData.signerEmail || '',
             esignConsent: true,
-            signatureDrawnOrTyped: user?.signatureUrl || '',
+            signatureDrawnOrTyped: userProfile?.signatureUrl || '',
             signedAt: new Date().toISOString(),
             signerIp: '', // Will be filled by backend
             otpCode: '' // Will be filled by backend
@@ -3495,142 +3466,6 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
                 )}
               </div>
               
-              {formData.certainMortgageLoan === true && (
-                <>
-                  <div className="col-12">
-                    <label htmlFor="form35bComplianceAffidavitPdf" className="form-label">Upload Form 35B Compliance Affidavit (PDF only) *</label>
-                    
-                    {!formData.form35bComplianceAffidavitPdf ? (
-                      <input 
-                        type="file" 
-                        id="form35bComplianceAffidavitPdf" 
-                        name="form35bComplianceAffidavitPdf" 
-                        accept=".pdf" 
-                        className={`form-control ${fieldErrors.form35bComplianceAffidavitPdf ? 'is-invalid' : ''}`}
-                        onChange={handleInputChange}
-                      />
-                    ) : (
-                      <div className="p-3 bg-light rounded border d-flex align-items-center justify-content-between">
-                        <div className="d-flex align-items-center">
-                          <i className="fas fa-file-pdf text-danger me-2"></i>
-                          <span className="text-muted">
-                            {formData.form35bComplianceAffidavitPdf.name}
-                          </span>
-                        </div>
-                        <button
-                          type="button"
-                          className="btn btn-sm btn-outline-danger p-1"
-                          onClick={() => handleRemoveFile('form35bComplianceAffidavitPdf')}
-                          title="Remove file"
-                        >
-                          <i className="fas fa-times"></i>
-                        </button>
-                      </div>
-                    )}
-                    
-                    {fieldErrors.form35bComplianceAffidavitPdf && (
-                      <div className="text-danger small mt-1">
-                        {fieldErrors.form35bComplianceAffidavitPdf}
-                      </div>
-                    )}
-                    <div className="form-text">Required for certain mortgage loans. File must be in PDF format.</div>
-                  </div>
-                </>
-              )}
-              
-              {formData.certainMortgageLoan === false && (
-                <div className="col-12">
-                  <label htmlFor="form35bNonApplicabilityAffidavitPdf" className="form-label">Upload Form 35B Non-Applicability Affidavit (PDF only) - Optional</label>
-                  
-                  {!formData.form35bNonApplicabilityAffidavitPdf ? (
-                    <input 
-                      type="file" 
-                      id="form35bNonApplicabilityAffidavitPdf" 
-                      name="form35bNonApplicabilityAffidavitPdf" 
-                      accept=".pdf" 
-                      className="form-control"
-                      onChange={handleInputChange}
-                    />
-                  ) : (
-                    <div className="p-3 bg-light rounded border d-flex align-items-center justify-content-between">
-                      <div className="d-flex align-items-center">
-                        <i className="fas fa-file-pdf text-danger me-2"></i>
-                        <span className="text-muted">
-                          {formData.form35bNonApplicabilityAffidavitPdf.name}
-                        </span>
-                      </div>
-                      <button
-                        type="button"
-                        className="btn btn-sm btn-outline-danger p-1"
-                        onClick={() => handleRemoveFile('form35bNonApplicabilityAffidavitPdf')}
-                        title="Remove file"
-                      >
-                        <i className="fas fa-times"></i>
-                      </button>
-                    </div>
-                  )}
-                  
-                  <div className="form-text">Optional for loans that do not qualify as certain mortgage loans.</div>
-                </div>
-              )}
-              
-              {/* Show affiant fields if any affidavit is uploaded */}
-              {(formData.form35bComplianceAffidavitPdf || formData.form35bNonApplicabilityAffidavitPdf) && (
-                <>
-                  <div className="col-12">
-                    <hr className="my-3" />
-                    <h6 className="text-muted mb-3">Affidavit Details</h6>
-                  </div>
-                  <div className="col-md-6">
-                    <label htmlFor="affiantName" className="form-label">Affiant Name *</label>
-                    <input 
-                      type="text" 
-                      id="affiantName" 
-                      name="affiantName" 
-                      className={`form-control ${fieldErrors.affiantName ? 'is-invalid' : ''}`}
-                      value={formData.affiantName}
-                      onChange={handleInputChange}
-                    />
-                    {fieldErrors.affiantName && (
-                      <div className="text-danger small mt-1">
-                        {fieldErrors.affiantName}
-                      </div>
-                    )}
-                  </div>
-                  <div className="col-md-6">
-                    <label htmlFor="affiantTitle" className="form-label">Affiant Title *</label>
-                    <input 
-                      type="text" 
-                      id="affiantTitle" 
-                      name="affiantTitle" 
-                      className={`form-control ${fieldErrors.affiantTitle ? 'is-invalid' : ''}`}
-                      value={formData.affiantTitle}
-                      onChange={handleInputChange}
-                    />
-                    {fieldErrors.affiantTitle && (
-                      <div className="text-danger small mt-1">
-                        {fieldErrors.affiantTitle}
-                      </div>
-                    )}
-                  </div>
-                  <div className="col-12">
-                    <label htmlFor="affidavitExecutionDate" className="form-label">Date of Affidavit Execution *</label>
-                    <input 
-                      type="date" 
-                      id="affidavitExecutionDate" 
-                      name="affidavitExecutionDate" 
-                      className={`form-control ${fieldErrors.affidavitExecutionDate ? 'is-invalid' : ''}`}
-                      value={formData.affidavitExecutionDate}
-                      onChange={handleInputChange}
-                    />
-                    {fieldErrors.affidavitExecutionDate && (
-                      <div className="text-danger small mt-1">
-                        {fieldErrors.affidavitExecutionDate}
-                      </div>
-                    )}
-                  </div>
-                </>
-              )}
             </div>
           </div>
         );
@@ -3899,8 +3734,12 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
           <div>
             <h2 className="theme-color font-med mb-1">8. Petition Attestation & Certification</h2>
             <p className="text-muted small mb-3">By completing this section, you formally certify the accuracy and completeness of the entire petition.</p>
-            <div className="p-4 border border-warning bg-warning-subtle rounded mb-4">
-              <h5 className="fw-bold font-base mb-3">Signer Details</h5>
+            {/* Attester Details & Digital Signature - Combined */}
+            <div className="p-4 border border-info bg-info-subtle rounded mb-4">
+              <h5 className="fw-bold font-base mb-3">
+                <i className="fas fa-signature me-2"></i>
+                Attester Details & Digital Signature
+              </h5>
               <div className="row g-3">
                 <div className="col-md-4">
                   <label htmlFor="signerFirstName" className="form-label">First Name *</label>
@@ -3942,7 +3781,7 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
                   />
                   <small className="text-muted">Prefilled from your profile</small>
                 </div>
-                <div className="col-12">
+                <div className="col-md-6">
                   <label htmlFor="signerEmail" className="form-label">Email Address *</label>
                   <input 
                     type="email" 
@@ -3955,27 +3794,46 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
                   />
                   <small className="text-muted">Prefilled from your profile</small>
                 </div>
-              </div>
-            </div>
-
-            {/* Digital Signature Section */}
-            {user?.signatureUrl && (
-              <div className="p-4 border border-info bg-info-subtle rounded mb-4">
-                <h5 className="fw-bold font-base mb-3">
-                  <i className="fas fa-signature me-2"></i>
-                  Digital Signature
-                </h5>
-                <div className="row g-3">
-                  <div className="col-md-6">
-                    <label className="form-label text-muted small">Signature Preview</label>
-                    <div className="signature-preview-container p-3 border rounded bg-light">
+                <div className="col-md-6">
+                  <label htmlFor="signerTitle" className="form-label">Title *</label>
+                  <input 
+                    type="text" 
+                    id="signerTitle" 
+                    name="signerTitle" 
+                    className="form-control"
+                    value={formData.signerTitle}
+                    onChange={handleInputChange}
+                    readOnly
+                  />
+                  <small className="text-muted">Prefilled from your profile</small>
+                </div>
+                <div className="col-md-6">
+                  <label className="form-label">Digital Signature Status</label>
+                  <div className="d-flex align-items-center">
+                    {userProfile?.signatureUrl ? (
+                      <span className="badge bg-success fs-6 me-2">
+                        <i className="fa-solid fa-check-circle me-1"></i>
+                        Available
+                      </span>
+                    ) : (
+                      <span className="badge bg-danger fs-6 me-2">
+                        <i className="fa-solid fa-exclamation-circle me-1"></i>
+                        Required
+                      </span>
+                    )}
+                  </div>
+                </div>
+                {userProfile?.signatureUrl && (
+                  <div className="col-12">
+                    <label className="form-label">Signature Preview</label>
+                    <div className="signature-preview-container p-3 border rounded bg-light" style={{ maxWidth: '400px' }}>
                       <img 
-                        src={user.signatureUrl} 
+                        src={userProfile.signatureUrl} 
                         alt="Digital Signature" 
                         className="signature-preview-img"
                         style={{
                           maxWidth: '100%',
-                          maxHeight: '100px',
+                          maxHeight: '120px',
                           objectFit: 'contain',
                           border: '1px solid #dee2e6',
                           borderRadius: '4px',
@@ -3984,27 +3842,12 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
                       />
                     </div>
                   </div>
-                  <div className="col-md-6">
-                    <label className="form-label text-muted small">Signature Status</label>
-                    <p className="fw-medium mb-0">
-                      <span className="badge bg-success fs-6">
-                        <i className="fa-solid fa-check-circle me-1"></i>
-                        Available
-                      </span>
-                    </p>
-                    <div className="mt-2">
-                      <small className="text-muted">
-                        <i className="fa-solid fa-user me-1"></i>
-                        Signer: {user.fullName || `${user.firstName} ${user.lastName}`}
-                      </small>
-                    </div>
-                  </div>
-                </div>
+                )}
               </div>
-            )}
+            </div>
 
             {/* Digital Signature Requirement */}
-            {!user?.signatureUrl ? (
+            {!userProfile?.signatureUrl ? (
               <div className="p-4 border border-danger bg-danger-subtle rounded mb-4">
                 <div className="d-flex align-items-center">
                   <i className="fas fa-exclamation-triangle text-danger me-3" style={{ fontSize: '24px' }}></i>
@@ -4046,11 +3889,11 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
                 name="certification_check"
                 checked={formData.certification_check}
                 onChange={handleInputChange}
-                disabled={!user?.signatureUrl}
+                disabled={!userProfile?.signatureUrl}
               />
               <label className="form-check-label font-sm fw-medium" htmlFor="certification_check">
                 Electronic Certification: I solemnly certify under the pains and penalties of perjury that the information contained in this petition is true and correct to the best of my knowledge and belief.
-                {!user?.signatureUrl && (
+                {!userProfile?.signatureUrl && (
                   <span className="text-danger ms-2">(Signature required)</span>
                 )}
               </label>
@@ -4295,25 +4138,6 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
                     <div className="col-12">
                       <strong>35B Filed:</strong> {formData.certainMortgageLoan ? 'Yes' : 'No'}
                     </div>
-                    {formData.certainMortgageLoan && (
-                      <>
-                        <div className="col-md-6">
-                          <strong>Affiant Name:</strong> {formData.affiantName}
-                        </div>
-                        <div className="col-md-6">
-                          <strong>Affiant Title:</strong> {formData.affiantTitle}
-                        </div>
-                        <div className="col-md-6">
-                          <strong>Execution Date:</strong> {formData.affidavitExecutionDate}
-                        </div>
-                        <div className="col-md-6">
-                          <strong>Compliance Affidavit:</strong> {formData.form35bComplianceAffidavitPdf ? 'Uploaded' : 'Not uploaded'}
-                        </div>
-                        <div className="col-md-6">
-                          <strong>Non-Applicability Affidavit:</strong> {formData.form35bNonApplicabilityAffidavitPdf ? 'Uploaded' : 'Not uploaded'}
-                        </div>
-                      </>
-                    )}
                   </div>
                 </div>
               </div>
@@ -4384,54 +4208,29 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
                   </button>
                 </div>
                 <div className="review-content">
-                  {formData.signatures && formData.signatures.length > 0 ? (
-                    formData.signatures.map((signature, index) => (
-                      <div key={index} className="row g-3 mb-3">
-                        <div className="col-12">
-                          <strong>Signer {index + 1}:</strong>
+                  
+                  {/* Signature Preview - Moved to bottom */}
+                  {userProfile?.signatureUrl && (
+                    <div className="row g-3 mt-3">
+                      <div className="col-12">
+                        <strong>Signature Preview:</strong>
+                        <div className="signature-preview-container p-3 border rounded bg-light mt-2" style={{ maxWidth: '400px' }}>
+                          <img 
+                            src={userProfile.signatureUrl} 
+                            alt="Digital Signature" 
+                            className="signature-preview-img"
+                            style={{
+                              maxWidth: '100%',
+                              maxHeight: '120px',
+                              objectFit: 'contain',
+                              border: '1px solid #dee2e6',
+                              borderRadius: '4px',
+                              backgroundColor: 'white'
+                            }}
+                          />
                         </div>
-                        <div className="col-md-6">
-                          <strong>Name:</strong> {signature.signerFullName}
-                        </div>
-                        <div className="col-md-6">
-                          <strong>Title:</strong> {signature.signerTitle}
-                        </div>
-                        <div className="col-md-6">
-                          <strong>Email:</strong> {signature.signerEmail}
-                        </div>
-                        <div className="col-md-6">
-                          <strong>E-sign Consent:</strong> {signature.esignConsent ? 'Yes' : 'No'}
-                        </div>
-                        <div className="col-md-6">
-                          <strong>Signature:</strong> {signature.signatureDrawnOrTyped ? 'Provided' : 'Not provided'}
-                        </div>
-                        <div className="col-md-6">
-                          <strong>Signed At:</strong> {signature.signedAt || 'Not signed'}
-                        </div>
-                        {user?.signatureUrl && (
-                          <div className="col-12">
-                            <strong>Signature Preview:</strong>
-                            <div className="signature-preview-container p-2 border rounded bg-light mt-2" style={{ maxWidth: '300px' }}>
-                              <img 
-                                src={user.signatureUrl} 
-                                alt="Digital Signature" 
-                                className="signature-preview-img"
-                                style={{
-                                  maxWidth: '100%',
-                                  maxHeight: '80px',
-                                  objectFit: 'contain',
-                                  border: '1px solid #dee2e6',
-                                  borderRadius: '4px',
-                                  backgroundColor: 'white'
-                                }}
-                              />
-                            </div>
-                          </div>
-                        )}
                       </div>
-                    ))
-                  ) : (
-                    <div className="text-muted">No signature information available</div>
+                    </div>
                   )}
                   
                   {/* Signer Information */}
@@ -4440,9 +4239,12 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
                       <strong>Signer Name:</strong> {formData.signerFirstName} {formData.signerMiddleInitial} {formData.signerLastName}
                     </div>
                     <div className="col-md-6">
+                      <strong>Signer Title:</strong> {formData.signerTitle}
+                    </div>
+                    <div className="col-md-6">
                       <strong>Signer Email:</strong> {formData.signerEmail}
                     </div>
-                    <div className="col-12">
+                    <div className="col-md-6">
                       <strong>Certification:</strong> {formData.certification_check ? 'Certified' : 'Not Certified'}
                     </div>
                   </div>
