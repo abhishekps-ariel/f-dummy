@@ -226,7 +226,7 @@ const ViewAllPetitions = ({ onBack }) => {
   // Helper function to get status value for API
   const getStatusValue = (status) => {
     const statusMap = {
-      'all': 0,
+      'all': null,
       'draft': 0,
       'submitted': 1,
       'resubmitted': 3,
@@ -234,7 +234,7 @@ const ViewAllPetitions = ({ onBack }) => {
       'returned': 2,
       'closed': 5
     };
-    return statusMap[status] || 0;
+    return statusMap[status] !== undefined ? statusMap[status] : null;
   };
 
   // Helper function to map frontend sort fields to API sort columns

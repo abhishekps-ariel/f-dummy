@@ -31,7 +31,7 @@ class PetitionApiService {
    * @param {number} [paginationParams.pageNumber=1] - Page number (1-based)
    * @param {number} [paginationParams.pageSize=10] - Number of items per page
    * @param {string} [paginationParams.searchText=""] - Search text for filtering
-   * @param {number} [paginationParams.status=0] - Status filter (0=all, 1=draft, 2=submitted, etc.)
+   * @param {number} [paginationParams.status=null] - Status filter (null=all, 0=draft, 1=submitted, etc.)
    * @param {string|Date} [paginationParams.fromDate] - Start date for date range filter
    * @param {string|Date} [paginationParams.toDate] - End date for date range filter
    * @param {string} [paginationParams.sortColumn="CreatedDate"] - Sort column (PetitionNumber, CreatedDate, ModifiedDate)
@@ -75,7 +75,7 @@ class PetitionApiService {
    * @param {number} [options.pageNumber=1] - Page number (1-based)
    * @param {number} [options.pageSize=10] - Number of items per page
    * @param {string} [options.searchText=""] - Search text for filtering
-   * @param {number} [options.status=0] - Status filter
+   * @param {number} [options.status=null] - Status filter
    * @param {string|Date} [options.fromDate] - Start date for date range filter
    * @param {string|Date} [options.toDate] - End date for date range filter
    * @param {string} [options.sortColumn="CreatedDate"] - Sort column
@@ -89,7 +89,7 @@ class PetitionApiService {
       pageNumber = 1,
       pageSize = 10,
       searchText = "",
-      status = 0,
+      status = null,
       fromDate = null,
       toDate = null,
       sortColumn = "CreatedDate",
@@ -114,7 +114,7 @@ class PetitionApiService {
       organizationId,
       pageNumber: Math.max(1, parseInt(pageNumber) || 1), // Ensure minimum page 1
       pageSize: Math.max(1, parseInt(pageSize) || 10),
-      status: parseInt(status) || 0,
+      status: status !== null ? parseInt(status) : null,
       sortColumn: validSortColumn,
       sortDirection: validSortDirection
     };

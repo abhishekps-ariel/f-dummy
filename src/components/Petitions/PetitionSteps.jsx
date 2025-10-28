@@ -199,6 +199,19 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
     loadOrganizationData();
   }, [organization?.id]);
 
+  // Prefill signer fields from user data
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        signerFirstName: user.firstName || '',
+        signerMiddleInitial: user.middleName ? user.middleName.charAt(0).toUpperCase() : '',
+        signerLastName: user.lastName || '',
+        signerEmail: user.email || ''
+      }));
+    }
+  }, [user]);
+
   // Initialize Google Maps API with React library
   const { isLoaded, loadError } = useJsApiLoader({
     id: 'google-map-script',
@@ -397,6 +410,12 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
     // Additional fields
     documents: [],
     certification_check: false,
+    
+    // Signer fields (prefilled from user data)
+    signerFirstName: '',
+    signerMiddleInitial: '',
+    signerLastName: '',
+    signerEmail: '',
   });
 
   // Handle address input and get predictions
@@ -2107,9 +2126,9 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
         ...formData,
         signatures: [
           {
-            signerFullName: user?.fullName || `${user?.firstName || ''} ${user?.lastName || ''}`.trim(),
+            signerFullName: `${formData.signerFirstName || ''} ${formData.signerMiddleInitial || ''} ${formData.signerLastName || ''}`.trim(),
             signerTitle: user?.role || 'FILIR User',
-            signerEmail: user?.email || '',
+            signerEmail: formData.signerEmail || '',
             esignConsent: true,
             signatureDrawnOrTyped: user?.signatureUrl || '',
             signedAt: new Date().toISOString(),
@@ -3881,41 +3900,60 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
             <h2 className="theme-color font-med mb-1">8. Petition Attestation & Certification</h2>
             <p className="text-muted small mb-3">By completing this section, you formally certify the accuracy and completeness of the entire petition.</p>
             <div className="p-4 border border-warning bg-warning-subtle rounded mb-4">
-              <h5 className="fw-bold font-base mb-3">Attester Details</h5>
+              <h5 className="fw-bold font-base mb-3">Signer Details</h5>
               <div className="row g-3">
                 <div className="col-md-4">
-                  <label htmlFor="attester_first_name" className="form-label">First Name</label>
+                  <label htmlFor="signerFirstName" className="form-label">First Name *</label>
                   <input 
                     type="text" 
-                    id="attester_first_name" 
-                    name="attester_first_name" 
+                    id="signerFirstName" 
+                    name="signerFirstName" 
                     className="form-control"
-                    value={formData.attester_first_name}
+                    value={formData.signerFirstName}
                     onChange={handleInputChange}
+                    readOnly
                   />
+                  <small className="text-muted">Prefilled from your profile</small>
                 </div>
                 <div className="col-md-4">
-                  <label htmlFor="attester_middle_initial" className="form-label">Middle Initial (Optional)</label>
+                  <label htmlFor="signerMiddleInitial" className="form-label">Middle Initial</label>
                   <input 
                     type="text" 
-                    id="attester_middle_initial" 
-                    name="attester_middle_initial" 
+                    id="signerMiddleInitial" 
+                    name="signerMiddleInitial" 
                     maxLength="1" 
                     className="form-control"
-                    value={formData.attester_middle_initial}
+                    value={formData.signerMiddleInitial}
                     onChange={handleInputChange}
+                    readOnly
                   />
+                  <small className="text-muted">Prefilled from your profile</small>
                 </div>
                 <div className="col-md-4">
-                  <label htmlFor="attester_last_name" className="form-label">Last Name</label>
+                  <label htmlFor="signerLastName" className="form-label">Last Name *</label>
                   <input 
                     type="text" 
-                    id="attester_last_name" 
-                    name="attester_last_name" 
+                    id="signerLastName" 
+                    name="signerLastName" 
                     className="form-control"
-                    value={formData.attester_last_name}
+                    value={formData.signerLastName}
                     onChange={handleInputChange}
+                    readOnly
                   />
+                  <small className="text-muted">Prefilled from your profile</small>
+                </div>
+                <div className="col-12">
+                  <label htmlFor="signerEmail" className="form-label">Email Address *</label>
+                  <input 
+                    type="email" 
+                    id="signerEmail" 
+                    name="signerEmail" 
+                    className="form-control"
+                    value={formData.signerEmail}
+                    onChange={handleInputChange}
+                    readOnly
+                  />
+                  <small className="text-muted">Prefilled from your profile</small>
                 </div>
               </div>
             </div>
@@ -4396,10 +4434,13 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
                     <div className="text-muted">No signature information available</div>
                   )}
                   
-                  {/* Legacy attestation fields */}
+                  {/* Signer Information */}
                   <div className="row g-3 mt-3">
-                    <div className="col-12">
-                      <strong>Attester:</strong> {formData.attester_first_name} {formData.attester_middle_initial} {formData.attester_last_name}
+                    <div className="col-md-6">
+                      <strong>Signer Name:</strong> {formData.signerFirstName} {formData.signerMiddleInitial} {formData.signerLastName}
+                    </div>
+                    <div className="col-md-6">
+                      <strong>Signer Email:</strong> {formData.signerEmail}
                     </div>
                     <div className="col-12">
                       <strong>Certification:</strong> {formData.certification_check ? 'Certified' : 'Not Certified'}
