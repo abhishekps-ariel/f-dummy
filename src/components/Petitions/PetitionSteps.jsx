@@ -16,7 +16,6 @@ const LIBRARIES = ['places'];
 const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) => {
   const { currentStep: wizardCurrentStep, goToStep: wizardGoToStep, markStepCompleted, completedSteps } = usePetitionWizard();
   const [currentStep, setCurrentStep] = useState(1);
-  const [isIntentionalSubmit, setIsIntentionalSubmit] = useState(false);
   const totalSteps = 9;
 
   // Sync wizard state with component state
@@ -2038,37 +2037,34 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
   };
 
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e, isIntentional = false) => {
     e.preventDefault();
     
     console.log('=== HANDLE SUBMIT CALLED ===');
     console.log('Current step:', currentStep);
     console.log('Total steps:', totalSteps);
-    console.log('Is intentional submit:', isIntentionalSubmit);
+    console.log('Is intentional submit:', isIntentional);
     
     // Only validate certification if we're actually on the last step and trying to submit
-    if (currentStep !== totalSteps || !isIntentionalSubmit) {
+    if (currentStep !== totalSteps || !isIntentional) {
       console.log('Early return - not on last step or not intentional submit');
       return;
     }
     
     if (!formData.certification_check) {
       toast.error("Please certify the petition by checking the certification checkbox.");
-      setIsIntentionalSubmit(false); // Reset the flag
       return;
     }
 
     // Validate address fields
     const addressValidation = validateAddressFields();
     if (addressValidation.hasErrors) {
-      setIsIntentionalSubmit(false); // Reset the flag
       return;
     }
 
     // Check organization access
     if (!hasOrganizationAccess) {
       toast.error("You must be part of an organization to submit petitions.");
-      setIsIntentionalSubmit(false);
       return;
     }
 
@@ -2092,7 +2088,9 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
       
       // Submit petition using API
       await submitPetition(petitionData);
-      setIsIntentionalSubmit(false); // Reset the flag
+      
+      // Clear petition wizard state and drafts from localStorage after successful submission
+      localStorage.removeItem('petitionDrafts');
       
       // Notify parent component that petition was submitted successfully
       if (onPetitionSubmitted) {
@@ -2100,9 +2098,11 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
       }
       
       onClose();
+      
+      // Reload the entire petitions section page
+      window.location.reload();
     } catch (error) {
       console.error('Error submitting petition:', error);
-      setIsIntentionalSubmit(false); // Reset the flag
       // Error is already handled in the submitPetition function with toast
     }
   };
@@ -4490,8 +4490,7 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
                             className="dashboard-btn-create"
                             onClick={async () => {
                               console.log('Submit button clicked!');
-                              setIsIntentionalSubmit(true);
-                              await handleSubmit({ preventDefault: () => {} });
+                              await handleSubmit({ preventDefault: () => {} }, true);
                             }}
                             disabled={petitionLoading}
                           >
