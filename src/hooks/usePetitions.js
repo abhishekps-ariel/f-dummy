@@ -9,13 +9,19 @@ export const usePetitions = () => {
   const [petitions, setPetitions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [petitionCounts, setPetitionCounts] = useState({
+    totalRecords: 0,
+    totalSubmittedCount: 0,
+    totalDraftedCount: 0,
+    totalClosedCount: 0
+  });
 
   // Get organization ID from the organization context
   const userOrganizationId = organization?.id || null;
 
 
-  // Fetch petitions for the user's organization
-  const fetchPetitions = async () => {
+  // Fetch recent petitions for the user's organization (last 5 updated)
+  const fetchRecentPetitions = async () => {
     if (!hasOrganizationAccess) {
       setError('User must be part of an organization to view petitions');
       return;
@@ -25,7 +31,19 @@ export const usePetitions = () => {
     setError(null);
 
     try {
-      const response = await petitionApiService.getPetitionsByOrganization(userOrganizationId);
+      const paginationParams = {
+        organizationId: userOrganizationId,
+        pageNumber: 1,
+        pageSize: 5, // Get only last 5 petitions
+        searchText: "",
+        status: null, // Get all statuses
+        fromDate: null,
+        toDate: null,
+        sortColumn: "ModifiedDate", // Sort by modification date
+        sortDirection: "desc" // Most recent first
+      };
+
+      const response = await petitionApiService.getPetitionsPaged(paginationParams);
       
       if (response.success) {
         const formattedPetitions = petitionApiService.transformApiResponseToDisplayFormat(response);
@@ -35,13 +53,42 @@ export const usePetitions = () => {
         toast.error(response.message || 'Failed to fetch petitions');
       }
     } catch (err) {
-      console.error('Error fetching petitions:', err);
+      console.error('Error fetching recent petitions:', err);
       const errorMessage = err.response?.data?.message || err.message || 'Failed to fetch petitions';
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
+  };
+
+  // Fetch petition counts for the user's organization
+  const fetchPetitionCounts = async () => {
+    if (!hasOrganizationAccess) {
+      console.log('No organization access, skipping petition counts fetch');
+      return;
+    }
+
+    console.log('Fetching petition counts for organization:', userOrganizationId);
+
+    try {
+      const response = await petitionApiService.getPetitionCountByOrganization(userOrganizationId);
+      console.log('Petition counts API response:', response);
+      
+      if (response.success && response.data) {
+        console.log('Setting petition counts:', response.data);
+        setPetitionCounts(response.data);
+      } else {
+        console.log('No valid data in response:', response);
+      }
+    } catch (err) {
+      console.error('Error fetching petition counts:', err);
+    }
+  };
+
+  // Legacy function for backward compatibility
+  const fetchPetitions = async () => {
+    await fetchRecentPetitions();
   };
 
   // Submit a new petition
@@ -87,12 +134,27 @@ export const usePetitions = () => {
     }
   };
 
-  // Auto-fetch petitions when organization access is confirmed
+  // Auto-fetch petitions and counts when organization access is confirmed
   useEffect(() => {
+    console.log('usePetitions useEffect triggered:', {
+      organizationCheckComplete,
+      hasOrganizationAccess,
+      userOrganizationId
+    });
+    
     if (organizationCheckComplete && hasOrganizationAccess && userOrganizationId) {
-      fetchPetitions();
+      console.log('Fetching petitions and counts...');
+      fetchRecentPetitions();
+      fetchPetitionCounts();
     } else if (organizationCheckComplete && !hasOrganizationAccess) {
+      console.log('No organization access, clearing data');
       setPetitions([]);
+      setPetitionCounts({
+        totalRecords: 0,
+        totalSubmittedCount: 0,
+        totalDraftedCount: 0,
+        totalClosedCount: 0
+      });
       setError(null);
     }
   }, [organizationCheckComplete, hasOrganizationAccess, userOrganizationId]);
@@ -101,8 +163,11 @@ export const usePetitions = () => {
     petitions,
     loading,
     error,
+    petitionCounts,
     hasOrganizationAccess,
     fetchPetitions,
+    fetchRecentPetitions,
+    fetchPetitionCounts,
     submitPetition,
     organization: organization,
     userOrganizationId,

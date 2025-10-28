@@ -6,6 +6,7 @@ import { ROUTES } from "../../constants/routerConstants";
 import { logout as logoutApi } from "../../services/authService";
 import { getUserJoinRequests, getOrganizationById } from "../../services/organizationService";
 import { getFilingEntityTypes } from "../../services/commonService";
+import petitionApiService from "../../services/petitionApiService";
 import PetitionDetailModal from "../../components/Petitions/PetitionDetailModal";
 import OrganizationActions from "../../components/Petitions/OrganizationActions";
 import Sidebar from "../../components/shared/Sidebar";
@@ -22,10 +23,12 @@ function Dashboard() {
   const { 
     petitions, 
     loading: petitionsLoading, 
+    petitionCounts,
     hasOrganizationAccess,
     organization,
     organizationCheckComplete,
-    fetchPetitions
+    fetchPetitions,
+    fetchPetitionCounts
   } = usePetitions();
   const [userOrganization, setUserOrganization] = useState(null);
   const [isLoadingOrgData, setIsLoadingOrgData] = useState(false);
@@ -241,23 +244,24 @@ function Dashboard() {
               <div className="row mb-5">
                 <div className="col-md-4 mb-3">
                   <div className="stat-card">
-                    <h4 className="stat-count">{petitions.length}</h4>
-                    <p className="stat-title">Total Active Petitions</p>
+                    <h4 className="stat-count">{petitionCounts.totalRecords}</h4>
+                    <p className="stat-title">Total Petitions</p>
                   </div>
                 </div>
                 <div className="col-md-4 mb-3">
                   <div className="stat-card">
-                    <h4 className="stat-count">{petitions.filter(p => p.status.toLowerCase() === 'returned').length}</h4>
-                    <p className="stat-title">Returned Petitions</p>
+                    <h4 className="stat-count">{petitionCounts.totalSubmittedCount}</h4>
+                    <p className="stat-title">Total Submitted Petitions</p>
                   </div>
                 </div>
                 <div className="col-md-4 mb-3">
                   <div className="stat-card">
-                    <h4 className="stat-count">{petitions.filter(p => p.status.toLowerCase() === 'accepted').length}</h4>
-                    <p className="stat-title">Accepted Petitions</p>
+                    <h4 className="stat-count">{petitionCounts.totalClosedCount}</h4>
+                    <p className="stat-title">Total Closed Petitions</p>
                   </div>
                 </div>
               </div>
+              
 
               {/* New Information Cards */}
               <div className="row mb-4">
@@ -344,7 +348,7 @@ function Dashboard() {
               </div>
 
               {/* Desktop Table View */}
-              <h3 className="mb-3" style={{ fontSize: '1.3rem', fontWeight: '600' }}>Recent Petitions</h3>
+              <h3 className="font-med mb-4">Recent Petitions</h3>
               <div className="d-none d-lg-block table-responsive petition-table-container dashboard-petition-table">
                 <table className="table table-hover w-100">
                   <thead className="table-light">
@@ -455,6 +459,7 @@ function Dashboard() {
               </div>
 
               {/* Mobile Card View */}
+              <h3 className="mb-3 d-lg-none" style={{ fontSize: '1.3rem', fontWeight: '600' }}>Last 5 Updated Petitions</h3>
               <div className="d-lg-none">
                 {petitions.length > 0 ? (
                   <div className="row g-3">

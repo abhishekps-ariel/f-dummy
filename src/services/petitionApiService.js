@@ -24,6 +24,28 @@ class PetitionApiService {
     }
   }
 
+  // Get petition count by organization ID
+  async getPetitionCountByOrganization(organizationId) {
+    try {
+      console.log('API Service - Fetching petition count for organization:', organizationId);
+      const url = `/api/Petition/get-petition-count-by-organisationId/${organizationId}`;
+      console.log('API Service - Full URL:', axiosInstance.defaults.baseURL + url);
+      
+      const response = await axiosInstance.post(url, {}, {
+        headers: {
+          'Accept': 'text/plain',
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      console.log('API Service - Petition count response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching petition count by organization:', error);
+      throw error;
+    }
+  }
+
   /**
    * Get paginated petitions by organization ID with filters, search, and sorting
    * @param {Object} paginationParams - The pagination and filter parameters
