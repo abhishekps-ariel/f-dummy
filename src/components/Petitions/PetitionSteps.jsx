@@ -8,6 +8,7 @@ import { useAuth } from '../../context/AuthContext';
 import { usePetitionWizard } from '../../context/PetitionWizardContext';
 import { getUserById } from '../../services/authService';
 import { getFilingEntityTypes } from '../../services/commonService';
+import { getOrganizationById } from '../../services/organizationService';
 import PetitionStepper from './PetitionStepper';
 
 // Static libraries array to prevent LoadScript reload
@@ -28,6 +29,10 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
   const [filingEntityTypes, setFilingEntityTypes] = useState([]);
   const [userFilingEntityType, setUserFilingEntityType] = useState(null);
   const [profileLoading, setProfileLoading] = useState(true);
+  
+  // Organization data state
+  const [organizationData, setOrganizationData] = useState(null);
+  const [organizationLoading, setOrganizationLoading] = useState(false);
   
   // Load petition common data
   const {
@@ -129,42 +134,70 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
 
   // Load organization details and prefill filing entity fields
   useEffect(() => {
-    if (organization) {
+    const loadOrganizationData = async () => {
+      if (!organization?.id) return;
+      
+      setOrganizationLoading(true);
       try {
-        // Parse the address to extract components
-        // Expected format: "9 Maple Brook Dr, Rutland, MA 01543, USA"
-        const addressParts = organization.address ? organization.address.split(', ') : [];
-        let street1 = '';
-        let city = '';
-        let state = '';
-        let zip = '';
-        
-        if (addressParts.length >= 3) {
-          street1 = addressParts[0] || ''; // "9 Maple Brook Dr"
-          city = addressParts[1] || ''; // "Rutland"
-          const stateZip = addressParts[2] || ''; // "MA 01543"
-          const stateZipParts = stateZip.split(' ');
-          if (stateZipParts.length >= 2) {
-            state = stateZipParts[0] || ''; // "MA"
-            zip = stateZipParts[1] || ''; // "01543"
-          }
+        // Fetch full organization details using the new API structure
+        const orgResponse = await getOrganizationById(organization.id);
+        if (orgResponse.isSuccess && orgResponse.data) {
+          const orgData = orgResponse.data;
+          
+          // Prefill filing entity fields with organization data
+          setFormData(prev => ({
+            ...prev,
+            filingEntityLegalName: orgData.name || '',
+            filingEntityStreet1: orgData.addressStreet1 || '',
+            filingEntityStreet2: orgData.addressStreet2 || '',
+            filingEntityCity: orgData.addressCity || '',
+            filingEntityState: orgData.addressState || '',
+            filingEntityZip: orgData.addressZip || '',
+            filingContactName: orgData.primaryContactName || '',
+            filingContactEmail: orgData.primaryContactEmail || '',
+            filingContactPhone: orgData.primaryContactPhone || ''
+          }));
+          
+          setOrganizationData(orgData);
         }
-        
-        // Prefill filing entity fields with organization data
-        setFormData(prev => ({
-          ...prev,
-          filingEntityLegalName: organization.name || '',
-          filingEntityStreet1: street1,
-          filingEntityCity: city,
-          filingEntityState: state,
-          filingEntityZip: zip
-        }));
       } catch (error) {
-        console.error('Error parsing organization details:', error);
-        // Don't show error toast as this is not critical
+        console.error('Error loading organization details:', error);
+        // Fallback to existing organization prop if available
+        if (organization) {
+          // Parse the old format as fallback
+          const addressParts = organization.address ? organization.address.split(', ') : [];
+          let street1 = '';
+          let city = '';
+          let state = '';
+          let zip = '';
+          
+          if (addressParts.length >= 3) {
+            street1 = addressParts[0] || '';
+            city = addressParts[1] || '';
+            const stateZip = addressParts[2] || '';
+            const stateZipParts = stateZip.split(' ');
+            if (stateZipParts.length >= 2) {
+              state = stateZipParts[0] || '';
+              zip = stateZipParts[1] || '';
+            }
+          }
+          
+          setFormData(prev => ({
+            ...prev,
+            filingEntityLegalName: organization.name || '',
+            filingEntityStreet1: street1,
+            filingEntityCity: city,
+            filingEntityState: state,
+            filingEntityZip: zip
+          }));
+        }
+      } finally {
+        setOrganizationLoading(false);
       }
-    }
-  }, [organization]);
+    };
+    
+    loadOrganizationData();
+  }, [organization?.id]);
 
   // Initialize Google Maps API with React library
   const { isLoaded, loadError } = useJsApiLoader({
@@ -2885,9 +2918,27 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
           <div>
             <h2 className="theme-color font-med mb-1">4. Filing Entity</h2>
             <p className="text-muted small mb-3">Provide the organization and contact details for the party submitting this petition.</p>
+            
+            {/* Organization Data Loading Indicator */}
+            {organizationLoading && (
+              <div className="alert alert-info d-flex align-items-center mb-3">
+                <div className="spinner-border spinner-border-sm me-2" role="status">
+                  <span className="visually-hidden">Loading...</span>
+                </div>
+                <span>Loading organization details...</span>
+              </div>
+            )}
+            
             <div className="row g-3">
               <div className="col-12">
-                <label htmlFor="filingEntityLegalName" className="form-label">Filing Entity Legal Name *</label>
+                <label htmlFor="filingEntityLegalName" className="form-label">
+                  Filing Entity Legal Name *
+                  {organizationData && (
+                    <span className="text-success small ms-2">
+                      <i className="fas fa-check-circle me-1"></i>Prefilled from organization
+                    </span>
+                  )}
+                </label>
                 <input 
                   type="text" 
                   id="filingEntityLegalName" 
@@ -2928,7 +2979,14 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
 
               {/* Address Fields */}
               <div className="col-12">
-                <label htmlFor="filingEntityStreet1" className="form-label">Street Address Line 1 *</label>
+                <label htmlFor="filingEntityStreet1" className="form-label">
+                  Street Address Line 1 *
+                  {organizationData && (
+                    <span className="text-success small ms-2">
+                      <i className="fas fa-check-circle me-1"></i>Prefilled from organization
+                    </span>
+                  )}
+                </label>
                 <input 
                   type="text" 
                   id="filingEntityStreet1" 
@@ -3008,7 +3066,14 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
                 )}
               </div>
               <div className="col-md-6">
-                <label htmlFor="filingContactName" className="form-label">Filing Contact Name *</label>
+                <label htmlFor="filingContactName" className="form-label">
+                  Filing Contact Name *
+                  {organizationData && (
+                    <span className="text-success small ms-2">
+                      <i className="fas fa-check-circle me-1"></i>Prefilled from organization
+                    </span>
+                  )}
+                </label>
                 <input 
                   type="text" 
                   id="filingContactName" 
@@ -3024,7 +3089,14 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
                 )}
               </div>
               <div className="col-md-6">
-                <label htmlFor="filingContactPhone" className="form-label">Filing Contact Phone *</label>
+                <label htmlFor="filingContactPhone" className="form-label">
+                  Filing Contact Phone *
+                  {organizationData && (
+                    <span className="text-success small ms-2">
+                      <i className="fas fa-check-circle me-1"></i>Prefilled from organization
+                    </span>
+                  )}
+                </label>
                 <input 
                   type="tel" 
                   id="filingContactPhone" 
@@ -3040,7 +3112,14 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
                 )}
               </div>
               <div className="col-12">
-                <label htmlFor="filingContactEmail" className="form-label">Filing Contact Email *</label>
+                <label htmlFor="filingContactEmail" className="form-label">
+                  Filing Contact Email *
+                  {organizationData && (
+                    <span className="text-success small ms-2">
+                      <i className="fas fa-check-circle me-1"></i>Prefilled from organization
+                    </span>
+                  )}
+                </label>
                 <input 
                   type="email" 
                   id="filingContactEmail" 
