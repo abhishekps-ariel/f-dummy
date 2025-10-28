@@ -393,7 +393,7 @@ text-decoration: underline;
 
 /* ViewAllPetitions specific styling */
 .shadow-custom.bg-white.org-search-box {
-    margin-top: 50px;
+    /* margin-top: 50px; */
     padding: 1.5rem;
 }
 
