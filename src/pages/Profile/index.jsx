@@ -125,7 +125,10 @@ function Profile() {
                   ...request,
                   organizationName: orgResponse.data.name,
                   organizationType: orgResponse.data.type,
-                  organizationAddress: orgResponse.data.address,
+                  organizationAddress: `${orgResponse.data.addressStreet1 || ''}${orgResponse.data.addressStreet2 ? ', ' + orgResponse.data.addressStreet2 : ''}, ${orgResponse.data.addressCity || ''}, ${orgResponse.data.addressState || ''} ${orgResponse.data.addressZip || ''}`.replace(/^,\s*/, '').replace(/,\s*$/, ''),
+                  primaryContactName: orgResponse.data.primaryContactName,
+                  primaryContactEmail: orgResponse.data.primaryContactEmail,
+                  primaryContactPhone: orgResponse.data.primaryContactPhone,
                 };
               }
               return request;
@@ -727,6 +730,22 @@ function Profile() {
                             <div className="col-12">
                               <label className="form-label text-muted small">Address</label>
                               <p className="fw-medium mb-0 small">{userOrganization.organizationAddress}</p>
+                            </div>
+                          )}
+                          {(userOrganization.primaryContactName || userOrganization.primaryContactEmail || userOrganization.primaryContactPhone) && (
+                            <div className="col-12">
+                              <label className="form-label text-muted small">Primary Contact</label>
+                              <div className="fw-medium mb-0 small">
+                                {userOrganization.primaryContactName && (
+                                  <div><i className="fa-solid fa-user me-1"></i>{userOrganization.primaryContactName}</div>
+                                )}
+                                {userOrganization.primaryContactEmail && (
+                                  <div><i className="fa-solid fa-envelope me-1"></i>{userOrganization.primaryContactEmail}</div>
+                                )}
+                                {userOrganization.primaryContactPhone && (
+                                  <div><i className="fa-solid fa-phone me-1"></i>{userOrganization.primaryContactPhone}</div>
+                                )}
+                              </div>
                             </div>
                           )}
                           <div className="col-12">

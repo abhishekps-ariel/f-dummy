@@ -220,7 +220,10 @@ const OrganizationActions = () => {
                   ...request,
                   organizationName: orgResponse.data.name,
                   organizationType: orgResponse.data.type,
-                  organizationAddress: orgResponse.data.address,
+                  organizationAddress: `${orgResponse.data.addressStreet1 || ''}${orgResponse.data.addressStreet2 ? ', ' + orgResponse.data.addressStreet2 : ''}, ${orgResponse.data.addressCity || ''}, ${orgResponse.data.addressState || ''} ${orgResponse.data.addressZip || ''}`.replace(/^,\s*/, '').replace(/,\s*$/, ''),
+                  primaryContactName: orgResponse.data.primaryContactName,
+                  primaryContactEmail: orgResponse.data.primaryContactEmail,
+                  primaryContactPhone: orgResponse.data.primaryContactPhone,
                 };
               }
               return request;
@@ -554,8 +557,14 @@ const OrganizationActions = () => {
       const organizationData = {
         name: orgFormData.orgName,
         type: orgFormData.orgType,
-        address: `${orgFormData.addressStreet}, ${orgFormData.addressCity}, ${orgFormData.addressState} ${orgFormData.addressZip}`,
-        primaryContact: `${orgFormData.contactName}, ${orgFormData.contactEmail}, ${orgFormData.contactPhone}`,
+        addressStreet1: orgFormData.addressStreet,
+        addressStreet2: "", // Not used in current form
+        addressCity: orgFormData.addressCity,
+        addressState: orgFormData.addressState,
+        addressZip: orgFormData.addressZip,
+        primaryContactName: orgFormData.contactName,
+        primaryContactPhone: orgFormData.contactPhone,
+        primaryContactEmail: orgFormData.contactEmail,
       };
 
       const response = await createOrganization(organizationData);
@@ -610,8 +619,14 @@ const OrganizationActions = () => {
       const organizationData = {
         name: orgFormData.orgName,
         type: orgFormData.orgType,
-        address: `${orgFormData.addressStreet}, ${orgFormData.addressCity}, ${orgFormData.addressState} ${orgFormData.addressZip}`,
-        primaryContact: `${orgFormData.contactName}, ${orgFormData.contactEmail}, ${orgFormData.contactPhone}`,
+        addressStreet1: orgFormData.addressStreet,
+        addressStreet2: "", // Not used in current form
+        addressCity: orgFormData.addressCity,
+        addressState: orgFormData.addressState,
+        addressZip: orgFormData.addressZip,
+        primaryContactName: orgFormData.contactName,
+        primaryContactPhone: orgFormData.contactPhone,
+        primaryContactEmail: orgFormData.contactEmail,
       };
 
       const response = await createOrganization(organizationData);
@@ -763,10 +778,10 @@ const OrganizationActions = () => {
                             {selectedOrganization.type}
                           </span>
                         )}
-                        {selectedOrganization.address && (
+                        {selectedOrganization.addressStreet1 && (
                           <span className="selected-org-address">
                             {" "}
-                            • {selectedOrganization.address}
+                            • {`${selectedOrganization.addressStreet1 || ''}${selectedOrganization.addressStreet2 ? ', ' + selectedOrganization.addressStreet2 : ''}, ${selectedOrganization.addressCity || ''}, ${selectedOrganization.addressState || ''} ${selectedOrganization.addressZip || ''}`.replace(/^,\s*/, '').replace(/,\s*$/, '')}
                           </span>
                         )}
                       </div>
@@ -820,17 +835,19 @@ const OrganizationActions = () => {
                                   <i className="fa-solid fa-building me-1"></i>
                                   {org.type || "N/A"}
                                 </span>
-                                {org.address && (
+                                {(org.addressStreet1 || org.addressCity || org.addressState || org.addressZip) && (
                                   <span className="org-item-address ms-3">
                                     <i className="fa-solid fa-location-dot me-1"></i>
-                                    {org.address}
+                                    {`${org.addressStreet1 || ''}${org.addressStreet2 ? ', ' + org.addressStreet2 : ''}, ${org.addressCity || ''}, ${org.addressState || ''} ${org.addressZip || ''}`.replace(/^,\s*/, '').replace(/,\s*$/, '')}
                                   </span>
                                 )}
                               </div>
-                              {org.primaryContact && (
+                              {(org.primaryContactName || org.primaryContactEmail || org.primaryContactPhone) && (
                                 <div className="org-item-contact">
                                   <i className="fa-solid fa-user me-1"></i>
-                                  {org.primaryContact}
+                                  {org.primaryContactName && <span>{org.primaryContactName}</span>}
+                                  {org.primaryContactEmail && <span className="ms-2">{org.primaryContactEmail}</span>}
+                                  {org.primaryContactPhone && <span className="ms-2">{org.primaryContactPhone}</span>}
                                 </div>
                               )}
                             </div>

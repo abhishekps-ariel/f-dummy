@@ -106,8 +106,8 @@ function Dashboard() {
                   ...request,
                   organizationName: orgResponse.data.name,
                   organizationType: orgResponse.data.type,
-                  organizationAddress: orgResponse.data.address,
-                  primaryContact: orgResponse.data.primaryContact,
+                  organizationAddress: `${orgResponse.data.addressStreet1 || ''}${orgResponse.data.addressStreet2 ? ', ' + orgResponse.data.addressStreet2 : ''}, ${orgResponse.data.addressCity || ''}, ${orgResponse.data.addressState || ''} ${orgResponse.data.addressZip || ''}`.replace(/^,\s*/, '').replace(/,\s*$/, ''),
+                  primaryContact: `${orgResponse.data.primaryContactName || ''}, ${orgResponse.data.primaryContactEmail || ''}, ${orgResponse.data.primaryContactPhone || ''}`.replace(/^,\s*/, '').replace(/,\s*$/, ''),
                 };
               }
               return request;
