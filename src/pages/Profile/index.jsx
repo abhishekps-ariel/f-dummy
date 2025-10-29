@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { getAuthData, clearAuthData } from "../../utils/storage";
 import { useAuth } from "../../context/AuthContext";
+import { usePetitionWizard } from "../../context/PetitionWizardContext";
 import { ROUTES } from "../../constants/routerConstants";
 import { logout as logoutApi, updateUser, getUserById, uploadUserSignature, getSignatureById } from "../../services/authService";
 import { getFilingEntityTypes } from "../../services/commonService";
@@ -38,6 +39,9 @@ function Profile() {
   const [isImageLoading, setIsImageLoading] = useState(false);
   const navigate = useNavigate();
   const { logout: authLogout, login, updateUserSignature } = useAuth();
+  
+  // Get resetWizard function from PetitionWizard context
+  const { resetWizard } = usePetitionWizard();
 
   useEffect(() => {
     const { user: userData, token } = getAuthData();
@@ -220,6 +224,17 @@ function Profile() {
       // Always clear local data and redirect
       clearAuthData();
       authLogout();
+      
+      // Clear petition form data from localStorage on logout
+      try {
+        localStorage.removeItem('petitionFormData');
+      } catch (error) {
+        console.error('Error clearing petition form data on logout:', error);
+      }
+      
+      // Reset petition wizard progress
+      resetWizard();
+      
       navigate(ROUTES.LOGIN);
     }
   };
@@ -778,15 +793,6 @@ function Profile() {
                             <p className="fw-medium mb-0">
                               {new Date(userOrganization.respondedOn || userOrganization.requestedOn).toLocaleDateString()}
                             </p>
-                          </div>
-                          <div className="col-12 mt-3">
-                            <button 
-                              className="dashboard-btn-create w-100"
-                              onClick={() => navigate(ROUTES.DASHBOARD, { state: { activeSection: 'organizations' } })}
-                            >
-                              <i className="fa-solid fa-building me-1"></i>
-                              View Organization Section
-                            </button>
                           </div>
                         </div>
                       ) : joinRequests.length > 0 ? (

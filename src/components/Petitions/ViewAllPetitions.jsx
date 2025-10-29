@@ -291,7 +291,7 @@ const ViewAllPetitions = ({ onBack }) => {
     }
   }, [organization?.id, organizationCheckComplete]);
 
-  // Handle filter changes with debouncing
+  // Handle filter changes with debouncing (excluding custom date fields)
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       if (organization?.id) {
@@ -301,15 +301,10 @@ const ViewAllPetitions = ({ onBack }) => {
     }, 500); // 500ms debounce
 
     return () => clearTimeout(timeoutId);
-  }, [searchQuery, statusFilter, dateFilter, customDateFrom, customDateTo]);
+  }, [searchQuery, statusFilter, dateFilter]);
 
-  // Handle custom date range changes
-  useEffect(() => {
-    if (dateFilter === 'custom' && customDateFrom && customDateTo && organization?.id) {
-      setPagination(prev => ({ ...prev, currentPage: 1 }));
-      fetchPetitions(1);
-    }
-  }, [customDateFrom, customDateTo, dateFilter, organization?.id]);
+  // Custom date range changes are handled manually via Apply Filter button
+  // No automatic triggering to prevent page reloads while user is selecting dates
 
   // Handle sorting changes
   useEffect(() => {
@@ -564,6 +559,12 @@ const ViewAllPetitions = ({ onBack }) => {
             className="form-select"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
+            style={{ 
+              paddingRight: '30px',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden'
+            }}
           >
             <option value="all">All Statuses</option>
             <option value="draft">Draft</option>
@@ -579,6 +580,12 @@ const ViewAllPetitions = ({ onBack }) => {
             className="form-select"
             value={dateFilter}
             onChange={(e) => handleDateFilterChange(e.target.value)}
+            style={{ 
+              paddingRight: '30px',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden'
+            }}
           >
             <option value="all">All Dates</option>
             <option value="today">Today</option>
@@ -597,6 +604,12 @@ const ViewAllPetitions = ({ onBack }) => {
               const [field, order] = e.target.value.split('-');
               setSortBy(field);
               setSortOrder(order);
+            }}
+            style={{ 
+              paddingRight: '30px',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden'
             }}
           >
             <option value="filingDate-desc">Filing Date (Newest First)</option>

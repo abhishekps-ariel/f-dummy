@@ -308,7 +308,8 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
     }
   }, [isOpen, currentStep]);
   
-  const [formData, setFormData] = useState({
+  // Default form data structure
+  const defaultFormData = {
     // Step 1: Property Details
     propertyStreet1: '',
     propertyStreet2: '',
@@ -427,7 +428,61 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
     signerLastName: '',
     signerEmail: '',
     signerTitle: '',
-  });
+  };
+
+  // Load form data from localStorage on component mount
+  const loadFormDataFromStorage = () => {
+    try {
+      const savedData = localStorage.getItem('petitionFormData');
+      if (savedData) {
+        const parsedData = JSON.parse(savedData);
+        return { ...defaultFormData, ...parsedData };
+      }
+    } catch (error) {
+      console.error('Error loading form data from localStorage:', error);
+    }
+    return defaultFormData;
+  };
+
+  // Save form data to localStorage
+  const saveFormDataToStorage = (data) => {
+    try {
+      localStorage.setItem('petitionFormData', JSON.stringify(data));
+    } catch (error) {
+      console.error('Error saving form data to localStorage:', error);
+    }
+  };
+
+  // Clear form data from localStorage
+  const clearFormDataFromStorage = () => {
+    try {
+      localStorage.removeItem('petitionFormData');
+    } catch (error) {
+      console.error('Error clearing form data from localStorage:', error);
+    }
+  };
+
+  const [formData, setFormData] = useState(loadFormDataFromStorage);
+
+  // Save form data to localStorage whenever it changes
+  useEffect(() => {
+    if (formData && Object.keys(formData).length > 0) {
+      saveFormDataToStorage(formData);
+    }
+  }, [formData]);
+
+  // Clear form data from localStorage on page reload
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      clearFormDataFromStorage();
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []);
 
   // Handle address input and get predictions
   const handleAddressInput = (input) => {
@@ -499,8 +554,13 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
         let zipCode = '';
         let county = '';    
 
+        // Debug: Log address components to console
+        console.log('Address components:', addressComponents);
+
         addressComponents.forEach(component => {
           const types = component.types;
+          console.log('Component types:', types, 'Long name:', component.long_name);
+          
           if (types.includes('street_number')) {
             streetNumber = component.long_name;
           } else if (types.includes('route')) {
@@ -509,8 +569,9 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
             city = component.long_name;
           } else if (types.includes('administrative_area_level_1')) {
             state = component.short_name;
-          } else if (types.includes(' postal_code')) {
+          } else if (types.includes('postal_code')) {
             zipCode = component.long_name;
+            console.log('Found postal code:', zipCode);
           } else if (types.includes('administrative_area_level_2')) {
             // County information is typically found in administrative_area_level_2
             county = component.long_name;
@@ -518,6 +579,15 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
         });
 
         const fullAddress = `${streetNumber} ${route}`.trim();
+        
+        // Debug: Log extracted values
+        console.log('Extracted values:', {
+          fullAddress,
+          city,
+          state,
+          zipCode,
+          county
+        });
         
         setFormData(prev => ({
           ...prev,
@@ -1048,6 +1118,25 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
       });
     }
 
+    // Real-time validation for principal amount comparison
+    if (name === 'originalPrincipalAmount' || name === 'currentPrincipalBalance') {
+      const originalAmount = parseFloat(name === 'originalPrincipalAmount' ? value : formData.originalPrincipalAmount) || 0;
+      const currentBalance = parseFloat(name === 'currentPrincipalBalance' ? value : formData.currentPrincipalBalance) || 0;
+      
+      if (originalAmount > 0 && currentBalance > 0 && currentBalance > originalAmount) {
+        setFieldErrors(prev => ({
+          ...prev,
+          currentPrincipalBalance: 'Current Principal Balance cannot exceed the Original Principal Amount'
+        }));
+      } else if (fieldErrors.currentPrincipalBalance === 'Current Principal Balance cannot exceed the Original Principal Amount') {
+        setFieldErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors.currentPrincipalBalance;
+          return newErrors;
+        });
+      }
+    }
+
     // Reset saved draft indicator when user makes changes
     if (hasSavedDraft) {
       setHasSavedDraft(false);
@@ -1245,6 +1334,15 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
     // Current Principal Balance is required and must be positive
     if (!formData.currentPrincipalBalance || formData.currentPrincipalBalance <= 0) {
       errors.currentPrincipalBalance = 'Current Principal Balance is required and must be greater than 0';
+      hasErrors = true;
+    }
+    
+    // Current Principal Balance cannot exceed Original Principal Amount
+    const originalAmount = parseFloat(formData.originalPrincipalAmount) || 0;
+    const currentBalance = parseFloat(formData.currentPrincipalBalance) || 0;
+    
+    if (originalAmount > 0 && currentBalance > 0 && currentBalance > originalAmount) {
+      errors.currentPrincipalBalance = 'Current Principal Balance cannot exceed the Original Principal Amount';
       hasErrors = true;
     }
     
@@ -2088,6 +2186,9 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
       
       // Clear petition wizard state and drafts from localStorage after successful submission
       localStorage.removeItem('petitionDrafts');
+      
+      // Clear form data from localStorage after successful submission
+      clearFormDataFromStorage();
       
       // Notify parent component that petition was submitted successfully
       if (onPetitionSubmitted) {

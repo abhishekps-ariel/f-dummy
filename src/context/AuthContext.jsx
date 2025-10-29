@@ -135,6 +135,13 @@ export const AuthProvider = ({ children }) => {
     setOrganization(null);
     setHasOrganizationAccess(false);
     setOrganizationCheckComplete(false);
+    
+    // Clear petition form data from localStorage on logout
+    try {
+      localStorage.removeItem('petitionFormData');
+    } catch (error) {
+      console.error('Error clearing petition form data on logout:', error);
+    }
   };
 
   const updateOrganization = (orgData) => {

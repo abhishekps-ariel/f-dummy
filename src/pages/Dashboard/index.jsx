@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { getAuthData, clearAuthData } from "../../utils/storage";
 import { useAuth } from "../../context/AuthContext";
+import { usePetitionWizard } from "../../context/PetitionWizardContext";
 import { ROUTES } from "../../constants/routerConstants";
 import { logout as logoutApi } from "../../services/authService";
 import { getUserJoinRequests, getOrganizationById } from "../../services/organizationService";
@@ -28,6 +29,10 @@ function Dashboard() {
     fetchPetitions,
     fetchPetitionCounts
   } = usePetitions();
+  
+  // Get resetWizard function from PetitionWizard context
+  const { resetWizard } = usePetitionWizard();
+  
   const [userOrganization, setUserOrganization] = useState(null);
   const [isLoadingOrgData, setIsLoadingOrgData] = useState(false);
   const [hasLoadedOrgData, setHasLoadedOrgData] = useState(false);
@@ -161,6 +166,17 @@ function Dashboard() {
       // Always clear local data and redirect
       clearAuthData();
       authLogout();
+      
+      // Clear petition form data from localStorage on logout
+      try {
+        localStorage.removeItem('petitionFormData');
+      } catch (error) {
+        console.error('Error clearing petition form data on logout:', error);
+      }
+      
+      // Reset petition wizard progress
+      resetWizard();
+      
       navigate(ROUTES.LOGIN);
     }
   };

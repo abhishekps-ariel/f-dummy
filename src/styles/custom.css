@@ -1322,6 +1322,7 @@ form.search-form input:focus {
 }
 
 .dashboard-btn-refresh {
+    height: 46px;
     background: transparent;
     border: 1px solid #ddd;
     border-radius: 8px;
@@ -1517,7 +1518,7 @@ form.search-form input:focus {
     font-size: 16px !important;
     border: 1px solid #ddd;
     border-radius: 8px;
-    padding: 10px 14px;
+    padding: 10px 12px;
 }
 
 /* Global fix to prevent mobile zoom - applies to ALL devices */

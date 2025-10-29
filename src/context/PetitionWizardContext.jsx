@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useAuth } from './AuthContext';
 
 const PetitionWizardContext = createContext();
 
@@ -13,6 +14,15 @@ export const usePetitionWizard = () => {
 export const PetitionWizardProvider = ({ children }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [completedSteps, setCompletedSteps] = useState(new Set());
+  const { user } = useAuth();
+
+  // Reset wizard when user logs out
+  useEffect(() => {
+    if (!user) {
+      setCurrentStep(1);
+      setCompletedSteps(new Set());
+    }
+  }, [user]);
 
   const markStepCompleted = (step) => {
     setCompletedSteps(prev => new Set([...prev, step]));
