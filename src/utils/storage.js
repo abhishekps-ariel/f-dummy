@@ -1,4 +1,8 @@
 export const storeAuthData = (authData) => {
+  // Clear all existing data before storing new user data
+  // This ensures no data leakage between different users
+  localStorage.clear();
+  
   const { token, refreshToken, user } = authData;
   localStorage.setItem('token', token);
   localStorage.setItem('refreshToken', refreshToken);
@@ -14,9 +18,21 @@ export const getAuthData = () => {
 };
 
 export const clearAuthData = () => {
+  // Clear authentication data
   localStorage.removeItem('token');
   localStorage.removeItem('refreshToken');
   localStorage.removeItem('user');
   
+  // Clear petition-related data
+  localStorage.removeItem('petitionTabs');
+  localStorage.removeItem('activePetitionTab');
+  localStorage.removeItem('petitionDrafts');
+  
+  // Clear any other user-specific data
+  localStorage.removeItem('resetEmail');
+  
+  // Clear all localStorage for this origin (comprehensive cleanup)
+  // This ensures no data leakage between different users
+  localStorage.clear();
 };
 

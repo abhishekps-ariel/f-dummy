@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { logout as logoutApi } from '../../services/authService';
+import { clearAuthData, getAuthData } from '../../utils/storage';
 import { ROUTES } from '../../constants/routerConstants';
 import Sidebar from '../../components/shared/Sidebar';
 import Header from '../../components/shared/Header';
@@ -18,11 +19,19 @@ const Petitions = () => {
 
   const handleLogout = async () => {
     try {
-      await logoutApi();
-      logout();
-      navigate(ROUTES.LOGIN);
+      // Get refresh token from storage
+      const { refreshToken } = getAuthData();
+      
+      if (refreshToken) {
+        // Call logout API
+        await logoutApi(refreshToken);
+      }
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error("Logout API error:", error);
+      // Continue with logout even if API fails
+    } finally {
+      // Always clear local data and redirect
+      clearAuthData();
       logout();
       navigate(ROUTES.LOGIN);
     }

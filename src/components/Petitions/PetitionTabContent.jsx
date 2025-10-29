@@ -56,6 +56,18 @@ const PetitionTabContent = ({ petition }) => {
     });
   };
 
+  const formatDateTime = (dateString) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
   const getStatusBadgeClass = (status, statusClass) => {
     // Use the statusClass from API if available, otherwise fallback to status text
     if (statusClass) {
@@ -484,24 +496,26 @@ const PetitionTabContent = ({ petition }) => {
         <div className="row mb-4">
           <div className="col-12">
             <div className="petition-header-card">
-              <div className="d-flex justify-content-between align-items-center w-100">
+              <div className="d-flex justify-content-between align-items-start w-100">
                 {/* Left side - Petition Info */}
                 <div className="flex-grow-1">
-                  <div className="d-flex align-items-center gap-3 mb-2">
-                    <span className="petition-number-badge">{petition.petitionNumber}</span>
+                  <div className="mb-2">
+                    <h4 className="petition-number-badge mb-0">{petition.petitionNumber}</h4>
                   </div>
-                  <div className="d-flex align-items-center gap-4">
-                    <div className="petition-meta-item">
-                      <i className="fas fa-calendar-alt me-1 text-muted"></i>
-                      <span className="small text-muted">Created: {formatDate(petition.createdDate)}</span>
+                  <div className="petition-meta-info">
+                    <div className="petition-meta-line mb-1">
+                      <i className="fas fa-calendar-alt me-2 text-muted"></i>
+                      <span className="text-muted">Created: {formatDate(petition.createdDate)}</span>
                     </div>
-                    <div className="petition-meta-item">
-                      <i className="fas fa-edit me-1 text-muted"></i>
-                      <span className="small text-muted">Modified: {formatDate(petition.modifiedDate)}</span>
+                    <div className="petition-meta-line mb-1">
+                      <i className="fas fa-clock me-2 text-muted"></i>
+                      <span className="text-muted">Last Updated: {formatDateTime(petition.modifiedDate)}</span>
                     </div>
-                    <span className={getStatusBadgeClass(petition.status, petition.statusClass)}>
-                      {petition.status}
-                    </span>
+                    <div className="petition-meta-line">
+                      <span className={getStatusBadgeClass(petition.status, petition.statusClass)}>
+                        {petition.status}
+                      </span>
+                    </div>
                   </div>
                 </div>
                 
