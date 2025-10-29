@@ -828,15 +828,15 @@ const PetitionTabContent = ({ petition }) => {
                         <i className="fas fa-edit me-1"></i>
                         Edit
                       </button>
-                      <button 
-                        type="button" 
-                        className="dashboard-btn-refresh"
-                        onClick={handleDownloadPDF}
-                        title="Download as PDF"
-                      >
-                        <i className="fas fa-download me-1"></i>
-                        Download PDF
-                      </button>
+                  <button 
+                    type="button" 
+                    className="dashboard-btn-refresh"
+                    onClick={handleDownloadPDF}
+                    title="Download as PDF"
+                  >
+                    <i className="fas fa-download me-1"></i>
+                    Download PDF
+                  </button>
                     </>
                   ) : (
                     <>
@@ -847,8 +847,17 @@ const PetitionTabContent = ({ petition }) => {
                         disabled={isSaving}
                         title="Save changes"
                       >
-                        <i className={`fas fa-save me-1 ${isSaving ? 'fa-spin' : ''}`}></i>
-                        {isSaving ? 'Saving...' : 'Save'}
+                        {isSaving ? (
+                          <>
+                            <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                            Saving...
+                          </>
+                        ) : (
+                          <>
+                            <i className="fas fa-save me-1"></i>
+                            Save
+                          </>
+                        )}
                       </button>
                       <button 
                         type="button" 
@@ -898,7 +907,7 @@ const PetitionTabContent = ({ petition }) => {
                     <input 
                       type="text" 
                       name="propertyStreet2"
-                      className="form-control"
+                      className="form-control" 
                       value={formData.propertyStreet2 || ''} 
                       readOnly={!isEditing}
                       onChange={handleInputChange}
@@ -959,7 +968,7 @@ const PetitionTabContent = ({ petition }) => {
                     <input 
                       type="text" 
                       name="propertyCounty"
-                      className="form-control"
+                      className="form-control" 
                       value={formData.propertyCounty || ''} 
                       readOnly={!isEditing}
                       onChange={handleInputChange}
@@ -972,7 +981,7 @@ const PetitionTabContent = ({ petition }) => {
                     <input 
                       type="text" 
                       name="assessorParcelId"
-                      className="form-control"
+                      className="form-control" 
                       value={formData.assessorParcelId || ''} 
                       readOnly={!isEditing}
                       onChange={handleInputChange}
@@ -1168,7 +1177,7 @@ const PetitionTabContent = ({ petition }) => {
                   <div className="form-group mb-3">
                     <label className="form-label">Variable Rate</label>
                     <div className="form-check">
-                      <input 
+                    <input 
                         type="checkbox" 
                         name="variableRate"
                         className="form-check-input"
@@ -1186,7 +1195,7 @@ const PetitionTabContent = ({ petition }) => {
                   <div className="form-group mb-3">
                     <label className="form-label">Interest Only</label>
                     <div className="form-check">
-                      <input 
+                    <input 
                         type="checkbox" 
                         name="interestOnly"
                         className="form-check-input"
@@ -1204,7 +1213,7 @@ const PetitionTabContent = ({ petition }) => {
                   <div className="form-group mb-3">
                     <label className="form-label">Negative Amortization</label>
                     <div className="form-check">
-                      <input 
+                    <input 
                         type="checkbox" 
                         name="negativeAmortization"
                         className="form-check-input"
@@ -1229,7 +1238,7 @@ const PetitionTabContent = ({ petition }) => {
               {formData.borrowers && formData.borrowers.length > 0 ? (
                 <>
                   {formData.borrowers.map((borrower, index) => (
-                    <div key={borrower.id || index} className="border rounded p-3 mb-3">
+                  <div key={borrower.id || index} className="border rounded p-3 mb-3">
                       <div className="d-flex justify-content-between align-items-center mb-3">
                         <h6 className="mb-0 fw-semibold">Borrower {index + 1}</h6>
                         {isEditing && formData.borrowers.length > 1 && (
@@ -1243,12 +1252,12 @@ const PetitionTabContent = ({ petition }) => {
                           </button>
                         )}
                       </div>
-                      <div className="row">
-                        <div className="col-md-3">
-                          <div className="form-group mb-3">
+                    <div className="row">
+                      <div className="col-md-3">
+                        <div className="form-group mb-3">
                             <label className="form-label">First Name *</label>
-                            <input 
-                              type="text" 
+                          <input 
+                            type="text" 
                               className={`form-control ${fieldErrors[`borrower_${borrower.id}_firstName`] ? 'is-invalid' : ''}`}
                               value={borrower.firstName || ''} 
                               readOnly={!isEditing}
@@ -1257,13 +1266,13 @@ const PetitionTabContent = ({ petition }) => {
                             {fieldErrors[`borrower_${borrower.id}_firstName`] && (
                               <div className="text-danger small mt-1">{fieldErrors[`borrower_${borrower.id}_firstName`]}</div>
                             )}
-                          </div>
                         </div>
-                        <div className="col-md-3">
-                          <div className="form-group mb-3">
-                            <label className="form-label">Middle Name</label>
-                            <input 
-                              type="text" 
+                      </div>
+                      <div className="col-md-3">
+                        <div className="form-group mb-3">
+                          <label className="form-label">Middle Name</label>
+                          <input 
+                            type="text" 
                               className={`form-control ${fieldErrors[`borrower_${borrower.id}_middleName`] ? 'is-invalid' : ''}`}
                               value={borrower.middleName || ''} 
                               readOnly={!isEditing}
@@ -1272,13 +1281,13 @@ const PetitionTabContent = ({ petition }) => {
                             {fieldErrors[`borrower_${borrower.id}_middleName`] && (
                               <div className="text-danger small mt-1">{fieldErrors[`borrower_${borrower.id}_middleName`]}</div>
                             )}
-                          </div>
                         </div>
-                        <div className="col-md-3">
-                          <div className="form-group mb-3">
+                      </div>
+                      <div className="col-md-3">
+                        <div className="form-group mb-3">
                             <label className="form-label">Last Name *</label>
-                            <input 
-                              type="text" 
+                          <input 
+                            type="text" 
                               className={`form-control ${fieldErrors[`borrower_${borrower.id}_lastName`] ? 'is-invalid' : ''}`}
                               value={borrower.lastName || ''} 
                               readOnly={!isEditing}
@@ -1287,13 +1296,13 @@ const PetitionTabContent = ({ petition }) => {
                             {fieldErrors[`borrower_${borrower.id}_lastName`] && (
                               <div className="text-danger small mt-1">{fieldErrors[`borrower_${borrower.id}_lastName`]}</div>
                             )}
-                          </div>
                         </div>
-                        <div className="col-md-3">
-                          <div className="form-group mb-3">
-                            <label className="form-label">Suffix</label>
-                            <input 
-                              type="text" 
+                      </div>
+                      <div className="col-md-3">
+                        <div className="form-group mb-3">
+                          <label className="form-label">Suffix</label>
+                          <input 
+                            type="text" 
                               className={`form-control ${fieldErrors[`borrower_${borrower.id}_suffix`] ? 'is-invalid' : ''}`}
                               value={borrower.suffix || ''} 
                               readOnly={!isEditing}
@@ -1302,13 +1311,13 @@ const PetitionTabContent = ({ petition }) => {
                             {fieldErrors[`borrower_${borrower.id}_suffix`] && (
                               <div className="text-danger small mt-1">{fieldErrors[`borrower_${borrower.id}_suffix`]}</div>
                             )}
-                          </div>
                         </div>
-                        <div className="col-md-6">
-                          <div className="form-group mb-3">
-                            <label className="form-label">Primary Borrower</label>
+                      </div>
+                      <div className="col-md-6">
+                        <div className="form-group mb-3">
+                          <label className="form-label">Primary Borrower</label>
                             <div className="form-check">
-                              <input 
+                          <input 
                                 type="checkbox" 
                                 className="form-check-input"
                                 checked={borrower.borrowerIsPrimary || false}
@@ -1329,82 +1338,82 @@ const PetitionTabContent = ({ petition }) => {
                                 {borrower.borrowerIsPrimary ? 'Yes' : 'No'}
                               </label>
                             </div>
-                          </div>
                         </div>
-                        <div className="col-md-6">
-                          <div className="form-group mb-3">
-                            <label className="form-label">Email</label>
-                            <input 
+                      </div>
+                      <div className="col-md-6">
+                        <div className="form-group mb-3">
+                          <label className="form-label">Email</label>
+                          <input 
                               type="email" 
-                              className="form-control"
+                            className="form-control" 
                               value={borrower.email || ''} 
                               readOnly={!isEditing}
                               onChange={(e) => updateBorrower(borrower.id, 'email', e.target.value)}
-                            />
-                          </div>
+                          />
                         </div>
-                        <div className="col-md-6">
-                          <div className="form-group mb-3">
-                            <label className="form-label">Phone</label>
-                            <input 
-                              type="text" 
-                              className="form-control"
+                      </div>
+                      <div className="col-md-6">
+                        <div className="form-group mb-3">
+                          <label className="form-label">Phone</label>
+                          <input 
+                            type="text" 
+                            className="form-control" 
                               value={borrower.phone || ''} 
                               readOnly={!isEditing}
                               onChange={(e) => updateBorrower(borrower.id, 'phone', e.target.value)}
-                            />
-                          </div>
+                          />
                         </div>
-                        <div className="col-md-6">
-                          <div className="form-group mb-3">
-                            <label className="form-label">Mailing Address</label>
-                            <input 
-                              type="text" 
-                              className="form-control"
+                      </div>
+                      <div className="col-md-6">
+                        <div className="form-group mb-3">
+                          <label className="form-label">Mailing Address</label>
+                          <input 
+                            type="text" 
+                            className="form-control" 
                               value={borrower.mailingStreet1 || ''} 
                               readOnly={!isEditing}
                               onChange={(e) => updateBorrower(borrower.id, 'mailingStreet1', e.target.value)}
-                            />
-                          </div>
+                          />
                         </div>
-                        <div className="col-md-4">
-                          <div className="form-group mb-3">
-                            <label className="form-label">Mailing City</label>
-                            <input 
-                              type="text" 
-                              className="form-control"
+                      </div>
+                      <div className="col-md-4">
+                        <div className="form-group mb-3">
+                          <label className="form-label">Mailing City</label>
+                          <input 
+                            type="text" 
+                            className="form-control" 
                               value={borrower.mailingCity || ''} 
                               readOnly={!isEditing}
                               onChange={(e) => updateBorrower(borrower.id, 'mailingCity', e.target.value)}
-                            />
-                          </div>
+                          />
                         </div>
+                      </div>
                         <div className="col-md-2">
-                          <div className="form-group mb-3">
+                        <div className="form-group mb-3">
                             <label className="form-label">State</label>
-                            <input 
-                              type="text" 
-                              className="form-control"
+                          <input 
+                            type="text" 
+                            className="form-control" 
                               value={borrower.mailingState || ''} 
                               readOnly={!isEditing}
                               onChange={(e) => updateBorrower(borrower.id, 'mailingState', e.target.value)}
-                            />
-                          </div>
+                          />
                         </div>
-                        <div className="col-md-4">
-                          <div className="form-group mb-3">
-                            <label className="form-label">Mailing ZIP</label>
-                            <input 
-                              type="text" 
-                              className="form-control"
+                      </div>
+                      <div className="col-md-4">
+                        <div className="form-group mb-3">
+                          <label className="form-label">Mailing ZIP</label>
+                          <input 
+                            type="text" 
+                            className="form-control" 
                               value={borrower.mailingZip || ''} 
                               readOnly={!isEditing}
                               onChange={(e) => updateBorrower(borrower.id, 'mailingZip', e.target.value)}
-                            />
-                          </div>
+                          />
                         </div>
                       </div>
                     </div>
+                  </div>
                   ))}
                   {isEditing && (
                     <button 
@@ -1498,7 +1507,7 @@ const PetitionTabContent = ({ petition }) => {
                     <input 
                       type="text" 
                       name="nmlsLicenseNumber"
-                      className="form-control"
+                      className="form-control" 
                       value={formData.nmlsLicenseNumber || ''} 
                       readOnly={!isEditing}
                       onChange={handleInputChange}
@@ -1511,7 +1520,7 @@ const PetitionTabContent = ({ petition }) => {
                     <input 
                       type="text" 
                       name="stateLicenseNumber"
-                      className="form-control"
+                      className="form-control" 
                       value={formData.stateLicenseNumber || ''} 
                       readOnly={!isEditing}
                       onChange={handleInputChange}
@@ -1524,7 +1533,7 @@ const PetitionTabContent = ({ petition }) => {
                     <input 
                       type="text" 
                       name="stateLicenseState"
-                      className="form-control"
+                      className="form-control" 
                       value={formData.stateLicenseState || ''} 
                       readOnly={!isEditing}
                       onChange={handleInputChange}
@@ -1553,7 +1562,7 @@ const PetitionTabContent = ({ petition }) => {
                     <input 
                       type="text" 
                       name="filingEntityStreet2"
-                      className="form-control"
+                      className="form-control" 
                       value={formData.filingEntityStreet2 || ''} 
                       readOnly={!isEditing}
                       onChange={handleInputChange}
@@ -1660,7 +1669,7 @@ const PetitionTabContent = ({ petition }) => {
                     <div className="col-md-6">
                       <div className="form-group mb-3">
                         <label className="form-label">Notice Date *</label>
-                        <input 
+                    <input 
                           type="date" 
                           name="noticeDate"
                           className={`form-control ${fieldErrors.noticeDate ? 'is-invalid' : ''}`}
@@ -1712,65 +1721,65 @@ const PetitionTabContent = ({ petition }) => {
                         <input 
                           type="date" 
                           name="cureExpirationDate"
-                          className="form-control"
+                      className="form-control" 
                           value={formData.cureExpirationDate || ''} 
                           readOnly={!isEditing}
                           onChange={handleInputChange}
-                        />
-                      </div>
-                    </div>
-                    <div className="col-md-6">
-                      <div className="form-group mb-3">
+                    />
+                  </div>
+                </div>
+                <div className="col-md-6">
+                  <div className="form-group mb-3">
                         <label className="form-label">Notice Address Street</label>
-                        <input 
-                          type="text" 
+                    <input 
+                      type="text" 
                           name="noticeAddressStreet1"
-                          className="form-control"
+                      className="form-control" 
                           value={formData.noticeAddressStreet1 || ''} 
                           readOnly={!isEditing}
                           onChange={handleInputChange}
-                        />
-                      </div>
-                    </div>
-                    <div className="col-md-6">
-                      <div className="form-group mb-3">
+                    />
+                  </div>
+                </div>
+                <div className="col-md-6">
+                  <div className="form-group mb-3">
                         <label className="form-label">Notice Address City</label>
-                        <input 
-                          type="text" 
+                    <input 
+                      type="text" 
                           name="noticeAddressCity"
-                          className="form-control"
+                      className="form-control" 
                           value={formData.noticeAddressCity || ''} 
                           readOnly={!isEditing}
                           onChange={handleInputChange}
-                        />
-                      </div>
-                    </div>
+                    />
+                  </div>
+                </div>
                     <div className="col-md-4">
-                      <div className="form-group mb-3">
+                  <div className="form-group mb-3">
                         <label className="form-label">Notice Address State</label>
-                        <input 
-                          type="text" 
+                    <input 
+                      type="text" 
                           name="noticeAddressState"
-                          className="form-control"
+                      className="form-control" 
                           value={formData.noticeAddressState || ''} 
                           readOnly={!isEditing}
                           onChange={handleInputChange}
-                        />
-                      </div>
-                    </div>
+                    />
+                  </div>
+                </div>
                     <div className="col-md-4">
-                      <div className="form-group mb-3">
+                  <div className="form-group mb-3">
                         <label className="form-label">Notice Address ZIP</label>
-                        <input 
-                          type="text" 
+                    <input 
+                      type="text" 
                           name="noticeAddressZip"
-                          className="form-control"
+                      className="form-control" 
                           value={formData.noticeAddressZip || ''} 
                           readOnly={!isEditing}
                           onChange={handleInputChange}
-                        />
-                      </div>
-                    </div>
+                    />
+                  </div>
+                </div>
                   </>
                 )}
                 {formData.noticeSent === false && (
@@ -1801,8 +1810,8 @@ const PetitionTabContent = ({ petition }) => {
               <SectionHeader title="Foreclosure Sale" />
               <div className="card-body">
                 <div className="row">
-                  <div className="col-md-6">
-                    <div className="form-group mb-3">
+                <div className="col-md-6">
+                  <div className="form-group mb-3">
                       <label className="form-label">Sale Date *</label>
                       <input 
                         type="date" 
@@ -1819,20 +1828,20 @@ const PetitionTabContent = ({ petition }) => {
                   <div className="col-md-6">
                     <div className="form-group mb-3">
                       <label className="form-label">Sold To?</label>
-                      <input 
-                        type="text" 
-                        className="form-control"
+                    <input 
+                      type="text" 
+                      className="form-control" 
                         value={formData.foreclosureSale?.soldTo || ''} 
                         readOnly={!isEditing}
                         onChange={(e) => updateForeclosureSale('soldTo', e.target.value)}
-                      />
-                    </div>
+                    />
                   </div>
-                  <div className="col-md-6">
-                    <div className="form-group mb-3">
+                </div>
+                <div className="col-md-6">
+                  <div className="form-group mb-3">
                       <label className="form-label">Vesting Entity Name *</label>
-                      <input 
-                        type="text" 
+                    <input 
+                      type="text" 
                         className={`form-control ${fieldErrors['foreclosureSale.vestingEntityName'] ? 'is-invalid' : ''}`}
                         value={formData.foreclosureSale?.vestingEntityName || ''} 
                         readOnly={!isEditing}
@@ -1841,25 +1850,25 @@ const PetitionTabContent = ({ petition }) => {
                       {fieldErrors['foreclosureSale.vestingEntityName'] && (
                         <div className="text-danger small mt-1">{fieldErrors['foreclosureSale.vestingEntityName']}</div>
                       )}
-                    </div>
                   </div>
-                  <div className="col-md-6">
-                    <div className="form-group mb-3">
+                </div>
+                <div className="col-md-6">
+                  <div className="form-group mb-3">
                       <label className="form-label">REO Entity Name</label>
-                      <input 
-                        type="text" 
-                        className="form-control"
+                    <input 
+                      type="text" 
+                      className="form-control" 
                         value={formData.foreclosureSale?.reoEntityName || ''} 
                         readOnly={!isEditing}
                         onChange={(e) => updateForeclosureSale('reoEntityName', e.target.value)}
-                      />
-                    </div>
+                    />
                   </div>
+                </div>
                   <div className="col-md-6">
-                    <div className="form-group mb-3">
+                  <div className="form-group mb-3">
                       <label className="form-label">REO Contact First Name *</label>
-                      <input 
-                        type="text" 
+                    <input 
+                      type="text" 
                         className={`form-control ${fieldErrors['foreclosureSale.reoContactFirstName'] ? 'is-invalid' : ''}`}
                         value={formData.foreclosureSale?.reoContactFirstName || ''} 
                         readOnly={!isEditing}
@@ -1868,10 +1877,10 @@ const PetitionTabContent = ({ petition }) => {
                       {fieldErrors['foreclosureSale.reoContactFirstName'] && (
                         <div className="text-danger small mt-1">{fieldErrors['foreclosureSale.reoContactFirstName']}</div>
                       )}
-                    </div>
                   </div>
+                </div>
                   <div className="col-md-6">
-                    <div className="form-group mb-3">
+                  <div className="form-group mb-3">
                       <label className="form-label">REO Contact Last Name *</label>
                       <input 
                         type="text" 
@@ -1903,18 +1912,18 @@ const PetitionTabContent = ({ petition }) => {
                   <div className="col-md-6">
                     <div className="form-group mb-3">
                       <label className="form-label">REO Emergency Phone</label>
-                      <input 
-                        type="text" 
-                        className="form-control"
+                    <input 
+                      type="text" 
+                      className="form-control" 
                         value={formData.foreclosureSale?.reoEmergencyPhone || ''} 
                         readOnly={!isEditing}
                         onChange={(e) => updateForeclosureSale('reoEmergencyPhone', e.target.value)}
-                      />
-                    </div>
+                    />
                   </div>
                 </div>
               </div>
             </div>
+          </div>
           )}
 
           {/* Form 35B Compliance Section */}
@@ -1950,7 +1959,7 @@ const PetitionTabContent = ({ petition }) => {
                     <input 
                       type="text" 
                       name="affiantName"
-                      className="form-control"
+                      className="form-control" 
                       value={formData.affiantName || ''} 
                       readOnly={!isEditing}
                       onChange={handleInputChange}
@@ -1995,7 +2004,7 @@ const PetitionTabContent = ({ petition }) => {
               {formData.loanAssignees && formData.loanAssignees.length > 0 ? (
                 <>
                   {formData.loanAssignees.map((assignee, index) => (
-                    <div key={index} className="border rounded p-3 mb-3">
+                  <div key={index} className="border rounded p-3 mb-3">
                       <div className="d-flex justify-content-between align-items-center mb-3">
                         <h6 className="mb-0 fw-semibold">Assignee {index + 1}</h6>
                         {isEditing && (
@@ -2009,12 +2018,12 @@ const PetitionTabContent = ({ petition }) => {
                           </button>
                         )}
                       </div>
-                      <div className="row">
-                        <div className="col-md-6">
-                          <div className="form-group mb-3">
+                    <div className="row">
+                      <div className="col-md-6">
+                        <div className="form-group mb-3">
                             <label className="form-label">Assignee Name *</label>
-                            <input 
-                              type="text" 
+                          <input 
+                            type="text" 
                               className={`form-control ${fieldErrors[`loanAssignees.${index}.assigneeName`] ? 'is-invalid' : ''}`}
                               value={assignee.assigneeName || ''} 
                               readOnly={!isEditing}
@@ -2023,10 +2032,10 @@ const PetitionTabContent = ({ petition }) => {
                             {fieldErrors[`loanAssignees.${index}.assigneeName`] && (
                               <div className="text-danger small mt-1">{fieldErrors[`loanAssignees.${index}.assigneeName`]}</div>
                             )}
-                          </div>
                         </div>
-                        <div className="col-md-6">
-                          <div className="form-group mb-3">
+                      </div>
+                      <div className="col-md-6">
+                        <div className="form-group mb-3">
                             <label className="form-label">Assignee Type *</label>
                             <select 
                               className={`form-select ${fieldErrors[`loanAssignees.${index}.assigneeTypeId`] ? 'is-invalid' : ''}`}
@@ -2044,10 +2053,10 @@ const PetitionTabContent = ({ petition }) => {
                             {fieldErrors[`loanAssignees.${index}.assigneeTypeId`] && (
                               <div className="text-danger small mt-1">{fieldErrors[`loanAssignees.${index}.assigneeTypeId`]}</div>
                             )}
-                          </div>
                         </div>
-                        <div className="col-md-6">
-                          <div className="form-group mb-3">
+                      </div>
+                      <div className="col-md-6">
+                        <div className="form-group mb-3">
                             <label className="form-label">Assignee Role *</label>
                             <select 
                               className={`form-select ${fieldErrors[`loanAssignees.${index}.assigneeRoleId`] ? 'is-invalid' : ''}`}
@@ -2065,13 +2074,13 @@ const PetitionTabContent = ({ petition }) => {
                             {fieldErrors[`loanAssignees.${index}.assigneeRoleId`] && (
                               <div className="text-danger small mt-1">{fieldErrors[`loanAssignees.${index}.assigneeRoleId`]}</div>
                             )}
-                          </div>
                         </div>
-                        <div className="col-md-6">
-                          <div className="form-group mb-3">
+                      </div>
+                      <div className="col-md-6">
+                        <div className="form-group mb-3">
                             <label className="form-label">Street Address *</label>
-                            <input 
-                              type="text" 
+                          <input 
+                            type="text" 
                               className={`form-control ${fieldErrors[`loanAssignees.${index}.street1`] ? 'is-invalid' : ''}`}
                               value={assignee.street1 || ''} 
                               readOnly={!isEditing}
@@ -2080,25 +2089,25 @@ const PetitionTabContent = ({ petition }) => {
                             {fieldErrors[`loanAssignees.${index}.street1`] && (
                               <div className="text-danger small mt-1">{fieldErrors[`loanAssignees.${index}.street1`]}</div>
                             )}
-                          </div>
                         </div>
-                        <div className="col-md-6">
-                          <div className="form-group mb-3">
-                            <label className="form-label">Street Address 2</label>
-                            <input 
-                              type="text" 
-                              className="form-control"
+                      </div>
+                      <div className="col-md-6">
+                        <div className="form-group mb-3">
+                          <label className="form-label">Street Address 2</label>
+                          <input 
+                            type="text" 
+                            className="form-control" 
                               value={assignee.street2 || ''} 
                               readOnly={!isEditing}
                               onChange={(e) => updateLoanAssignee(index, 'street2', e.target.value)}
-                            />
-                          </div>
+                          />
                         </div>
-                        <div className="col-md-4">
-                          <div className="form-group mb-3">
+                      </div>
+                      <div className="col-md-4">
+                        <div className="form-group mb-3">
                             <label className="form-label">City *</label>
-                            <input 
-                              type="text" 
+                          <input 
+                            type="text" 
                               className={`form-control ${fieldErrors[`loanAssignees.${index}.city`] ? 'is-invalid' : ''}`}
                               value={assignee.city || ''} 
                               readOnly={!isEditing}
@@ -2107,13 +2116,13 @@ const PetitionTabContent = ({ petition }) => {
                             {fieldErrors[`loanAssignees.${index}.city`] && (
                               <div className="text-danger small mt-1">{fieldErrors[`loanAssignees.${index}.city`]}</div>
                             )}
-                          </div>
                         </div>
-                        <div className="col-md-4">
-                          <div className="form-group mb-3">
+                      </div>
+                      <div className="col-md-4">
+                        <div className="form-group mb-3">
                             <label className="form-label">State *</label>
-                            <input 
-                              type="text" 
+                          <input 
+                            type="text" 
                               className={`form-control ${fieldErrors[`loanAssignees.${index}.addressState`] ? 'is-invalid' : ''}`}
                               value={assignee.addressState || ''} 
                               readOnly={!isEditing}
@@ -2122,13 +2131,13 @@ const PetitionTabContent = ({ petition }) => {
                             {fieldErrors[`loanAssignees.${index}.addressState`] && (
                               <div className="text-danger small mt-1">{fieldErrors[`loanAssignees.${index}.addressState`]}</div>
                             )}
-                          </div>
                         </div>
-                        <div className="col-md-4">
-                          <div className="form-group mb-3">
+                      </div>
+                      <div className="col-md-4">
+                        <div className="form-group mb-3">
                             <label className="form-label">ZIP Code *</label>
-                            <input 
-                              type="text" 
+                          <input 
+                            type="text" 
                               className={`form-control ${fieldErrors[`loanAssignees.${index}.zip`] ? 'is-invalid' : ''}`}
                               value={assignee.zip || ''} 
                               readOnly={!isEditing}
@@ -2137,14 +2146,14 @@ const PetitionTabContent = ({ petition }) => {
                             {fieldErrors[`loanAssignees.${index}.zip`] && (
                               <div className="text-danger small mt-1">{fieldErrors[`loanAssignees.${index}.zip`]}</div>
                             )}
-                          </div>
                         </div>
+                      </div>
                         <div className="col-md-6">
                           <div className="form-group mb-3">
                             <label className="form-label">License Number</label>
                             <input 
                               type="text" 
-                              className="form-control"
+                              className="form-control" 
                               value={assignee.licenseNumber || ''} 
                               readOnly={!isEditing}
                               onChange={(e) => updateLoanAssignee(index, 'licenseNumber', e.target.value)}
@@ -2156,15 +2165,15 @@ const PetitionTabContent = ({ petition }) => {
                             <label className="form-label">License State</label>
                             <input 
                               type="text" 
-                              className="form-control"
+                              className="form-control" 
                               value={assignee.licenseState || ''} 
                               readOnly={!isEditing}
                               onChange={(e) => updateLoanAssignee(index, 'licenseState', e.target.value)}
                             />
                           </div>
                         </div>
-                      </div>
                     </div>
+                  </div>
                   ))}
                   {isEditing && (
                     <button 
