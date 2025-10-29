@@ -4,46 +4,34 @@ import { PETITION_ENDPOINTS } from '../constants/apiEndpoints';
 class PetitionApiService {
   // Submit a new petition
   async submitPetition(petitionData) {
-    try {
-      const response = await axiosInstance.post(PETITION_ENDPOINTS.SUBMIT_PETITION, petitionData);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const response = await axiosInstance.post(PETITION_ENDPOINTS.SUBMIT_PETITION, petitionData);
+    return response.data;
   }
 
 
   // Get petition count by organization ID
   async getPetitionCountByOrganization(organizationId) {
-    try {
-      const url = `/api/Petition/get-petition-count-by-organisationId/${organizationId}`;
-      
-      const response = await axiosInstance.post(url, {}, {
-        headers: {
-          'Accept': 'text/plain',
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const url = `/api/Petition/get-petition-count-by-organisationId/${organizationId}`;
+    
+    const response = await axiosInstance.post(url, {}, {
+      headers: {
+        'Accept': 'text/plain',
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    return response.data;
   }
 
   // Get petition by ID
   async getPetitionById(petitionId) {
-    try {
-      const response = await axiosInstance.get(PETITION_ENDPOINTS.GET_PETITION_BY_ID(petitionId), {
-        headers: {
-          'Accept': 'text/plain'
-        }
-      });
-      
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const response = await axiosInstance.get(PETITION_ENDPOINTS.GET_PETITION_BY_ID(petitionId), {
+      headers: {
+        'Accept': 'text/plain'
+      }
+    });
+    
+    return response.data;
   }
 
   /**
@@ -61,22 +49,16 @@ class PetitionApiService {
    * @returns {Promise<Object>} API response with paginated petition data
    */
   async getPetitionsPaged(paginationParams) {
-    try {
-      
-      // Use the helper method to create validated parameters
-      const validatedParams = this.createPaginationParams(paginationParams);
-      
-      
-      const response = await axiosInstance.post(PETITION_ENDPOINTS.GET_PETITIONS_PAGED, validatedParams, {
-        headers: {
-          'Accept': 'text/plain',
-          'Content-Type': 'application/json'
-        }
-      });
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    // Use the helper method to create validated parameters
+    const validatedParams = this.createPaginationParams(paginationParams);
+    
+    const response = await axiosInstance.post(PETITION_ENDPOINTS.GET_PETITIONS_PAGED, validatedParams, {
+      headers: {
+        'Accept': 'text/plain',
+        'Content-Type': 'application/json'
+      }
+    });
+    return response.data;
   }
 
   /**
@@ -154,7 +136,7 @@ class PetitionApiService {
       try {
         const date = new Date(dateString);
         return isNaN(date.getTime()) ? null : date.toISOString();
-      } catch (error) {
+      } catch {
         return null;
       }
     };

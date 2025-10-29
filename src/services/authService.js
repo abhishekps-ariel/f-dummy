@@ -313,7 +313,7 @@ export const uploadUserSignature = async (userId, signatureFile) => {
 export const getSignatureById = async (userId) => {
   const response = await client.post(
     AUTH_ENDPOINTS.GET_SIGNATURE_BY_ID(userId),
-    {}, // Empty body as per API spec
+    {}, 
     {
       headers: {
         Accept: "text/plain",
