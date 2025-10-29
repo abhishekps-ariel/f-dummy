@@ -85,7 +85,7 @@ export const usePetitions = () => {
   };
 
   // Submit a new petition
-  const submitPetition = async (formData) => {
+  const submitPetition = async (formData, isDraft = false) => {
     if (!hasOrganizationAccess) {
       throw new Error('User must be part of an organization to submit petitions');
     }
@@ -106,7 +106,11 @@ export const usePetitions = () => {
       const response = await petitionApiService.submitPetition(apiData);
       
       if (response.success) {
-        toast.success('Petition submitted successfully!');
+        if (isDraft) {
+          toast.success('Petition saved as draft!');
+        } else {
+          toast.success('Petition submitted successfully!');
+        }
         // Refresh the petitions list
         await fetchPetitions();
         return response.data;

@@ -1901,12 +1901,35 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
     setIsSaving(true);
     
     try {
-      // No validation required for saving drafts - just save the current form data
-      // Here you would typically send the data to your API
-      // For now, we'll simulate a save operation
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Check organization access
+      if (!hasOrganizationAccess) {
+        toast.error("You must be part of an organization to save petition drafts.");
+        setIsSaving(false);
+        return;
+      }
+
+      // Prepare petition data with isAllStepsCompleted: false for draft
+      const petitionData = {
+        isAllStepsCompleted: false,
+        ...formData,
+        signatures: [
+          {
+            signerFullName: `${formData.signerFirstName || ''} ${formData.signerMiddleInitial || ''} ${formData.signerLastName || ''}`.trim(),
+            signerTitle: formData.signerTitle || user?.role || 'FILIR User',
+            signerEmail: formData.signerEmail || '',
+            esignConsent: true,
+            signatureDrawnOrTyped: userProfile?.signatureUrl || '',
+            signedAt: new Date().toISOString(),
+            signerIp: '', // Will be filled by backend
+            otpCode: '' // Will be filled by backend
+          }
+        ]
+      };
       
-      // Create save data object
+      // Submit petition as draft using API
+      await submitPetition(petitionData, true); // Pass isDraft: true
+      
+      // Also save to localStorage for backup
       const saveData = {
         step: currentStep,
         formData: formData,
@@ -1914,9 +1937,6 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
         isDraft: true
       };
       
-      // In a real application, you would save this to your backend
-      
-      // Store in localStorage for now (in real app, this would be API call)
       const existingDrafts = JSON.parse(localStorage.getItem('petitionDrafts') || '[]');
       const draftIndex = existingDrafts.findIndex(draft => draft.step === currentStep);
       
@@ -1929,7 +1949,14 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
       localStorage.setItem('petitionDrafts', JSON.stringify(existingDrafts));
       
       setHasSavedDraft(true);
-      toast.success(`Step ${currentStep} saved as draft!`);
+      
+      // Notify parent component that petition was saved as draft
+      if (onPetitionSubmitted) {
+        onPetitionSubmitted();
+      }
+      
+      // Close the form modal
+      onClose();
       
     } catch (error) {
       toast.error("Failed to save step. Please try again.");
