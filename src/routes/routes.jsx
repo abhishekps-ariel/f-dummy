@@ -1,6 +1,7 @@
 import { lazy } from 'react';
 import { createBrowserRouter } from 'react-router-dom';
 import Layout from '../layout/Layout';
+import RouteGuard from '../components/RouteGuard';
 import { ROUTES } from '../constants/routerConstants';
 
 const Home = lazy(() => import('../pages/Home'));
@@ -24,7 +25,11 @@ const PageNotFound = lazy(() => import('../components/shared/PageNotFound'));
 export const router = createBrowserRouter([
   {
     path: ROUTES.HOME,
-    element: <Home />,
+    element: (
+      <RouteGuard>
+        <Home />
+      </RouteGuard>
+    ),
   },
   {
     path: ROUTES.LOGIN,

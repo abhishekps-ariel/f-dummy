@@ -95,6 +95,22 @@ export const AuthProvider = ({ children }) => {
     checkAuthStatus();
   }, []);
 
+  // Function to validate token expiry
+  const isTokenExpired = (token) => {
+    if (!token) return true;
+    
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const currentTime = Math.floor(Date.now() / 1000);
+      const expirationTime = payload.exp;
+      
+      // Consider token expired if it expires within 5 minutes (300 seconds)
+      return currentTime >= (expirationTime - 300);
+    } catch (error) {
+      return true;
+    }
+  };
+
   // Check organization access when authentication status changes
   useEffect(() => {
     if (isAuthenticated && !organizationCheckComplete) {
@@ -152,6 +168,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     updateOrganization,
     updateUserSignature,
+    isTokenExpired,
   };
 
   return (

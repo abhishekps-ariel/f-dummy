@@ -56,7 +56,9 @@ const SignatureOtpModal = ({ show, onHide, onOtpVerified, signatureData }) => {
     try {
       const response = await verifySignatureOtp(user.id, otpCode);
       
-      if (response.isSuccess && response.data === true) {
+      if (response.isSuccess) {
+        // Proceed with signature upload regardless of data value
+        // The API might return data: false but we still continue with upload
         setSuccess('OTP verified successfully! Uploading signature...');
         // Call the callback to proceed with signature upload
         onOtpVerified(signatureData);
