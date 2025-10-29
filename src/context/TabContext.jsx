@@ -46,7 +46,6 @@ export const TabProvider = ({ children }) => {
         localStorage.setItem('activePetitionTab', 'all-petitions');
       }
     } catch (error) {
-      console.error('Error loading tabs from localStorage:', error);
       // Fallback to default tab
       const defaultTabs = [{
         id: 'all-petitions',
@@ -66,7 +65,6 @@ export const TabProvider = ({ children }) => {
       try {
         localStorage.setItem('petitionTabs', JSON.stringify(tabs));
       } catch (error) {
-        console.error('Error saving tabs to localStorage:', error);
       }
     }
   }, [tabs]);
@@ -77,7 +75,6 @@ export const TabProvider = ({ children }) => {
       try {
         localStorage.setItem('activePetitionTab', activeTabId);
       } catch (error) {
-        console.error('Error saving active tab to localStorage:', error);
       }
     }
   }, [activeTabId]);
@@ -128,7 +125,6 @@ export const TabProvider = ({ children }) => {
         );
       }
     } catch (error) {
-      console.error('Error fetching petition details:', error);
       // Update tab to show error state
       setTabs(prevTabs => 
         prevTabs.map(tab => 

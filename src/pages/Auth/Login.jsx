@@ -104,7 +104,6 @@ function Login() {
       } else {
         toast.error("Login failed. Please try again.");
       }
-      console.error("Login error:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -145,7 +144,6 @@ function Login() {
       } else {
         toast.error("Login failed. Please try again.");
       }
-      console.error("Direct login error:", error);
     }
   };
 
@@ -194,7 +192,6 @@ function Login() {
       } else {
         toast.error("Failed to send OTP. Please try again.");
       }
-      console.error("Send OTP error:", error);
     } finally {
       setIsSubmitting(false);
     }

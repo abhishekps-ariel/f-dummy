@@ -46,7 +46,6 @@ export const AuthProvider = ({ children }) => {
               setOrganization({ id: approvedRequest.organizationId });
             }
           } catch (error) {
-            console.error('Error fetching organization details:', error);
             // Fallback to just ID if full details can't be fetched
             setOrganization({ id: approvedRequest.organizationId });
           }
@@ -57,7 +56,6 @@ export const AuthProvider = ({ children }) => {
         setHasOrganizationAccess(false);
       }
     } catch (error) {
-      console.error('Error checking organization access:', error);
       setHasOrganizationAccess(false);
     } finally {
       setOrganizationCheckComplete(true);
@@ -84,7 +82,6 @@ export const AuthProvider = ({ children }) => {
           setOrganizationCheckComplete(false);
         }
       } catch (error) {
-        console.error('Error checking auth status:', error);
         setIsAuthenticated(false);
         setUser(null);
         setOrganization(null);

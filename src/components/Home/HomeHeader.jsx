@@ -223,7 +223,6 @@ function HomeHeader({
                 href="#"
                 onClick={(e) => {
                   e.preventDefault();
-                  console.log("Featured clicked, ref:", featureRef);
                   if (featureRef.current) {
                     featureRef.current.scrollIntoView({
                       behavior: "smooth",
@@ -247,7 +246,6 @@ function HomeHeader({
                 href="#"
                 onClick={(e) => {
                   e.preventDefault();
-                  console.log("Contact Us clicked, ref:", contactRef);
                   if (contactRef.current) {
                     contactRef.current.scrollIntoView({
                       behavior: "smooth",
@@ -271,7 +269,6 @@ function HomeHeader({
                 href="#"
                 onClick={(e) => {
                   e.preventDefault();
-                  console.log("Who we serve clicked, ref:", whoWeServeRef);
                   if (whoWeServeRef.current) {
                     whoWeServeRef.current.scrollIntoView({
                       behavior: "smooth",
@@ -295,7 +292,6 @@ function HomeHeader({
                 href="#"
                 onClick={(e) => {
                   e.preventDefault();
-                  console.log("I want to clicked, ref:", actionsRef);
                   if (actionsRef.current) {
                     actionsRef.current.scrollIntoView({
                       behavior: "smooth",
@@ -319,7 +315,6 @@ function HomeHeader({
                 href="#"
                 onClick={(e) => {
                   e.preventDefault();
-                  console.log("News clicked, ref:", newsRef);
                   if (newsRef.current) {
                     newsRef.current.scrollIntoView({
                       behavior: "smooth",
@@ -343,7 +338,6 @@ function HomeHeader({
                 href="#"
                 onClick={(e) => {
                   e.preventDefault();
-                  console.log("Events clicked, ref:", eventsRef);
                   if (eventsRef.current) {
                     eventsRef.current.scrollIntoView({
                       behavior: "smooth",

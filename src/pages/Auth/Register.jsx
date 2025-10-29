@@ -82,7 +82,6 @@ function Register() {
         setInviteError("Invalid or expired invite link");
       }
     } catch (error) {
-      console.error("Error fetching invite data:", error);
       setInviteError("Failed to load invite details. Please check your link and try again.");
     } finally {
       setIsLoadingInvite(false);
@@ -192,7 +191,6 @@ const handleSubmit = async (e) => {
             await bindUserToOrganization(inviteData.joinRequestId, response.data.userId);
             toast.success("Account created and organization access granted! Please login to continue.");
           } catch (bindError) {
-            console.error("Error binding user to organization:", bindError);
             toast.success("Account created successfully! Please login to continue.");
             // Still navigate to login even if binding fails
           }
@@ -214,7 +212,6 @@ const handleSubmit = async (e) => {
     } else {
       toast.error(err.message || "Registration failed!");
     }
-    console.error("Registration error:", err);
   } finally {
     setIsSubmitting(false);
   }

@@ -27,7 +27,6 @@ export const ORGANIZATION_ENDPOINTS = {
   SUBMIT_JOIN_REQUEST: "/api/OrganizationJoinRequest/request",
   GET_MY_REQUESTS: "/api/OrganizationJoinRequest/my-requests",
   GET_JOIN_REQUEST: (joinRequestId) => `/api/OrganizationJoinRequest/join-request/${joinRequestId}`,
-  BIND_USER_TO_ORGANIZATION: "/api/OrganizationJoinRequest/bind-user-to-organization",
 };
 
 export const COMMON_ENDPOINTS = {
@@ -40,7 +39,6 @@ export const COMMON_ENDPOINTS = {
 
 export const PETITION_ENDPOINTS = {
   SUBMIT_PETITION: "/api/Petition/submit",
-  GET_PETITIONS_BY_ORGANIZATION: (organizationId) => `/api/Petition/organization/${organizationId}`,
   GET_PETITIONS_PAGED: "/api/Petition/organization/paged",
   GET_PETITION_BY_ID: (petitionId) => `/api/Petition/${petitionId}`,
 };

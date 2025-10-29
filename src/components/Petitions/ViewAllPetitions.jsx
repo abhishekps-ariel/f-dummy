@@ -51,17 +51,14 @@ const ViewAllPetitions = ({ onBack }) => {
     }
   };
 
-  // Fetch petitions with fallback to existing endpoint
+  // Fetch petitions using paged API
   const fetchPetitions = async (page = 1) => {
     if (!organization?.id) {
-      console.log('No organization ID available');
       return;
     }
     
-    console.log('Fetching petitions for organization:', organization.id, 'page:', page);
     setLoading(true);
     try {
-      // Try server-side pagination first
       const paginationParams = {
         organizationId: organization.id,
         pageNumber: page, // Use 1-based pagination as expected by API
@@ -74,61 +71,25 @@ const ViewAllPetitions = ({ onBack }) => {
         sortDirection: sortOrder
       };
 
-      console.log('Sending pagination params:', paginationParams);
-      console.log('Page number being sent:', paginationParams.pageNumber);
-      console.log('Sort mapping - sortBy:', sortBy, '-> sortColumn:', getSortColumn(sortBy));
-      console.log('Sort direction:', sortOrder);
       
-      try {
-        const response = await petitionApiService.getPetitionsPaged(paginationParams);
-        console.log('API Response received:', response);
+      const response = await petitionApiService.getPetitionsPaged(paginationParams);
+      
+      if (response.success) {
+        const transformedPetitions = petitionApiService.transformApiResponseToDisplayFormat(response);
+        setPetitions(transformedPetitions);
         
-        if (response.success) {
-          const transformedPetitions = petitionApiService.transformApiResponseToDisplayFormat(response);
-          console.log('Transformed petitions:', transformedPetitions);
-          setPetitions(transformedPetitions);
-          
-          // Update pagination info from API response
-          setPagination(prev => ({
-            ...prev,
-            currentPage: page,
-            totalPages: Math.ceil((response.totalRecords || response.data?.length || 0) / 10),
-            totalCount: response.totalRecords || response.data?.length || 0
-          }));
-          return;
-        }
-      } catch (pagedError) {
-        console.log('Server-side pagination not available, falling back to client-side pagination');
-        
-        // Fallback to existing endpoint with client-side pagination
-        const response = await petitionApiService.getPetitionsByOrganization(organization.id);
-        
-        if (response.isSuccess) {
-          const allPetitions = petitionApiService.transformApiResponseToDisplayFormat(response);
-          
-          // Apply client-side filtering
-          const filteredPetitions = applyClientSideFilters(allPetitions);
-          
-          // Apply client-side pagination
-          const startIndex = (page - 1) * 10;
-          const paginatedPetitions = filteredPetitions.slice(startIndex, startIndex + 10);
-          
-          setPetitions(paginatedPetitions);
-          
-          // Update pagination info
-          setPagination(prev => ({
-            ...prev,
-            currentPage: page,
-            totalPages: Math.ceil(filteredPetitions.length / 10),
-            totalCount: filteredPetitions.length
-          }));
-        } else {
-          toast.error(response.message || 'Failed to fetch petitions');
-          setPetitions([]);
-        }
+        // Update pagination info from API response
+        setPagination(prev => ({
+          ...prev,
+          currentPage: page,
+          totalPages: Math.ceil((response.totalRecords || response.data?.length || 0) / 10),
+          totalCount: response.totalRecords || response.data?.length || 0
+        }));
+      } else {
+        toast.error(response.message || 'Failed to fetch petitions');
+        setPetitions([]);
       }
     } catch (error) {
-      console.error('Error fetching petitions:', error);
       toast.error('Failed to fetch petitions. Please try again.');
       setPetitions([]);
     } finally {
@@ -136,92 +97,6 @@ const ViewAllPetitions = ({ onBack }) => {
     }
   };
 
-  // Apply client-side filters
-  const applyClientSideFilters = (allPetitions) => {
-    let filtered = [...allPetitions];
-
-    // Apply search filter
-    if (searchQuery.trim()) {
-      const searchLower = searchQuery.toLowerCase();
-      filtered = filtered.filter(petition =>
-        (petition.petitionNumber || '').toLowerCase().includes(searchLower) ||
-        (petition.propertyAddress || '').toLowerCase().includes(searchLower) ||
-        (petition.borrower || '').toLowerCase().includes(searchLower)
-      );
-    }
-
-    // Apply status filter
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter(petition => 
-        petition.statusValue === statusFilter
-      );
-    }
-
-    // Apply date filter
-    if (dateFilter !== 'all') {
-      const today = new Date();
-      const filterDate = new Date();
-      
-      switch (dateFilter) {
-        case 'today':
-          filtered = filtered.filter(petition => {
-            const petitionDate = new Date(petition.details.createdDate);
-            return petitionDate.toDateString() === today.toDateString();
-          });
-          break;
-        case 'week':
-          filterDate.setDate(today.getDate() - 7);
-          filtered = filtered.filter(petition => {
-            const petitionDate = new Date(petition.details.createdDate);
-            return petitionDate >= filterDate;
-          });
-          break;
-        case 'month':
-          filterDate.setMonth(today.getMonth() - 1);
-          filtered = filtered.filter(petition => {
-            const petitionDate = new Date(petition.details.createdDate);
-            return petitionDate >= filterDate;
-          });
-          break;
-        case 'custom':
-          if (customDateFrom && customDateTo) {
-            const fromDate = new Date(customDateFrom);
-            const toDate = new Date(customDateTo);
-            toDate.setHours(23, 59, 59, 999);
-            
-            filtered = filtered.filter(petition => {
-              const petitionDate = new Date(petition.details.createdDate);
-              return petitionDate >= fromDate && petitionDate <= toDate;
-            });
-          }
-          break;
-        default:
-          break;
-      }
-    }
-
-    // Apply sorting
-    filtered.sort((a, b) => {
-      let aValue = a[sortBy];
-      let bValue = b[sortBy];
-
-      if (sortBy === 'filingDate') {
-        aValue = new Date(a.details.createdDate);
-        bValue = new Date(b.details.createdDate);
-      } else if (sortBy === 'lastUpdated') {
-        aValue = new Date(a.details.modifiedDate);
-        bValue = new Date(b.details.modifiedDate);
-      }
-
-      if (sortOrder === 'asc') {
-        return aValue > bValue ? 1 : -1;
-      } else {
-        return aValue > bValue ? -1 : 1;
-      }
-    });
-
-    return filtered;
-  };
 
   // Helper function to get status value for API
   const getStatusValue = (status) => {
@@ -305,7 +180,6 @@ const ViewAllPetitions = ({ onBack }) => {
       }
       toast.success(`Petitions exported as ${format.toUpperCase()} successfully!`);
     } catch (error) {
-      console.error('Export error:', error);
       toast.error('Failed to export petitions. Please try again.');
     } finally {
       setExporting(false);
@@ -340,7 +214,6 @@ const ViewAllPetitions = ({ onBack }) => {
       link.click();
       document.body.removeChild(link);
     } catch (error) {
-      console.error('CSV export error:', error);
       toast.error('Failed to export CSV. Please try again.');
     }
   };
@@ -407,7 +280,6 @@ const ViewAllPetitions = ({ onBack }) => {
       // Save the PDF
       doc.save(`petitions_${new Date().toISOString().split('T')[0]}.pdf`);
     } catch (error) {
-      console.error('PDF export error:', error);
       toast.error('Failed to export PDF. Please try again.');
     }
   };
@@ -442,8 +314,6 @@ const ViewAllPetitions = ({ onBack }) => {
   // Handle sorting changes
   useEffect(() => {
     if (organization?.id) {
-      console.log('Sorting changed - sortBy:', sortBy, 'sortOrder:', sortOrder);
-      console.log('Mapped to API - sortColumn:', getSortColumn(sortBy), 'sortDirection:', sortOrder);
       setPagination(prev => ({ ...prev, currentPage: 1 }));
       fetchPetitions(1);
     }
@@ -500,7 +370,6 @@ const ViewAllPetitions = ({ onBack }) => {
     try {
       await fetchPetitions(pagination.currentPage);
     } catch (error) {
-      console.error("Error reloading petitions:", error);
       // Don't show error toast here as the submission was successful
       // The user will see the success message from the submission itself
     }
@@ -944,7 +813,6 @@ const ViewAllPetitions = ({ onBack }) => {
                               e.stopPropagation();
                               setOpenDropdownId(null);
                               // TODO: Implement resume functionality
-                              console.log('Resume petition:', petition.id);
                             }}
                           >
                             Resume
@@ -955,7 +823,6 @@ const ViewAllPetitions = ({ onBack }) => {
                               e.stopPropagation();
                               setOpenDropdownId(null);
                               // TODO: Implement delete functionality
-                              console.log('Delete petition:', petition.id);
                             }}
                           >
                             Delete
@@ -1048,7 +915,6 @@ const ViewAllPetitions = ({ onBack }) => {
                               e.stopPropagation();
                               setOpenDropdownId(null);
                               // TODO: Implement resume functionality
-                              console.log('Resume petition:', petition.id);
                             }}
                           >
                             Resume
@@ -1059,7 +925,6 @@ const ViewAllPetitions = ({ onBack }) => {
                               e.stopPropagation();
                               setOpenDropdownId(null);
                               // TODO: Implement delete functionality
-                              console.log('Delete petition:', petition.id);
                             }}
                           >
                             Delete

@@ -115,7 +115,6 @@ const PetitionTabContent = ({ petition }) => {
   const handleSave = (sectionName) => {
     setEditingSections(prev => ({ ...prev, [sectionName]: false }));
     // In a real implementation, this would save to the API
-    console.log(`Saving ${sectionName}:`, editedData[sectionName]);
     // For now, just show a success message
     alert(`${sectionName} saved successfully! (This is a static implementation)`);
   };
@@ -484,7 +483,6 @@ const PetitionTabContent = ({ petition }) => {
       // Save the PDF
       doc.save(`petition-${petition.petitionNumber}-details.pdf`);
     } catch (error) {
-      console.error('Error generating PDF:', error);
       alert('Error generating PDF. Please try again.');
     }
   };

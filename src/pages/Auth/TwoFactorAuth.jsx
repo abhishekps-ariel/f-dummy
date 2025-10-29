@@ -120,7 +120,6 @@ function TwoFactorAuth() {
       }
     } catch (error) {
       toast.error("Invalid authentication code. Please try again.");
-      console.error("2FA error:", error);
     } finally {
       setIsSubmitting(false);
     }

@@ -120,7 +120,6 @@ export const verifyEmail = async (token) => {
     headers: { Accept: "text/plain" },
   });
 
-  console.log("Verify Email Response:", response.data);
 
   return {
     isSuccess: response.data.success,

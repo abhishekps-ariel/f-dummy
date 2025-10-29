@@ -8,7 +8,6 @@ class CommonPetitionService {
       const response = await axiosInstance.get(COMMON_ENDPOINTS.GET_PETITION_ENUMS);
       return response.data;
     } catch (error) {
-      console.error('Error fetching petition enums:', error);
       throw error;
     }
   }
@@ -19,7 +18,6 @@ class CommonPetitionService {
       const response = await axiosInstance.get(COMMON_ENDPOINTS.GET_PETITION_LOAN_TYPES);
       return response.data;
     } catch (error) {
-      console.error('Error fetching petition loan types:', error);
       throw error;
     }
   }
@@ -30,7 +28,6 @@ class CommonPetitionService {
       const response = await axiosInstance.get(COMMON_ENDPOINTS.GET_PETITION_ASSIGNEE_TYPES);
       return response.data;
     } catch (error) {
-      console.error('Error fetching petition assignee types:', error);
       throw error;
     }
   }
@@ -41,7 +38,6 @@ class CommonPetitionService {
       const response = await axiosInstance.get(COMMON_ENDPOINTS.GET_PETITION_ASSIGNEE_ROLES);
       return response.data;
     } catch (error) {
-      console.error('Error fetching petition assignee roles:', error);
       throw error;
     }
   }
@@ -66,7 +62,6 @@ class CommonPetitionService {
         }
       };
     } catch (error) {
-      console.error('Error fetching all petition common data:', error);
       throw error;
     }
   }

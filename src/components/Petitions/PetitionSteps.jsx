@@ -126,12 +126,9 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
               signatureImageName: signatureResponse.data.signatureImageName,
               signatureUrl: signatureResponse.data.signatureUrl
             }));
-            console.log('User signature loaded in petition steps:', signatureResponse.data);
           } else {
-            console.log('No signature found for user in petition steps:', signatureResponse.msg);
           }
         } catch (error) {
-          console.error('Error fetching user signature in petition steps:', error);
         }
         
         // Load filing entity types
@@ -140,7 +137,6 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
           setFilingEntityTypes(typesResponse.data);
         }
       } catch (error) {
-        console.error('Error loading user profile:', error);
         toast.error('Failed to load user profile');
       } finally {
         setProfileLoading(false);
@@ -179,7 +175,6 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
           setOrganizationData(orgData);
         }
       } catch (error) {
-        console.error('Error loading organization details:', error);
         // Fallback to existing organization prop if available
         if (organization) {
           // Parse the old format as fallback
@@ -242,12 +237,10 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
   // Error logging
   useEffect(() => {
     if (loadError) {
-      console.error('Google Maps Load Error:', loadError);
     }
     
     // Check if API key is properly configured
     if (Config.GOOGLE_PLACES_API_KEY === 'YOUR_GOOGLE_PLACES_API_KEY_HERE') {
-      console.warn('Google Places API key not configured properly');
     }
   }, [isLoaded, loadError]);
 
@@ -265,7 +258,6 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
         // Initialize Geocoder
         geocoderRef.current = new window.google.maps.Geocoder();
       } catch (error) {
-        console.error('Error initializing Google Places services:', error);
       }
     }
   }, [isLoaded]);
@@ -305,7 +297,6 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
           setHasSavedDraft(false);
         }
       } catch (error) {
-        console.error('Error loading saved drafts:', error);
         setHasSavedDraft(false);
       }
     };
@@ -476,17 +467,13 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
             
             // Show specific error messages for debugging
             if (status === window.google.maps.places.PlacesServiceStatus.REQUEST_DENIED) {
-              console.error('Google Places API request denied - check API key permissions');
             } else if (status === window.google.maps.places.PlacesServiceStatus.OVER_QUERY_LIMIT) {
-              console.error('Google Places API quota exceeded');
             } else if (status === window.google.maps.places.PlacesServiceStatus.INVALID_REQUEST) {
-              console.error('Google Places API invalid request');
             }
           }
         });
       } catch (error) {
         setIsLoadingPredictions(false);
-        console.error('Error calling Google Places API:', error);
         setPredictions([]);
         setShowPredictions(false);
       }
@@ -510,7 +497,7 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
         let city = '';
         let state = '';
         let zipCode = '';
-        let county = '';
+        let county = '';    
 
         addressComponents.forEach(component => {
           const types = component.types;
@@ -522,7 +509,7 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
             city = component.long_name;
           } else if (types.includes('administrative_area_level_1')) {
             state = component.short_name;
-          } else if (types.includes('postal_code')) {
+          } else if (types.includes(' postal_code')) {
             zipCode = component.long_name;
           } else if (types.includes('administrative_area_level_2')) {
             // County information is typically found in administrative_area_level_2
@@ -609,7 +596,6 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
         }
       });
     } catch (error) {
-      console.error('Error calling Google Places API for borrower address:', error);
       setIsLoadingBorrowerPredictions(prev => ({ ...prev, [borrowerId]: false }));
     }
   };
@@ -644,7 +630,6 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
         }
       });
     } catch (error) {
-      console.error('Error calling Google Places API for notice address:', error);
       setIsLoadingNoticePredictions(false);
     }
   };
@@ -679,7 +664,6 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
         }
       });
     } catch (error) {
-      console.error('Error calling Google Places API for loan assignee address:', error);
       setIsLoadingLoanAssigneePredictions(prev => ({ ...prev, [assigneeIndex]: false }));
     }
   };
@@ -1043,7 +1027,6 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
         }
       });
     } catch (error) {
-      console.error('Auto-detection error:', error);
     }
   };
 
@@ -1795,7 +1778,6 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
       };
       
       // In a real application, you would send this to your backend
-      console.log('Auto-saving step data:', saveData);
       
       // Store in localStorage for now (in real app, this would be API call)
       const existingDrafts = JSON.parse(localStorage.getItem('petitionDrafts') || '[]');
@@ -1812,7 +1794,6 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
       setHasSavedDraft(true);
       
     } catch (error) {
-      console.error('Error auto-saving step:', error);
       // Don't show error toast for auto-save failures to avoid interrupting user flow
     }
   };
@@ -1836,7 +1817,6 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
       };
       
       // In a real application, you would save this to your backend
-      console.log('Saving step data as draft:', saveData);
       
       // Store in localStorage for now (in real app, this would be API call)
       const existingDrafts = JSON.parse(localStorage.getItem('petitionDrafts') || '[]');
@@ -1854,7 +1834,6 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
       toast.success(`Step ${currentStep} saved as draft!`);
       
     } catch (error) {
-      console.error('Error saving step:', error);
       toast.error("Failed to save step. Please try again.");
     } finally {
       setIsSaving(false);
@@ -2063,14 +2042,9 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
   const handleSubmit = async (e, isIntentional = false) => {
     e.preventDefault();
     
-    console.log('=== HANDLE SUBMIT CALLED ===');
-    console.log('Current step:', currentStep);
-    console.log('Total steps:', totalSteps);
-    console.log('Is intentional submit:', isIntentional);
     
     // Only validate certification if we're actually on the last step and trying to submit
     if (currentStep !== totalSteps || !isIntentional) {
-      console.log('Early return - not on last step or not intentional submit');
       return;
     }
     
@@ -2125,7 +2099,6 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
       // Reload the entire petitions section page
       window.location.reload();
     } catch (error) {
-      console.error('Error submitting petition:', error);
       // Error is already handled in the submitPetition function with toast
     }
   };
@@ -4411,7 +4384,6 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
                             type="button" 
                             className="dashboard-btn-create"
                             onClick={async () => {
-                              console.log('Submit button clicked!');
                               await handleSubmit({ preventDefault: () => {} }, true);
                             }}
                             disabled={petitionLoading}

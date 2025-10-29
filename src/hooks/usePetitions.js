@@ -53,7 +53,6 @@ export const usePetitions = () => {
         toast.error(response.message || 'Failed to fetch petitions');
       }
     } catch (err) {
-      console.error('Error fetching recent petitions:', err);
       const errorMessage = err.response?.data?.message || err.message || 'Failed to fetch petitions';
       setError(errorMessage);
       toast.error(errorMessage);
@@ -65,24 +64,18 @@ export const usePetitions = () => {
   // Fetch petition counts for the user's organization
   const fetchPetitionCounts = async () => {
     if (!hasOrganizationAccess) {
-      console.log('No organization access, skipping petition counts fetch');
       return;
     }
 
-    console.log('Fetching petition counts for organization:', userOrganizationId);
 
     try {
       const response = await petitionApiService.getPetitionCountByOrganization(userOrganizationId);
-      console.log('Petition counts API response:', response);
       
       if (response.success && response.data) {
-        console.log('Setting petition counts:', response.data);
         setPetitionCounts(response.data);
       } else {
-        console.log('No valid data in response:', response);
       }
     } catch (err) {
-      console.error('Error fetching petition counts:', err);
     }
   };
 
@@ -124,7 +117,6 @@ export const usePetitions = () => {
         throw new Error(errorMessage);
       }
     } catch (err) {
-      console.error('Error submitting petition:', err);
       const errorMessage = err.response?.data?.message || err.message || 'Failed to submit petition';
       setError(errorMessage);
       toast.error(errorMessage);
@@ -136,18 +128,11 @@ export const usePetitions = () => {
 
   // Auto-fetch petitions and counts when organization access is confirmed
   useEffect(() => {
-    console.log('usePetitions useEffect triggered:', {
-      organizationCheckComplete,
-      hasOrganizationAccess,
-      userOrganizationId
-    });
     
     if (organizationCheckComplete && hasOrganizationAccess && userOrganizationId) {
-      console.log('Fetching petitions and counts...');
       fetchRecentPetitions();
       fetchPetitionCounts();
     } else if (organizationCheckComplete && !hasOrganizationAccess) {
-      console.log('No organization access, clearing data');
       setPetitions([]);
       setPetitionCounts({
         totalRecords: 0,

@@ -8,28 +8,15 @@ class PetitionApiService {
       const response = await axiosInstance.post(PETITION_ENDPOINTS.SUBMIT_PETITION, petitionData);
       return response.data;
     } catch (error) {
-      console.error('Error submitting petition:', error);
       throw error;
     }
   }
 
-  // Get petitions by organization ID
-  async getPetitionsByOrganization(organizationId) {
-    try {
-      const response = await axiosInstance.get(PETITION_ENDPOINTS.GET_PETITIONS_BY_ORGANIZATION(organizationId));
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching petitions by organization:', error);
-      throw error;
-    }
-  }
 
   // Get petition count by organization ID
   async getPetitionCountByOrganization(organizationId) {
     try {
-      console.log('API Service - Fetching petition count for organization:', organizationId);
       const url = `/api/Petition/get-petition-count-by-organisationId/${organizationId}`;
-      console.log('API Service - Full URL:', axiosInstance.defaults.baseURL + url);
       
       const response = await axiosInstance.post(url, {}, {
         headers: {
@@ -38,10 +25,8 @@ class PetitionApiService {
         }
       });
       
-      console.log('API Service - Petition count response:', response.data);
       return response.data;
     } catch (error) {
-      console.error('Error fetching petition count by organization:', error);
       throw error;
     }
   }
@@ -49,17 +34,14 @@ class PetitionApiService {
   // Get petition by ID
   async getPetitionById(petitionId) {
     try {
-      console.log('API Service - Fetching petition by ID:', petitionId);
       const response = await axiosInstance.get(PETITION_ENDPOINTS.GET_PETITION_BY_ID(petitionId), {
         headers: {
           'Accept': 'text/plain'
         }
       });
       
-      console.log('API Service - Petition by ID response:', response.data);
       return response.data;
     } catch (error) {
-      console.error('Error fetching petition by ID:', error);
       throw error;
     }
   }
@@ -80,18 +62,10 @@ class PetitionApiService {
    */
   async getPetitionsPaged(paginationParams) {
     try {
-      console.log('API Service - Sending request to:', PETITION_ENDPOINTS.GET_PETITIONS_PAGED);
-      console.log('API Service - Request body:', paginationParams);
-      console.log('API Service - Sort column:', paginationParams.sortColumn);
-      console.log('API Service - Sort direction:', paginationParams.sortDirection);
       
       // Use the helper method to create validated parameters
       const validatedParams = this.createPaginationParams(paginationParams);
       
-      console.log('API Service - Validated params:', validatedParams);
-      console.log('API Service - Base URL:', axiosInstance.defaults.baseURL);
-      console.log('API Service - Endpoint:', PETITION_ENDPOINTS.GET_PETITIONS_PAGED);
-      console.log('API Service - Full URL:', axiosInstance.defaults.baseURL + PETITION_ENDPOINTS.GET_PETITIONS_PAGED);
       
       const response = await axiosInstance.post(PETITION_ENDPOINTS.GET_PETITIONS_PAGED, validatedParams, {
         headers: {
@@ -99,11 +73,8 @@ class PetitionApiService {
           'Content-Type': 'application/json'
         }
       });
-      console.log('API Service - Response:', response.data);
       return response.data;
     } catch (error) {
-      console.error('Error fetching paginated petitions:', error);
-      console.error('Error response:', error.response?.data);
       throw error;
     }
   }
@@ -184,7 +155,6 @@ class PetitionApiService {
         const date = new Date(dateString);
         return isNaN(date.getTime()) ? null : date.toISOString();
       } catch (error) {
-        console.error('Date conversion error:', error);
         return null;
       }
     };
@@ -203,7 +173,6 @@ class PetitionApiService {
           resolve(base64);
         };
         reader.onerror = () => {
-          console.error('Error reading file:', file.name);
           resolve("");
         };
         reader.readAsDataURL(file);
@@ -311,7 +280,6 @@ class PetitionApiService {
       return null;
     }
 
-    console.log('Transforming single petition API response:', apiResponse);
     const petition = apiResponse.data;
 
     // Map status number to readable status
@@ -361,10 +329,8 @@ class PetitionApiService {
       return [];
     }
 
-    console.log('Transforming API response:', apiResponse);
     // Handle both single petition and array of petitions
     const petitions = Array.isArray(apiResponse.data) ? apiResponse.data : [apiResponse.data];
-    console.log('Petitions to transform:', petitions);
 
     const transformedPetitions = petitions.map(petition => {
       // Map status number to readable status
@@ -448,7 +414,6 @@ class PetitionApiService {
       };
     });
     
-    console.log('Transformed petitions:', transformedPetitions);
     return transformedPetitions;
   }
 }

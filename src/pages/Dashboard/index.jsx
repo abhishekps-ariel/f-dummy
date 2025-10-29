@@ -110,7 +110,6 @@ function Dashboard() {
               }
               return request;
             } catch (error) {
-              console.error(`Error fetching organization ${request.organizationId}:`, error);
               return request;
             }
           })
@@ -122,10 +121,8 @@ function Dashboard() {
           setUserOrganization(approvedRequest);
         }
       } else {
-        console.error("Failed to load join requests:", response.msg);
       }
     } catch (error) {
-      console.error("Error loading organization data:", error);
     } finally {
       setIsLoadingOrgData(false);
       setHasLoadedOrgData(true);
@@ -139,11 +136,9 @@ function Dashboard() {
       if (response.isSuccess) {
         setFilingEntityTypes(response.data || []);
       } else {
-        console.error("Failed to load filing entity types:", response.msg);
         setFilingEntityTypes([]);
       }
     } catch (error) {
-      console.error("Error loading filing entity types:", error);
       setFilingEntityTypes([]);
     } finally {
       setIsLoadingFilingEntityTypes(false);
@@ -161,7 +156,6 @@ function Dashboard() {
         await logoutApi(refreshToken);
       }
     } catch (error) {
-      console.error("Logout API error:", error);
       // Continue with logout even if API fails
     } finally {
       // Always clear local data and redirect

@@ -65,7 +65,6 @@ function ForgotPassword() {
       } else {
         toast.error("Failed to send reset email. Please try again.");
       }
-      console.error("Forgot password error:", error);
     } finally {
       setIsSubmitting(false);
     }

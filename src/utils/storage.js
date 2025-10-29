@@ -1,6 +1,6 @@
 export const storeAuthData = (authData) => {
   // Clear all existing data before storing new user data
-  // This ensures no data leakage between different users
+
   localStorage.clear();
   
   const { token, refreshToken, user } = authData;
@@ -31,8 +31,6 @@ export const clearAuthData = () => {
   // Clear any other user-specific data
   localStorage.removeItem('resetEmail');
   
-  // Clear all localStorage for this origin (comprehensive cleanup)
-  // This ensures no data leakage between different users
   localStorage.clear();
 };
 

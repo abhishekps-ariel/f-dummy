@@ -68,23 +68,14 @@ const OrganizationActions = () => {
 
   // Initialize Google Maps API services
   useEffect(() => {
-    console.log('Google Maps API initialization check:', { isLoaded, loadError });
     if (isLoaded && !loadError) {
       try {
         autocompleteServiceRef.current = new window.google.maps.places.AutocompleteService();
         placesServiceRef.current = new window.google.maps.places.PlacesService(document.createElement('div'));
         geocoderRef.current = new window.google.maps.Geocoder();
-        console.log('Google Places services initialized successfully');
-        console.log('Services:', { 
-          autocomplete: !!autocompleteServiceRef.current, 
-          places: !!placesServiceRef.current, 
-          geocoder: !!geocoderRef.current 
-        });
       } catch (error) {
-        console.error('Error initializing Google Places services:', error);
       }
     } else {
-      console.log('Google Maps API not loaded yet or has error:', { isLoaded, loadError });
     }
   }, [isLoaded, loadError]);
 
@@ -111,7 +102,6 @@ const OrganizationActions = () => {
           }));
         }
       } catch (error) {
-        console.error('Error prefilling contact fields:', error);
       }
     };
 
@@ -132,7 +122,6 @@ const OrganizationActions = () => {
             setOrganizations([]);
           }
         } catch (error) {
-          console.error("Error fetching organizations:", error);
           setOrganizations([]);
         } finally {
           setIsLoadingOrgs(false);
@@ -147,7 +136,6 @@ const OrganizationActions = () => {
             setOrganizations([]);
           }
         } catch (error) {
-          console.error("Error searching organizations:", error);
           setOrganizations([]);
         } finally {
           setIsLoadingOrgs(false);
@@ -228,7 +216,6 @@ const OrganizationActions = () => {
               }
               return request;
             } catch (error) {
-              console.error(`Error fetching organization ${request.organizationId}:`, error);
               return request;
             }
           })
@@ -236,11 +223,9 @@ const OrganizationActions = () => {
 
         setJoinRequests(requestsWithOrgNames);
       } else {
-        console.error("Failed to load join requests:", response.msg);
         setJoinRequests([]);
       }
     } catch (error) {
-      console.error("Error loading join requests:", error);
       setJoinRequests([]);
     } finally {
       setIsLoadingJoinRequests(false);
@@ -285,17 +270,13 @@ const OrganizationActions = () => {
 
   // Address autocomplete functionality
   const handleAddressInput = (input) => {
-    console.log('handleAddressInput called with:', input);
-    console.log('autocompleteServiceRef.current:', autocompleteServiceRef.current);
     
     if (!autocompleteServiceRef.current || !input || !input.trim()) {
-      console.log('Clearing predictions - no service or empty input');
       setPredictions([]);
       setShowPredictions(false);
       return;
     }
 
-    console.log('Making Google Places API request...');
     setIsLoadingPredictions(true);
     
     const request = {
@@ -306,22 +287,18 @@ const OrganizationActions = () => {
 
     try {
       autocompleteServiceRef.current.getPlacePredictions(request, (predictions, status) => {
-        console.log('Google Places API response:', { predictions, status });
         setIsLoadingPredictions(false);
         
         if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
-          console.log('Setting predictions:', predictions);
           setPredictions(predictions);
           setShowPredictions(true);
           setSelectedPredictionIndex(-1);
         } else {
-          console.log('No predictions or error:', status);
           setPredictions([]);
           setShowPredictions(false);
         }
       });
     } catch (error) {
-      console.error('Error calling Google Places API:', error);
       setIsLoadingPredictions(false);
       setPredictions([]);
       setShowPredictions(false);
@@ -331,12 +308,10 @@ const OrganizationActions = () => {
   // Debounced address input using setTimeout
   const debouncedAddressInput = useRef(null);
   const handleDebouncedAddressInput = (input) => {
-    console.log('handleDebouncedAddressInput called with:', input);
     if (debouncedAddressInput.current) {
       clearTimeout(debouncedAddressInput.current);
     }
     debouncedAddressInput.current = setTimeout(() => {
-      console.log('Debounced timeout triggered, calling handleAddressInput');
       handleAddressInput(input);
     }, 300);
   };
@@ -595,7 +570,6 @@ const OrganizationActions = () => {
         toast.error(response.msg || "Failed to create organization");
       }
     } catch (error) {
-      console.error("Error submitting organization:", error);
       toast.error("An error occurred. Please try again.");
     } finally {
       setIsCreatingOrg(false);
@@ -657,7 +631,6 @@ const OrganizationActions = () => {
         toast.error(response.msg || "Failed to create organization");
       }
     } catch (error) {
-      console.error("Error submitting organization:", error);
       toast.error("Failed to create organization. Please try again.");
     } finally {
       setIsCreatingOrg(false);
@@ -678,7 +651,6 @@ const OrganizationActions = () => {
           setOrganizations([]);
         }
       } catch (error) {
-        console.error("Error fetching organizations:", error);
         toast.error("Failed to fetch organizations");
         setOrganizations([]);
       } finally {
@@ -695,7 +667,6 @@ const OrganizationActions = () => {
   };
 
   const handleOrganizationSelect = (org) => {
-    console.log("Selected organization:", org);
     setSelectedOrganization(org);
     setSearchQuery("");
     setShowDropdown(false);
@@ -726,7 +697,6 @@ const OrganizationActions = () => {
         toast.error(response.msg || "Failed to submit join request");
       }
     } catch (error) {
-      console.error("Error submitting join request:", error);
       toast.error("Failed to submit join request. Please try again.");
     } finally {
       setIsSubmittingJoinRequest(false);

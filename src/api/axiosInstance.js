@@ -15,7 +15,6 @@ const isTokenExpired = (token) => {
     // Consider token expired if it expires within 5 minutes (300 seconds)
     return currentTime >= (expirationTime - 300);
   } catch (error) {
-    console.error('Error parsing token:', error);
     return true;
   }
 };
@@ -36,7 +35,6 @@ const refreshTokenIfNeeded = async () => {
         return response.data.token;
       }
     } catch (error) {
-      console.error('Proactive token refresh failed:', error);
     }
   }
   
@@ -103,7 +101,6 @@ client.interceptors.response.use(
           }
         }
       } catch (refreshError) {
-        console.error('Token refresh failed:', refreshError);
       }
       
       // If refresh fails, clear auth data and redirect to login

@@ -51,8 +51,6 @@ function Profile() {
     
     // Initialize edit form data
     if (userData) {
-      console.log("User data loaded:", userData);
-      console.log("Filing entity type ID:", userData.filingEntityTypeId);
       
       setEditFormData({
         firstName: userData.firstName || "",
@@ -79,14 +77,11 @@ function Profile() {
         const response = await getFilingEntityTypes();
         
         if (response.isSuccess) {
-          console.log("Filing entity types loaded:", response.data);
           setFilingEntityTypes(response.data || []);
         } else {
-          console.error("Failed to load filing entity types:", response.msg);
           setFilingEntityTypes([]);
         }
       } catch (error) {
-        console.error("Error fetching filing entity types:", error);
         setFilingEntityTypes([]);
       } finally {
         setIsLoadingEntityTypes(false);
@@ -121,15 +116,12 @@ function Profile() {
         // Update context only - don't update local user state to avoid infinite loop
         updateUserSignature(signatureData);
         
-        console.log('User signature loaded successfully:', signatureData);
         return true;
       } else {
-        console.log('No signature found for user:', response.msg);
         setSignatureStatus('pending');
         return false;
       }
     } catch (error) {
-      console.error('Error fetching user signature:', error);
       setSignatureStatus('pending');
       return false;
     }
@@ -165,7 +157,6 @@ function Profile() {
               }
               return request;
             } catch (error) {
-              console.error(`Error fetching organization ${request.organizationId}:`, error);
               return request;
             }
           })
@@ -179,11 +170,9 @@ function Profile() {
           setUserOrganization(approvedRequest);
         }
       } else {
-        console.error("Failed to load join requests:", response.msg);
         setJoinRequests([]);
       }
     } catch (error) {
-      console.error("Error loading organization data:", error);
       setJoinRequests([]);
     } finally {
       setIsLoadingOrgData(false);
@@ -226,7 +215,6 @@ function Profile() {
         await logoutApi(refreshToken);
       }
     } catch (error) {
-      console.error("Logout API error:", error);
       // Continue with logout even if API fails
     } finally {
       // Always clear local data and redirect
@@ -307,7 +295,6 @@ function Profile() {
             login(updatedUser);
           }
         } catch (error) {
-          console.error("Error fetching updated user data:", error);
           // Fallback: Update with the data we sent
           const updatedUser = {
             ...user,
@@ -330,7 +317,6 @@ function Profile() {
         toast.error(response.msg || "Failed to update profile");
       }
     } catch (error) {
-      console.error("Error updating profile:", error);
       toast.error("Failed to update profile. Please try again.");
     } finally {
       setIsSaving(false);
@@ -397,7 +383,6 @@ function Profile() {
         toast.error(uploadResponse.msg || 'Failed to upload signature');
       }
     } catch (error) {
-      console.error('Error uploading signature:', error);
       toast.error('Failed to upload signature. Please try again.');
     } finally {
       setIsUploadingSignature(false);
@@ -683,7 +668,6 @@ function Profile() {
                             onLoad={() => setIsImageLoading(false)}
                             onError={() => {
                               setIsImageLoading(false);
-                              console.error('Failed to load signature image');
                             }}
                           />
                           {isImageLoading && (

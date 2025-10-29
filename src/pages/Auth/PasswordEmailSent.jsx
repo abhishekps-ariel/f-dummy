@@ -35,7 +35,6 @@ function PasswordEmailSent() {
       }
     } catch (error) {
       toast.error("Failed to resend email. Please try again.");
-      console.error("Resend email error:", error);
     } finally {
       setIsResending(false);
     }

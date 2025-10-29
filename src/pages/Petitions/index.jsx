@@ -27,7 +27,6 @@ const Petitions = () => {
         await logoutApi(refreshToken);
       }
     } catch (error) {
-      console.error("Logout API error:", error);
       // Continue with logout even if API fails
     } finally {
       // Always clear local data and redirect

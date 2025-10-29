@@ -54,7 +54,6 @@ function SetNewPassword() {
           setIsTokenValid(false);
         }
       } catch (error) {
-        console.error("Token validation error:", error);
         toast.error("Invalid or expired reset link");
         setIsTokenValid(false);
       } finally {
@@ -150,7 +149,6 @@ function SetNewPassword() {
       }
     } catch (error) {
       toast.error("Failed to reset password. Please try again.");
-      console.error("Reset password error:", error);
     } finally {
       setIsSubmitting(false);
     }
