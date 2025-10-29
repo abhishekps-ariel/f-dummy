@@ -1106,6 +1106,10 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
     // Define integer fields that should not show decimal values
     const integerFields = ['delinquencyDaysAtFiling', 'daysDelinquentAtNotice'];
     
+    // NOTE: Removed precision handling for decimal fields (interestRatePercent, etc.)
+    // Previously had complex logic that was converting 70 to 69.999
+    // Now all decimal fields store exactly what user types
+    
     // Handle numeric inputs for integer fields
     let processedValue = value;
     if (type === 'number' && integerFields.includes(name) && value !== '') {
