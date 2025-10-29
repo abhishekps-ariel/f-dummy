@@ -690,7 +690,7 @@ const ViewAllPetitions = ({ onBack }) => {
           <thead className="table-light">
             <tr>
               <th 
-                style={{ width: '18%', minWidth: '160px' }} 
+                style={{ width: '20%', minWidth: '160px' }} 
                 className="sortable-header"
                 onClick={() => handleSort('id')}
               >
@@ -699,9 +699,9 @@ const ViewAllPetitions = ({ onBack }) => {
                   <i className={`fas fa-sort-${sortOrder === 'asc' ? 'up' : 'down'} ms-1`}></i>
                 )}
               </th>
-              <th style={{ width: '32%', minWidth: '280px' }}>Property Address</th>
+              <th style={{ width: '25%', minWidth: '200px' }}>Property Address</th>
               <th 
-                style={{ width: '14%', minWidth: '110px' }} 
+                style={{ width: '16%', minWidth: '110px' }} 
                 className="sortable-header"
                 onClick={() => handleSort('borrower')}
               >

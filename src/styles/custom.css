@@ -83,7 +83,7 @@ body {
 
 .petition-table-container table {
   margin-bottom: 0;
-  min-width: 1000px; /* Ensure table has minimum width */
+  min-width: 800px; /* Reduced minimum width to prevent horizontal scrolling */
   table-layout: fixed; /* Fixed layout for consistent column widths */
 }
 
@@ -137,7 +137,7 @@ body {
   }
   
   .petition-table-container table {
-    min-width: 900px; /* Increased minimum width for better readability */
+    min-width: 700px; /* Reduced minimum width for better mobile experience */
     font-size: 0.8rem;
     table-layout: fixed;
   }

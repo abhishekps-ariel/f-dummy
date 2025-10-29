@@ -326,11 +326,11 @@ function Dashboard() {
                   <thead className="table-light">
                     <tr>
                       <th style={{ width: '20%' }}>Petition Number</th>
-                      <th style={{ width: '30%' }}>Property Address</th>
-                      <th style={{ width: '20%' }}>Borrower</th>
-                      <th style={{ width: '15%' }}>Status</th>
-                      <th style={{ width: '15%' }}>Filing Date</th>
-                      <th style={{ width: '15%' }}>Last Updated</th>
+                      <th style={{ width: '25%' }}>Property Address</th>
+                      <th style={{ width: '16%' }}>Borrower</th>
+                      <th style={{ width: '12%' }}>Status</th>
+                      <th style={{ width: '13%' }}>Filing Date</th>
+                      <th style={{ width: '14%' }}>Last Updated</th>
                     </tr>
                   </thead>
                   <tbody>
