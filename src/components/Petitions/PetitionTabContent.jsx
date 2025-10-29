@@ -386,6 +386,37 @@ const PetitionTabContent = ({ petition }) => {
         yPosition = doc.lastAutoTable.finalY + 15;
       }
 
+      // Foreclosure Sale - Only show if Right to Cure is "Yes"
+      if (petition.details?.rightToCure?.noticeSent && petition.details?.foreclosureSale) {
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Foreclosure Sale (After Petition Filed)', 20, yPosition);
+        yPosition += 10;
+
+        const foreclosureSaleData = [
+          ['Sale Date', formatDate(petition.details.foreclosureSale.saleDate) || 'N/A'],
+          ['Sold To', petition.details.foreclosureSale.soldTo || 'N/A'],
+          ['Vesting Entity Name', petition.details.foreclosureSale.vestingEntityName || 'N/A'],
+          ['REO Entity Name', petition.details.foreclosureSale.reoEntityName || 'N/A'],
+          ['REO Contact First Name', petition.details.foreclosureSale.reoContactFirstName || 'N/A'],
+          ['REO Contact Last Name', petition.details.foreclosureSale.reoContactLastName || 'N/A'],
+          ['REO Business Phone', petition.details.foreclosureSale.reoBusinessPhone || 'N/A'],
+          ['REO Emergency Phone', petition.details.foreclosureSale.reoEmergencyPhone || 'N/A']
+        ];
+
+        autoTable(doc, {
+          startY: yPosition,
+          head: [['Field', 'Value']],
+          body: foreclosureSaleData,
+          theme: 'grid',
+          headStyles: { fillColor: [52, 73, 94] },
+          styles: { fontSize: 9 },
+          columnStyles: { 0: { cellWidth: 60 }, 1: { cellWidth: 120 } }
+        });
+
+        yPosition = doc.lastAutoTable.finalY + 15;
+      }
+
       // Form 35B Compliance
       if (petition.details?.affidavit) {
         doc.setFontSize(12);
@@ -1182,6 +1213,105 @@ const PetitionTabContent = ({ petition }) => {
               </div>
             </div>
           </div>
+
+          {/* Foreclosure Sale Section - Only show if Right to Cure is "Yes" */}
+          {petition.details?.rightToCure?.noticeSent && (
+            <div className={`card mb-4 ${editingSections.foreclosureSale ? 'editing' : ''}`}>
+              <SectionHeader title="Foreclosure Sale (After Petition Filed)" sectionName="foreclosureSale" />
+              <div className="card-body">
+                <div className="row">
+                  <div className="col-md-6">
+                    <div className="form-group mb-3">
+                      <label className="form-label">Sale Date *</label>
+                      <input 
+                        type="text" 
+                        className="form-control" 
+                        value={formatDate(petition.details?.foreclosureSale?.saleDate) || 'N/A'} 
+                        readOnly
+                      />
+                    </div>
+                  </div>
+                  <div className="col-md-6">
+                    <div className="form-group mb-3">
+                      <label className="form-label">Sold To?</label>
+                      <input 
+                        type="text" 
+                        className="form-control" 
+                        value={petition.details?.foreclosureSale?.soldTo || 'N/A'} 
+                        readOnly
+                      />
+                    </div>
+                  </div>
+                  <div className="col-md-6">
+                    <div className="form-group mb-3">
+                      <label className="form-label">Vesting Entity Name *</label>
+                      <input 
+                        type="text" 
+                        className="form-control" 
+                        value={petition.details?.foreclosureSale?.vestingEntityName || 'N/A'} 
+                        readOnly
+                      />
+                    </div>
+                  </div>
+                  <div className="col-md-6">
+                    <div className="form-group mb-3">
+                      <label className="form-label">REO Entity Name</label>
+                      <input 
+                        type="text" 
+                        className="form-control" 
+                        value={petition.details?.foreclosureSale?.reoEntityName || 'N/A'} 
+                        readOnly
+                      />
+                    </div>
+                  </div>
+                  <div className="col-md-6">
+                    <div className="form-group mb-3">
+                      <label className="form-label">REO Contact First Name *</label>
+                      <input 
+                        type="text" 
+                        className="form-control" 
+                        value={petition.details?.foreclosureSale?.reoContactFirstName || 'N/A'} 
+                        readOnly
+                      />
+                    </div>
+                  </div>
+                  <div className="col-md-6">
+                    <div className="form-group mb-3">
+                      <label className="form-label">REO Contact Last Name *</label>
+                      <input 
+                        type="text" 
+                        className="form-control" 
+                        value={petition.details?.foreclosureSale?.reoContactLastName || 'N/A'} 
+                        readOnly
+                      />
+                    </div>
+                  </div>
+                  <div className="col-md-6">
+                    <div className="form-group mb-3">
+                      <label className="form-label">REO Business Phone *</label>
+                      <input 
+                        type="text" 
+                        className="form-control" 
+                        value={petition.details?.foreclosureSale?.reoBusinessPhone || 'N/A'} 
+                        readOnly
+                      />
+                    </div>
+                  </div>
+                  <div className="col-md-6">
+                    <div className="form-group mb-3">
+                      <label className="form-label">REO Emergency Phone</label>
+                      <input 
+                        type="text" 
+                        className="form-control" 
+                        value={petition.details?.foreclosureSale?.reoEmergencyPhone || 'N/A'} 
+                        readOnly
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Form 35B Compliance Section */}
           <div className={`card mb-4 ${editingSections.affidavit ? 'editing' : ''}`}>
