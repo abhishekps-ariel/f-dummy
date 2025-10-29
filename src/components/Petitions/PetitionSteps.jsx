@@ -2166,6 +2166,7 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
     try {
       // Prepare petition data with signature information
       const petitionData = {
+        isAllStepsCompleted: true,
         ...formData,
         signatures: [
           {
