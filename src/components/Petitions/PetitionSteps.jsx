@@ -1103,10 +1103,20 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
   const handleInputChange = (e) => {
     const { name, value, type, checked, files } = e.target;
     
+    // Define integer fields that should not show decimal values
+    const integerFields = ['delinquencyDaysAtFiling', 'daysDelinquentAtNotice'];
+    
+    // Handle numeric inputs for integer fields
+    let processedValue = value;
+    if (type === 'number' && integerFields.includes(name) && value !== '') {
+      // For integer fields, remove any decimal part
+      const intValue = parseInt(value, 10);
+      processedValue = isNaN(intValue) ? '' : intValue.toString();
+    }
     
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : type === 'file' ? files[0] : value
+      [name]: type === 'checkbox' ? checked : type === 'file' ? files[0] : processedValue
     }));
 
     // Clear field error when user starts typing
@@ -1246,8 +1256,13 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
           assigneeName: '',
           assigneeTypeId: '',
           assigneeRoleId: '',
-          contactEmail: '',
-          contactPhone: ''
+          street1: '',
+          street2: '',
+          city: '',
+          addressState: '',
+          zip: '',
+          licenseNumber: '',
+          licenseState: ''
         }
       ]
     }));
@@ -2649,7 +2664,7 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
                   name="delinquencyDaysAtFiling" 
                   min="0"
                   className={`form-control ${fieldErrors.delinquencyDaysAtFiling ? 'is-invalid' : ''}`}
-                  value={formData.delinquencyDaysAtFiling}
+                  value={formData.delinquencyDaysAtFiling === '' || formData.delinquencyDaysAtFiling === null || formData.delinquencyDaysAtFiling === undefined ? '' : String(Math.floor(Number(formData.delinquencyDaysAtFiling)))}
                   onChange={handleInputChange}
                 />
                 {fieldErrors.delinquencyDaysAtFiling && (
@@ -3334,7 +3349,7 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
                       name="daysDelinquentAtNotice" 
                       min="0" 
                       className={`form-control ${fieldErrors.daysDelinquentAtNotice ? 'is-invalid' : ''}`}
-                      value={formData.daysDelinquentAtNotice}
+                      value={formData.daysDelinquentAtNotice === '' || formData.daysDelinquentAtNotice === null || formData.daysDelinquentAtNotice === undefined ? '' : String(Math.floor(Number(formData.daysDelinquentAtNotice)))}
                       onChange={handleInputChange}
                     />
                     {fieldErrors.daysDelinquentAtNotice && (

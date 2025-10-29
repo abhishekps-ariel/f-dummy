@@ -2,16 +2,36 @@ import React, { useState } from 'react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { useTabs } from '../../context/TabContext';
+import { usePetitionCommonData } from '../../hooks/usePetitionCommonData';
 import './PetitionForm.css';
 
 const PetitionTabContent = ({ petition }) => {
   const { loadingTabs, activeTabId } = useTabs();
+  const { getLoanTypes, getAssigneeTypes, getAssigneeRoles, getLienPositions, getOptionName } = usePetitionCommonData();
   
   // Edit state management
   const [editingSections, setEditingSections] = useState({});
   const [editedData, setEditedData] = useState({});
   
   if (!petition) return null;
+
+  // Helper functions to get mapped values
+  const getLoanTypeName = (loanTypeId) => {
+    return getOptionName(getLoanTypes(), loanTypeId) || loanTypeId || 'N/A';
+  };
+
+  const getAssigneeTypeName = (assigneeTypeId) => {
+    return getOptionName(getAssigneeTypes(), assigneeTypeId) || assigneeTypeId || 'N/A';
+  };
+
+  const getAssigneeRoleName = (assigneeRoleId) => {
+    return getOptionName(getAssigneeRoles(), assigneeRoleId) || assigneeRoleId || 'N/A';
+  };
+
+  const getLienPositionName = (lienPosition) => {
+    // Map lien position value to name using the petition enums
+    return getOptionName(getLienPositions(), lienPosition) || 'N/A';
+  };
 
   // Check if this tab is currently loading
   const isTabLoading = loadingTabs.has(activeTabId);
@@ -257,8 +277,8 @@ const PetitionTabContent = ({ petition }) => {
       const loanData = [
         ['MIN Number', petition.details?.loan?.minNumber || 'N/A'],
         ['Loan Number', petition.details?.loan?.loanNumber || 'N/A'],
-        ['Loan Type', petition.details?.loan?.petitionLoanTypeName || 'N/A'],
-        ['Lien Position', petition.details?.loan?.lienPosition || 'N/A'],
+        ['Loan Type', getLoanTypeName(petition.details?.loan?.petitionLoanTypeId)],
+        ['Lien Position', getLienPositionName(petition.details?.loan?.lienPosition)],
         ['Origination Date', formatDate(petition.details?.loan?.originationDate)],
         ['Original Amount', formatCurrency(petition.details?.loan?.originalPrincipalAmount)],
         ['Current Amount', formatCurrency(petition.details?.loan?.currentPrincipalBalance)],
@@ -390,7 +410,7 @@ const PetitionTabContent = ({ petition }) => {
       if (petition.details?.rightToCure?.noticeSent && petition.details?.foreclosureSale) {
         doc.setFontSize(12);
         doc.setFont('helvetica', 'bold');
-        doc.text('Foreclosure Sale (After Petition Filed)', 20, yPosition);
+        doc.text('Foreclosure Sale', 20, yPosition);
         yPosition += 10;
 
         const foreclosureSaleData = [
@@ -454,8 +474,8 @@ const PetitionTabContent = ({ petition }) => {
         petition.details.loanAssignees.forEach((assignee, index) => {
           const assigneeData = [
             ['Assignee Name', assignee.assigneeName || 'N/A'],
-            ['Assignee Type ID', assignee.assigneeTypeId || 'N/A'],
-            ['Assignee Role ID', assignee.assigneeRoleId || 'N/A'],
+            ['Assignee Type', getAssigneeTypeName(assignee.assigneeTypeId)],
+            ['Assignee Role', getAssigneeRoleName(assignee.assigneeRoleId)],
             ['Street Address', assignee.street1 || 'N/A'],
             ['Address Line 2', assignee.street2 || 'N/A'],
             ['City', assignee.city || 'N/A'],
@@ -696,7 +716,7 @@ const PetitionTabContent = ({ petition }) => {
                     <input 
                       type="text" 
                       className="form-control" 
-                      value={petition.details?.loan?.petitionLoanTypeName || 'N/A'} 
+                      value={getLoanTypeName(petition.details?.loan?.petitionLoanTypeId)} 
                       readOnly
                     />
                   </div>
@@ -707,7 +727,7 @@ const PetitionTabContent = ({ petition }) => {
                     <input 
                       type="text" 
                       className="form-control" 
-                      value={petition.details?.loan?.lienPosition || 'N/A'} 
+                      value={getLienPositionName(petition.details?.loan?.lienPosition)} 
                       readOnly
                     />
                   </div>
@@ -1217,7 +1237,7 @@ const PetitionTabContent = ({ petition }) => {
           {/* Foreclosure Sale Section - Only show if Right to Cure is "Yes" */}
           {petition.details?.rightToCure?.noticeSent && (
             <div className={`card mb-4 ${editingSections.foreclosureSale ? 'editing' : ''}`}>
-              <SectionHeader title="Foreclosure Sale (After Petition Filed)" sectionName="foreclosureSale" />
+              <SectionHeader title="Foreclosure Sale" sectionName="foreclosureSale" />
               <div className="card-body">
                 <div className="row">
                   <div className="col-md-6">
@@ -1356,22 +1376,22 @@ const PetitionTabContent = ({ petition }) => {
                       </div>
                       <div className="col-md-6">
                         <div className="form-group mb-3">
-                          <label className="form-label">Assignee Type ID</label>
+                          <label className="form-label">Assignee Type</label>
                           <input 
                             type="text" 
                             className="form-control" 
-                            value={assignee.assigneeTypeId || 'N/A'} 
+                            value={getAssigneeTypeName(assignee.assigneeTypeId)} 
                             readOnly
                           />
                         </div>
                       </div>
                       <div className="col-md-6">
                         <div className="form-group mb-3">
-                          <label className="form-label">Assignee Role ID</label>
+                          <label className="form-label">Assignee Role</label>
                           <input 
                             type="text" 
                             className="form-control" 
-                            value={assignee.assigneeRoleId || 'N/A'} 
+                            value={getAssigneeRoleName(assignee.assigneeRoleId)} 
                             readOnly
                           />
                         </div>

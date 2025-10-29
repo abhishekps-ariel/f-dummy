@@ -243,9 +243,16 @@ class PetitionApiService {
         email: borrower.email
       })),
       loanAssignees: (formData.loanAssignees || []).map(assignee => ({
-        ...assignee,
+        assigneeName: assignee.assigneeName || null,
         assigneeTypeId: assignee.assigneeTypeId && assignee.assigneeTypeId.trim() !== '' ? assignee.assigneeTypeId : null,
-        assigneeRoleId: assignee.assigneeRoleId && assignee.assigneeRoleId.trim() !== '' ? assignee.assigneeRoleId : null
+        assigneeRoleId: assignee.assigneeRoleId && assignee.assigneeRoleId.trim() !== '' ? assignee.assigneeRoleId : null,
+        street1: assignee.street1 || null,
+        street2: assignee.street2 || null,
+        city: assignee.city || null,
+        addressState: assignee.addressState || null,
+        zip: assignee.zip || null,
+        licenseNumber: assignee.licenseNumber || null,
+        licenseState: assignee.licenseState || null
       })),
       documents: (formData.documents || []).map(document => ({
         ...document,
