@@ -371,7 +371,6 @@ function Dashboard() {
               </div>
 
               {/* Mobile Card View */}
-              <h3 className="mb-3 d-lg-none" style={{ fontSize: '1.3rem', fontWeight: '600' }}>Last 5 Updated Petitions</h3>
               <div className="d-lg-none">
                 {petitions.length > 0 ? (
                   <div className="row g-3">

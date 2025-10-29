@@ -328,3 +328,46 @@ export const getSignatureById = async (userId) => {
     data: response.data.data,
   };
 };
+
+export const sendSignatureOtp = async (userId) => {
+  const response = await client.post(
+    AUTH_ENDPOINTS.SEND_SIGNATURE_OTP,
+    {
+      userId: userId,
+    },
+    {
+      headers: {
+        Accept: "text/plain",
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  return {
+    isSuccess: response.data.success,
+    msg: response.data.message,
+    data: response.data.data,
+  };
+};
+
+export const verifySignatureOtp = async (userId, otpCode) => {
+  const response = await client.post(
+    AUTH_ENDPOINTS.VERIFY_SIGNATURE_OTP,
+    {
+      userId: userId,
+      otpCode: otpCode,
+    },
+    {
+      headers: {
+        Accept: "text/plain",
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  return {
+    isSuccess: response.data.success,
+    msg: response.data.message,
+    data: response.data.data,
+  };
+};
