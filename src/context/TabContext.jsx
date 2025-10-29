@@ -24,7 +24,13 @@ export const TabProvider = ({ children }) => {
       
       if (savedTabs) {
         const parsedTabs = JSON.parse(savedTabs);
-        setTabs(parsedTabs);
+        // Restore tabs without data - data will be fetched when tab is activated
+        const restoredTabs = parsedTabs.map(tab => ({
+          ...tab,
+          data: null,
+          isLoading: false
+        }));
+        setTabs(restoredTabs);
         
         if (savedActiveTab && parsedTabs.some(tab => tab.id === savedActiveTab)) {
           setActiveTabId(savedActiveTab);
@@ -59,11 +65,19 @@ export const TabProvider = ({ children }) => {
     }
   }, []);
 
-  // Save tabs to localStorage whenever tabs change
+  // Save tabs to localStorage whenever tabs change (without data to avoid stale data)
   useEffect(() => {
     if (tabs.length > 0) {
       try {
-        localStorage.setItem('petitionTabs', JSON.stringify(tabs));
+        // Only save tab metadata, not the data to avoid stale data issues
+        const tabsToSave = tabs.map(tab => ({
+          id: tab.id,
+          title: tab.title,
+          type: tab.type,
+          isClosable: tab.isClosable,
+          petitionId: tab.type === 'petition' ? tab.id.replace('petition-', '') : null
+        }));
+        localStorage.setItem('petitionTabs', JSON.stringify(tabsToSave));
       } catch (error) {
       }
     }
@@ -79,23 +93,88 @@ export const TabProvider = ({ children }) => {
     }
   }, [activeTabId]);
 
+  // Fetch data for active tab when it changes
+  useEffect(() => {
+    const fetchActiveTabData = async () => {
+      if (!activeTabId) return;
+      
+      const tab = tabs.find(t => t.id === activeTabId);
+      
+      // If it's a petition tab and data is missing, fetch fresh data
+      if (tab && tab.type === 'petition' && !tab.data && !tab.isLoading) {
+        const petitionId = tab.id.replace('petition-', '');
+        
+        // Set loading state
+        setTabs(prevTabs => 
+          prevTabs.map(t => 
+            t.id === activeTabId ? { ...t, isLoading: true } : t
+          )
+        );
+        setLoadingTabs(prev => new Set([...prev, activeTabId]));
+        
+        try {
+          // Fetch fresh petition data
+          const response = await petitionApiService.getPetitionById(petitionId);
+          const detailedPetition = petitionApiService.transformSinglePetitionResponse(response);
+          
+          if (detailedPetition) {
+            // Update tab with fresh data
+            setTabs(prevTabs => 
+              prevTabs.map(t => 
+                t.id === activeTabId 
+                  ? {
+                      ...t,
+                      title: detailedPetition.petitionNumber,
+                      data: detailedPetition,
+                      isLoading: false
+                    }
+                  : t
+              )
+            );
+          }
+        } catch (error) {
+          // Update tab to show error state
+          setTabs(prevTabs => 
+            prevTabs.map(t => 
+              t.id === activeTabId 
+                ? {
+                    ...t,
+                    isLoading: false,
+                    hasError: true
+                  }
+                : t
+            )
+          );
+        } finally {
+          setLoadingTabs(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(activeTabId);
+            return newSet;
+          });
+        }
+      }
+    };
+    
+    fetchActiveTabData();
+  }, [activeTabId, tabs]);
+
   const openTab = async (petition) => {
     const tabId = `petition-${petition.id}`;
     
     // Check if tab already exists
     const existingTab = tabs.find(tab => tab.id === tabId);
     if (existingTab) {
-      // Switch to existing tab
-      setActiveTabId(tabId);
+      // Switch to existing tab and refresh data
+      await switchToTab(tabId);
       return;
     }
 
-    // Create new tab with loading state
+    // Create new tab with loading state (don't store data - will be fetched fresh)
     const newTab = {
       id: tabId,
       title: petition.petitionNumber || 'Loading...',
       type: 'petition',
-      data: petition, // Store basic petition data initially
+      data: null, // Don't store data - fetch fresh each time
       isClosable: true,
       isLoading: true
     };
@@ -181,7 +260,63 @@ export const TabProvider = ({ children }) => {
     });
   };
 
-  const switchToTab = (tabId) => {
+  const switchToTab = async (tabId) => {
+    const tab = tabs.find(t => t.id === tabId);
+    
+    // If it's a petition tab and data is missing, fetch fresh data
+    if (tab && tab.type === 'petition' && !tab.data && !tab.isLoading) {
+      const petitionId = tab.id.replace('petition-', '');
+      
+      // Set loading state
+      setTabs(prevTabs => 
+        prevTabs.map(t => 
+          t.id === tabId ? { ...t, isLoading: true } : t
+        )
+      );
+      setLoadingTabs(prev => new Set([...prev, tabId]));
+      
+      try {
+        // Fetch fresh petition data
+        const response = await petitionApiService.getPetitionById(petitionId);
+        const detailedPetition = petitionApiService.transformSinglePetitionResponse(response);
+        
+        if (detailedPetition) {
+          // Update tab with fresh data
+          setTabs(prevTabs => 
+            prevTabs.map(t => 
+              t.id === tabId 
+                ? {
+                    ...t,
+                    title: detailedPetition.petitionNumber,
+                    data: detailedPetition,
+                    isLoading: false
+                  }
+                : t
+            )
+          );
+        }
+      } catch (error) {
+        // Update tab to show error state
+        setTabs(prevTabs => 
+          prevTabs.map(t => 
+            t.id === tabId 
+              ? {
+                  ...t,
+                  isLoading: false,
+                  hasError: true
+                }
+              : t
+          )
+        );
+      } finally {
+        setLoadingTabs(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(tabId);
+          return newSet;
+        });
+      }
+    }
+    
     setActiveTabId(tabId);
   };
 

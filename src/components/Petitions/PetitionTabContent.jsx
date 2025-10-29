@@ -1,19 +1,158 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { useTabs } from '../../context/TabContext';
 import { usePetitionCommonData } from '../../hooks/usePetitionCommonData';
+import { usePetitions } from '../../hooks/usePetitions';
+import { toast } from 'react-toastify';
 import './PetitionForm.css';
 
 const PetitionTabContent = ({ petition }) => {
   const { loadingTabs, activeTabId } = useTabs();
-  const { getLoanTypes, getAssigneeTypes, getAssigneeRoles, getLienPositions, getOptionName } = usePetitionCommonData();
+  const { getLoanTypes, getAssigneeTypes, getAssigneeRoles, getLienPositions, getOptionName, loading: commonDataLoading } = usePetitionCommonData();
+  const { submitPetition } = usePetitions();
   
-  // Edit state management
-  const [editingSections, setEditingSections] = useState({});
-  const [editedData, setEditedData] = useState({});
+  // Single edit mode state - makes all fields editable at once
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
   
-  if (!petition) return null;
+  // Transform petition.details to formData structure matching PetitionSteps
+  const initialFormData = useMemo(() => {
+    if (!petition?.details) return null;
+    
+    const details = petition.details;
+    return {
+      // Property Details
+      propertyStreet1: details.property?.propertyStreet1 || '',
+      propertyStreet2: details.property?.propertyStreet2 || '',
+      propertyCity: details.property?.propertyCity || '',
+      propertyState: details.property?.propertyState || 'MA',
+      propertyZip: details.property?.propertyZip || '',
+      propertyCounty: details.property?.propertyCounty || '',
+      assessorParcelId: details.property?.assessorParcelId || '',
+      
+      // Loan Details
+      minNumber: details.loan?.minNumber || '',
+      loanNumber: details.loan?.loanNumber || '',
+      petitionLoanTypeId: details.loan?.petitionLoanTypeId || '',
+      petitionLoanTypeName: details.loan?.petitionLoanTypeName || '',
+      lienPosition: details.loan?.lienPosition || '',
+      originationDate: details.loan?.originationDate ? details.loan.originationDate.split('T')[0] : '',
+      originalPrincipalAmount: details.loan?.originalPrincipalAmount || 0,
+      currentPrincipalBalance: details.loan?.currentPrincipalBalance || 0,
+      interestRatePercent: details.loan?.interestRatePercent || 0,
+      variableRate: details.loan?.variableRate || false,
+      interestOnly: details.loan?.interestOnly || false,
+      negativeAmortization: details.loan?.negativeAmortization || false,
+      monthlyPaymentAmount: details.loan?.monthlyPaymentAmount || 0,
+      delinquencyDaysAtFiling: details.loan?.delinquencyDaysAtFiling || 0,
+      
+      // Borrowers
+      borrowers: details.borrowers?.map((b, idx) => ({
+        id: b.id || idx + 1,
+        firstName: b.firstName || '',
+        middleName: b.middleName || '',
+        lastName: b.lastName || '',
+        suffix: b.suffix || '',
+        borrowerIsPrimary: b.borrowerIsPrimary || (idx === 0),
+        mailingStreet1: b.mailingStreet1 || '',
+        mailingCity: b.mailingCity || '',
+        mailingState: b.mailingState || '',
+        mailingZip: b.mailingZip || '',
+        phone: b.phone || '',
+        email: b.email || ''
+      })) || [],
+      
+      // Filing Entity
+      filingEntityLegalName: details.filingEntity?.filingEntityLegalName || '',
+      filingEntityTypeId: details.filingEntity?.filingEntityTypeId || '',
+      filingEntityStreet1: details.filingEntity?.filingEntityStreet1 || '',
+      filingEntityStreet2: details.filingEntity?.filingEntityStreet2 || '',
+      filingEntityCity: details.filingEntity?.filingEntityCity || '',
+      filingEntityState: details.filingEntity?.filingEntityState || '',
+      filingEntityZip: details.filingEntity?.filingEntityZip || '',
+      filingContactName: details.filingEntity?.filingContactName || '',
+      filingContactEmail: details.filingEntity?.filingContactEmail || '',
+      filingContactPhone: details.filingEntity?.filingContactPhone || '',
+      nmlsLicenseNumber: details.filingEntity?.nmlsLicenseNumber || '',
+      stateLicenseNumber: details.filingEntity?.stateLicenseNumber || '',
+      stateLicenseState: details.filingEntity?.stateLicenseState || '',
+      
+      // Right-to-Cure
+      noticeSent: details.rightToCure?.noticeSent || false,
+      noticeDate: details.rightToCure?.noticeDate ? details.rightToCure.noticeDate.split('T')[0] : '',
+      amountInDefault: details.rightToCure?.amountInDefault || 0,
+      daysDelinquentAtNotice: details.rightToCure?.daysDelinquentAtNotice || 0,
+      cureExpirationDate: details.rightToCure?.cureExpirationDate ? details.rightToCure.cureExpirationDate.split('T')[0] : '',
+      noticeAddressStreet1: details.rightToCure?.noticeAddressStreet1 || '',
+      noticeAddressCity: details.rightToCure?.noticeAddressCity || '',
+      noticeAddressState: details.rightToCure?.noticeAddressState || '',
+      noticeAddressZip: details.rightToCure?.noticeAddressZip || '',
+      manualOverrideReason: details.rightToCure?.manualOverrideReason || '',
+      
+      // Foreclosure Sale
+      foreclosureSale: details.foreclosureSale ? {
+        saleDate: details.foreclosureSale.saleDate ? details.foreclosureSale.saleDate.split('T')[0] : '',
+        soldTo: details.foreclosureSale.soldTo || '',
+        vestingEntityName: details.foreclosureSale.vestingEntityName || '',
+        reoEntityName: details.foreclosureSale.reoEntityName || '',
+        reoContactFirstName: details.foreclosureSale.reoContactFirstName || '',
+        reoContactLastName: details.foreclosureSale.reoContactLastName || '',
+        reoBusinessPhone: details.foreclosureSale.reoBusinessPhone || '',
+        reoEmergencyPhone: details.foreclosureSale.reoEmergencyPhone || ''
+      } : (details.rightToCure?.noticeSent === true ? {
+        saleDate: '',
+        soldTo: '',
+        vestingEntityName: '',
+        reoEntityName: '',
+        reoContactFirstName: '',
+        reoContactLastName: '',
+        reoBusinessPhone: '',
+        reoEmergencyPhone: ''
+      } : null),
+      
+      // Form 35B Compliance
+      certainMortgageLoan: details.affidavit?.certainMortgageLoan || false,
+      form35bComplianceAffidavitPdf: details.affidavit?.form35bComplianceAffidavitPdf || '',
+      form35bNonApplicabilityAffidavitPdf: details.affidavit?.form35bNonApplicabilityAffidavitPdf || '',
+      affiantName: details.affidavit?.affiantName || '',
+      affiantTitle: details.affidavit?.affiantTitle || '',
+      affidavitExecutionDate: details.affidavit?.affidavitExecutionDate ? details.affidavit.affidavitExecutionDate.split('T')[0] : '',
+      
+      // Loan Assignees
+      loanAssignees: details.loanAssignees?.map((a, idx) => ({
+        assigneeName: a.assigneeName || '',
+        assigneeTypeId: a.assigneeTypeId || '',
+        assigneeRoleId: a.assigneeRoleId || '',
+        street1: a.street1 || '',
+        street2: a.street2 || '',
+        city: a.city || '',
+        addressState: a.addressState || '',
+        zip: a.zip || '',
+        licenseNumber: a.licenseNumber || '',
+        licenseState: a.licenseState || ''
+      })) || [],
+      
+      // Signatures
+      signatures: details.signatures?.map(s => ({ ...s })) || [],
+      
+      // Additional
+      documents: details.documents || [],
+      isAllStepsCompleted: true
+    };
+  }, [petition]);
+  
+  const [formData, setFormData] = useState(initialFormData);
+  
+  // Update formData when petition changes
+  useEffect(() => {
+    if (initialFormData) {
+      setFormData(initialFormData);
+    }
+  }, [initialFormData]);
+  
+  if (!petition || !formData) return null;
 
   // Helper functions to get mapped values
   const getLoanTypeName = (loanTypeId) => {
@@ -116,105 +255,213 @@ const PetitionTabContent = ({ petition }) => {
     }
   };
 
-  // Edit functionality
-  const handleEdit = (sectionName) => {
-    setEditingSections(prev => ({ ...prev, [sectionName]: true }));
-    // Initialize edited data with current petition data
-    setEditedData(prev => ({ ...prev, [sectionName]: { ...petition.details } }));
-  };
-
-  const handleCancel = (sectionName) => {
-    setEditingSections(prev => ({ ...prev, [sectionName]: false }));
-    setEditedData(prev => {
-      const newData = { ...prev };
-      delete newData[sectionName];
-      return newData;
-    });
-  };
-
-  const handleSave = (sectionName) => {
-    setEditingSections(prev => ({ ...prev, [sectionName]: false }));
-    // In a real implementation, this would save to the API
-    // For now, just show a success message
-    alert(`${sectionName} saved successfully! (This is a static implementation)`);
-  };
-
-  const handleFieldChange = (sectionName, fieldPath, value) => {
-    setEditedData(prev => {
-      const newData = { ...prev };
-      if (!newData[sectionName]) {
-        newData[sectionName] = { ...petition.details };
-      }
-      
-      // Update nested field
-      const keys = fieldPath.split('.');
-      let current = newData[sectionName];
-      for (let i = 0; i < keys.length - 1; i++) {
-        if (!current[keys[i]]) current[keys[i]] = {};
-        current = current[keys[i]];
-      }
-      current[keys[keys.length - 1]] = value;
-      
-      return newData;
-    });
-  };
-
-  const getFieldValue = (sectionName, fieldPath) => {
-    if (editingSections[sectionName] && editedData[sectionName]) {
-      const keys = fieldPath.split('.');
-      let value = editedData[sectionName];
-      for (const key of keys) {
-        value = value?.[key];
-      }
-      return value || '';
+  // Handle input change - similar to PetitionSteps
+  const handleInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    
+    // Define integer fields that should not show decimal values
+    const integerFields = ['delinquencyDaysAtFiling', 'daysDelinquentAtNotice'];
+    
+    // Handle numeric inputs for integer fields
+    let processedValue = value;
+    if (type === 'number' && integerFields.includes(name) && value !== '') {
+      const intValue = parseInt(value, 10);
+      processedValue = isNaN(intValue) ? '' : intValue.toString();
     }
     
-    const keys = fieldPath.split('.');
-    let value = petition.details;
-    for (const key of keys) {
-      value = value?.[key];
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : processedValue
+    }));
+    
+    // Clear field error when user starts typing
+    if (fieldErrors[name]) {
+      setFieldErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
     }
-    return value || '';
+    
+    // Real-time validation for principal amount comparison
+    if (name === 'originalPrincipalAmount' || name === 'currentPrincipalBalance') {
+      const originalAmount = parseFloat(name === 'originalPrincipalAmount' ? processedValue : formData.originalPrincipalAmount) || 0;
+      const currentBalance = parseFloat(name === 'currentPrincipalBalance' ? processedValue : formData.currentPrincipalBalance) || 0;
+      
+      if (originalAmount > 0 && currentBalance > 0 && currentBalance > originalAmount) {
+        setFieldErrors(prev => ({
+          ...prev,
+          currentPrincipalBalance: 'Current Principal Balance cannot exceed the Original Principal Amount'
+        }));
+      } else if (fieldErrors.currentPrincipalBalance === 'Current Principal Balance cannot exceed the Original Principal Amount') {
+        setFieldErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors.currentPrincipalBalance;
+          return newErrors;
+        });
+      }
+    }
   };
-
-  // Reusable section header component
-  const SectionHeader = ({ title, sectionName }) => (
-    <div className="card-header d-flex justify-content-between align-items-center">
+  
+  // Handle borrower field changes
+  const updateBorrower = (borrowerId, field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      borrowers: prev.borrowers.map(borrower =>
+        borrower.id === borrowerId
+          ? { ...borrower, [field]: value }
+          : borrower
+      )
+    }));
+  };
+  
+  // Handle loan assignee field changes
+  const updateLoanAssignee = (index, field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      loanAssignees: prev.loanAssignees.map((assignee, idx) =>
+        idx === index
+          ? { ...assignee, [field]: value }
+          : assignee
+      )
+    }));
+  };
+  
+  // Handle foreclosure sale field changes
+  const updateForeclosureSale = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      foreclosureSale: prev.foreclosureSale ? {
+        ...prev.foreclosureSale,
+        [field]: value
+      } : {
+        saleDate: '',
+        soldTo: '',
+        vestingEntityName: '',
+        reoEntityName: '',
+        reoContactFirstName: '',
+        reoContactLastName: '',
+        reoBusinessPhone: '',
+        reoEmergencyPhone: '',
+        [field]: value
+      }
+    }));
+  };
+  
+  // Add borrower
+  const addBorrower = () => {
+    setFormData(prev => ({
+      ...prev,
+      borrowers: [
+        ...prev.borrowers,
+        {
+          id: Date.now(),
+          firstName: '',
+          middleName: '',
+          lastName: '',
+          suffix: '',
+          borrowerIsPrimary: false,
+          mailingStreet1: '',
+          mailingCity: '',
+          mailingState: '',
+          mailingZip: '',
+          phone: '',
+          email: ''
+        }
+      ]
+    }));
+  };
+  
+  // Remove borrower
+  const removeBorrower = (borrowerId) => {
+    if (formData.borrowers.length > 1) {
+      const isRemovingPrimary = formData.borrowers.find(b => b.id === borrowerId)?.borrowerIsPrimary;
+      
+      setFormData(prev => {
+        const newBorrowers = prev.borrowers.filter(borrower => borrower.id !== borrowerId);
+        
+        if (isRemovingPrimary && newBorrowers.length > 0) {
+          newBorrowers[0].borrowerIsPrimary = true;
+        }
+        
+        return {
+          ...prev,
+          borrowers: newBorrowers
+        };
+      });
+    }
+  };
+  
+  // Add loan assignee
+  const addLoanAssignee = () => {
+    setFormData(prev => ({
+      ...prev,
+      loanAssignees: [
+        ...prev.loanAssignees,
+        {
+          assigneeName: '',
+          assigneeTypeId: '',
+          assigneeRoleId: '',
+          street1: '',
+          street2: '',
+          city: '',
+          addressState: '',
+          zip: '',
+          licenseNumber: '',
+          licenseState: ''
+        }
+      ]
+    }));
+  };
+  
+  // Remove loan assignee
+  const removeLoanAssignee = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      loanAssignees: prev.loanAssignees.filter((_, idx) => idx !== index)
+    }));
+  };
+  
+  // Handle edit mode toggle
+  const handleEditToggle = () => {
+    if (isEditing) {
+      // Cancel edit - reset form data
+      setFormData(initialFormData);
+      setFieldErrors({});
+    }
+    setIsEditing(!isEditing);
+  };
+  
+  // Handle save - submit form data
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      // Basic validation
+      if (!formData.propertyStreet1?.trim()) {
+        toast.error('Property Street Address is required');
+        setIsSaving(false);
+        return;
+      }
+      
+      // Submit petition with petition ID for edit
+      await submitPetition(formData, false, petition.id);
+      
+      toast.success('Petition updated successfully!');
+      setIsEditing(false);
+      
+      // Reload to get updated data
+      window.location.reload();
+    } catch (error) {
+      toast.error('Failed to update petition. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+  
+  // Reusable section header component - no edit buttons, just title
+  const SectionHeader = ({ title }) => (
+    <div className="card-header">
       <h5 className="mb-0">{title}</h5>
-      <div className="d-flex gap-2">
-        {editingSections[sectionName] ? (
-          <>
-            <button 
-              type="button" 
-              className="btn btn-sm"
-              onClick={() => handleSave(sectionName)}
-              title="Save changes"
-            >
-              <i className="fas fa-save me-1"></i>
-              Save
-            </button>
-            <button 
-              type="button" 
-              className="btn btn-sm"
-              onClick={() => handleCancel(sectionName)}
-              title="Cancel editing"
-            >
-              <i className="fas fa-times me-1"></i>
-              Cancel
-            </button>
-          </>
-        ) : (
-          <button 
-            type="button" 
-            className="btn btn-sm"
-            onClick={() => handleEdit(sectionName)}
-            title="Edit section"
-          >
-            <i className="fas fa-edit me-1"></i>
-            Edit
-          </button>
-        )}
-      </div>
     </div>
   );
 
@@ -570,15 +817,51 @@ const PetitionTabContent = ({ petition }) => {
                 
                 {/* Right side - Action Buttons */}
                 <div className="d-flex align-items-center gap-2">
-                  <button 
-                    type="button" 
-                    className="dashboard-btn-refresh"
-                    onClick={handleDownloadPDF}
-                    title="Download as PDF"
-                  >
-                    <i className="fas fa-download me-1"></i>
-                    Download PDF
-                  </button>
+                  {!isEditing ? (
+                    <>
+                      <button 
+                        type="button" 
+                        className="dashboard-btn-create"
+                        onClick={handleEditToggle}
+                        title="Edit petition"
+                      >
+                        <i className="fas fa-edit me-1"></i>
+                        Edit
+                      </button>
+                      <button 
+                        type="button" 
+                        className="dashboard-btn-refresh"
+                        onClick={handleDownloadPDF}
+                        title="Download as PDF"
+                      >
+                        <i className="fas fa-download me-1"></i>
+                        Download PDF
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button 
+                        type="button" 
+                        className="dashboard-btn-create"
+                        onClick={handleSave}
+                        disabled={isSaving}
+                        title="Save changes"
+                      >
+                        <i className={`fas fa-save me-1 ${isSaving ? 'fa-spin' : ''}`}></i>
+                        {isSaving ? 'Saving...' : 'Save'}
+                      </button>
+                      <button 
+                        type="button" 
+                        className="dashboard-btn-refresh"
+                        onClick={handleEditToggle}
+                        disabled={isSaving}
+                        title="Cancel editing"
+                      >
+                        <i className="fas fa-times me-1"></i>
+                        Cancel
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -589,20 +872,24 @@ const PetitionTabContent = ({ petition }) => {
         <form className="petition-form">
 
           {/* Property Details Section */}
-          <div className={`card mb-4 ${editingSections.property ? 'editing' : ''}`}>
-            <SectionHeader title="Property Details" sectionName="property" />
+          <div className={`card mb-4 ${isEditing ? 'editing' : ''}`}>
+            <SectionHeader title="Property Details" />
             <div className="card-body">
               <div className="row">
                 <div className="col-md-6">
                   <div className="form-group mb-3">
-                    <label className="form-label">Street Address</label>
+                    <label className="form-label">Street Address *</label>
                     <input 
                       type="text" 
-                      className="form-control"
-                      value={getFieldValue('property', 'property.propertyStreet1') || 'N/A'} 
-                      readOnly={!editingSections.property}
-                      onChange={(e) => handleFieldChange('property', 'property.propertyStreet1', e.target.value)}
+                      name="propertyStreet1"
+                      className={`form-control ${fieldErrors.propertyStreet1 ? 'is-invalid' : ''}`}
+                      value={formData.propertyStreet1 || ''} 
+                      readOnly={!isEditing}
+                      onChange={handleInputChange}
                     />
+                    {fieldErrors.propertyStreet1 && (
+                      <div className="text-danger small mt-1">{fieldErrors.propertyStreet1}</div>
+                    )}
                   </div>
                 </div>
                 <div className="col-md-6">
@@ -610,47 +897,60 @@ const PetitionTabContent = ({ petition }) => {
                     <label className="form-label">Street Address 2</label>
                     <input 
                       type="text" 
-                      className="form-control" 
-                      value={getFieldValue('property', 'property.propertyStreet2') || 'N/A'} 
-                      readOnly={!editingSections.property}
-                      onChange={(e) => handleFieldChange('property', 'property.propertyStreet2', e.target.value)}
+                      name="propertyStreet2"
+                      className="form-control"
+                      value={formData.propertyStreet2 || ''} 
+                      readOnly={!isEditing}
+                      onChange={handleInputChange}
                     />
                   </div>
                 </div>
                 <div className="col-md-4">
                   <div className="form-group mb-3">
-                    <label className="form-label">City</label>
+                    <label className="form-label">City *</label>
                     <input 
                       type="text" 
-                      className="form-control" 
-                      value={getFieldValue('property', 'property.propertyCity') || 'N/A'} 
-                      readOnly={!editingSections.property}
-                      onChange={(e) => handleFieldChange('property', 'property.propertyCity', e.target.value)}
+                      name="propertyCity"
+                      className={`form-control ${fieldErrors.propertyCity ? 'is-invalid' : ''}`}
+                      value={formData.propertyCity || ''} 
+                      readOnly={!isEditing}
+                      onChange={handleInputChange}
                     />
+                    {fieldErrors.propertyCity && (
+                      <div className="text-danger small mt-1">{fieldErrors.propertyCity}</div>
+                    )}
                   </div>
                 </div>
                 <div className="col-md-4">
                   <div className="form-group mb-3">
-                    <label className="form-label">State</label>
+                    <label className="form-label">State *</label>
                     <input 
                       type="text" 
-                      className="form-control" 
-                      value={getFieldValue('property', 'property.propertyState') || 'N/A'} 
-                      readOnly={!editingSections.property}
-                      onChange={(e) => handleFieldChange('property', 'property.propertyState', e.target.value)}
+                      name="propertyState"
+                      className={`form-control ${fieldErrors.propertyState ? 'is-invalid' : ''}`}
+                      value={formData.propertyState || ''} 
+                      readOnly={!isEditing}
+                      onChange={handleInputChange}
                     />
+                    {fieldErrors.propertyState && (
+                      <div className="text-danger small mt-1">{fieldErrors.propertyState}</div>
+                    )}
                   </div>
                 </div>
                 <div className="col-md-4">
                   <div className="form-group mb-3">
-                    <label className="form-label">ZIP Code</label>
+                    <label className="form-label">ZIP Code *</label>
                     <input 
                       type="text" 
-                      className="form-control" 
-                      value={getFieldValue('property', 'property.propertyZip') || 'N/A'} 
-                      readOnly={!editingSections.property}
-                      onChange={(e) => handleFieldChange('property', 'property.propertyZip', e.target.value)}
+                      name="propertyZip"
+                      className={`form-control ${fieldErrors.propertyZip ? 'is-invalid' : ''}`}
+                      value={formData.propertyZip || ''} 
+                      readOnly={!isEditing}
+                      onChange={handleInputChange}
                     />
+                    {fieldErrors.propertyZip && (
+                      <div className="text-danger small mt-1">{fieldErrors.propertyZip}</div>
+                    )}
                   </div>
                 </div>
                 <div className="col-md-6">
@@ -658,10 +958,11 @@ const PetitionTabContent = ({ petition }) => {
                     <label className="form-label">County</label>
                     <input 
                       type="text" 
-                      className="form-control" 
-                      value={getFieldValue('property', 'property.propertyCounty') || 'N/A'} 
-                      readOnly={!editingSections.property}
-                      onChange={(e) => handleFieldChange('property', 'property.propertyCounty', e.target.value)}
+                      name="propertyCounty"
+                      className="form-control"
+                      value={formData.propertyCounty || ''} 
+                      readOnly={!isEditing}
+                      onChange={handleInputChange}
                     />
                   </div>
                 </div>
@@ -670,10 +971,11 @@ const PetitionTabContent = ({ petition }) => {
                     <label className="form-label">Assessor Parcel ID</label>
                     <input 
                       type="text" 
-                      className="form-control" 
-                      value={getFieldValue('property', 'property.assessorParcelId') || 'N/A'} 
-                      readOnly={!editingSections.property}
-                      onChange={(e) => handleFieldChange('property', 'property.assessorParcelId', e.target.value)}
+                      name="assessorParcelId"
+                      className="form-control"
+                      value={formData.assessorParcelId || ''} 
+                      readOnly={!isEditing}
+                      onChange={handleInputChange}
                     />
                   </div>
                 </div>
@@ -682,8 +984,8 @@ const PetitionTabContent = ({ petition }) => {
           </div>
 
           {/* Loan Details Section */}
-          <div className={`card mb-4 ${editingSections.loan ? 'editing' : ''}`}>
-            <SectionHeader title="Loan Details" sectionName="loan" />
+          <div className={`card mb-4 ${isEditing ? 'editing' : ''}`}>
+            <SectionHeader title="Loan Details" />
             <div className="card-body">
               <div className="row">
                 <div className="col-md-6">
@@ -691,144 +993,229 @@ const PetitionTabContent = ({ petition }) => {
                     <label className="form-label">MIN Number</label>
                     <input 
                       type="text" 
-                      className="form-control" 
-                      value={getFieldValue('loan', 'loan.minNumber') || 'N/A'} 
-                      readOnly={!editingSections.loan}
-                      onChange={(e) => handleFieldChange('loan', 'loan.minNumber', e.target.value)}
+                      name="minNumber"
+                      className={`form-control ${fieldErrors.minNumber ? 'is-invalid' : ''}`}
+                      value={formData.minNumber || ''} 
+                      readOnly={!isEditing}
+                      onChange={handleInputChange}
                     />
+                    {fieldErrors.minNumber && (
+                      <div className="text-danger small mt-1">{fieldErrors.minNumber}</div>
+                    )}
                   </div>
                 </div>
                 <div className="col-md-6">
                   <div className="form-group mb-3">
-                    <label className="form-label">Loan Number</label>
+                    <label className="form-label">Loan Number *</label>
                     <input 
                       type="text" 
-                      className="form-control" 
-                      value={getFieldValue('loan', 'loan.loanNumber') || 'N/A'} 
-                      readOnly={!editingSections.loan}
-                      onChange={(e) => handleFieldChange('loan', 'loan.loanNumber', e.target.value)}
+                      name="loanNumber"
+                      className={`form-control ${fieldErrors.loanNumber ? 'is-invalid' : ''}`}
+                      value={formData.loanNumber || ''} 
+                      readOnly={!isEditing}
+                      onChange={handleInputChange}
                     />
+                    {fieldErrors.loanNumber && (
+                      <div className="text-danger small mt-1">{fieldErrors.loanNumber}</div>
+                    )}
                   </div>
                 </div>
                 <div className="col-md-6">
                   <div className="form-group mb-3">
-                    <label className="form-label">Loan Type</label>
-                    <input 
-                      type="text" 
-                      className="form-control" 
-                      value={getLoanTypeName(petition.details?.loan?.petitionLoanTypeId)} 
-                      readOnly
-                    />
+                    <label className="form-label">Loan Type *</label>
+                    <select 
+                      name="petitionLoanTypeId"
+                      className={`form-select ${fieldErrors.petitionLoanTypeId ? 'is-invalid' : ''}`}
+                      value={formData.petitionLoanTypeId || ''}
+                      onChange={handleInputChange}
+                      disabled={!isEditing || commonDataLoading}
+                    >
+                      <option value="">Select Loan Type</option>
+                      {getLoanTypes().map(loanType => (
+                        <option key={loanType.id} value={loanType.id}>
+                          {loanType.name}
+                        </option>
+                      ))}
+                    </select>
+                    {fieldErrors.petitionLoanTypeId && (
+                      <div className="text-danger small mt-1">{fieldErrors.petitionLoanTypeId}</div>
+                    )}
                   </div>
                 </div>
                 <div className="col-md-6">
                   <div className="form-group mb-3">
-                    <label className="form-label">Lien Position</label>
-                    <input 
-                      type="text" 
-                      className="form-control" 
-                      value={getLienPositionName(petition.details?.loan?.lienPosition)} 
-                      readOnly
-                    />
+                    <label className="form-label">Lien Position *</label>
+                    <select 
+                      name="lienPosition"
+                      className={`form-select ${fieldErrors.lienPosition ? 'is-invalid' : ''}`}
+                      value={formData.lienPosition || ''}
+                      onChange={handleInputChange}
+                      disabled={!isEditing || commonDataLoading}
+                    >
+                      <option value="">Select Position</option>
+                      {getLienPositions().map(position => (
+                        <option key={position.value} value={position.value}>
+                          {position.name}
+                        </option>
+                      ))}
+                    </select>
+                    {fieldErrors.lienPosition && (
+                      <div className="text-danger small mt-1">{fieldErrors.lienPosition}</div>
+                    )}
                   </div>
                 </div>
                 <div className="col-md-6">
                   <div className="form-group mb-3">
-                    <label className="form-label">Origination Date</label>
+                    <label className="form-label">Origination Date *</label>
                     <input 
-                      type="text" 
-                      className="form-control" 
-                      value={formatDate(petition.details?.loan?.originationDate)} 
-                      readOnly
+                      type="date" 
+                      name="originationDate"
+                      className={`form-control ${fieldErrors.originationDate ? 'is-invalid' : ''}`}
+                      value={formData.originationDate || ''} 
+                      readOnly={!isEditing}
+                      onChange={handleInputChange}
                     />
+                    {fieldErrors.originationDate && (
+                      <div className="text-danger small mt-1">{fieldErrors.originationDate}</div>
+                    )}
                   </div>
                 </div>
                 <div className="col-md-6">
                   <div className="form-group mb-3">
-                    <label className="form-label">Original Principal Amount</label>
+                    <label className="form-label">Original Principal Amount ($) *</label>
                     <input 
-                      type="text" 
-                      className="form-control" 
-                      value={formatCurrency(petition.details?.loan?.originalPrincipalAmount)} 
-                      readOnly
+                      type="number" 
+                      step="0.01"
+                      name="originalPrincipalAmount"
+                      className={`form-control ${fieldErrors.originalPrincipalAmount ? 'is-invalid' : ''}`}
+                      value={formData.originalPrincipalAmount || ''} 
+                      readOnly={!isEditing}
+                      onChange={handleInputChange}
                     />
+                    {fieldErrors.originalPrincipalAmount && (
+                      <div className="text-danger small mt-1">{fieldErrors.originalPrincipalAmount}</div>
+                    )}
                   </div>
                 </div>
                 <div className="col-md-6">
                   <div className="form-group mb-3">
-                    <label className="form-label">Current Principal Balance</label>
+                    <label className="form-label">Current Principal Balance ($) *</label>
                     <input 
-                      type="text" 
-                      className="form-control" 
-                      value={formatCurrency(petition.details?.loan?.currentPrincipalBalance)} 
-                      readOnly
+                      type="number" 
+                      step="0.01"
+                      name="currentPrincipalBalance"
+                      className={`form-control ${fieldErrors.currentPrincipalBalance ? 'is-invalid' : ''}`}
+                      value={formData.currentPrincipalBalance || ''} 
+                      readOnly={!isEditing}
+                      onChange={handleInputChange}
                     />
+                    {fieldErrors.currentPrincipalBalance && (
+                      <div className="text-danger small mt-1">{fieldErrors.currentPrincipalBalance}</div>
+                    )}
                   </div>
                 </div>
                 <div className="col-md-6">
                   <div className="form-group mb-3">
-                    <label className="form-label">Interest Rate</label>
+                    <label className="form-label">Interest Rate (%) *</label>
                     <input 
-                      type="text" 
-                      className="form-control" 
-                      value={petition.details?.loan?.interestRatePercent ? `${petition.details.loan.interestRatePercent}%` : 'N/A'} 
-                      readOnly
+                      type="number" 
+                      step="0.001"
+                      name="interestRatePercent"
+                      className={`form-control ${fieldErrors.interestRatePercent ? 'is-invalid' : ''}`}
+                      value={formData.interestRatePercent || ''} 
+                      readOnly={!isEditing}
+                      onChange={handleInputChange}
                     />
+                    {fieldErrors.interestRatePercent && (
+                      <div className="text-danger small mt-1">{fieldErrors.interestRatePercent}</div>
+                    )}
                   </div>
                 </div>
                 <div className="col-md-6">
                   <div className="form-group mb-3">
-                    <label className="form-label">Monthly Payment Amount</label>
+                    <label className="form-label">Monthly Payment Amount ($) *</label>
                     <input 
-                      type="text" 
-                      className="form-control" 
-                      value={formatCurrency(petition.details?.loan?.monthlyPaymentAmount)} 
-                      readOnly
+                      type="number" 
+                      step="0.01"
+                      name="monthlyPaymentAmount"
+                      className={`form-control ${fieldErrors.monthlyPaymentAmount ? 'is-invalid' : ''}`}
+                      value={formData.monthlyPaymentAmount || ''} 
+                      readOnly={!isEditing}
+                      onChange={handleInputChange}
                     />
+                    {fieldErrors.monthlyPaymentAmount && (
+                      <div className="text-danger small mt-1">{fieldErrors.monthlyPaymentAmount}</div>
+                    )}
                   </div>
                 </div>
                 <div className="col-md-6">
                   <div className="form-group mb-3">
                     <label className="form-label">Delinquency Days at Filing</label>
                     <input 
-                      type="text" 
-                      className="form-control" 
-                      value={petition.details?.loan?.delinquencyDaysAtFiling || 'N/A'} 
-                      readOnly
+                      type="number" 
+                      name="delinquencyDaysAtFiling"
+                      className={`form-control ${fieldErrors.delinquencyDaysAtFiling ? 'is-invalid' : ''}`}
+                      value={formData.delinquencyDaysAtFiling || ''} 
+                      readOnly={!isEditing}
+                      onChange={handleInputChange}
                     />
+                    {fieldErrors.delinquencyDaysAtFiling && (
+                      <div className="text-danger small mt-1">{fieldErrors.delinquencyDaysAtFiling}</div>
+                    )}
                   </div>
                 </div>
                 <div className="col-md-6">
                   <div className="form-group mb-3">
                     <label className="form-label">Variable Rate</label>
-                    <input 
-                      type="text" 
-                      className="form-control" 
-                      value={petition.details?.loan?.variableRate ? 'Yes' : 'No'} 
-                      readOnly
-                    />
+                    <div className="form-check">
+                      <input 
+                        type="checkbox" 
+                        name="variableRate"
+                        className="form-check-input"
+                        checked={formData.variableRate || false}
+                        onChange={handleInputChange}
+                        disabled={!isEditing}
+                      />
+                      <label className="form-check-label">
+                        {formData.variableRate ? 'Yes' : 'No'}
+                      </label>
+                    </div>
                   </div>
                 </div>
                 <div className="col-md-6">
                   <div className="form-group mb-3">
                     <label className="form-label">Interest Only</label>
-                    <input 
-                      type="text" 
-                      className="form-control" 
-                      value={petition.details?.loan?.interestOnly ? 'Yes' : 'No'} 
-                      readOnly
-                    />
+                    <div className="form-check">
+                      <input 
+                        type="checkbox" 
+                        name="interestOnly"
+                        className="form-check-input"
+                        checked={formData.interestOnly || false}
+                        onChange={handleInputChange}
+                        disabled={!isEditing}
+                      />
+                      <label className="form-check-label">
+                        {formData.interestOnly ? 'Yes' : 'No'}
+                      </label>
+                    </div>
                   </div>
                 </div>
                 <div className="col-md-6">
                   <div className="form-group mb-3">
                     <label className="form-label">Negative Amortization</label>
-                    <input 
-                      type="text" 
-                      className="form-control" 
-                      value={petition.details?.loan?.negativeAmortization ? 'Yes' : 'No'} 
-                      readOnly
-                    />
+                    <div className="form-check">
+                      <input 
+                        type="checkbox" 
+                        name="negativeAmortization"
+                        className="form-check-input"
+                        checked={formData.negativeAmortization || false}
+                        onChange={handleInputChange}
+                        disabled={!isEditing}
+                      />
+                      <label className="form-check-label">
+                        {formData.negativeAmortization ? 'Yes' : 'No'}
+                      </label>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -836,138 +1223,200 @@ const PetitionTabContent = ({ petition }) => {
           </div>
 
           {/* Borrower Details Section */}
-          <div className={`card mb-4 ${editingSections.borrowers ? 'editing' : ''}`}>
-            <SectionHeader title="Borrower Details" sectionName="borrowers" />
+          <div className={`card mb-4 ${isEditing ? 'editing' : ''}`}>
+            <SectionHeader title="Borrower Details" />
             <div className="card-body">
-              {petition.details?.borrowers && petition.details.borrowers.length > 0 ? (
-                petition.details.borrowers.map((borrower, index) => (
-                  <div key={borrower.id || index} className="border rounded p-3 mb-3">
-                    <h6 className="mb-3 fw-semibold">Borrower {index + 1}</h6>
-                    <div className="row">
-                      <div className="col-md-3">
-                        <div className="form-group mb-3">
-                          <label className="form-label">First Name</label>
-                          <input 
-                            type="text" 
-                            className="form-control" 
-                            value={borrower.firstName || 'N/A'} 
-                            readOnly
-                          />
-                        </div>
+              {formData.borrowers && formData.borrowers.length > 0 ? (
+                <>
+                  {formData.borrowers.map((borrower, index) => (
+                    <div key={borrower.id || index} className="border rounded p-3 mb-3">
+                      <div className="d-flex justify-content-between align-items-center mb-3">
+                        <h6 className="mb-0 fw-semibold">Borrower {index + 1}</h6>
+                        {isEditing && formData.borrowers.length > 1 && (
+                          <button 
+                            type="button" 
+                            className="btn btn-sm btn-danger"
+                            onClick={() => removeBorrower(borrower.id)}
+                          >
+                            <i className="fas fa-trash me-1"></i>
+                            Remove
+                          </button>
+                        )}
                       </div>
-                      <div className="col-md-3">
-                        <div className="form-group mb-3">
-                          <label className="form-label">Middle Name</label>
-                          <input 
-                            type="text" 
-                            className="form-control" 
-                            value={borrower.middleName || 'N/A'} 
-                            readOnly
-                          />
+                      <div className="row">
+                        <div className="col-md-3">
+                          <div className="form-group mb-3">
+                            <label className="form-label">First Name *</label>
+                            <input 
+                              type="text" 
+                              className={`form-control ${fieldErrors[`borrower_${borrower.id}_firstName`] ? 'is-invalid' : ''}`}
+                              value={borrower.firstName || ''} 
+                              readOnly={!isEditing}
+                              onChange={(e) => updateBorrower(borrower.id, 'firstName', e.target.value)}
+                            />
+                            {fieldErrors[`borrower_${borrower.id}_firstName`] && (
+                              <div className="text-danger small mt-1">{fieldErrors[`borrower_${borrower.id}_firstName`]}</div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                      <div className="col-md-3">
-                        <div className="form-group mb-3">
-                          <label className="form-label">Last Name</label>
-                          <input 
-                            type="text" 
-                            className="form-control" 
-                            value={borrower.lastName || 'N/A'} 
-                            readOnly
-                          />
+                        <div className="col-md-3">
+                          <div className="form-group mb-3">
+                            <label className="form-label">Middle Name</label>
+                            <input 
+                              type="text" 
+                              className={`form-control ${fieldErrors[`borrower_${borrower.id}_middleName`] ? 'is-invalid' : ''}`}
+                              value={borrower.middleName || ''} 
+                              readOnly={!isEditing}
+                              onChange={(e) => updateBorrower(borrower.id, 'middleName', e.target.value)}
+                            />
+                            {fieldErrors[`borrower_${borrower.id}_middleName`] && (
+                              <div className="text-danger small mt-1">{fieldErrors[`borrower_${borrower.id}_middleName`]}</div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                      <div className="col-md-3">
-                        <div className="form-group mb-3">
-                          <label className="form-label">Suffix</label>
-                          <input 
-                            type="text" 
-                            className="form-control" 
-                            value={borrower.suffix || 'N/A'} 
-                            readOnly
-                          />
+                        <div className="col-md-3">
+                          <div className="form-group mb-3">
+                            <label className="form-label">Last Name *</label>
+                            <input 
+                              type="text" 
+                              className={`form-control ${fieldErrors[`borrower_${borrower.id}_lastName`] ? 'is-invalid' : ''}`}
+                              value={borrower.lastName || ''} 
+                              readOnly={!isEditing}
+                              onChange={(e) => updateBorrower(borrower.id, 'lastName', e.target.value)}
+                            />
+                            {fieldErrors[`borrower_${borrower.id}_lastName`] && (
+                              <div className="text-danger small mt-1">{fieldErrors[`borrower_${borrower.id}_lastName`]}</div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                      <div className="col-md-6">
-                        <div className="form-group mb-3">
-                          <label className="form-label">Primary Borrower</label>
-                          <input 
-                            type="text" 
-                            className="form-control" 
-                            value={borrower.borrowerIsPrimary ? 'Yes' : 'No'} 
-                            readOnly
-                          />
+                        <div className="col-md-3">
+                          <div className="form-group mb-3">
+                            <label className="form-label">Suffix</label>
+                            <input 
+                              type="text" 
+                              className={`form-control ${fieldErrors[`borrower_${borrower.id}_suffix`] ? 'is-invalid' : ''}`}
+                              value={borrower.suffix || ''} 
+                              readOnly={!isEditing}
+                              onChange={(e) => updateBorrower(borrower.id, 'suffix', e.target.value)}
+                            />
+                            {fieldErrors[`borrower_${borrower.id}_suffix`] && (
+                              <div className="text-danger small mt-1">{fieldErrors[`borrower_${borrower.id}_suffix`]}</div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                      <div className="col-md-6">
-                        <div className="form-group mb-3">
-                          <label className="form-label">Email</label>
-                          <input 
-                            type="text" 
-                            className="form-control" 
-                            value={borrower.email || 'N/A'} 
-                            readOnly
-                          />
+                        <div className="col-md-6">
+                          <div className="form-group mb-3">
+                            <label className="form-label">Primary Borrower</label>
+                            <div className="form-check">
+                              <input 
+                                type="checkbox" 
+                                className="form-check-input"
+                                checked={borrower.borrowerIsPrimary || false}
+                                onChange={(e) => {
+                                  // Make this borrower primary and uncheck others
+                                  setFormData(prev => ({
+                                    ...prev,
+                                    borrowers: prev.borrowers.map(b =>
+                                      b.id === borrower.id 
+                                        ? { ...b, borrowerIsPrimary: true }
+                                        : { ...b, borrowerIsPrimary: false }
+                                    )
+                                  }));
+                                }}
+                                disabled={!isEditing}
+                              />
+                              <label className="form-check-label">
+                                {borrower.borrowerIsPrimary ? 'Yes' : 'No'}
+                              </label>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                      <div className="col-md-6">
-                        <div className="form-group mb-3">
-                          <label className="form-label">Phone</label>
-                          <input 
-                            type="text" 
-                            className="form-control" 
-                            value={borrower.phone || 'N/A'} 
-                            readOnly
-                          />
+                        <div className="col-md-6">
+                          <div className="form-group mb-3">
+                            <label className="form-label">Email</label>
+                            <input 
+                              type="email" 
+                              className="form-control"
+                              value={borrower.email || ''} 
+                              readOnly={!isEditing}
+                              onChange={(e) => updateBorrower(borrower.id, 'email', e.target.value)}
+                            />
+                          </div>
                         </div>
-                      </div>
-                      <div className="col-md-6">
-                        <div className="form-group mb-3">
-                          <label className="form-label">Mailing Address</label>
-                          <input 
-                            type="text" 
-                            className="form-control" 
-                            value={borrower.mailingStreet1 || 'N/A'} 
-                            readOnly
-                          />
+                        <div className="col-md-6">
+                          <div className="form-group mb-3">
+                            <label className="form-label">Phone</label>
+                            <input 
+                              type="text" 
+                              className="form-control"
+                              value={borrower.phone || ''} 
+                              readOnly={!isEditing}
+                              onChange={(e) => updateBorrower(borrower.id, 'phone', e.target.value)}
+                            />
+                          </div>
                         </div>
-                      </div>
-                      <div className="col-md-4">
-                        <div className="form-group mb-3">
-                          <label className="form-label">Mailing City</label>
-                          <input 
-                            type="text" 
-                            className="form-control" 
-                            value={borrower.mailingCity || 'N/A'} 
-                            readOnly
-                          />
+                        <div className="col-md-6">
+                          <div className="form-group mb-3">
+                            <label className="form-label">Mailing Address</label>
+                            <input 
+                              type="text" 
+                              className="form-control"
+                              value={borrower.mailingStreet1 || ''} 
+                              readOnly={!isEditing}
+                              onChange={(e) => updateBorrower(borrower.id, 'mailingStreet1', e.target.value)}
+                            />
+                          </div>
                         </div>
-                      </div>
-                      <div className="col-md-4">
-                        <div className="form-group mb-3">
-                          <label className="form-label">Mailing State</label>
-                          <input 
-                            type="text" 
-                            className="form-control" 
-                            value={borrower.mailingState || 'N/A'} 
-                            readOnly
-                          />
+                        <div className="col-md-4">
+                          <div className="form-group mb-3">
+                            <label className="form-label">Mailing City</label>
+                            <input 
+                              type="text" 
+                              className="form-control"
+                              value={borrower.mailingCity || ''} 
+                              readOnly={!isEditing}
+                              onChange={(e) => updateBorrower(borrower.id, 'mailingCity', e.target.value)}
+                            />
+                          </div>
                         </div>
-                      </div>
-                      <div className="col-md-4">
-                        <div className="form-group mb-3">
-                          <label className="form-label">Mailing ZIP</label>
-                          <input 
-                            type="text" 
-                            className="form-control" 
-                            value={borrower.mailingZip || 'N/A'} 
-                            readOnly
-                          />
+                        <div className="col-md-2">
+                          <div className="form-group mb-3">
+                            <label className="form-label">State</label>
+                            <input 
+                              type="text" 
+                              className="form-control"
+                              value={borrower.mailingState || ''} 
+                              readOnly={!isEditing}
+                              onChange={(e) => updateBorrower(borrower.id, 'mailingState', e.target.value)}
+                            />
+                          </div>
+                        </div>
+                        <div className="col-md-4">
+                          <div className="form-group mb-3">
+                            <label className="form-label">Mailing ZIP</label>
+                            <input 
+                              type="text" 
+                              className="form-control"
+                              value={borrower.mailingZip || ''} 
+                              readOnly={!isEditing}
+                              onChange={(e) => updateBorrower(borrower.id, 'mailingZip', e.target.value)}
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))
+                  ))}
+                  {isEditing && (
+                    <button 
+                      type="button" 
+                      className="btn btn-sm btn-outline-primary"
+                      onClick={addBorrower}
+                    >
+                      <i className="fas fa-plus me-1"></i>
+                      Add Borrower
+                    </button>
+                  )}
+                </>
               ) : (
                 <p className="text-muted">No borrower information available</p>
               )}
@@ -975,52 +1424,72 @@ const PetitionTabContent = ({ petition }) => {
           </div>
 
           {/* Filing Entity Section */}
-          <div className={`card mb-4 ${editingSections.filingEntity ? 'editing' : ''}`}>
-            <SectionHeader title="Filing Entity" sectionName="filingEntity" />
+          <div className={`card mb-4 ${isEditing ? 'editing' : ''}`}>
+            <SectionHeader title="Filing Entity" />
             <div className="card-body">
               <div className="row">
                 <div className="col-12">
                   <div className="form-group mb-3">
-                    <label className="form-label">Filing Entity Legal Name</label>
+                    <label className="form-label">Filing Entity Legal Name *</label>
                     <input 
                       type="text" 
-                      className="form-control" 
-                      value={petition.details?.filingEntity?.filingEntityLegalName || 'N/A'} 
-                      readOnly
+                      name="filingEntityLegalName"
+                      className={`form-control ${fieldErrors.filingEntityLegalName ? 'is-invalid' : ''}`}
+                      value={formData.filingEntityLegalName || ''} 
+                      readOnly={!isEditing}
+                      onChange={handleInputChange}
                     />
+                    {fieldErrors.filingEntityLegalName && (
+                      <div className="text-danger small mt-1">{fieldErrors.filingEntityLegalName}</div>
+                    )}
                   </div>
                 </div>
                 <div className="col-md-6">
                   <div className="form-group mb-3">
-                    <label className="form-label">Contact Name</label>
+                    <label className="form-label">Contact Name *</label>
                     <input 
                       type="text" 
-                      className="form-control" 
-                      value={petition.details?.filingEntity?.filingContactName || 'N/A'} 
-                      readOnly
+                      name="filingContactName"
+                      className={`form-control ${fieldErrors.filingContactName ? 'is-invalid' : ''}`}
+                      value={formData.filingContactName || ''} 
+                      readOnly={!isEditing}
+                      onChange={handleInputChange}
                     />
+                    {fieldErrors.filingContactName && (
+                      <div className="text-danger small mt-1">{fieldErrors.filingContactName}</div>
+                    )}
                   </div>
                 </div>
                 <div className="col-md-6">
                   <div className="form-group mb-3">
-                    <label className="form-label">Contact Email</label>
+                    <label className="form-label">Contact Email *</label>
                     <input 
-                      type="text" 
-                      className="form-control" 
-                      value={petition.details?.filingEntity?.filingContactEmail || 'N/A'} 
-                      readOnly
+                      type="email" 
+                      name="filingContactEmail"
+                      className={`form-control ${fieldErrors.filingContactEmail ? 'is-invalid' : ''}`}
+                      value={formData.filingContactEmail || ''} 
+                      readOnly={!isEditing}
+                      onChange={handleInputChange}
                     />
+                    {fieldErrors.filingContactEmail && (
+                      <div className="text-danger small mt-1">{fieldErrors.filingContactEmail}</div>
+                    )}
                   </div>
                 </div>
                 <div className="col-md-6">
                   <div className="form-group mb-3">
-                    <label className="form-label">Contact Phone</label>
+                    <label className="form-label">Contact Phone *</label>
                     <input 
                       type="text" 
-                      className="form-control" 
-                      value={petition.details?.filingEntity?.filingContactPhone || 'N/A'} 
-                      readOnly
+                      name="filingContactPhone"
+                      className={`form-control ${fieldErrors.filingContactPhone ? 'is-invalid' : ''}`}
+                      value={formData.filingContactPhone || ''} 
+                      readOnly={!isEditing}
+                      onChange={handleInputChange}
                     />
+                    {fieldErrors.filingContactPhone && (
+                      <div className="text-danger small mt-1">{fieldErrors.filingContactPhone}</div>
+                    )}
                   </div>
                 </div>
                 <div className="col-md-6">
@@ -1028,9 +1497,11 @@ const PetitionTabContent = ({ petition }) => {
                     <label className="form-label">NMLS License Number</label>
                     <input 
                       type="text" 
-                      className="form-control" 
-                      value={petition.details?.filingEntity?.nmlsLicenseNumber || 'N/A'} 
-                      readOnly
+                      name="nmlsLicenseNumber"
+                      className="form-control"
+                      value={formData.nmlsLicenseNumber || ''} 
+                      readOnly={!isEditing}
+                      onChange={handleInputChange}
                     />
                   </div>
                 </div>
@@ -1039,9 +1510,11 @@ const PetitionTabContent = ({ petition }) => {
                     <label className="form-label">State License Number</label>
                     <input 
                       type="text" 
-                      className="form-control" 
-                      value={petition.details?.filingEntity?.stateLicenseNumber || 'N/A'} 
-                      readOnly
+                      name="stateLicenseNumber"
+                      className="form-control"
+                      value={formData.stateLicenseNumber || ''} 
+                      readOnly={!isEditing}
+                      onChange={handleInputChange}
                     />
                   </div>
                 </div>
@@ -1050,21 +1523,28 @@ const PetitionTabContent = ({ petition }) => {
                     <label className="form-label">State License State</label>
                     <input 
                       type="text" 
-                      className="form-control" 
-                      value={petition.details?.filingEntity?.stateLicenseState || 'N/A'} 
-                      readOnly
+                      name="stateLicenseState"
+                      className="form-control"
+                      value={formData.stateLicenseState || ''} 
+                      readOnly={!isEditing}
+                      onChange={handleInputChange}
                     />
                   </div>
                 </div>
                 <div className="col-md-6">
                   <div className="form-group mb-3">
-                    <label className="form-label">Street Address</label>
+                    <label className="form-label">Street Address *</label>
                     <input 
                       type="text" 
-                      className="form-control" 
-                      value={petition.details?.filingEntity?.filingEntityStreet1 || 'N/A'} 
-                      readOnly
+                      name="filingEntityStreet1"
+                      className={`form-control ${fieldErrors.filingEntityStreet1 ? 'is-invalid' : ''}`}
+                      value={formData.filingEntityStreet1 || ''} 
+                      readOnly={!isEditing}
+                      onChange={handleInputChange}
                     />
+                    {fieldErrors.filingEntityStreet1 && (
+                      <div className="text-danger small mt-1">{fieldErrors.filingEntityStreet1}</div>
+                    )}
                   </div>
                 </div>
                 <div className="col-md-6">
@@ -1072,43 +1552,60 @@ const PetitionTabContent = ({ petition }) => {
                     <label className="form-label">Street Address 2</label>
                     <input 
                       type="text" 
-                      className="form-control" 
-                      value={petition.details?.filingEntity?.filingEntityStreet2 || 'N/A'} 
-                      readOnly
+                      name="filingEntityStreet2"
+                      className="form-control"
+                      value={formData.filingEntityStreet2 || ''} 
+                      readOnly={!isEditing}
+                      onChange={handleInputChange}
                     />
                   </div>
                 </div>
                 <div className="col-md-4">
                   <div className="form-group mb-3">
-                    <label className="form-label">City</label>
+                    <label className="form-label">City *</label>
                     <input 
                       type="text" 
-                      className="form-control" 
-                      value={petition.details?.filingEntity?.filingEntityCity || 'N/A'} 
-                      readOnly
+                      name="filingEntityCity"
+                      className={`form-control ${fieldErrors.filingEntityCity ? 'is-invalid' : ''}`}
+                      value={formData.filingEntityCity || ''} 
+                      readOnly={!isEditing}
+                      onChange={handleInputChange}
                     />
+                    {fieldErrors.filingEntityCity && (
+                      <div className="text-danger small mt-1">{fieldErrors.filingEntityCity}</div>
+                    )}
                   </div>
                 </div>
                 <div className="col-md-4">
                   <div className="form-group mb-3">
-                    <label className="form-label">State</label>
+                    <label className="form-label">State *</label>
                     <input 
                       type="text" 
-                      className="form-control" 
-                      value={petition.details?.filingEntity?.filingEntityState || 'N/A'} 
-                      readOnly
+                      name="filingEntityState"
+                      className={`form-control ${fieldErrors.filingEntityState ? 'is-invalid' : ''}`}
+                      value={formData.filingEntityState || ''} 
+                      readOnly={!isEditing}
+                      onChange={handleInputChange}
                     />
+                    {fieldErrors.filingEntityState && (
+                      <div className="text-danger small mt-1">{fieldErrors.filingEntityState}</div>
+                    )}
                   </div>
                 </div>
                 <div className="col-md-4">
                   <div className="form-group mb-3">
-                    <label className="form-label">ZIP Code</label>
+                    <label className="form-label">ZIP Code *</label>
                     <input 
                       type="text" 
-                      className="form-control" 
-                      value={petition.details?.filingEntity?.filingEntityZip || 'N/A'} 
-                      readOnly
+                      name="filingEntityZip"
+                      className={`form-control ${fieldErrors.filingEntityZip ? 'is-invalid' : ''}`}
+                      value={formData.filingEntityZip || ''} 
+                      readOnly={!isEditing}
+                      onChange={handleInputChange}
                     />
+                    {fieldErrors.filingEntityZip && (
+                      <div className="text-danger small mt-1">{fieldErrors.filingEntityZip}</div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1116,139 +1613,207 @@ const PetitionTabContent = ({ petition }) => {
           </div>
 
           {/* Right-to-Cure Section */}
-          <div className={`card mb-4 ${editingSections.rightToCure ? 'editing' : ''}`}>
-            <SectionHeader title="Right-to-Cure (§35A)" sectionName="rightToCure" />
+          <div className={`card mb-4 ${isEditing ? 'editing' : ''}`}>
+            <SectionHeader title="Right-to-Cure (§35A)" />
             <div className="card-body">
               <div className="row">
                 <div className="col-md-6">
                   <div className="form-group mb-3">
-                    <label className="form-label">Notice Sent</label>
-                    <input 
-                      type="text" 
-                      className="form-control" 
-                      value={petition.details?.rightToCure?.noticeSent ? 'Yes' : 'No'} 
-                      readOnly
-                    />
+                    <label className="form-label">Notice Sent *</label>
+                    <select 
+                      name="noticeSent"
+                      className={`form-select ${fieldErrors.noticeSent ? 'is-invalid' : ''}`}
+                      value={formData.noticeSent === null ? '' : formData.noticeSent ? 'true' : 'false'}
+                      onChange={(e) => {
+                        const value = e.target.value === 'true' ? true : e.target.value === 'false' ? false : null;
+                        setFormData(prev => {
+                          const updated = { ...prev, noticeSent: value };
+                          // Initialize foreclosureSale if noticeSent is true and it doesn't exist
+                          if (value === true && !updated.foreclosureSale) {
+                            updated.foreclosureSale = {
+                              saleDate: '',
+                              soldTo: '',
+                              vestingEntityName: '',
+                              reoEntityName: '',
+                              reoContactFirstName: '',
+                              reoContactLastName: '',
+                              reoBusinessPhone: '',
+                              reoEmergencyPhone: ''
+                            };
+                          }
+                          return updated;
+                        });
+                      }}
+                      disabled={!isEditing}
+                    >
+                      <option value="">Select...</option>
+                      <option value="true">Yes</option>
+                      <option value="false">No</option>
+                    </select>
+                    {fieldErrors.noticeSent && (
+                      <div className="text-danger small mt-1">{fieldErrors.noticeSent}</div>
+                    )}
                   </div>
                 </div>
-                <div className="col-md-6">
-                  <div className="form-group mb-3">
-                    <label className="form-label">Notice Date</label>
-                    <input 
-                      type="text" 
-                      className="form-control" 
-                      value={formatDate(petition.details?.rightToCure?.noticeDate)} 
-                      readOnly
-                    />
+                {formData.noticeSent === true && (
+                  <>
+                    <div className="col-md-6">
+                      <div className="form-group mb-3">
+                        <label className="form-label">Notice Date *</label>
+                        <input 
+                          type="date" 
+                          name="noticeDate"
+                          className={`form-control ${fieldErrors.noticeDate ? 'is-invalid' : ''}`}
+                          value={formData.noticeDate || ''} 
+                          readOnly={!isEditing}
+                          onChange={handleInputChange}
+                        />
+                        {fieldErrors.noticeDate && (
+                          <div className="text-danger small mt-1">{fieldErrors.noticeDate}</div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="col-md-6">
+                      <div className="form-group mb-3">
+                        <label className="form-label">Days Delinquent at Notice *</label>
+                        <input 
+                          type="number" 
+                          name="daysDelinquentAtNotice"
+                          className={`form-control ${fieldErrors.daysDelinquentAtNotice ? 'is-invalid' : ''}`}
+                          value={formData.daysDelinquentAtNotice || ''} 
+                          readOnly={!isEditing}
+                          onChange={handleInputChange}
+                        />
+                        {fieldErrors.daysDelinquentAtNotice && (
+                          <div className="text-danger small mt-1">{fieldErrors.daysDelinquentAtNotice}</div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="col-md-6">
+                      <div className="form-group mb-3">
+                        <label className="form-label">Amount in Default ($) *</label>
+                        <input 
+                          type="number" 
+                          step="0.01"
+                          name="amountInDefault"
+                          className={`form-control ${fieldErrors.amountInDefault ? 'is-invalid' : ''}`}
+                          value={formData.amountInDefault || ''} 
+                          readOnly={!isEditing}
+                          onChange={handleInputChange}
+                        />
+                        {fieldErrors.amountInDefault && (
+                          <div className="text-danger small mt-1">{fieldErrors.amountInDefault}</div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="col-md-6">
+                      <div className="form-group mb-3">
+                        <label className="form-label">Cure Expiration Date</label>
+                        <input 
+                          type="date" 
+                          name="cureExpirationDate"
+                          className="form-control"
+                          value={formData.cureExpirationDate || ''} 
+                          readOnly={!isEditing}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                    </div>
+                    <div className="col-md-6">
+                      <div className="form-group mb-3">
+                        <label className="form-label">Notice Address Street</label>
+                        <input 
+                          type="text" 
+                          name="noticeAddressStreet1"
+                          className="form-control"
+                          value={formData.noticeAddressStreet1 || ''} 
+                          readOnly={!isEditing}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                    </div>
+                    <div className="col-md-6">
+                      <div className="form-group mb-3">
+                        <label className="form-label">Notice Address City</label>
+                        <input 
+                          type="text" 
+                          name="noticeAddressCity"
+                          className="form-control"
+                          value={formData.noticeAddressCity || ''} 
+                          readOnly={!isEditing}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                    </div>
+                    <div className="col-md-4">
+                      <div className="form-group mb-3">
+                        <label className="form-label">Notice Address State</label>
+                        <input 
+                          type="text" 
+                          name="noticeAddressState"
+                          className="form-control"
+                          value={formData.noticeAddressState || ''} 
+                          readOnly={!isEditing}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                    </div>
+                    <div className="col-md-4">
+                      <div className="form-group mb-3">
+                        <label className="form-label">Notice Address ZIP</label>
+                        <input 
+                          type="text" 
+                          name="noticeAddressZip"
+                          className="form-control"
+                          value={formData.noticeAddressZip || ''} 
+                          readOnly={!isEditing}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+                {formData.noticeSent === false && (
+                  <div className="col-md-12">
+                    <div className="form-group mb-3">
+                      <label className="form-label">Acceleration Date</label>
+                      <input 
+                        type="date" 
+                        name="manualOverrideReason"
+                        className={`form-control ${fieldErrors.manualOverrideReason ? 'is-invalid' : ''}`}
+                        value={formData.manualOverrideReason || ''} 
+                        readOnly={!isEditing}
+                        onChange={handleInputChange}
+                      />
+                      {fieldErrors.manualOverrideReason && (
+                        <div className="text-danger small mt-1">{fieldErrors.manualOverrideReason}</div>
+                      )}
+                    </div>
                   </div>
-                </div>
-                <div className="col-md-6">
-                  <div className="form-group mb-3">
-                    <label className="form-label">Days Delinquent at Notice</label>
-                    <input 
-                      type="text" 
-                      className="form-control" 
-                      value={petition.details?.rightToCure?.daysDelinquentAtNotice || 'N/A'} 
-                      readOnly
-                    />
-                  </div>
-                </div>
-                <div className="col-md-6">
-                  <div className="form-group mb-3">
-                    <label className="form-label">Amount in Default</label>
-                    <input 
-                      type="text" 
-                      className="form-control" 
-                      value={formatCurrency(petition.details?.rightToCure?.amountInDefault)} 
-                      readOnly
-                    />
-                  </div>
-                </div>
-                <div className="col-md-6">
-                  <div className="form-group mb-3">
-                    <label className="form-label">Cure Expiration Date</label>
-                    <input 
-                      type="text" 
-                      className="form-control" 
-                      value={formatDate(petition.details?.rightToCure?.cureExpirationDate)} 
-                      readOnly
-                    />
-                  </div>
-                </div>
-                <div className="col-md-6">
-                  <div className="form-group mb-3">
-                    <label className="form-label">Manual Override Reason</label>
-                    <input 
-                      type="text" 
-                      className="form-control" 
-                      value={petition.details?.rightToCure?.manualOverrideReason || 'N/A'} 
-                      readOnly
-                    />
-                  </div>
-                </div>
-                <div className="col-md-6">
-                  <div className="form-group mb-3">
-                    <label className="form-label">Notice Address Street</label>
-                    <input 
-                      type="text" 
-                      className="form-control" 
-                      value={petition.details?.rightToCure?.noticeAddressStreet1 || 'N/A'} 
-                      readOnly
-                    />
-                  </div>
-                </div>
-                <div className="col-md-6">
-                  <div className="form-group mb-3">
-                    <label className="form-label">Notice Address City</label>
-                    <input 
-                      type="text" 
-                      className="form-control" 
-                      value={petition.details?.rightToCure?.noticeAddressCity || 'N/A'} 
-                      readOnly
-                    />
-                  </div>
-                </div>
-                <div className="col-md-4">
-                  <div className="form-group mb-3">
-                    <label className="form-label">Notice Address State</label>
-                    <input 
-                      type="text" 
-                      className="form-control" 
-                      value={petition.details?.rightToCure?.noticeAddressState || 'N/A'} 
-                      readOnly
-                    />
-                  </div>
-                </div>
-                <div className="col-md-4">
-                  <div className="form-group mb-3">
-                    <label className="form-label">Notice Address ZIP</label>
-                    <input 
-                      type="text" 
-                      className="form-control" 
-                      value={petition.details?.rightToCure?.noticeAddressZip || 'N/A'} 
-                      readOnly
-                    />
-                  </div>
-                </div>
+                )}
               </div>
             </div>
           </div>
 
           {/* Foreclosure Sale Section - Only show if Right to Cure is "Yes" */}
-          {petition.details?.rightToCure?.noticeSent && (
-            <div className={`card mb-4 ${editingSections.foreclosureSale ? 'editing' : ''}`}>
-              <SectionHeader title="Foreclosure Sale" sectionName="foreclosureSale" />
+          {formData.noticeSent === true && (
+            <div className={`card mb-4 ${isEditing ? 'editing' : ''}`}>
+              <SectionHeader title="Foreclosure Sale" />
               <div className="card-body">
                 <div className="row">
                   <div className="col-md-6">
                     <div className="form-group mb-3">
                       <label className="form-label">Sale Date *</label>
                       <input 
-                        type="text" 
-                        className="form-control" 
-                        value={formatDate(petition.details?.foreclosureSale?.saleDate) || 'N/A'} 
-                        readOnly
+                        type="date" 
+                        className={`form-control ${fieldErrors['foreclosureSale.saleDate'] ? 'is-invalid' : ''}`}
+                        value={formData.foreclosureSale?.saleDate || ''} 
+                        readOnly={!isEditing}
+                        onChange={(e) => updateForeclosureSale('saleDate', e.target.value)}
                       />
+                      {fieldErrors['foreclosureSale.saleDate'] && (
+                        <div className="text-danger small mt-1">{fieldErrors['foreclosureSale.saleDate']}</div>
+                      )}
                     </div>
                   </div>
                   <div className="col-md-6">
@@ -1256,9 +1821,10 @@ const PetitionTabContent = ({ petition }) => {
                       <label className="form-label">Sold To?</label>
                       <input 
                         type="text" 
-                        className="form-control" 
-                        value={petition.details?.foreclosureSale?.soldTo || 'N/A'} 
-                        readOnly
+                        className="form-control"
+                        value={formData.foreclosureSale?.soldTo || ''} 
+                        readOnly={!isEditing}
+                        onChange={(e) => updateForeclosureSale('soldTo', e.target.value)}
                       />
                     </div>
                   </div>
@@ -1267,10 +1833,14 @@ const PetitionTabContent = ({ petition }) => {
                       <label className="form-label">Vesting Entity Name *</label>
                       <input 
                         type="text" 
-                        className="form-control" 
-                        value={petition.details?.foreclosureSale?.vestingEntityName || 'N/A'} 
-                        readOnly
+                        className={`form-control ${fieldErrors['foreclosureSale.vestingEntityName'] ? 'is-invalid' : ''}`}
+                        value={formData.foreclosureSale?.vestingEntityName || ''} 
+                        readOnly={!isEditing}
+                        onChange={(e) => updateForeclosureSale('vestingEntityName', e.target.value)}
                       />
+                      {fieldErrors['foreclosureSale.vestingEntityName'] && (
+                        <div className="text-danger small mt-1">{fieldErrors['foreclosureSale.vestingEntityName']}</div>
+                      )}
                     </div>
                   </div>
                   <div className="col-md-6">
@@ -1278,9 +1848,10 @@ const PetitionTabContent = ({ petition }) => {
                       <label className="form-label">REO Entity Name</label>
                       <input 
                         type="text" 
-                        className="form-control" 
-                        value={petition.details?.foreclosureSale?.reoEntityName || 'N/A'} 
-                        readOnly
+                        className="form-control"
+                        value={formData.foreclosureSale?.reoEntityName || ''} 
+                        readOnly={!isEditing}
+                        onChange={(e) => updateForeclosureSale('reoEntityName', e.target.value)}
                       />
                     </div>
                   </div>
@@ -1289,10 +1860,14 @@ const PetitionTabContent = ({ petition }) => {
                       <label className="form-label">REO Contact First Name *</label>
                       <input 
                         type="text" 
-                        className="form-control" 
-                        value={petition.details?.foreclosureSale?.reoContactFirstName || 'N/A'} 
-                        readOnly
+                        className={`form-control ${fieldErrors['foreclosureSale.reoContactFirstName'] ? 'is-invalid' : ''}`}
+                        value={formData.foreclosureSale?.reoContactFirstName || ''} 
+                        readOnly={!isEditing}
+                        onChange={(e) => updateForeclosureSale('reoContactFirstName', e.target.value)}
                       />
+                      {fieldErrors['foreclosureSale.reoContactFirstName'] && (
+                        <div className="text-danger small mt-1">{fieldErrors['foreclosureSale.reoContactFirstName']}</div>
+                      )}
                     </div>
                   </div>
                   <div className="col-md-6">
@@ -1300,10 +1875,14 @@ const PetitionTabContent = ({ petition }) => {
                       <label className="form-label">REO Contact Last Name *</label>
                       <input 
                         type="text" 
-                        className="form-control" 
-                        value={petition.details?.foreclosureSale?.reoContactLastName || 'N/A'} 
-                        readOnly
+                        className={`form-control ${fieldErrors['foreclosureSale.reoContactLastName'] ? 'is-invalid' : ''}`}
+                        value={formData.foreclosureSale?.reoContactLastName || ''} 
+                        readOnly={!isEditing}
+                        onChange={(e) => updateForeclosureSale('reoContactLastName', e.target.value)}
                       />
+                      {fieldErrors['foreclosureSale.reoContactLastName'] && (
+                        <div className="text-danger small mt-1">{fieldErrors['foreclosureSale.reoContactLastName']}</div>
+                      )}
                     </div>
                   </div>
                   <div className="col-md-6">
@@ -1311,10 +1890,14 @@ const PetitionTabContent = ({ petition }) => {
                       <label className="form-label">REO Business Phone *</label>
                       <input 
                         type="text" 
-                        className="form-control" 
-                        value={petition.details?.foreclosureSale?.reoBusinessPhone || 'N/A'} 
-                        readOnly
+                        className={`form-control ${fieldErrors['foreclosureSale.reoBusinessPhone'] ? 'is-invalid' : ''}`}
+                        value={formData.foreclosureSale?.reoBusinessPhone || ''} 
+                        readOnly={!isEditing}
+                        onChange={(e) => updateForeclosureSale('reoBusinessPhone', e.target.value)}
                       />
+                      {fieldErrors['foreclosureSale.reoBusinessPhone'] && (
+                        <div className="text-danger small mt-1">{fieldErrors['foreclosureSale.reoBusinessPhone']}</div>
+                      )}
                     </div>
                   </div>
                   <div className="col-md-6">
@@ -1322,9 +1905,10 @@ const PetitionTabContent = ({ petition }) => {
                       <label className="form-label">REO Emergency Phone</label>
                       <input 
                         type="text" 
-                        className="form-control" 
-                        value={petition.details?.foreclosureSale?.reoEmergencyPhone || 'N/A'} 
-                        readOnly
+                        className="form-control"
+                        value={formData.foreclosureSale?.reoEmergencyPhone || ''} 
+                        readOnly={!isEditing}
+                        onChange={(e) => updateForeclosureSale('reoEmergencyPhone', e.target.value)}
                       />
                     </div>
                   </div>
@@ -1334,18 +1918,68 @@ const PetitionTabContent = ({ petition }) => {
           )}
 
           {/* Form 35B Compliance Section */}
-          <div className={`card mb-4 ${editingSections.affidavit ? 'editing' : ''}`}>
-            <SectionHeader title="Form 35B Compliance" sectionName="affidavit" />
+          <div className={`card mb-4 ${isEditing ? 'editing' : ''}`}>
+            <SectionHeader title="Form 35B Compliance" />
             <div className="card-body">
               <div className="row">
                 <div className="col-12">
                   <div className="form-group mb-3">
-                    <label className="form-label">Certain Mortgage Loan</label>
+                    <label className="form-label">Certain Mortgage Loan *</label>
+                    <select 
+                      name="certainMortgageLoan"
+                      className={`form-select ${fieldErrors.certainMortgageLoan ? 'is-invalid' : ''}`}
+                      value={formData.certainMortgageLoan === null ? '' : formData.certainMortgageLoan ? 'true' : 'false'}
+                      onChange={(e) => {
+                        const value = e.target.value === 'true' ? true : e.target.value === 'false' ? false : null;
+                        setFormData(prev => ({ ...prev, certainMortgageLoan: value }));
+                      }}
+                      disabled={!isEditing}
+                    >
+                      <option value="">Select...</option>
+                      <option value="true">Yes</option>
+                      <option value="false">No</option>
+                    </select>
+                    {fieldErrors.certainMortgageLoan && (
+                      <div className="text-danger small mt-1">{fieldErrors.certainMortgageLoan}</div>
+                    )}
+                  </div>
+                </div>
+                <div className="col-md-6">
+                  <div className="form-group mb-3">
+                    <label className="form-label">Affiant Name</label>
                     <input 
                       type="text" 
-                      className="form-control" 
-                      value={petition.details?.affidavit?.certainMortgageLoan ? 'Yes' : 'No'} 
-                      readOnly
+                      name="affiantName"
+                      className="form-control"
+                      value={formData.affiantName || ''} 
+                      readOnly={!isEditing}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                </div>
+                <div className="col-md-6">
+                  <div className="form-group mb-3">
+                    <label className="form-label">Affiant Title</label>
+                    <input 
+                      type="text" 
+                      name="affiantTitle"
+                      className="form-control"
+                      value={formData.affiantTitle || ''} 
+                      readOnly={!isEditing}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                </div>
+                <div className="col-md-6">
+                  <div className="form-group mb-3">
+                    <label className="form-label">Affidavit Execution Date</label>
+                    <input 
+                      type="date" 
+                      name="affidavitExecutionDate"
+                      className="form-control"
+                      value={formData.affidavitExecutionDate || ''} 
+                      readOnly={!isEditing}
+                      onChange={handleInputChange}
                     />
                   </div>
                 </div>
@@ -1355,131 +1989,194 @@ const PetitionTabContent = ({ petition }) => {
 
 
           {/* Loan Assignees Section */}
-          <div className={`card mb-4 ${editingSections.loanAssignees ? 'editing' : ''}`}>
-            <SectionHeader title="Loan Assignees" sectionName="loanAssignees" />
+          <div className={`card mb-4 ${isEditing ? 'editing' : ''}`}>
+            <SectionHeader title="Loan Assignees" />
             <div className="card-body">
-              {petition.details?.loanAssignees && petition.details.loanAssignees.length > 0 ? (
-                petition.details.loanAssignees.map((assignee, index) => (
-                  <div key={index} className="border rounded p-3 mb-3">
-                    <h6 className="mb-3 fw-semibold">Assignee {index + 1}</h6>
-                    <div className="row">
-                      <div className="col-md-6">
-                        <div className="form-group mb-3">
-                          <label className="form-label">Assignee Name</label>
-                          <input 
-                            type="text" 
-                            className="form-control" 
-                            value={assignee.assigneeName || 'N/A'} 
-                            readOnly
-                          />
-                        </div>
+              {formData.loanAssignees && formData.loanAssignees.length > 0 ? (
+                <>
+                  {formData.loanAssignees.map((assignee, index) => (
+                    <div key={index} className="border rounded p-3 mb-3">
+                      <div className="d-flex justify-content-between align-items-center mb-3">
+                        <h6 className="mb-0 fw-semibold">Assignee {index + 1}</h6>
+                        {isEditing && (
+                          <button 
+                            type="button" 
+                            className="btn btn-sm btn-danger"
+                            onClick={() => removeLoanAssignee(index)}
+                          >
+                            <i className="fas fa-trash me-1"></i>
+                            Remove
+                          </button>
+                        )}
                       </div>
-                      <div className="col-md-6">
-                        <div className="form-group mb-3">
-                          <label className="form-label">Assignee Type</label>
-                          <input 
-                            type="text" 
-                            className="form-control" 
-                            value={getAssigneeTypeName(assignee.assigneeTypeId)} 
-                            readOnly
-                          />
+                      <div className="row">
+                        <div className="col-md-6">
+                          <div className="form-group mb-3">
+                            <label className="form-label">Assignee Name *</label>
+                            <input 
+                              type="text" 
+                              className={`form-control ${fieldErrors[`loanAssignees.${index}.assigneeName`] ? 'is-invalid' : ''}`}
+                              value={assignee.assigneeName || ''} 
+                              readOnly={!isEditing}
+                              onChange={(e) => updateLoanAssignee(index, 'assigneeName', e.target.value)}
+                            />
+                            {fieldErrors[`loanAssignees.${index}.assigneeName`] && (
+                              <div className="text-danger small mt-1">{fieldErrors[`loanAssignees.${index}.assigneeName`]}</div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                      <div className="col-md-6">
-                        <div className="form-group mb-3">
-                          <label className="form-label">Assignee Role</label>
-                          <input 
-                            type="text" 
-                            className="form-control" 
-                            value={getAssigneeRoleName(assignee.assigneeRoleId)} 
-                            readOnly
-                          />
+                        <div className="col-md-6">
+                          <div className="form-group mb-3">
+                            <label className="form-label">Assignee Type *</label>
+                            <select 
+                              className={`form-select ${fieldErrors[`loanAssignees.${index}.assigneeTypeId`] ? 'is-invalid' : ''}`}
+                              value={assignee.assigneeTypeId || ''}
+                              onChange={(e) => updateLoanAssignee(index, 'assigneeTypeId', e.target.value)}
+                              disabled={!isEditing || commonDataLoading}
+                            >
+                              <option value="">Select Type</option>
+                              {getAssigneeTypes().map(type => (
+                                <option key={type.id} value={type.id}>
+                                  {type.name}
+                                </option>
+                              ))}
+                            </select>
+                            {fieldErrors[`loanAssignees.${index}.assigneeTypeId`] && (
+                              <div className="text-danger small mt-1">{fieldErrors[`loanAssignees.${index}.assigneeTypeId`]}</div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                      <div className="col-md-6">
-                        <div className="form-group mb-3">
-                          <label className="form-label">Street Address</label>
-                          <input 
-                            type="text" 
-                            className="form-control" 
-                            value={assignee.street1 || 'N/A'} 
-                            readOnly
-                          />
+                        <div className="col-md-6">
+                          <div className="form-group mb-3">
+                            <label className="form-label">Assignee Role *</label>
+                            <select 
+                              className={`form-select ${fieldErrors[`loanAssignees.${index}.assigneeRoleId`] ? 'is-invalid' : ''}`}
+                              value={assignee.assigneeRoleId || ''}
+                              onChange={(e) => updateLoanAssignee(index, 'assigneeRoleId', e.target.value)}
+                              disabled={!isEditing || commonDataLoading}
+                            >
+                              <option value="">Select Role</option>
+                              {getAssigneeRoles().map(role => (
+                                <option key={role.id} value={role.id}>
+                                  {role.name}
+                                </option>
+                              ))}
+                            </select>
+                            {fieldErrors[`loanAssignees.${index}.assigneeRoleId`] && (
+                              <div className="text-danger small mt-1">{fieldErrors[`loanAssignees.${index}.assigneeRoleId`]}</div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                      <div className="col-md-6">
-                        <div className="form-group mb-3">
-                          <label className="form-label">Street Address 2</label>
-                          <input 
-                            type="text" 
-                            className="form-control" 
-                            value={assignee.street2 || 'N/A'} 
-                            readOnly
-                          />
+                        <div className="col-md-6">
+                          <div className="form-group mb-3">
+                            <label className="form-label">Street Address *</label>
+                            <input 
+                              type="text" 
+                              className={`form-control ${fieldErrors[`loanAssignees.${index}.street1`] ? 'is-invalid' : ''}`}
+                              value={assignee.street1 || ''} 
+                              readOnly={!isEditing}
+                              onChange={(e) => updateLoanAssignee(index, 'street1', e.target.value)}
+                            />
+                            {fieldErrors[`loanAssignees.${index}.street1`] && (
+                              <div className="text-danger small mt-1">{fieldErrors[`loanAssignees.${index}.street1`]}</div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                      <div className="col-md-4">
-                        <div className="form-group mb-3">
-                          <label className="form-label">City</label>
-                          <input 
-                            type="text" 
-                            className="form-control" 
-                            value={assignee.city || 'N/A'} 
-                            readOnly
-                          />
+                        <div className="col-md-6">
+                          <div className="form-group mb-3">
+                            <label className="form-label">Street Address 2</label>
+                            <input 
+                              type="text" 
+                              className="form-control"
+                              value={assignee.street2 || ''} 
+                              readOnly={!isEditing}
+                              onChange={(e) => updateLoanAssignee(index, 'street2', e.target.value)}
+                            />
+                          </div>
                         </div>
-                      </div>
-                      <div className="col-md-4">
-                        <div className="form-group mb-3">
-                          <label className="form-label">State</label>
-                          <input 
-                            type="text" 
-                            className="form-control" 
-                            value={assignee.addressState || 'N/A'} 
-                            readOnly
-                          />
+                        <div className="col-md-4">
+                          <div className="form-group mb-3">
+                            <label className="form-label">City *</label>
+                            <input 
+                              type="text" 
+                              className={`form-control ${fieldErrors[`loanAssignees.${index}.city`] ? 'is-invalid' : ''}`}
+                              value={assignee.city || ''} 
+                              readOnly={!isEditing}
+                              onChange={(e) => updateLoanAssignee(index, 'city', e.target.value)}
+                            />
+                            {fieldErrors[`loanAssignees.${index}.city`] && (
+                              <div className="text-danger small mt-1">{fieldErrors[`loanAssignees.${index}.city`]}</div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                      <div className="col-md-4">
-                        <div className="form-group mb-3">
-                          <label className="form-label">ZIP Code</label>
-                          <input 
-                            type="text" 
-                            className="form-control" 
-                            value={assignee.zip || 'N/A'} 
-                            readOnly
-                          />
+                        <div className="col-md-4">
+                          <div className="form-group mb-3">
+                            <label className="form-label">State *</label>
+                            <input 
+                              type="text" 
+                              className={`form-control ${fieldErrors[`loanAssignees.${index}.addressState`] ? 'is-invalid' : ''}`}
+                              value={assignee.addressState || ''} 
+                              readOnly={!isEditing}
+                              onChange={(e) => updateLoanAssignee(index, 'addressState', e.target.value)}
+                            />
+                            {fieldErrors[`loanAssignees.${index}.addressState`] && (
+                              <div className="text-danger small mt-1">{fieldErrors[`loanAssignees.${index}.addressState`]}</div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                      {assignee.licenseNumber && (
+                        <div className="col-md-4">
+                          <div className="form-group mb-3">
+                            <label className="form-label">ZIP Code *</label>
+                            <input 
+                              type="text" 
+                              className={`form-control ${fieldErrors[`loanAssignees.${index}.zip`] ? 'is-invalid' : ''}`}
+                              value={assignee.zip || ''} 
+                              readOnly={!isEditing}
+                              onChange={(e) => updateLoanAssignee(index, 'zip', e.target.value)}
+                            />
+                            {fieldErrors[`loanAssignees.${index}.zip`] && (
+                              <div className="text-danger small mt-1">{fieldErrors[`loanAssignees.${index}.zip`]}</div>
+                            )}
+                          </div>
+                        </div>
                         <div className="col-md-6">
                           <div className="form-group mb-3">
                             <label className="form-label">License Number</label>
                             <input 
                               type="text" 
-                              className="form-control" 
-                              value={assignee.licenseNumber} 
-                              readOnly
+                              className="form-control"
+                              value={assignee.licenseNumber || ''} 
+                              readOnly={!isEditing}
+                              onChange={(e) => updateLoanAssignee(index, 'licenseNumber', e.target.value)}
                             />
                           </div>
                         </div>
-                      )}
-                      {assignee.licenseState && (
                         <div className="col-md-6">
                           <div className="form-group mb-3">
                             <label className="form-label">License State</label>
                             <input 
                               type="text" 
-                              className="form-control" 
-                              value={assignee.licenseState} 
-                              readOnly
+                              className="form-control"
+                              value={assignee.licenseState || ''} 
+                              readOnly={!isEditing}
+                              onChange={(e) => updateLoanAssignee(index, 'licenseState', e.target.value)}
                             />
                           </div>
                         </div>
-                      )}
+                      </div>
                     </div>
-                  </div>
-                ))
+                  ))}
+                  {isEditing && (
+                    <button 
+                      type="button" 
+                      className="btn btn-sm btn-outline-primary"
+                      onClick={addLoanAssignee}
+                    >
+                      <i className="fas fa-plus me-1"></i>
+                      Add Loan Assignee
+                    </button>
+                  )}
+                </>
               ) : (
                 <p className="text-muted">No assignee information available</p>
               )}
@@ -1487,8 +2184,8 @@ const PetitionTabContent = ({ petition }) => {
           </div>
 
           {/* Signatures Section */}
-          <div className={`card mb-4 ${editingSections.signatures ? 'editing' : ''}`}>
-            <SectionHeader title="Signatures" sectionName="signatures" />
+          <div className={`card mb-4 ${isEditing ? 'editing' : ''}`}>
+            <SectionHeader title="Signatures" />
             <div className="card-body">
               {petition.details?.signatures && petition.details.signatures.length > 0 ? (
                 petition.details.signatures.map((signature, index) => (

@@ -84,8 +84,8 @@ export const usePetitions = () => {
     await fetchRecentPetitions();
   };
 
-  // Submit a new petition
-  const submitPetition = async (formData, isDraft = false) => {
+  // Submit a new petition or update existing petition
+  const submitPetition = async (formData, isDraft = false, petitionId = null) => {
     if (!hasOrganizationAccess) {
       throw new Error('User must be part of an organization to submit petitions');
     }
@@ -101,7 +101,7 @@ export const usePetitions = () => {
         throw new Error('Organization ID not found. Please ensure you are part of an organization.');
       }
       
-      const apiData = await petitionApiService.transformFormDataToApiFormat(formData, organizationId);
+      const apiData = await petitionApiService.transformFormDataToApiFormat(formData, organizationId, petitionId);
       
       const response = await petitionApiService.submitPetition(apiData);
       
