@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { useTabs } from '../../context/TabContext';
@@ -6,16 +6,139 @@ import { usePetitionCommonData } from '../../hooks/usePetitionCommonData';
 import { usePetitions } from '../../hooks/usePetitions';
 import { toast } from 'react-toastify';
 import './PetitionForm.css';
+import { useJsApiLoader } from '@react-google-maps/api';
+import Config from '../../config/index';
 
 const PetitionTabContent = ({ petition }) => {
   const { loadingTabs, activeTabId } = useTabs();
   const { getLoanTypes, getAssigneeTypes, getAssigneeRoles, getLienPositions, getOptionName, loading: commonDataLoading } = usePetitionCommonData();
-  const { submitPetition } = usePetitions();
+  const { submitPetition, hasOrganizationAccess } = usePetitions();
   
   // Single edit mode state - makes all fields editable at once
   const [isEditing, setIsEditing] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
+  
+  // Google Places/Geocoder (property address)
+  const LIBRARIES = ['places'];
+  const { isLoaded, loadError } = useJsApiLoader({
+    id: 'google-map-script',
+    googleMapsApiKey: Config.GOOGLE_PLACES_API_KEY,
+    libraries: LIBRARIES,
+    preventGoogleFontsLoading: true
+  });
+  const geocoderRef = useRef(null);
+  const autocompleteServiceRef = useRef(null);
+  const [predictions, setPredictions] = useState([]);
+  const [isLoadingPredictions, setIsLoadingPredictions] = useState(false);
+  const propertyAddressInputRef = useRef(null);
+  
+  useEffect(() => {
+    if (!isLoaded || loadError) return;
+    try {
+      autocompleteServiceRef.current = new window.google.maps.places.AutocompleteService();
+      geocoderRef.current = new window.google.maps.Geocoder();
+    } catch (err) {
+      // ignore
+    }
+  }, [isLoaded, loadError]);
+
+  const handlePropertyAddressInput = (value) => {
+    if (!autocompleteServiceRef.current || !value.trim()) {
+      setPredictions([]);
+      return;
+    }
+    const request = {
+      input: value,
+      componentRestrictions: { country: ['us'] },
+      types: ['address']
+    };
+    if (window.autocompleteTimeout) clearTimeout(window.autocompleteTimeout);
+    window.autocompleteTimeout = setTimeout(() => {
+      setIsLoadingPredictions(true);
+      try {
+        autocompleteServiceRef.current.getPlacePredictions(request, (result, status) => {
+          setIsLoadingPredictions(false);
+          if (status === window.google.maps.places.PlacesServiceStatus.OK && result) {
+            setPredictions(result.slice(0, 5));
+          } else {
+            setPredictions([]);
+          }
+        });
+      } catch (e) {
+        setIsLoadingPredictions(false);
+        setPredictions([]);
+      }
+    }, 250);
+  };
+
+  const handlePropertyAddressSelect = (prediction) => {
+    setPredictions([]);
+    const street = prediction.description?.split(',')[0] || '';
+    setFormData(prev => ({ ...prev, propertyStreet1: street }));
+    if (propertyAddressInputRef.current) propertyAddressInputRef.current.blur();
+  };
+
+  const validatePropertyAddressWithGeocoding = async () => {
+    return new Promise((resolve) => {
+      if (!geocoderRef.current || !formData.propertyStreet1?.trim()) {
+        resolve({ isValid: false, error: 'Street address is required' });
+        return;
+      }
+      const address = `${formData.propertyStreet1}, ${formData.propertyCity || ''}, ${formData.propertyState || 'MA'} ${formData.propertyZip || ''}`.trim();
+      try {
+        geocoderRef.current.geocode({ address }, (results, status) => {
+          if (status === window.google.maps.GeocoderStatus.OK && results && results.length > 0) {
+            const result = results[0];
+            let foundState = false;
+            let cityMatch = false;
+            let zipMatch = false;
+            let countyMatch = false;
+            let county = '';
+            result.address_components.forEach(component => {
+              const types = component.types;
+              if (types.includes('administrative_area_level_1')) {
+                foundState = component.short_name === (formData.propertyState || 'MA');
+              }
+              if (types.includes('locality')) {
+                const componentCity = component.long_name.toLowerCase();
+                const inputCity = (formData.propertyCity || '').toLowerCase();
+                if (componentCity.includes(inputCity) || inputCity.includes(componentCity)) {
+                  cityMatch = true;
+                }
+              }
+              if (types.includes('postal_code')) {
+                if (component.long_name === (formData.propertyZip || '')) {
+                  zipMatch = true;
+                }
+              }
+              if (types.includes('administrative_area_level_2')) {
+                const componentCounty = component.long_name.toLowerCase();
+                const inputCounty = (formData.propertyCounty || '').toLowerCase();
+                county = component.long_name;
+                if (componentCounty.includes(inputCounty) || inputCounty.includes(componentCounty)) {
+                  countyMatch = true;
+                }
+              }
+            });
+            if (foundState && cityMatch && zipMatch && countyMatch) {
+              if (county && !formData.propertyCounty) {
+                setFormData(prev => ({ ...prev, propertyCounty: county }));
+              }
+              resolve({ isValid: true });
+            } else {
+              resolve({ isValid: false, error: 'Address verification failed' });
+            }
+          } else {
+            resolve({ isValid: false, error: 'Invalid address' });
+          }
+        });
+      } catch (e) {
+        resolve({ isValid: false, error: 'Address validation failed' });
+      }
+    });
+  };
   
   // Transform petition.details to formData structure matching PetitionSteps
   const initialFormData = useMemo(() => {
@@ -240,6 +363,71 @@ const PetitionTabContent = ({ petition }) => {
     });
   };
 
+  // Validate required fields across sections for final submit
+  const validateFormForSubmit = () => {
+    const errors = {};
+
+    // Property
+    if (!formData.propertyStreet1) errors.propertyStreet1 = 'Required';
+    if (!formData.propertyCity) errors.propertyCity = 'Required';
+    if (!formData.propertyState) errors.propertyState = 'Required';
+    if (!formData.propertyZip) errors.propertyZip = 'Required';
+
+    // Loan basics
+    if (!formData.loanNumber) errors.loanNumber = 'Required';
+    if (!formData.petitionLoanTypeId) errors.petitionLoanTypeId = 'Required';
+    if (!formData.lienPosition && formData.lienPosition !== 0) errors.lienPosition = 'Required';
+
+    // Borrowers: require at least one primary with name and address
+    const primaryBorrower = (formData.borrowers || []).find(b => b.borrowerIsPrimary);
+    if (!primaryBorrower) {
+      errors.borrowers = 'Primary borrower is required';
+    } else {
+      const pbKey = primaryBorrower.id || 'primary';
+      if (!primaryBorrower.firstName) errors[`borrower_${pbKey}_firstName`] = 'Required';
+      if (!primaryBorrower.lastName) errors[`borrower_${pbKey}_lastName`] = 'Required';
+      // Borrower mailing address is optional in wizard; do not require here.
+    }
+
+    // Loan Assignees: if present, validate required fields for each
+    (formData.loanAssignees || []).forEach((a, idx) => {
+      if (!a.assigneeName) errors[`loanAssignees.${idx}.assigneeName`] = 'Required';
+      if (!a.assigneeTypeId) errors[`loanAssignees.${idx}.assigneeTypeId`] = 'Required';
+      if (!a.assigneeRoleId) errors[`loanAssignees.${idx}.assigneeRoleId`] = 'Required';
+      if (!a.street1) errors[`loanAssignees.${idx}.street1`] = 'Required';
+      if (!a.city) errors[`loanAssignees.${idx}.city`] = 'Required';
+      if (!a.addressState) errors[`loanAssignees.${idx}.addressState`] = 'Required';
+      if (!a.zip) errors[`loanAssignees.${idx}.zip`] = 'Required';
+    });
+
+    // Filing entity core fields
+    if (!formData.filingEntityLegalName) errors.filingEntityLegalName = 'Required';
+    if (!formData.filingEntityStreet1) errors.filingEntityStreet1 = 'Required';
+    if (!formData.filingEntityCity) errors.filingEntityCity = 'Required';
+    if (!formData.filingEntityState) errors.filingEntityState = 'Required';
+    if (!formData.filingEntityZip) errors.filingEntityZip = 'Required';
+    if (!formData.filingContactName) errors.filingContactName = 'Required';
+    if (!formData.filingContactEmail) {
+      errors.filingContactEmail = 'Required';
+    } else {
+      const emailOk = /.+@.+\..+/.test(formData.filingContactEmail);
+      if (!emailOk) errors.filingContactEmail = 'Invalid email';
+    }
+
+    if (Object.keys(errors).length) {
+      setFieldErrors(prev => ({ ...prev, ...errors }));
+      // Attempt to focus first invalid field
+      const firstKey = Object.keys(errors)[0];
+      const el = document.querySelector(`[name="${firstKey}"]`) || document.querySelector(`[data-error-key="${firstKey}"]`);
+      if (el && typeof el.scrollIntoView === 'function') {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (typeof el.focus === 'function') el.focus();
+      }
+      return false;
+    }
+    return true;
+  };
+
   const getStatusBadgeClass = (status, statusClass) => {
     // Use the statusClass from API if available, otherwise fallback to status text
     if (statusClass) {
@@ -286,6 +474,11 @@ const PetitionTabContent = ({ petition }) => {
       ...prev,
       [name]: type === 'checkbox' ? checked : processedValue
     }));
+    
+    // Trigger Google predictions for property address while editing
+    if (isEditing && isLoaded && name === 'propertyStreet1') {
+      handlePropertyAddressInput(processedValue || '');
+    }
     
     // Clear field error when user starts typing
     if (fieldErrors[name]) {
@@ -445,29 +638,58 @@ const PetitionTabContent = ({ petition }) => {
     setIsEditing(!isEditing);
   };
   
-  // Handle save - submit form data
-  const handleSave = async () => {
-    setIsSaving(true);
+  // Save as Draft (does not mark submitted)
+  const handleSaveDraft = async () => {
+    setIsSavingDraft(true);
     try {
-      // Basic validation
-      if (!formData.propertyStreet1?.trim()) {
-        toast.error('Property Street Address is required');
-        setIsSaving(false);
+      if (!hasOrganizationAccess) {
+        toast.error('You must be part of an organization to save petition drafts.');
         return;
       }
-      
-      // Submit petition with petition ID for edit
-      await submitPetition(formData, false, petition.id);
-      
-      toast.success('Petition updated successfully!');
+      const addressValidation = await validatePropertyAddressWithGeocoding();
+      if (!addressValidation.isValid) {
+        toast.error('Please verify the property address before saving.');
+        return;
+      }
+      const petitionData = { ...formData, isAllStepsCompleted: false };
+      await submitPetition(petitionData, true, petition.id);
+      toast.success('Draft saved successfully.');
       setIsEditing(false);
-      
-      // Reload to get updated data
       window.location.reload();
     } catch (error) {
-      toast.error('Failed to update petition. Please try again.');
+      toast.error('Failed to save draft. Please try again.');
     } finally {
-      setIsSaving(false);
+      setIsSavingDraft(false);
+    }
+  };
+
+  // Submit Petition (requires full info)
+  const handleFinalSubmit = async () => {
+    setIsSubmitting(true);
+    try {
+      if (!hasOrganizationAccess) {
+        toast.error('You must be part of an organization to submit petitions.');
+        return;
+      }
+      // Validate all sections
+      if (!validateFormForSubmit()) {
+        toast.error('Please fill all required fields.');
+        return;
+      }
+      const addressValidation = await validatePropertyAddressWithGeocoding();
+      if (!addressValidation.isValid) {
+        toast.error('Property address could not be validated.');
+        return;
+      }
+      const petitionData = { ...formData, isAllStepsCompleted: true };
+      await submitPetition(petitionData, false, petition.id);
+      toast.success('Petition submitted successfully!');
+      setIsEditing(false);
+      window.location.reload();
+    } catch (error) {
+      toast.error('Failed to submit petition. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
   
@@ -705,10 +927,7 @@ const PetitionTabContent = ({ petition }) => {
         yPosition += 10;
 
         const affidavitData = [
-          ['Certain Mortgage Loan', petition.details.affidavit.certainMortgageLoan ? 'Yes' : 'No'],
-          ['Affiant Name', petition.details.affidavit.affiantName || 'N/A'],
-          ['Affiant Title', petition.details.affidavit.affiantTitle || 'N/A'],
-          ['Execution Date', formatDate(petition.details.affidavit.affidavitExecutionDate)]
+          ['Certain Mortgage Loan', petition.details.affidavit.certainMortgageLoan ? 'Yes' : 'No']
         ];
 
         autoTable(doc, {
@@ -854,15 +1073,15 @@ const PetitionTabContent = ({ petition }) => {
                   </button>
                     </>
                   ) : (
-                    <>
+                    <> 
                       <button 
                         type="button" 
                         className="dashboard-btn-create"
-                        onClick={handleSave}
-                        disabled={isSaving}
-                        title="Save changes"
+                        onClick={handleSaveDraft}
+                        disabled={isSavingDraft || isSubmitting}
+                        title="Save as Draft"
                       >
-                        {isSaving ? (
+                        {isSavingDraft ? (
                           <>
                             <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
                             Saving...
@@ -870,7 +1089,26 @@ const PetitionTabContent = ({ petition }) => {
                         ) : (
                           <>
                             <i className="fas fa-save me-1"></i>
-                            Save
+                            Save as Draft
+                          </>
+                        )}
+                      </button>
+                      <button 
+                        type="button" 
+                        className="dashboard-btn-create"
+                        onClick={handleFinalSubmit}
+                        disabled={isSavingDraft || isSubmitting}
+                        title="Submit Petition"
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                            Submitting...
+                          </>
+                        ) : (
+                          <>
+                            <i className="fas fa-paper-plane me-1"></i>
+                            Submit Petition
                           </>
                         )}
                       </button>
@@ -878,7 +1116,7 @@ const PetitionTabContent = ({ petition }) => {
                         type="button" 
                         className="dashboard-btn-refresh"
                         onClick={handleEditToggle}
-                        disabled={isSaving}
+                        disabled={isSavingDraft || isSubmitting}
                         title="Cancel editing"
                       >
                         <i className="fas fa-times me-1"></i>
@@ -904,13 +1142,29 @@ const PetitionTabContent = ({ petition }) => {
                   <div className="form-group mb-3">
                     <label className="form-label">Street Address *</label>
                     <input 
+                      ref={propertyAddressInputRef}
                       type="text" 
                       name="propertyStreet1"
                       className={`form-control ${fieldErrors.propertyStreet1 ? 'is-invalid' : ''}`}
                       value={formData.propertyStreet1 || ''} 
                       readOnly={!isEditing}
                       onChange={handleInputChange}
+                      autoComplete="off"
                     />
+                    {isEditing && isLoaded && predictions.length > 0 && (
+                      <div className="list-group mt-1">
+                        {predictions.map((p) => (
+                          <button
+                            type="button"
+                            key={p.place_id}
+                            className="list-group-item list-group-item-action"
+                            onClick={() => handlePropertyAddressSelect(p)}
+                          >
+                            {p.description}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                     {fieldErrors.propertyStreet1 && (
                       <div className="text-danger small mt-1">{fieldErrors.propertyStreet1}</div>
                     )}
@@ -1259,11 +1513,11 @@ const PetitionTabContent = ({ petition }) => {
                         {isEditing && formData.borrowers.length > 1 && (
                           <button 
                             type="button" 
-                            className="btn btn-sm btn-danger"
+                            className="btn btn-outline-danger btn-sm"
                             onClick={() => removeBorrower(borrower.id)}
+                            title="Remove this borrower"
                           >
-                            <i className="fas fa-trash me-1"></i>
-                            Remove
+                            <i className="fas fa-times" style={{ fontSize: '12px' }}></i>
                           </button>
                         )}
                       </div>
@@ -1273,7 +1527,8 @@ const PetitionTabContent = ({ petition }) => {
                             <label className="form-label">First Name *</label>
                           <input 
                             type="text" 
-                              className={`form-control ${fieldErrors[`borrower_${borrower.id}_firstName`] ? 'is-invalid' : ''}`}
+                            className={`form-control ${fieldErrors[`borrower_${borrower.id}_firstName`] ? 'is-invalid' : ''}`}
+                            data-error-key={`borrower_${borrower.id}_firstName`}
                               value={borrower.firstName || ''} 
                               readOnly={!isEditing}
                               onChange={(e) => updateBorrower(borrower.id, 'firstName', e.target.value)}
@@ -1288,7 +1543,8 @@ const PetitionTabContent = ({ petition }) => {
                           <label className="form-label">Middle Name</label>
                           <input 
                             type="text" 
-                              className={`form-control ${fieldErrors[`borrower_${borrower.id}_middleName`] ? 'is-invalid' : ''}`}
+                            className={`form-control ${fieldErrors[`borrower_${borrower.id}_middleName`] ? 'is-invalid' : ''}`}
+                            data-error-key={`borrower_${borrower.id}_middleName`}
                               value={borrower.middleName || ''} 
                               readOnly={!isEditing}
                               onChange={(e) => updateBorrower(borrower.id, 'middleName', e.target.value)}
@@ -1303,7 +1559,8 @@ const PetitionTabContent = ({ petition }) => {
                             <label className="form-label">Last Name *</label>
                           <input 
                             type="text" 
-                              className={`form-control ${fieldErrors[`borrower_${borrower.id}_lastName`] ? 'is-invalid' : ''}`}
+                            className={`form-control ${fieldErrors[`borrower_${borrower.id}_lastName`] ? 'is-invalid' : ''}`}
+                            data-error-key={`borrower_${borrower.id}_lastName`}
                               value={borrower.lastName || ''} 
                               readOnly={!isEditing}
                               onChange={(e) => updateBorrower(borrower.id, 'lastName', e.target.value)}
@@ -1319,6 +1576,7 @@ const PetitionTabContent = ({ petition }) => {
                           <input 
                             type="text" 
                               className={`form-control ${fieldErrors[`borrower_${borrower.id}_suffix`] ? 'is-invalid' : ''}`}
+                            data-error-key={`borrower_${borrower.id}_suffix`}
                               value={borrower.suffix || ''} 
                               readOnly={!isEditing}
                               onChange={(e) => updateBorrower(borrower.id, 'suffix', e.target.value)}
@@ -1384,11 +1642,15 @@ const PetitionTabContent = ({ petition }) => {
                           <label className="form-label">Mailing Address</label>
                           <input 
                             type="text" 
-                            className="form-control" 
+                            className={`form-control ${fieldErrors[`borrower_${borrower.id}_mailingStreet1`] ? 'is-invalid' : ''}`} 
+                            data-error-key={`borrower_${borrower.id}_mailingStreet1`}
                               value={borrower.mailingStreet1 || ''} 
                               readOnly={!isEditing}
                               onChange={(e) => updateBorrower(borrower.id, 'mailingStreet1', e.target.value)}
                           />
+                          {fieldErrors[`borrower_${borrower.id}_mailingStreet1`] && (
+                            <div className="text-danger small mt-1">{fieldErrors[`borrower_${borrower.id}_mailingStreet1`]}</div>
+                          )}
                         </div>
                       </div>
                       <div className="col-md-4">
@@ -1396,11 +1658,15 @@ const PetitionTabContent = ({ petition }) => {
                           <label className="form-label">Mailing City</label>
                           <input 
                             type="text" 
-                            className="form-control" 
+                            className={`form-control ${fieldErrors[`borrower_${borrower.id}_mailingCity`] ? 'is-invalid' : ''}`} 
+                            data-error-key={`borrower_${borrower.id}_mailingCity`}
                               value={borrower.mailingCity || ''} 
                               readOnly={!isEditing}
                               onChange={(e) => updateBorrower(borrower.id, 'mailingCity', e.target.value)}
                           />
+                          {fieldErrors[`borrower_${borrower.id}_mailingCity`] && (
+                            <div className="text-danger small mt-1">{fieldErrors[`borrower_${borrower.id}_mailingCity`]}</div>
+                          )}
                         </div>
                       </div>
                         <div className="col-md-2">
@@ -1408,11 +1674,15 @@ const PetitionTabContent = ({ petition }) => {
                             <label className="form-label">State</label>
                           <input 
                             type="text" 
-                            className="form-control" 
+                            className={`form-control ${fieldErrors[`borrower_${borrower.id}_mailingState`] ? 'is-invalid' : ''}`} 
+                            data-error-key={`borrower_${borrower.id}_mailingState`}
                               value={borrower.mailingState || ''} 
                               readOnly={!isEditing}
                               onChange={(e) => updateBorrower(borrower.id, 'mailingState', e.target.value)}
                           />
+                          {fieldErrors[`borrower_${borrower.id}_mailingState`] && (
+                            <div className="text-danger small mt-1">{fieldErrors[`borrower_${borrower.id}_mailingState`]}</div>
+                          )}
                         </div>
                       </div>
                       <div className="col-md-4">
@@ -1420,11 +1690,15 @@ const PetitionTabContent = ({ petition }) => {
                           <label className="form-label">Mailing ZIP</label>
                           <input 
                             type="text" 
-                            className="form-control" 
+                            className={`form-control ${fieldErrors[`borrower_${borrower.id}_mailingZip`] ? 'is-invalid' : ''}`} 
+                            data-error-key={`borrower_${borrower.id}_mailingZip`}
                               value={borrower.mailingZip || ''} 
                               readOnly={!isEditing}
                               onChange={(e) => updateBorrower(borrower.id, 'mailingZip', e.target.value)}
                           />
+                          {fieldErrors[`borrower_${borrower.id}_mailingZip`] && (
+                            <div className="text-danger small mt-1">{fieldErrors[`borrower_${borrower.id}_mailingZip`]}</div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1968,45 +2242,7 @@ const PetitionTabContent = ({ petition }) => {
                     )}
                   </div>
                 </div>
-                <div className="col-md-6">
-                  <div className="form-group mb-3">
-                    <label className="form-label">Affiant Name</label>
-                    <input 
-                      type="text" 
-                      name="affiantName"
-                      className="form-control" 
-                      value={formData.affiantName || ''} 
-                      readOnly={!isEditing}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                </div>
-                <div className="col-md-6">
-                  <div className="form-group mb-3">
-                    <label className="form-label">Affiant Title</label>
-                    <input 
-                      type="text" 
-                      name="affiantTitle"
-                      className="form-control"
-                      value={formData.affiantTitle || ''} 
-                      readOnly={!isEditing}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                </div>
-                <div className="col-md-6">
-                  <div className="form-group mb-3">
-                    <label className="form-label">Affidavit Execution Date</label>
-                    <input 
-                      type="date" 
-                      name="affidavitExecutionDate"
-                      className="form-control"
-                      value={formData.affidavitExecutionDate || ''} 
-                      readOnly={!isEditing}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                </div>
+                
               </div>
             </div>
           </div>
@@ -2022,14 +2258,14 @@ const PetitionTabContent = ({ petition }) => {
                   <div key={index} className="border rounded p-3 mb-3">
                       <div className="d-flex justify-content-between align-items-center mb-3">
                         <h6 className="mb-0 fw-semibold">Assignee {index + 1}</h6>
-                        {isEditing && (
+                        {isEditing && formData.loanAssignees.length > 1 && (
                           <button 
                             type="button" 
-                            className="btn btn-sm btn-danger"
+                            className="btn btn-outline-danger btn-sm"
                             onClick={() => removeLoanAssignee(index)}
+                            title="Remove this assignee"
                           >
-                            <i className="fas fa-trash me-1"></i>
-                            Remove
+                            <i className="fas fa-trash"></i>
                           </button>
                         )}
                       </div>
@@ -2040,6 +2276,7 @@ const PetitionTabContent = ({ petition }) => {
                           <input 
                             type="text" 
                               className={`form-control ${fieldErrors[`loanAssignees.${index}.assigneeName`] ? 'is-invalid' : ''}`}
+                              data-error-key={`loanAssignees.${index}.assigneeName`}
                               value={assignee.assigneeName || ''} 
                               readOnly={!isEditing}
                               onChange={(e) => updateLoanAssignee(index, 'assigneeName', e.target.value)}
@@ -2054,6 +2291,7 @@ const PetitionTabContent = ({ petition }) => {
                             <label className="form-label">Assignee Type *</label>
                             <select 
                               className={`form-select ${fieldErrors[`loanAssignees.${index}.assigneeTypeId`] ? 'is-invalid' : ''}`}
+                              data-error-key={`loanAssignees.${index}.assigneeTypeId`}
                               value={assignee.assigneeTypeId || ''}
                               onChange={(e) => updateLoanAssignee(index, 'assigneeTypeId', e.target.value)}
                               disabled={!isEditing || commonDataLoading}
@@ -2075,6 +2313,7 @@ const PetitionTabContent = ({ petition }) => {
                             <label className="form-label">Assignee Role *</label>
                             <select 
                               className={`form-select ${fieldErrors[`loanAssignees.${index}.assigneeRoleId`] ? 'is-invalid' : ''}`}
+                              data-error-key={`loanAssignees.${index}.assigneeRoleId`}
                               value={assignee.assigneeRoleId || ''}
                               onChange={(e) => updateLoanAssignee(index, 'assigneeRoleId', e.target.value)}
                               disabled={!isEditing || commonDataLoading}
@@ -2097,6 +2336,7 @@ const PetitionTabContent = ({ petition }) => {
                           <input 
                             type="text" 
                               className={`form-control ${fieldErrors[`loanAssignees.${index}.street1`] ? 'is-invalid' : ''}`}
+                              data-error-key={`loanAssignees.${index}.street1`}
                               value={assignee.street1 || ''} 
                               readOnly={!isEditing}
                               onChange={(e) => updateLoanAssignee(index, 'street1', e.target.value)}
@@ -2124,6 +2364,7 @@ const PetitionTabContent = ({ petition }) => {
                           <input 
                             type="text" 
                               className={`form-control ${fieldErrors[`loanAssignees.${index}.city`] ? 'is-invalid' : ''}`}
+                              data-error-key={`loanAssignees.${index}.city`}
                               value={assignee.city || ''} 
                               readOnly={!isEditing}
                               onChange={(e) => updateLoanAssignee(index, 'city', e.target.value)}
@@ -2139,6 +2380,7 @@ const PetitionTabContent = ({ petition }) => {
                           <input 
                             type="text" 
                               className={`form-control ${fieldErrors[`loanAssignees.${index}.addressState`] ? 'is-invalid' : ''}`}
+                              data-error-key={`loanAssignees.${index}.addressState`}
                               value={assignee.addressState || ''} 
                               readOnly={!isEditing}
                               onChange={(e) => updateLoanAssignee(index, 'addressState', e.target.value)}
@@ -2154,6 +2396,7 @@ const PetitionTabContent = ({ petition }) => {
                           <input 
                             type="text" 
                               className={`form-control ${fieldErrors[`loanAssignees.${index}.zip`] ? 'is-invalid' : ''}`}
+                              data-error-key={`loanAssignees.${index}.zip`}
                               value={assignee.zip || ''} 
                               readOnly={!isEditing}
                               onChange={(e) => updateLoanAssignee(index, 'zip', e.target.value)}
@@ -2193,11 +2436,11 @@ const PetitionTabContent = ({ petition }) => {
                   {isEditing && (
                     <button 
                       type="button" 
-                      className="btn btn-sm btn-outline-primary"
+                      className="btn btn-outline-primary btn-sm"
                       onClick={addLoanAssignee}
+                      title="Add Loan Assignee"
                     >
-                      <i className="fas fa-plus me-1"></i>
-                      Add Loan Assignee
+                      <i className="fas fa-plus" style={{ fontSize: '12px' }}></i>
                     </button>
                   )}
                 </>
