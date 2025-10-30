@@ -1034,7 +1034,7 @@ const ViewAllPetitions = ({ onBack }) => {
           <div className="d-flex justify-content-end gap-2">
             <button
               type="button"
-              className="btn btn-outline-secondary"
+              className="dashboard-btn-refresh"
               onClick={() => setShowDeleteModal(false)}
             >
               Cancel
@@ -1042,10 +1042,10 @@ const ViewAllPetitions = ({ onBack }) => {
 
             <button
               type="button"
-              className="dashboard-btn-create"
+              className="dashboard-btn-refresh text-danger"
                onClick={handleConfirmDelete}
             >
-              delete
+              Delete
             </button>
           </div>
         </div>

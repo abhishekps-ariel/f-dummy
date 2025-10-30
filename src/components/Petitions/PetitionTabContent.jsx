@@ -33,6 +33,15 @@ const PetitionTabContent = ({ petition }) => {
   const [predictions, setPredictions] = useState([]);
   const [isLoadingPredictions, setIsLoadingPredictions] = useState(false);
   const propertyAddressInputRef = useRef(null);
+  // Borrower address autocomplete
+  const [borrowerPredictions, setBorrowerPredictions] = useState({}); // { [borrowerId]: Prediction[] }
+  const [isLoadingBorrowerPredictions, setIsLoadingBorrowerPredictions] = useState({}); // { [borrowerId]: boolean }
+  // Loan assignee address autocomplete
+  const [assigneePredictions, setAssigneePredictions] = useState({}); // { [index]: Prediction[] }
+  const [isLoadingAssigneePredictions, setIsLoadingAssigneePredictions] = useState({}); // { [index]: boolean }
+  // Notice address autocomplete
+  const [noticePredictions, setNoticePredictions] = useState([]);
+  const [isLoadingNoticePredictions, setIsLoadingNoticePredictions] = useState(false);
   
   useEffect(() => {
     if (!isLoaded || loadError) return;
@@ -78,6 +87,151 @@ const PetitionTabContent = ({ petition }) => {
     const street = prediction.description?.split(',')[0] || '';
     setFormData(prev => ({ ...prev, propertyStreet1: street }));
     if (propertyAddressInputRef.current) propertyAddressInputRef.current.blur();
+  };
+
+  // Generic helper: geocode by placeId and update fields via setter
+  const geocodePlaceAndFill = (placeId, apply) => {
+    if (!geocoderRef.current || !placeId) return;
+    try {
+      geocoderRef.current.geocode({ placeId }, (results, status) => {
+        if (status === window.google.maps.GeocoderStatus.OK && results && results[0]) {
+          const comp = results[0].address_components || [];
+          const get = (type) => comp.find(c => c.types.includes(type));
+          const streetNumber = get('street_number')?.long_name || '';
+          const route = get('route')?.long_name || '';
+          const city = (get('locality')?.long_name || get('sublocality')?.long_name || '');
+          const state = get('administrative_area_level_1')?.short_name || '';
+          const zip = get('postal_code')?.long_name || '';
+          const street1 = [streetNumber, route].filter(Boolean).join(' ');
+          apply({ street1, city, state, zip });
+        }
+      });
+    } catch (e) {
+      // ignore
+    }
+  };
+
+  // Borrower mailing address handlers
+  const handleBorrowerAddressInput = (borrowerId, value) => {
+    if (!autocompleteServiceRef.current || !value.trim()) {
+      setBorrowerPredictions(prev => ({ ...prev, [borrowerId]: [] }));
+      return;
+    }
+    const request = { input: value, componentRestrictions: { country: ['us'] }, types: ['address'] };
+    if (window.autocompleteTimeout) clearTimeout(window.autocompleteTimeout);
+    setIsLoadingBorrowerPredictions(prev => ({ ...prev, [borrowerId]: true }));
+    window.autocompleteTimeout = setTimeout(() => {
+      try {
+        autocompleteServiceRef.current.getPlacePredictions(request, (result, status) => {
+          setIsLoadingBorrowerPredictions(prev => ({ ...prev, [borrowerId]: false }));
+          if (status === window.google.maps.places.PlacesServiceStatus.OK && result) {
+            setBorrowerPredictions(prev => ({ ...prev, [borrowerId]: result.slice(0, 5) }));
+          } else {
+            setBorrowerPredictions(prev => ({ ...prev, [borrowerId]: [] }));
+          }
+        });
+      } catch (e) {
+        setIsLoadingBorrowerPredictions(prev => ({ ...prev, [borrowerId]: false }));
+        setBorrowerPredictions(prev => ({ ...prev, [borrowerId]: [] }));
+      }
+    }, 250);
+  };
+
+  const handleBorrowerAddressSelect = (borrowerId, prediction) => {
+    setBorrowerPredictions(prev => ({ ...prev, [borrowerId]: [] }));
+    const street = prediction.description?.split(',')[0] || '';
+    setFormData(prev => ({
+      ...prev,
+      borrowers: prev.borrowers.map(b => b.id === borrowerId ? { ...b, mailingStreet1: street } : b)
+    }));
+    geocodePlaceAndFill(prediction.place_id, ({ street1, city, state, zip }) => {
+      setFormData(prev => ({
+        ...prev,
+        borrowers: prev.borrowers.map(b => b.id === borrowerId ? { ...b, mailingStreet1: street1 || b.mailingStreet1, mailingCity: city || b.mailingCity, mailingState: state || b.mailingState, mailingZip: zip || b.mailingZip } : b)
+      }));
+    });
+  };
+
+  // Loan assignee address handlers
+  const handleAssigneeAddressInput = (index, value) => {
+    if (!autocompleteServiceRef.current || !value.trim()) {
+      setAssigneePredictions(prev => ({ ...prev, [index]: [] }));
+      return;
+    }
+    const request = { input: value, componentRestrictions: { country: ['us'] }, types: ['address'] };
+    if (window.autocompleteTimeout) clearTimeout(window.autocompleteTimeout);
+    setIsLoadingAssigneePredictions(prev => ({ ...prev, [index]: true }));
+    window.autocompleteTimeout = setTimeout(() => {
+      try {
+        autocompleteServiceRef.current.getPlacePredictions(request, (result, status) => {
+          setIsLoadingAssigneePredictions(prev => ({ ...prev, [index]: false }));
+          if (status === window.google.maps.places.PlacesServiceStatus.OK && result) {
+            setAssigneePredictions(prev => ({ ...prev, [index]: result.slice(0, 5) }));
+          } else {
+            setAssigneePredictions(prev => ({ ...prev, [index]: [] }));
+          }
+        });
+      } catch (e) {
+        setIsLoadingAssigneePredictions(prev => ({ ...prev, [index]: false }));
+        setAssigneePredictions(prev => ({ ...prev, [index]: [] }));
+      }
+    }, 250);
+  };
+
+  const handleAssigneeAddressSelect = (index, prediction) => {
+    setAssigneePredictions(prev => ({ ...prev, [index]: [] }));
+    const street = prediction.description?.split(',')[0] || '';
+    setFormData(prev => ({
+      ...prev,
+      loanAssignees: prev.loanAssignees.map((a, i) => i === index ? { ...a, street1: street } : a)
+    }));
+    geocodePlaceAndFill(prediction.place_id, ({ street1, city, state, zip }) => {
+      setFormData(prev => ({
+        ...prev,
+        loanAssignees: prev.loanAssignees.map((a, i) => i === index ? { ...a, street1: street1 || a.street1, city: city || a.city, addressState: state || a.addressState, zip: zip || a.zip } : a)
+      }));
+    });
+  };
+
+  // Notice address handlers
+  const handleNoticeAddressInput = (value) => {
+    if (!autocompleteServiceRef.current || !value.trim()) {
+      setNoticePredictions([]);
+      return;
+    }
+    const request = { input: value, componentRestrictions: { country: ['us'] }, types: ['address'] };
+    if (window.autocompleteTimeout) clearTimeout(window.autocompleteTimeout);
+    setIsLoadingNoticePredictions(true);
+    window.autocompleteTimeout = setTimeout(() => {
+      try {
+        autocompleteServiceRef.current.getPlacePredictions(request, (result, status) => {
+          setIsLoadingNoticePredictions(false);
+          if (status === window.google.maps.places.PlacesServiceStatus.OK && result) {
+            setNoticePredictions(result.slice(0, 5));
+          } else {
+            setNoticePredictions([]);
+          }
+        });
+      } catch (e) {
+        setIsLoadingNoticePredictions(false);
+        setNoticePredictions([]);
+      }
+    }, 250);
+  };
+
+  const handleNoticeAddressSelect = (prediction) => {
+    setNoticePredictions([]);
+    const street = prediction.description?.split(',')[0] || '';
+    setFormData(prev => ({ ...prev, noticeAddressStreet1: street }));
+    geocodePlaceAndFill(prediction.place_id, ({ street1, city, state, zip }) => {
+      setFormData(prev => ({
+        ...prev,
+        noticeAddressStreet1: street1 || prev.noticeAddressStreet1,
+        noticeAddressCity: city || prev.noticeAddressCity,
+        noticeAddressState: state || prev.noticeAddressState,
+        noticeAddressZip: zip || prev.noticeAddressZip
+      }));
+    });
   };
 
   const validatePropertyAddressWithGeocoding = async () => {
@@ -1148,7 +1302,7 @@ const PetitionTabContent = ({ petition }) => {
                       className={`form-control ${fieldErrors.propertyStreet1 ? 'is-invalid' : ''}`}
                       value={formData.propertyStreet1 || ''} 
                       readOnly={!isEditing}
-                      onChange={handleInputChange}
+                      onChange={(e) => { handleInputChange(e); handlePropertyAddressInput(e.target.value); }}
                       autoComplete="off"
                     />
                     {isEditing && isLoaded && predictions.length > 0 && (
@@ -1646,8 +1800,22 @@ const PetitionTabContent = ({ petition }) => {
                             data-error-key={`borrower_${borrower.id}_mailingStreet1`}
                               value={borrower.mailingStreet1 || ''} 
                               readOnly={!isEditing}
-                              onChange={(e) => updateBorrower(borrower.id, 'mailingStreet1', e.target.value)}
+                              onChange={(e) => { updateBorrower(borrower.id, 'mailingStreet1', e.target.value); handleBorrowerAddressInput(borrower.id, e.target.value); }}
                           />
+                          {isEditing && isLoaded && (borrowerPredictions[borrower.id] || []).length > 0 && (
+                            <div className="list-group mt-1">
+                              {(borrowerPredictions[borrower.id] || []).map((p) => (
+                                <button
+                                  type="button"
+                                  key={p.place_id}
+                                  className="list-group-item list-group-item-action"
+                                  onClick={() => handleBorrowerAddressSelect(borrower.id, p)}
+                                >
+                                  {p.description}
+                                </button>
+                              ))}
+                            </div>
+                          )}
                           {fieldErrors[`borrower_${borrower.id}_mailingStreet1`] && (
                             <div className="text-danger small mt-1">{fieldErrors[`borrower_${borrower.id}_mailingStreet1`]}</div>
                           )}
