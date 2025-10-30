@@ -819,15 +819,17 @@ const PetitionTabContent = ({ petition }) => {
                 <div className="d-flex align-items-center gap-2">
                   {!isEditing ? (
                     <>
-                      <button 
-                        type="button" 
-                        className="dashboard-btn-create"
-                        onClick={handleEditToggle}
-                        title="Edit petition"
-                      >
-                        <i className="fas fa-edit me-1"></i>
-                        Edit
-                      </button>
+                      {petition.status?.toLowerCase() === 'draft' && (
+                        <button 
+                          type="button" 
+                          className="dashboard-btn-create"
+                          onClick={handleEditToggle}
+                          title="Edit petition"
+                        >
+                          <i className="fas fa-edit me-1"></i>
+                          Edit
+                        </button>
+                      )}
                   <button 
                     type="button" 
                     className="dashboard-btn-refresh"
