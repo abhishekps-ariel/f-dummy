@@ -4508,6 +4508,11 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
       await autoSaveCurrentStep();
 
       
+      // Mark current step as completed and sync wizard before moving on
+      try {
+        markStepCompleted(currentStep);
+        wizardGoToStep(newStep);
+      } catch (e) {}
 
       setCurrentStep(newStep);
 
