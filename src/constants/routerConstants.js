@@ -15,5 +15,6 @@ export const ROUTES = {
   TWO_FACTOR_AUTH: '/two-factor-auth',
   VERIFICATION_PAGE: '/verification-page',
   VERIFICATION_EMAIL_SENT: '/verification-email-sent',
+  REQUEST_IMPERSONATE_USER: '/request-impersonate-user',
   NOT_FOUND: '*',
 };

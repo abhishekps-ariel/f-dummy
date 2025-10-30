@@ -1,5 +1,6 @@
 import client from "../api/axiosInstance";
 import { AUTH_ENDPOINTS } from "../constants/apiEndpoints";
+import { storeAuthData, clearAuthData, setImpersonationState } from "../utils/storage";
 
 export const checkMfa = async (email, password) => {
   const response = await client.post(
@@ -370,4 +371,75 @@ export const verifySignatureOtp = async (userId, otpCode) => {
     msg: response.data.message,
     data: response.data.data,
   };
+};
+
+// Impersonation APIs
+export const impersonateByUserId = async (userId) => {
+  const response = await client.post(
+    AUTH_ENDPOINTS.IMPERSONATE_BY_USER_ID(userId),
+    '',
+    {
+      headers: {
+        Accept: "text/plain",
+      },
+    }
+  );
+
+  return {
+    isSuccess: response.data.success,
+    msg: response.data.message,
+    data: response.data.data,
+  };
+};
+
+export const managerImpersonate = async (managerUserId, userId) => {
+  const response = await client.post(
+    AUTH_ENDPOINTS.MANAGER_IMPERSONATE(managerUserId, userId),
+    '',
+    {
+      headers: {
+        Accept: "text/plain",
+      },
+    }
+  );
+
+  return {
+    isSuccess: response.data.success,
+    msg: response.data.message,
+    data: response.data.data,
+  };
+};
+
+export const exitImpersonation = async () => {
+  const response = await client.post(
+    AUTH_ENDPOINTS.EXIT_IMPERSONATION,
+    '',
+    {
+      headers: {
+        Accept: "text/plain",
+      },
+    }
+  );
+
+  return {
+    isSuccess: response.data.success,
+    msg: response.data.message,
+    data: response.data.data,
+  };
+};
+
+export const performExitImpersonation = async () => {
+  // Hit API to end server-side impersonation session, but do not restore manager session locally
+  try {
+    await exitImpersonation();
+  } catch (e) {
+    // ignore errors; still proceed to clear local state for safety
+  }
+  try {
+    setImpersonationState(false);
+  } catch {}
+  try {
+    clearAuthData();
+  } catch {}
+  return { isSuccess: true };
 };

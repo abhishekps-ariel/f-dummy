@@ -20,6 +20,7 @@ const PasswordChanged = lazy(() => import('../pages/Auth/PasswordChanged'));
 const TwoFactorAuth = lazy(() => import('../pages/Auth/TwoFactorAuth'));
 const VerificationPage = lazy(() => import('../pages/Auth/VerificationPage'));
 const VerificationEmailSent = lazy(() => import('../pages/Auth/VerificationEmailSent'));
+const ImpersonationRequest = lazy(() => import('../pages/Auth/ImpersonationRequest'));
 const PageNotFound = lazy(() => import('../components/shared/PageNotFound'));
 
 export const router = createBrowserRouter([
@@ -66,6 +67,10 @@ export const router = createBrowserRouter([
   {
     path: ROUTES.VERIFICATION_EMAIL_SENT,
     element: <VerificationEmailSent />,
+  },
+  {
+    path: ROUTES.REQUEST_IMPERSONATE_USER,
+    element: <ImpersonationRequest />,
   },
   {
     path: ROUTES.DASHBOARD,

@@ -80,6 +80,11 @@ client.interceptors.response.use(
     const originalRequest = error.config;
     
     if (error.response?.status === 401 && !originalRequest._retry) {
+      // Avoid redirecting away from impersonation handler while it's processing
+      const currentPath = window.location?.pathname || '';
+      if (currentPath.startsWith('/request-impersonate-user')) {
+        return Promise.reject(error);
+      }
       originalRequest._retry = true;
       
       try {

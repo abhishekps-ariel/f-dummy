@@ -34,3 +34,19 @@ export const clearAuthData = () => {
   localStorage.clear();
 };
 
+export const setImpersonationState = (isImpersonating, impersonatedUserName = '') => {
+  if (isImpersonating) {
+    localStorage.setItem('isImpersonating', 'true');
+    if (impersonatedUserName) localStorage.setItem('impersonatedUserName', impersonatedUserName);
+  } else {
+    localStorage.removeItem('isImpersonating');
+    localStorage.removeItem('impersonatedUserName');
+  }
+};
+
+export const getImpersonationState = () => {
+  const isImpersonating = localStorage.getItem('isImpersonating') === 'true';
+  const impersonatedUserName = localStorage.getItem('impersonatedUserName') || '';
+  return { isImpersonating, impersonatedUserName };
+};
+

@@ -1,9 +1,11 @@
 import { Link } from "react-router-dom";
 import NotificationDropdown from "./NotificationDropdown";
+import ImpersonationBanner from "./ImpersonationBanner";
 
 const Header = ({ user, pageTitle, showMobileMenu = true, onLogout }) => {
   return (
-    <div className="d-flex align-items-center justify-content-between dashboard-header">
+    <div className="dashboard-header-wrapper">
+      <div className="d-flex align-items-center justify-content-between dashboard-header">
       <div className="d-flex align-items-center">
         {/* Mobile Menu Button */}
         {showMobileMenu && (
@@ -114,6 +116,10 @@ const Header = ({ user, pageTitle, showMobileMenu = true, onLogout }) => {
             </li>
           </ul>
         </div>
+      </div>
+      </div>
+      <div className="mt-2">
+        <ImpersonationBanner />
       </div>
     </div>
   );
