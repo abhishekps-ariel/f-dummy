@@ -258,7 +258,7 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
 
             ...prev,
 
-            filingEntityTypeId: profileResponse.data.filingEntityTypeId || ''
+            filingEntityTypeId: profileResponse.data.filingEntityTypeId || null
 
           }));
 

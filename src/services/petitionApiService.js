@@ -228,7 +228,7 @@ class PetitionApiService {
       },
       filingEntity: {
         filingEntityLegalName: formData.filingEntityLegalName || "",
-        filingEntityTypeId: formData.filingEntityTypeId || "",
+        filingEntityTypeId: formData.filingEntityTypeId && `${formData.filingEntityTypeId}`.trim() !== '' ? formData.filingEntityTypeId : null,
         filingEntityStreet1: formData.filingEntityStreet1 || "",
         filingEntityCity: formData.filingEntityCity || "",
         filingEntityState: formData.filingEntityState || "",

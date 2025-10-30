@@ -376,7 +376,7 @@ const PetitionTabContent = ({ petition }) => {
       
       // Filing Entity
       filingEntityLegalName: details.filingEntity?.filingEntityLegalName || '',
-      filingEntityTypeId: details.filingEntity?.filingEntityTypeId || '',
+      filingEntityTypeId: details.filingEntity?.filingEntityTypeId ?? null,
       filingEntityStreet1: details.filingEntity?.filingEntityStreet1 || '',
       filingEntityStreet2: details.filingEntity?.filingEntityStreet2 || '',
       filingEntityCity: details.filingEntity?.filingEntityCity || '',
