@@ -664,12 +664,12 @@ function Profile() {
                     </div>
                     
                     {/* Signature Preview */}
-                    {signatureStatus === 'saved' && user?.signatureUrl && (
+                    {signatureStatus === 'saved' && signatureData && (
                       <div className="col-12">
                         <label className="form-label text-muted small">Signature Preview</label>
                         <div className="signature-preview-container p-3 border rounded bg-light">
                           <img 
-                            src={user.signatureUrl} 
+                            src={signatureData} 
                             alt="Digital Signature" 
                             className="signature-preview-img"
                             style={{

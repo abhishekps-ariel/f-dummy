@@ -347,7 +347,7 @@ const PetitionTabContent = ({ petition }) => {
       loanNumber: details.loan?.loanNumber || '',
       petitionLoanTypeId: details.loan?.petitionLoanTypeId || '',
       petitionLoanTypeName: details.loan?.petitionLoanTypeName || '',
-      lienPosition: details.loan?.lienPosition || '',
+      lienPosition: details.loan?.lienPosition ?? '',
       originationDate: details.loan?.originationDate ? details.loan.originationDate.split('T')[0] : '',
       originalPrincipalAmount: details.loan?.originalPrincipalAmount || 0,
       currentPrincipalBalance: details.loan?.currentPrincipalBalance || 0,
@@ -1513,7 +1513,7 @@ const PetitionTabContent = ({ petition }) => {
                     <select 
                       name="lienPosition"
                       className={`form-select ${fieldErrors.lienPosition ? 'is-invalid' : ''}`}
-                      value={formData.lienPosition || ''}
+                      value={(formData.lienPosition ?? '')}
                       onChange={handleInputChange}
                       disabled={!isEditing || commonDataLoading}
                     >
