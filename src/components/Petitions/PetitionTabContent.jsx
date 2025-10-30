@@ -152,6 +152,19 @@ const PetitionTabContent = ({ petition }) => {
     }
   }, [initialFormData]);
   
+  // Reset edit mode when switching to a different petition or to a non-draft
+  useEffect(() => {
+    setIsEditing(false);
+    setFieldErrors({});
+  }, [petition?.id]);
+  
+  useEffect(() => {
+    if (petition?.status && petition.status.toLowerCase() !== 'draft' && isEditing) {
+      setIsEditing(false);
+      setFieldErrors({});
+    }
+  }, [petition?.status]);
+  
   if (!petition || !formData) return null;
 
   // Helper functions to get mapped values
