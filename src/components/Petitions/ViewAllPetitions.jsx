@@ -36,21 +36,26 @@ const ViewAllPetitions = ({ onBack }) => {
   
 
   const handleConfirmDelete = async () => {
-  try {
-    await petitionApiService.deletePetitionById(petitionToDelete);
-    setShowDeleteModal(false);
-    setPetitionToDelete(null);
-
-    toast.success("Petition deleted successfully!");
-
-    if (typeof fetchPetitions === "function") {
-      fetchPetitions();
+    try {
+      await petitionApiService.deletePetitionById(petitionToDelete);
+      setShowDeleteModal(false);
+      setPetitionToDelete(null);
+ 
+      toast.success("Petition deleted successfully!");
+      setTabs((prevTabs) => prevTabs.filter(tab => tab.id !== `petition-${petitionToDelete}`));
+      const activeTab = getActiveTab?.();
+      if (activeTab?.type === "petition" && activeTab?.data?.id === petitionToDelete) {
+        setActiveTabId("all-petitions");
+      }
+ 
+      if (typeof fetchPetitions === "function") {
+        fetchPetitions();
+      }
+    } catch (error) {
+      console.error("Error deleting petition:", error);
+      alert("Failed to delete petition. Please try again.");
     }
-  } catch (error) {
-    console.error("Error deleting petition:", error);
-    alert("Failed to delete petition. Please try again.");
-  }
-};
+  };
 
 
   // Use the petitions hook for organization access
@@ -61,7 +66,7 @@ const ViewAllPetitions = ({ onBack }) => {
   } = usePetitions();
 
   // Use the tabs context
-  const { openTab, getActiveTab } = useTabs();
+   const { tabs, setTabs, activeTabId, setActiveTabId, getActiveTab, openTab } = useTabs();
 
   // Handle date filter change
   const handleDateFilterChange = (value) => {

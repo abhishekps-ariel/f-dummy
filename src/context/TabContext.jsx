@@ -324,9 +324,11 @@ export const TabProvider = ({ children }) => {
     return tabs.find(tab => tab.id === activeTabId);
   };
 
-  const value = {
+ const value = {
     tabs,
+    setTabs,
     activeTabId,
+    setActiveTabId,
     openTab,
     closeTab,
     switchToTab,
