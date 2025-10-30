@@ -470,7 +470,7 @@ function Profile() {
                       </p>
                       <p className="text-muted mb-0">
                         <i className="fas fa-user-tag me-2"></i>
-                        {user.role || "FILIR"}
+                        {user.role || "Filer"}
                       </p>
                     </div>
                     <div className="d-flex gap-2">
@@ -625,7 +625,7 @@ function Profile() {
                     <div className="col-sm-6">
                       <label className="form-label text-muted small">Role</label>
                       <p className="fw-medium mb-0">
-                        <span className="badge bg-primary fs-6">{user.role || "FILIR"}</span>
+                        <span className="badge bg-primary fs-6">{user.role || "Filer"}</span>
                       </p>
                     </div>
                     <div className="col-sm-6">

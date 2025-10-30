@@ -77,7 +77,7 @@ const Header = ({ user, pageTitle, showMobileMenu = true, onLogout }) => {
                 {user?.firstName} {user?.lastName}
               </p>
               <p className="font-sm mb-0 text-gray-dark">
-                {user?.role || "FILIR"}
+                {user?.role || "Filer"}
               </p>
             </div>
             <i className="fas fa-chevron-down small ms-2 text-secondary d-none d-lg-block"></i>

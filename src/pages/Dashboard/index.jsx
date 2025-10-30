@@ -308,7 +308,7 @@ function Dashboard() {
                       </p>
                       <p className="text-muted small mb-1">
                         <i className="fa-solid fa-user-tag me-1"></i>
-                        Role: {user.role || "FILIR"}
+                        Role: {user.role || "Filer"}
                           </p>
                           <p className="text-muted small mb-0">
                             <i className="fa-solid fa-tag me-1"></i>

@@ -221,7 +221,7 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
         signerMiddleInitial: user.middleName ? user.middleName.charAt(0).toUpperCase() : '',
         signerLastName: user.lastName || '',
         signerEmail: user.email || '',
-        signerTitle: user.role || 'FILIR User'
+        signerTitle: user.role || 'Filer User'
       }));
     }
   }, [user]);
@@ -1934,7 +1934,7 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
         signatures: [
           {
             signerFullName: `${formData.signerFirstName || ''} ${formData.signerMiddleInitial || ''} ${formData.signerLastName || ''}`.trim(),
-            signerTitle: formData.signerTitle || user?.role || 'FILIR User',
+            signerTitle: formData.signerTitle || user?.role || 'Filer',
             signerEmail: formData.signerEmail || '',
             esignConsent: true,
             signatureDrawnOrTyped: userProfile?.signatureUrl || '',
@@ -2217,7 +2217,7 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
         signatures: [
           {
             signerFullName: `${formData.signerFirstName || ''} ${formData.signerMiddleInitial || ''} ${formData.signerLastName || ''}`.trim(),
-            signerTitle: formData.signerTitle || user?.role || 'FILIR User',
+            signerTitle: formData.signerTitle || user?.role || 'Filer',
             signerEmail: formData.signerEmail || '',
             esignConsent: true,
             signatureDrawnOrTyped: userProfile?.signatureUrl || '',
