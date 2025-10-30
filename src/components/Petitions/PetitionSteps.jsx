@@ -47,6 +47,37 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
     setCurrentStep(wizardCurrentStep);
 
   }, [wizardCurrentStep]);
+  // Validate the step being left when navigating forward via the stepper
+  const previousStepRef = useRef(1);
+  useEffect(() => {
+    const prev = previousStepRef.current;
+    const next = wizardCurrentStep;
+    // Only validate when moving forward
+    if (next > prev) {
+      let validationResult = { hasErrors: false };
+      if (prev === 1) {
+        validationResult = validateAddressFields();
+      } else if (prev === 2) {
+        validationResult = validateLoanDetails();
+      } else if (prev === 3) {
+        validationResult = validateBorrowerDetails();
+      } else if (prev === 4) {
+        // Require filing entity type set before leaving Filing Entity step
+        if (!userFilingEntityType) {
+          toast.error('Please set your filing entity type in your profile before proceeding.');
+          validationResult = { hasErrors: true };
+        }
+      }
+      if (validationResult?.hasErrors) {
+        // Revert navigation if validation fails
+        wizardGoToStep(prev);
+        setCurrentStep(prev);
+        window.scrollTo(0, 0);
+        return;
+      }
+    }
+    previousStepRef.current = wizardCurrentStep;
+  }, [wizardCurrentStep]);
 
   
 
@@ -2344,6 +2375,11 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
 
     let processedValue = value;
 
+    // Enforce digits-only for MIN and Loan Number fields
+    if (name === 'minNumber' || name === 'loanNumber') {
+      processedValue = (processedValue || '').replace(/\D+/g, '');
+    }
+
     if (type === 'number' && integerFields.includes(name) && value !== '') {
 
       // For integer fields, remove any decimal part
@@ -2357,11 +2393,8 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
     
 
     setFormData(prev => ({
-
       ...prev,
-
       [name]: type === 'checkbox' ? checked : type === 'file' ? files[0] : processedValue
-
     }));
 
 
@@ -5109,6 +5142,8 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
                   value={formData.minNumber}
 
                   onChange={handleInputChange}
+                  inputMode="numeric"
+                  pattern="[0-9]*"
 
                   placeholder="Enter MIN number"
 
@@ -5143,6 +5178,8 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
                   value={formData.loanNumber}
 
                   onChange={handleInputChange}
+                  inputMode="numeric"
+                  pattern="[0-9]*"
 
                   placeholder="Enter loan number"
 

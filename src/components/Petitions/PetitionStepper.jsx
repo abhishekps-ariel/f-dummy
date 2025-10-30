@@ -34,10 +34,11 @@ const PetitionStepper = () => {
   }, [currentStep]);
 
   const getStepStatus = (stepNumber) => {
-    if (completedSteps.has(stepNumber)) {
-      return 'completed';
-    } else if (currentStep === stepNumber) {
+    // Always highlight the current step even if it is also completed
+    if (currentStep === stepNumber) {
       return 'current';
+    } else if (completedSteps.has(stepNumber)) {
+      return 'completed';
     } else if (canAccessStep(stepNumber)) {
       return 'accessible';
     } else {
