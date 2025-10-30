@@ -84,8 +84,41 @@ const PetitionTabContent = ({ petition }) => {
 
   const handlePropertyAddressSelect = (prediction) => {
     setPredictions([]);
+    // Fill street immediately for snappy UX
     const street = prediction.description?.split(',')[0] || '';
     setFormData(prev => ({ ...prev, propertyStreet1: street }));
+    // Geocode to populate city/state/zip/county
+    geocodePlaceAndFill(prediction.place_id, ({ street1, city, state, zip }) => {
+      // Attempt county extraction via a secondary geocode of placeId (already done in geocodePlaceAndFill)
+      try {
+        if (geocoderRef.current) {
+          geocoderRef.current.geocode({ placeId: prediction.place_id }, (results, status) => {
+            let countyName = '';
+            if (status === window.google.maps.GeocoderStatus.OK && results && results[0]) {
+              const comp = results[0].address_components || [];
+              const countyComp = comp.find(c => c.types.includes('administrative_area_level_2'));
+              countyName = countyComp?.long_name || '';
+            }
+            setFormData(prev => ({
+              ...prev,
+              propertyStreet1: street1 || prev.propertyStreet1,
+              propertyCity: city || prev.propertyCity,
+              propertyState: state || prev.propertyState,
+              propertyZip: zip || prev.propertyZip,
+              propertyCounty: countyName || prev.propertyCounty
+            }));
+          });
+        } else {
+          setFormData(prev => ({
+            ...prev,
+            propertyStreet1: street1 || prev.propertyStreet1,
+            propertyCity: city || prev.propertyCity,
+            propertyState: state || prev.propertyState,
+            propertyZip: zip || prev.propertyZip
+          }));
+        }
+      } catch {}
+    });
     if (propertyAddressInputRef.current) propertyAddressInputRef.current.blur();
   };
 
@@ -1800,6 +1833,7 @@ const PetitionTabContent = ({ petition }) => {
                             data-error-key={`borrower_${borrower.id}_mailingStreet1`}
                               value={borrower.mailingStreet1 || ''} 
                               readOnly={!isEditing}
+                              autoComplete="off"
                               onChange={(e) => { updateBorrower(borrower.id, 'mailingStreet1', e.target.value); handleBorrowerAddressInput(borrower.id, e.target.value); }}
                           />
                           {isEditing && isLoaded && (borrowerPredictions[borrower.id] || []).length > 0 && (
@@ -2194,8 +2228,23 @@ const PetitionTabContent = ({ petition }) => {
                       className="form-control" 
                           value={formData.noticeAddressStreet1 || ''} 
                           readOnly={!isEditing}
-                          onChange={handleInputChange}
+                      autoComplete="off"
+                      onChange={(e) => { handleInputChange(e); handleNoticeAddressInput(e.target.value); }}
                     />
+                    {isEditing && isLoaded && noticePredictions.length > 0 && (
+                      <div className="list-group mt-1">
+                        {noticePredictions.map((p) => (
+                          <button
+                            type="button"
+                            key={p.place_id}
+                            className="list-group-item list-group-item-action"
+                            onClick={() => handleNoticeAddressSelect(p)}
+                          >
+                            {p.description}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="col-md-6">
@@ -2507,8 +2556,23 @@ const PetitionTabContent = ({ petition }) => {
                               data-error-key={`loanAssignees.${index}.street1`}
                               value={assignee.street1 || ''} 
                               readOnly={!isEditing}
-                              onChange={(e) => updateLoanAssignee(index, 'street1', e.target.value)}
+                              autoComplete="off"
+                              onChange={(e) => { updateLoanAssignee(index, 'street1', e.target.value); handleAssigneeAddressInput(index, e.target.value); }}
                             />
+                          {isEditing && isLoaded && (assigneePredictions[index] || []).length > 0 && (
+                            <div className="list-group mt-1">
+                              {(assigneePredictions[index] || []).map((p) => (
+                                <button
+                                  type="button"
+                                  key={p.place_id}
+                                  className="list-group-item list-group-item-action"
+                                  onClick={() => handleAssigneeAddressSelect(index, p)}
+                                >
+                                  {p.description}
+                                </button>
+                              ))}
+                            </div>
+                          )}
                             {fieldErrors[`loanAssignees.${index}.street1`] && (
                               <div className="text-danger small mt-1">{fieldErrors[`loanAssignees.${index}.street1`]}</div>
                             )}
