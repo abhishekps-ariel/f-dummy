@@ -1019,7 +1019,37 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
         return {};
       })();
 
-      setFormData({ ...defaultFormData, ...orgPrefill });
+      // User attester/signer prefill from auth user
+      const userPrefill = (() => {
+        if (!user) return {};
+        const signerFirstName = user.firstName || '';
+        const signerMiddleInitial = user.middleName ? user.middleName.charAt(0).toUpperCase() : '';
+        const signerLastName = user.lastName || '';
+        const signerEmail = user.email || '';
+        const signerTitle = user.role || 'Filer User';
+        const signerFullName = [signerFirstName, signerMiddleInitial, signerLastName].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
+        return {
+          signerFirstName,
+          signerMiddleInitial,
+          signerLastName,
+          signerEmail,
+          signerTitle,
+          signatures: [
+            {
+              signerFullName,
+              signerTitle,
+              signerEmail,
+              esignConsent: false,
+              signatureDrawnOrTyped: '',
+              signedAt: '',
+              signerIp: '',
+              otpCode: ''
+            }
+          ]
+        };
+      })();
+
+      setFormData({ ...defaultFormData, ...orgPrefill, ...userPrefill });
       clearFormDataFromStorage();
       localStorage.removeItem('petitionDrafts');
       setFieldErrors({});
@@ -1046,6 +1076,11 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
       }
       setShowCloseConfirmDialog(false);
       onClose();
+      try {
+        window.location.reload();
+      } catch (e) {
+        // ignore
+      }
     } catch (e) {
       // keep dialog open on failure
     }
@@ -4033,9 +4068,13 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
 
       
 
-      // Close the form modal
-
+      // Close the form modal and reload to clear persisted wizard/form state
       onClose();
+      try {
+        window.location.reload();
+      } catch (e) {
+        // ignore
+      }
 
       
 
