@@ -31,6 +31,28 @@ const ViewAllPetitions = ({ onBack }) => {
   const [loading, setLoading] = useState(false);
   const [showPetitionSteps, setShowPetitionSteps] = useState(false);
 
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [petitionToDelete, setPetitionToDelete] = useState(null);
+  
+
+  const handleConfirmDelete = async () => {
+  try {
+    await petitionApiService.deletePetitionById(petitionToDelete);
+    setShowDeleteModal(false);
+    setPetitionToDelete(null);
+
+    toast.success("Petition deleted successfully!");
+
+    if (typeof fetchPetitions === "function") {
+      fetchPetitions();
+    }
+  } catch (error) {
+    console.error("Error deleting petition:", error);
+    alert("Failed to delete petition. Please try again.");
+  }
+};
+
+
   // Use the petitions hook for organization access
   const {
     hasOrganizationAccess,
@@ -355,6 +377,29 @@ const ViewAllPetitions = ({ onBack }) => {
         return 'status-badge';
     }
   };
+
+
+  const handleDeletePetition = async (e, petitionId) => {
+    e.stopPropagation();
+    setOpenDropdownId(null);
+
+    try {
+      const confirmDelete = window.confirm("Are you sure you want to delete this petition?");
+      if (!confirmDelete) return;
+
+      await petitionApiService.deletePetitionById(petitionId);
+      alert("Petition deleted successfully!");
+
+      // ✅ Optional: refresh the petition list after deletion
+      if (typeof fetchPetitions === "function") {
+        fetchPetitions();
+      }
+    } catch (error) {
+      console.error("Error deleting petition:", error);
+      alert("Failed to delete petition. Please try again.");
+    }
+  };
+
 
   const handlePetitionClick = (petition) => {
     openTab(petition);
@@ -835,7 +880,8 @@ const ViewAllPetitions = ({ onBack }) => {
                             onClick={(e) => {
                               e.stopPropagation();
                               setOpenDropdownId(null);
-                              // TODO: Implement delete functionality
+                              setPetitionToDelete(petition.id);
+                              setShowDeleteModal(true);
                             }}
                           >
                             Delete
@@ -937,7 +983,8 @@ const ViewAllPetitions = ({ onBack }) => {
                             onClick={(e) => {
                               e.stopPropagation();
                               setOpenDropdownId(null);
-                              // TODO: Implement delete functionality
+                              setPetitionToDelete(petition.id);
+                              setShowDeleteModal(true);
                             }}
                           >
                             Delete
@@ -947,8 +994,13 @@ const ViewAllPetitions = ({ onBack }) => {
                     </div>
                   </div>
                 </div>
+
+
+
               </div>
             ))}
+
+            
           </div>
         ) : (
           <div className="text-center py-4">
@@ -958,6 +1010,51 @@ const ViewAllPetitions = ({ onBack }) => {
           </div>
         )}
       </div>
+
+      {showDeleteModal && (
+  <div
+    className="modal fade show d-block"
+    style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1070 }}
+    tabIndex="-1"
+  >
+    <div className="modal-dialog modal-dialog-centered">
+      <div className="modal-content">
+        <div className="modal-header">
+          <h5 className="modal-title">Delete Petition</h5>
+          <button
+            type="button"
+            className="btn-close"
+            onClick={() => setShowDeleteModal(false)}
+            aria-label="Close"
+          ></button>
+        </div>
+
+        <div className="modal-body">
+          <p className="mb-4">Are you sure you want to delete this petition?</p>
+          <div className="d-flex justify-content-end gap-2">
+            <button
+              type="button"
+              className="btn btn-outline-secondary"
+              onClick={() => setShowDeleteModal(false)}
+            >
+              Cancel
+            </button>
+
+            <button
+              type="button"
+              className="dashboard-btn-create"
+               onClick={handleConfirmDelete}
+            >
+              delete
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
+
 
       {/* Pagination */}
       {pagination.totalPages >= 1 && (

@@ -23,6 +23,20 @@ class PetitionApiService {
     return response.data;
   }
 
+  async deletePetitionById(petitionId) {
+    if (!petitionId) {
+      throw new Error('Petition ID is required to delete a petition.');
+    }
+ 
+    const response = await axiosInstance.delete(PETITION_ENDPOINTS.DELETE_PETITION_BY_ID(petitionId), {
+      headers: {
+        'Accept': 'text/plain'
+      }
+    });
+ 
+    return response.data;
+  }
+
   // Get petition by ID
   async getPetitionById(petitionId) {
     const response = await axiosInstance.get(PETITION_ENDPOINTS.GET_PETITION_BY_ID(petitionId), {
