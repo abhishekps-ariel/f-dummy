@@ -6,21 +6,24 @@ import { AuthProvider } from './context/AuthContext';
 import { PetitionWizardProvider } from './context/PetitionWizardContext';
 import { router } from './routes/routes';
 import LoadingFallback from './components/shared/LoadingFallback';
+import ErrorBoundary from './components/shared/ErrorBoundary';
 
 function App() {
   return (
-    <AuthProvider>
-      <PetitionWizardProvider>
-        <div className="app-container">
-          <div className="main-content">
-            <ToastContainer position="top-right" autoClose={3000} />
-            <Suspense fallback={<LoadingFallback />}>
-              <RouterProvider router={router} />
-            </Suspense>
+    <ErrorBoundary>
+      <AuthProvider>
+        <PetitionWizardProvider>
+          <div className="app-container">
+            <div className="main-content">
+              <ToastContainer position="top-right" autoClose={3000} />
+              <Suspense fallback={<LoadingFallback />}>
+                <RouterProvider router={router} />
+              </Suspense>
+            </div>
           </div>
-        </div>
-      </PetitionWizardProvider>
-    </AuthProvider>
+        </PetitionWizardProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 
