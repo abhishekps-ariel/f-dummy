@@ -1,0 +1,137 @@
+/* Custom Dropdown Styles - Minimal Design */
+.custom-dropdown {
+  position: relative;
+  width: 100%;
+  height: 46px;
+  padding: 8px 12px;
+  background-color: transparent;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.2s;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.custom-dropdown:hover:not(.disabled) {
+  background-color: #f5f5f5;
+  border-color: #999;
+}
+
+.custom-dropdown.open {
+  background-color: #fff;
+  border-color: #ddd;
+}
+
+.custom-dropdown.disabled {
+  background-color: #e9ecef;
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.custom-dropdown.error {
+  border-color: #dc3545;
+}
+
+.custom-dropdown.error.open {
+  border-color: #dc3545;
+}
+
+.custom-dropdown-selected {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #212529;
+  font-weight: 500;
+}
+
+/* Keep selected value text normal black/dark gray */
+.custom-dropdown-selected.has-value {
+  color: #212529;
+}
+
+.custom-dropdown-arrow {
+  margin-left: 8px;
+  color: #666;
+  font-size: 12px;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.custom-dropdown.open .custom-dropdown-arrow {
+  transform: rotate(180deg);
+}
+
+/* Dropdown Menu (Portal) - Minimal Design */
+.custom-dropdown-menu {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  max-height: 300px;
+  overflow-y: auto;
+  margin-top: 4px;
+  padding: 4px 0;
+  z-index: 10000;
+}
+
+.custom-dropdown-item {
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  color: #272727;
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.custom-dropdown-item:hover:not(.disabled) {
+  background-color: #f8f9fa;
+}
+
+.custom-dropdown-item.selected {
+  background-color: var(--theme-color, #0265A3);
+  color: #fff;
+  font-weight: 500;
+}
+
+.custom-dropdown-item.selected:hover {
+  background-color: #015080;
+}
+
+.custom-dropdown-item.disabled {
+  color: #999;
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.custom-dropdown-item.no-options {
+  color: #999;
+  font-style: italic;
+  cursor: default;
+}
+
+/* Scrollbar styling for dropdown menu */
+.custom-dropdown-menu::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-dropdown-menu::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.custom-dropdown-menu::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
+}
+
+.custom-dropdown-menu::-webkit-scrollbar-thumb:hover {
+  background: #999;
+}

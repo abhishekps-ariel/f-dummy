@@ -22,6 +22,10 @@ import { getOrganizationById } from "../../services/organizationService";
 
 import PetitionStepper from "./PetitionStepper";
 
+import CustomDropdown from "../shared/CustomDropdown";
+
+import "../shared/CustomDropdown.css";
+
 // Static libraries array to prevent LoadScript reload
 
 const LIBRARIES = ["places"];
@@ -3949,24 +3953,22 @@ const PetitionSteps = ({
                   Loan Type *
                 </label>
 
-                <select
+                <CustomDropdown
                   id="petitionLoanTypeId"
                   name="petitionLoanTypeId"
-                  className={`form-select ${
-                    fieldErrors.petitionLoanTypeId ? "is-invalid" : ""
-                  }`}
                   value={formData.petitionLoanTypeId}
                   onChange={handleInputChange}
+                  placeholder="Select Loan Type"
                   disabled={commonDataLoading}
-                >
-                  <option value="">Select Loan Type</option>
-
-                  {getLoanTypes().map((loanType) => (
-                    <option key={loanType.id} value={loanType.id}>
-                      {loanType.name}
-                    </option>
-                  ))}
-                </select>
+                  error={!!fieldErrors.petitionLoanTypeId}
+                  options={[
+                    { value: "", label: "Select Loan Type" },
+                    ...getLoanTypes().map((loanType) => ({
+                      value: loanType.id,
+                      label: loanType.name,
+                    })),
+                  ]}
+                />
 
                 {fieldErrors.petitionLoanTypeId && (
                   <div className="text-danger small mt-1">
@@ -3987,24 +3989,22 @@ const PetitionSteps = ({
                   Lien Position *
                 </label>
 
-                <select
+                <CustomDropdown
                   id="lienPosition"
                   name="lienPosition"
-                  className={`form-select ${
-                    fieldErrors.lienPosition ? "is-invalid" : ""
-                  }`}
                   value={formData.lienPosition}
                   onChange={handleInputChange}
+                  placeholder="Select Position"
                   disabled={commonDataLoading}
-                >
-                  <option value="">Select Position</option>
-
-                  {getLienPositions().map((position) => (
-                    <option key={position.value} value={position.value}>
-                      {position.name}
-                    </option>
-                  ))}
-                </select>
+                  error={!!fieldErrors.lienPosition}
+                  options={[
+                    { value: "", label: "Select Position" },
+                    ...getLienPositions().map((position) => ({
+                      value: position.value,
+                      label: position.name,
+                    })),
+                  ]}
+                />
 
                 {fieldErrors.lienPosition && (
                   <div className="text-danger small mt-1">
@@ -5618,12 +5618,8 @@ const PetitionSteps = ({
                   <div className="col-md-6">
                     <label className="form-label">Assignee Type *</label>
 
-                    <select
-                      className={`form-select ${
-                        fieldErrors[`loanAssignees.${index}.assigneeTypeId`]
-                          ? "is-invalid"
-                          : ""
-                      }`}
+                    <CustomDropdown
+                      name={`loanAssignees.${index}.assigneeTypeId`}
                       value={assignee.assigneeTypeId}
                       onChange={(e) =>
                         updateLoanAssignee(
@@ -5632,16 +5628,19 @@ const PetitionSteps = ({
                           e.target.value
                         )
                       }
+                      placeholder="Select Type"
                       disabled={commonDataLoading}
-                    >
-                      <option value="">Select Type</option>
-
-                      {getAssigneeTypes().map((type) => (
-                        <option key={type.id} value={type.id}>
-                          {type.name}
-                        </option>
-                      ))}
-                    </select>
+                      error={
+                        !!fieldErrors[`loanAssignees.${index}.assigneeTypeId`]
+                      }
+                      options={[
+                        { value: "", label: "Select Type" },
+                        ...getAssigneeTypes().map((type) => ({
+                          value: type.id,
+                          label: type.name,
+                        })),
+                      ]}
+                    />
 
                     {fieldErrors[`loanAssignees.${index}.assigneeTypeId`] && (
                       <div className="text-danger small mt-1">
@@ -5660,12 +5659,8 @@ const PetitionSteps = ({
                   <div className="col-md-6">
                     <label className="form-label">Assignee Role *</label>
 
-                    <select
-                      className={`form-select ${
-                        fieldErrors[`loanAssignees.${index}.assigneeRoleId`]
-                          ? "is-invalid"
-                          : ""
-                      }`}
+                    <CustomDropdown
+                      name={`loanAssignees.${index}.assigneeRoleId`}
                       value={assignee.assigneeRoleId}
                       onChange={(e) =>
                         updateLoanAssignee(
@@ -5674,16 +5669,19 @@ const PetitionSteps = ({
                           e.target.value
                         )
                       }
+                      placeholder="Select Role"
                       disabled={commonDataLoading}
-                    >
-                      <option value="">Select Role</option>
-
-                      {getAssigneeRoles().map((role) => (
-                        <option key={role.id} value={role.id}>
-                          {role.name}
-                        </option>
-                      ))}
-                    </select>
+                      error={
+                        !!fieldErrors[`loanAssignees.${index}.assigneeRoleId`]
+                      }
+                      options={[
+                        { value: "", label: "Select Role" },
+                        ...getAssigneeRoles().map((role) => ({
+                          value: role.id,
+                          label: role.name,
+                        })),
+                      ]}
+                    />
 
                     {fieldErrors[`loanAssignees.${index}.assigneeRoleId`] && (
                       <div className="text-danger small mt-1">

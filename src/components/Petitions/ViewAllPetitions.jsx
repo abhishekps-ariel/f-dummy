@@ -8,6 +8,8 @@ import PetitionTabContent from "./PetitionTabContent";
 import { useTabs } from "../../context/TabContext";
 import { usePetitions } from "../../hooks/usePetitions";
 import petitionApiService from "../../services/petitionApiService";
+import CustomDropdown from "../shared/CustomDropdown";
+import "../shared/CustomDropdown.css";
 import "./TabbedWorkspace.css";
 
 const ViewAllPetitions = ({ onBack }) => {
@@ -17,7 +19,7 @@ const ViewAllPetitions = ({ onBack }) => {
   const [customDateFrom, setCustomDateFrom] = useState("");
   const [customDateTo, setCustomDateTo] = useState("");
   const [showCustomDateRange, setShowCustomDateRange] = useState(false);
-  const [sortBy, setSortBy] = useState("filingDate");
+  const [sortBy, setSortBy] = useState("lastUpdated");
   const [sortOrder, setSortOrder] = useState("desc");
   const [exporting, setExporting] = useState(false);
   const [pagination, setPagination] = useState({
@@ -150,7 +152,7 @@ const ViewAllPetitions = ({ onBack }) => {
       lastUpdated: "ModifiedDate", // lastUpdated maps to ModifiedDate
       petitionNumber: "PetitionNumber", // petitionNumber maps to PetitionNumber
     };
-    return sortColumnMap[sortBy] || "CreatedDate";
+    return sortColumnMap[sortBy] || "ModifiedDate"; // Default to ModifiedDate (lastUpdated)
   };
 
   // Helper function to get from date
@@ -194,7 +196,7 @@ const ViewAllPetitions = ({ onBack }) => {
     setCustomDateFrom("");
     setCustomDateTo("");
     setShowCustomDateRange(false);
-    setSortBy("filingDate");
+    setSortBy("lastUpdated");
     setSortOrder("desc");
     setPagination((prev) => ({ ...prev, currentPage: 1 }));
     fetchPetitions(1);
@@ -647,82 +649,58 @@ const ViewAllPetitions = ({ onBack }) => {
                     </div>
                   </div>
                   <div className="col-6 col-md-2">
-                    <select
-                      className="form-select"
+                    <CustomDropdown
+                      name="statusFilter"
                       value={statusFilter}
                       onChange={(e) => setStatusFilter(e.target.value)}
-                      style={{
-                        paddingRight: "30px",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                      }}
-                    >
-                      <option value="all">All Statuses</option>
-                      <option value="draft">Draft</option>
-                      <option value="submitted">Submitted</option>
-                      <option value="resubmitted">Resubmitted</option>
-                      <option value="accepted">Accepted</option>
-                      <option value="returned">Returned</option>
-                      <option value="closed">Closed</option>
-                    </select>
+                      placeholder="All Statuses"
+                      options={[
+                        { value: "all", label: "All Statuses" },
+                        { value: "draft", label: "Draft" },
+                        { value: "submitted", label: "Submitted" },
+                        { value: "resubmitted", label: "Resubmitted" },
+                        { value: "accepted", label: "Accepted" },
+                        { value: "returned", label: "Returned" },
+                        { value: "closed", label: "Closed" },
+                      ]}
+                    />
                   </div>
                   <div className="col-6 col-md-2">
-                    <select
-                      className="form-select"
+                    <CustomDropdown
+                      name="dateFilter"
                       value={dateFilter}
                       onChange={(e) => handleDateFilterChange(e.target.value)}
-                      style={{
-                        paddingRight: "30px",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                      }}
-                    >
-                      <option value="all">All Dates</option>
-                      <option value="today">Today</option>
-                      <option value="week">Last 7 Days</option>
-                      <option value="month">Last Month</option>
-                      <option value="quarter">Last 3 Months</option>
-                      <option value="year">Last Year</option>
-                      <option value="custom">Custom Range</option>
-                    </select>
+                      placeholder="All Dates"
+                      options={[
+                        { value: "all", label: "All Dates" },
+                        { value: "today", label: "Today" },
+                        { value: "week", label: "Last 7 Days" },
+                        { value: "month", label: "Last Month" },
+                        { value: "quarter", label: "Last 3 Months" },
+                        { value: "year", label: "Last Year" },
+                        { value: "custom", label: "Custom Range" },
+                      ]}
+                    />
                   </div>
                   <div className="col-8 col-md-3">
-                    <select
-                      className="form-select"
+                    <CustomDropdown
+                      name="sortBy"
                       value={`${sortBy}-${sortOrder}`}
                       onChange={(e) => {
                         const [field, order] = e.target.value.split("-");
                         setSortBy(field);
                         setSortOrder(order);
                       }}
-                      style={{
-                        paddingRight: "30px",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                      }}
-                    >
-                      <option value="filingDate-desc">
-                        Filing Date (Newest First)
-                      </option>
-                      <option value="filingDate-asc">
-                        Filing Date (Oldest First)
-                      </option>
-                      <option value="lastUpdated-desc">
-                        Last Updated (Most Recent)
-                      </option>
-                      <option value="lastUpdated-asc">
-                        Last Updated (Least Recent)
-                      </option>
-                      <option value="petitionNumber-asc">
-                        Petition Number (A-Z)
-                      </option>
-                      <option value="petitionNumber-desc">
-                        Petition Number (Z-A)
-                      </option>
-                    </select>
+                      placeholder="Sort By"
+                      options={[
+                        { value: "filingDate-desc", label: "Filing Date (Newest First)" },
+                        { value: "filingDate-asc", label: "Filing Date (Oldest First)" },
+                        { value: "lastUpdated-desc", label: "Last Updated (Most Recent)" },
+                        { value: "lastUpdated-asc", label: "Last Updated (Least Recent)" },
+                        { value: "petitionNumber-asc", label: "Petition Number (A-Z)" },
+                        { value: "petitionNumber-desc", label: "Petition Number (Z-A)" },
+                      ]}
+                    />
                   </div>
                   <div className="col-4 col-md-1">
                     <button

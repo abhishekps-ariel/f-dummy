@@ -11,7 +11,9 @@ import { toast } from "react-toastify";
 import Sidebar from "../../components/shared/Sidebar";
 import Header from "../../components/shared/Header";
 import SignatureCapture from "../../components/shared/SignatureCapture";
+import CustomDropdown from "../../components/shared/CustomDropdown";
 import "../../styles/custom.css";
+import "../../components/shared/CustomDropdown.css";
 
 function Profile() {
   const [user, setUser] = useState(null);
@@ -535,18 +537,19 @@ function Profile() {
                             <span className="text-muted">Loading entity types...</span>
                           </div>
                         ) : (
-                          <select
-                            className="form-select"
+                          <CustomDropdown
+                            name="filingEntityTypeId"
                             value={selectedFilingEntityType}
                             onChange={handleFilingEntityTypeChange}
-                          >
-                            <option value="">Select Filing Entity Type</option>
-                            {filingEntityTypes.map((entityType) => (
-                              <option key={entityType.id} value={entityType.id}>
-                                {entityType.name}
-                              </option>
-                            ))}
-                          </select>
+                            placeholder="Select Filing Entity Type"
+                            options={[
+                              { value: "", label: "Select Filing Entity Type" },
+                              ...filingEntityTypes.map((entityType) => ({
+                                value: entityType.id,
+                                label: entityType.name,
+                              })),
+                            ]}
+                          />
                         )
                       ) : (
                         <p className="fw-medium mb-0">
