@@ -78,7 +78,13 @@ const ViewAllPetitions = ({ onBack }) => {
     if (value !== "custom") {
       setCustomDateFrom("");
       setCustomDateTo("");
+      // Only trigger fetch for non-custom options
+      if (organization?.id) {
+        setPagination((prev) => ({ ...prev, currentPage: 1 }));
+        fetchPetitions(1);
+      }
     }
+    // For "custom", don't trigger fetch - wait for Apply button click
   };
 
   // Fetch petitions using paged API
@@ -355,7 +361,8 @@ const ViewAllPetitions = ({ onBack }) => {
     }, 500); // 500ms debounce
 
     return () => clearTimeout(timeoutId);
-  }, [searchQuery, statusFilter, dateFilter]);
+  }, [searchQuery, statusFilter]);
+  // Note: dateFilter removed from dependencies - custom range handled separately via Apply button
 
   // Custom date range changes are handled manually via Apply Filter button
   // No automatic triggering to prevent page reloads while user is selecting dates

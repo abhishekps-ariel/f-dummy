@@ -1321,7 +1321,6 @@ form.search-form input:focus {
 }
 
 .dashboard-btn-refresh {
-    height: 46px;
     background: transparent;
     border: 1px solid #ddd;
     border-radius: 8px;
