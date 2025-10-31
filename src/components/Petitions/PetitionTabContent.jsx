@@ -842,7 +842,6 @@ const PetitionTabContent = ({ petition }) => {
       await submitPetition(petitionData, true, petition.id);
       toast.success('Draft saved successfully.');
       setIsEditing(false);
-      window.location.reload();
     } catch (error) {
       toast.error('Failed to save draft. Please try again.');
     } finally {
@@ -872,7 +871,6 @@ const PetitionTabContent = ({ petition }) => {
       await submitPetition(petitionData, false, petition.id);
       toast.success('Petition submitted successfully!');
       setIsEditing(false);
-      window.location.reload();
     } catch (error) {
       toast.error('Failed to submit petition. Please try again.');
     } finally {

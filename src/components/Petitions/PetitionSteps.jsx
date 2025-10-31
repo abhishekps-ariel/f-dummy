@@ -1001,12 +1001,8 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
   }, []);
 
 
-  // Close confirmation handlers
-  const handleCloseAttempt = () => {
-    setShowCloseConfirmDialog(true);
-  };
-
-  const handleDiscardAndClose = () => {
+  // Helper function to clear form data and wizard state (reusable for submit/save/close)
+  const clearFormAndWizardState = () => {
     try {
       // Reapply organization prefilled info while clearing user-entered values
       const orgPrefill = (() => {
@@ -1094,6 +1090,19 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
       }
     } catch (e) {
       // ignore
+    }
+  };
+
+  // Close confirmation handlers
+  const handleCloseAttempt = () => {
+    setShowCloseConfirmDialog(true);
+};
+
+  const handleDiscardAndClose = () => {
+    try {
+      clearFormAndWizardState();
+    } catch (e) {
+      // ignore
     } finally {
       setShowCloseConfirmDialog(false);
       onClose();
@@ -1107,11 +1116,6 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
       }
       setShowCloseConfirmDialog(false);
       onClose();
-      try {
-        window.location.reload();
-      } catch (e) {
-        // ignore
-      }
     } catch (e) {
       // keep dialog open on failure
     }
@@ -4049,48 +4053,6 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
 
       
 
-      // Also save to localStorage for backup
-
-      const saveData = {
-
-        step: currentStep,
-
-        formData: formData,
-
-        timestamp: new Date().toISOString(),
-
-        isDraft: true
-
-      };
-
-      
-
-      const existingDrafts = JSON.parse(localStorage.getItem('petitionDrafts') || '[]');
-
-      const draftIndex = existingDrafts.findIndex(draft => draft.step === currentStep);
-
-      
-
-      if (draftIndex >= 0) {
-
-        existingDrafts[draftIndex] = saveData;
-
-      } else {
-
-        existingDrafts.push(saveData);
-
-      }
-
-      
-
-      localStorage.setItem('petitionDrafts', JSON.stringify(existingDrafts));
-
-      
-
-      setHasSavedDraft(true);
-
-      
-
       // Notify parent component that petition was saved as draft
 
       if (onPetitionSubmitted) {
@@ -4099,15 +4061,11 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
 
       }
 
+      // Clear form data and wizard state (like "Don't save")
+      clearFormAndWizardState();
       
-
-      // Close the form modal and reload to clear persisted wizard/form state
+      // Close the form modal
       onClose();
-      try {
-        window.location.reload();
-      } catch (e) {
-        // ignore
-      }
 
       
 
@@ -4624,18 +4582,6 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
 
       
 
-      // Clear petition wizard state and drafts from localStorage after successful submission
-
-      localStorage.removeItem('petitionDrafts');
-
-      
-
-      // Clear form data from localStorage after successful submission
-
-      clearFormDataFromStorage();
-
-      
-
       // Notify parent component that petition was submitted successfully
 
       if (onPetitionSubmitted) {
@@ -4644,15 +4590,12 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
 
       }
 
+      // Clear form data and wizard state (like "Don't save")
+      clearFormAndWizardState();
+
       
 
       onClose();
-
-      
-
-      // Reload the entire petitions section page
-
-      window.location.reload();
 
     } catch (error) {
 
