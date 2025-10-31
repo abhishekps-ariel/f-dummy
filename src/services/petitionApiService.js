@@ -206,6 +206,16 @@ class PetitionApiService {
         noticeAddressZip: formData.noticeAddressZip || "",
         manualOverrideReason: formData.manualOverrideReason || ""
       },
+      foreclosureSale: formData.noticeSent === true && formData.foreclosureSale ? {
+        saleDate: safeDateConversion(formData.foreclosureSale.saleDate),
+        soldToId: formData.foreclosureSale.soldToId && formData.foreclosureSale.soldToId.trim() !== '' ? formData.foreclosureSale.soldToId : null,
+        vestingEntityName: formData.foreclosureSale.vestingEntityName || null,
+        reoEntityName: formData.foreclosureSale.reoEntityName || null,
+        reoContactFirstName: formData.foreclosureSale.reoContactFirstName || null,
+        reoContactLastName: formData.foreclosureSale.reoContactLastName || null,
+        reoBusinessPhone: formData.foreclosureSale.reoBusinessPhone || null,
+        reoEmergencyPhone: formData.foreclosureSale.reoEmergencyPhone || null
+      } : null,
       affidavit: {
         certainMortgageLoan: formData.certainMortgageLoan || false,
         form35bComplianceAffidavitPdf: await fileToBase64(formData.form35bComplianceAffidavitPdf),
@@ -314,6 +324,7 @@ class PetitionApiService {
         property: petition.property,
         loan: petition.loan,
         rightToCure: petition.rightToCure,
+        foreclosureSale: petition.foreclosureSale,
         affidavit: petition.affidavit,
         filingEntity: petition.filingEntity,
         signatures: petition.signatures,

@@ -64,12 +64,16 @@ function Profile() {
       });
       
       // Check for existing signature data
-      if (userData.signatureUrl && userData.signatureImageName) {
+      // Only set as saved if both signatureUrl is non-empty and signatureImageName is not null/empty
+      if (userData.signatureUrl && 
+          userData.signatureUrl.trim() !== "" && 
+          userData.signatureImageName) {
         setSignatureStatus('saved');
         setSignatureData(userData.signatureUrl);
         setIsImageLoading(true);
       } else {
         setSignatureStatus('pending');
+        setSignatureData(null);
       }
       setSelectedFilingEntityType(userData.filingEntityTypeId || "");
     }
@@ -116,19 +120,31 @@ function Profile() {
       const response = await getSignatureById(userId);
       if (response.isSuccess && response.data) {
         const signatureData = response.data;
-        setSignatureData(signatureData.signatureUrl);
-        setSignatureStatus('saved');
-        
-        // Update context only - don't update local user state to avoid infinite loop
-        updateUserSignature(signatureData);
-        
-        return true;
+        // Check if signature actually exists (not empty/null)
+        if (signatureData.signatureUrl && 
+            signatureData.signatureUrl.trim() !== "" && 
+            signatureData.signatureImageName) {
+          setSignatureData(signatureData.signatureUrl);
+          setSignatureStatus('saved');
+          
+          // Update context only - don't update local user state to avoid infinite loop
+          updateUserSignature(signatureData);
+          
+          return true;
+        } else {
+          // Signature data exists but is empty/null - user hasn't uploaded signature
+          setSignatureStatus('pending');
+          setSignatureData(null);
+          return false;
+        }
       } else {
         setSignatureStatus('pending');
+        setSignatureData(null);
         return false;
       }
     } catch (error) {
       setSignatureStatus('pending');
+      setSignatureData(null);
       return false;
     }
   };

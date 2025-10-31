@@ -18,7 +18,9 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
     getAssigneeTypes,
     getAssigneeRoles,
     getLienPositions,
+    getBuyerTypes,
     getOptionName,
+    findOptionByValue,
     loading: commonDataLoading,
   } = usePetitionCommonData();
   const { submitPetition, hasOrganizationAccess, fetchPetitions } = usePetitions();
@@ -43,6 +45,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
   const [isLoadingPredictions, setIsLoadingPredictions] = useState(false);
   const propertyAddressInputRef = useRef(null);
   const signatureSectionRef = useRef(null);
+  const foreclosureSaleSectionRef = useRef(null);
   // Borrower address autocomplete
   const [borrowerPredictions, setBorrowerPredictions] = useState({}); // { [borrowerId]: Prediction[] }
   const [isLoadingBorrowerPredictions, setIsLoadingBorrowerPredictions] =
@@ -552,7 +555,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
             saleDate: details.foreclosureSale.saleDate
               ? details.foreclosureSale.saleDate.split("T")[0]
               : "",
-            soldTo: details.foreclosureSale.soldTo || "",
+            soldToId: details.foreclosureSale.soldToId || "",
             vestingEntityName: details.foreclosureSale.vestingEntityName || "",
             reoEntityName: details.foreclosureSale.reoEntityName || "",
             reoContactFirstName:
@@ -565,7 +568,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
         : details.rightToCure?.noticeSent === true
         ? {
             saleDate: "",
-            soldTo: "",
+            soldToId: "",
             vestingEntityName: "",
             reoEntityName: "",
             reoContactFirstName: "",
@@ -788,13 +791,67 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
       errors.signatures = "At least one signature is required";
     }
 
+    // Foreclosure Sale validation - only if noticeSent is true
+    if (formData.noticeSent === true) {
+      const foreclosureSale = formData.foreclosureSale || {};
+      
+      // Sale Date is required
+      if (!foreclosureSale.saleDate || foreclosureSale.saleDate.trim() === "") {
+        errors["foreclosureSale.saleDate"] = "Sale Date must be entered before committing the petition sale";
+      }
+      
+      // Sold To (soldToId) is required
+      if (!foreclosureSale.soldToId || foreclosureSale.soldToId === "") {
+        errors["foreclosureSale.soldToId"] = "Buyer Type must be selected before committing the petition sale";
+      } else {
+        // If soldToId is selected, check if it's Mortgagee/Investor
+        const buyerTypes = getBuyerTypes();
+        const selectedBuyerType = findOptionByValue(buyerTypes, foreclosureSale.soldToId);
+        const isMortgageeInvestor = selectedBuyerType && (
+          selectedBuyerType.name?.toLowerCase().includes("mortgagee") ||
+          selectedBuyerType.name?.toLowerCase().includes("investor") ||
+          selectedBuyerType.value?.toLowerCase().includes("mortgagee") ||
+          selectedBuyerType.value?.toLowerCase().includes("investor")
+        );
+        
+        // If Mortgagee/Investor, validate required fields
+        if (isMortgageeInvestor) {
+          if (!foreclosureSale.vestingEntityName || foreclosureSale.vestingEntityName.trim() === "") {
+            errors["foreclosureSale.vestingEntityName"] = "Must be entered if buyer is Mortgagee/Investor";
+          }
+          if (!foreclosureSale.reoContactFirstName || foreclosureSale.reoContactFirstName.trim() === "") {
+            errors["foreclosureSale.reoContactFirstName"] = "Must be entered if buyer is Mortgagee/Investor";
+          }
+          if (!foreclosureSale.reoContactLastName || foreclosureSale.reoContactLastName.trim() === "") {
+            errors["foreclosureSale.reoContactLastName"] = "Must be entered if buyer is Mortgagee/Investor";
+          }
+          if (!foreclosureSale.reoBusinessPhone || foreclosureSale.reoBusinessPhone.trim() === "") {
+            errors["foreclosureSale.reoBusinessPhone"] = "Must be entered if buyer is Mortgagee/Investor";
+          }
+        }
+      }
+    }
+
     if (Object.keys(errors).length) {
       setFieldErrors((prev) => ({ ...prev, ...errors }));
+      
+      // Check for foreclosure sale errors
+      const hasForeclosureSaleErrors = Object.keys(errors).some(key => 
+        key.startsWith("foreclosureSale.")
+      );
       
       // Special handling for e-consent error - scroll to signature section if it's present
       if (errors.esignConsent && signatureSectionRef.current) {
         setTimeout(() => {
           signatureSectionRef.current?.scrollIntoView({ 
+            behavior: "smooth", 
+            block: "center" 
+          });
+        }, 100);
+      } else if (hasForeclosureSaleErrors && foreclosureSaleSectionRef.current) {
+        // Special handling for foreclosure sale errors - scroll to foreclosure sale section
+        setTimeout(() => {
+          foreclosureSaleSectionRef.current?.scrollIntoView({ 
             behavior: "smooth", 
             block: "center" 
           });
@@ -947,10 +1004,19 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
         ? {
             ...prev.foreclosureSale,
             [field]: value,
+            // Clear Mortgagee/Investor required fields if soldToId changes to Third Party
+            ...(field === "soldToId" && value !== prev.foreclosureSale.soldToId
+              ? {
+                  vestingEntityName: "",
+                  reoContactFirstName: "",
+                  reoContactLastName: "",
+                  reoBusinessPhone: "",
+                }
+              : {}),
           }
         : {
             saleDate: "",
-            soldTo: "",
+            soldToId: "",
             vestingEntityName: "",
             reoEntityName: "",
             reoContactFirstName: "",
@@ -1653,29 +1719,39 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
                     </>
                   ) : (
                     <>
-                      <button
-                        type="button"
-                        className="dashboard-btn-create"
-                        onClick={handleSaveDraft}
-                        disabled={isSavingDraft || isSubmitting}
-                        title="Save as Draft"
-                      >
-                        {isSavingDraft ? (
-                          <>
-                            <span
-                              className="spinner-border spinner-border-sm me-1"
-                              role="status"
-                              aria-hidden="true"
-                            ></span>
-                            Saving...
-                          </>
-                        ) : (
-                          <>
-                            <i className="fas fa-save me-1"></i>
-                            Save as Draft
-                          </>
-                        )}
-                      </button>
+                      {/* Only show Save as Draft for non-submitted petitions */}
+                      {(petition.status !== "Submitted" && 
+                        petition.status !== "Resubmitted" && 
+                        petition.status !== "Accepted" && 
+                        petition.status !== "Closed" &&
+                        petition.statusClass !== "Submitted" &&
+                        petition.statusClass !== "Resubmitted" &&
+                        petition.statusClass !== "Accepted" &&
+                        petition.statusClass !== "Closed") && (
+                        <button
+                          type="button"
+                          className="dashboard-btn-create"
+                          onClick={handleSaveDraft}
+                          disabled={isSavingDraft || isSubmitting}
+                          title="Save as Draft"
+                        >
+                          {isSavingDraft ? (
+                            <>
+                              <span
+                                className="spinner-border spinner-border-sm me-1"
+                                role="status"
+                                aria-hidden="true"
+                              ></span>
+                              Saving...
+                            </>
+                          ) : (
+                            <>
+                              <i className="fas fa-save me-1"></i>
+                              Save as Draft
+                            </>
+                          )}
+                        </button>
+                      )}
                       <button
                         type="button"
                         className="dashboard-btn-create"
@@ -1716,6 +1792,14 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
             </div>
           </div>
         </div>
+
+        {/* Warning message for foreclosure sale info - show at top when noticeSent is true and info is missing */}
+        {formData.noticeSent === true && 
+          (!formData.foreclosureSale?.saleDate || !formData.foreclosureSale?.soldToId) && (
+          <div className="alert alert-warning mb-4">
+            <strong>Please fill foreclosure sale info</strong> - Sale Date and Sold To fields are required before committing the petition sale.
+          </div>
+        )}
 
         {/* Form Layout */}
         <form className="petition-form">
@@ -2826,7 +2910,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
                           if (value === true && !updated.foreclosureSale) {
                             updated.foreclosureSale = {
                               saleDate: "",
-                              soldTo: "",
+                              soldToId: "",
                               vestingEntityName: "",
                               reoEntityName: "",
                               reoContactFirstName: "",
@@ -3046,197 +3130,261 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
 
           {/* Foreclosure Sale Section - Only show if Right to Cure is "Yes" */}
           {formData.noticeSent === true && (
-            <div className={`card mb-4 ${isEditing ? "editing" : ""}`}>
+            <div 
+              ref={foreclosureSaleSectionRef}
+              className={`card mb-4 ${isEditing ? "editing" : ""} ${
+                Object.keys(fieldErrors).some(key => key.startsWith("foreclosureSale.")) 
+                  ? "border-danger" 
+                  : ""
+              }`}
+            >
               <SectionHeader title="Foreclosure Sale" />
               <div className="card-body">
-                <div className="row">
-                  <div className="col-md-6">
-                    <div className="form-group mb-3">
-                      <label className="form-label">Sale Date *</label>
-                      <input
-                        type="date"
-                        className={`form-control ${
-                          fieldErrors["foreclosureSale.saleDate"]
-                            ? "is-invalid"
-                            : ""
-                        }`}
-                        value={formData.foreclosureSale?.saleDate || ""}
-                        readOnly={!isEditing}
-                        onChange={(e) =>
-                          updateForeclosureSale("saleDate", e.target.value)
-                        }
-                      />
-                      {fieldErrors["foreclosureSale.saleDate"] && (
-                        <div className="text-danger small mt-1">
-                          {fieldErrors["foreclosureSale.saleDate"]}
+                
+                {/* Determine if selected buyer is Mortgagee/Investor */}
+                {(() => {
+                  const buyerTypes = getBuyerTypes();
+                  const selectedBuyerType = formData.foreclosureSale?.soldToId
+                    ? findOptionByValue(buyerTypes, formData.foreclosureSale.soldToId)
+                    : null;
+                  const isMortgageeInvestor = selectedBuyerType && (
+                    selectedBuyerType.name?.toLowerCase().includes("mortgagee") ||
+                    selectedBuyerType.name?.toLowerCase().includes("investor") ||
+                    selectedBuyerType.value?.toLowerCase().includes("mortgagee") ||
+                    selectedBuyerType.value?.toLowerCase().includes("investor")
+                  );
+                  
+                  return (
+                    <div className="row">
+                      <div className="col-md-6">
+                        <div className="form-group mb-3">
+                          <label className="form-label">Sale Date *</label>
+                          <input
+                            type="date"
+                            className={`form-control ${
+                              fieldErrors["foreclosureSale.saleDate"]
+                                ? "is-invalid"
+                                : ""
+                            }`}
+                            value={formData.foreclosureSale?.saleDate || ""}
+                            readOnly={!isEditing}
+                            onChange={(e) =>
+                              updateForeclosureSale("saleDate", e.target.value)
+                            }
+                          />
+                          {fieldErrors["foreclosureSale.saleDate"] && (
+                            <div className="text-danger small mt-1">
+                              {fieldErrors["foreclosureSale.saleDate"]}
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="col-md-6">
-                    <div className="form-group mb-3">
-                      <label className="form-label">Sold To?</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={formData.foreclosureSale?.soldTo || ""}
-                        readOnly={!isEditing}
-                        onChange={(e) =>
-                          updateForeclosureSale("soldTo", e.target.value)
-                        }
-                      />
-                    </div>
-                  </div>
-                  <div className="col-md-6">
-                    <div className="form-group mb-3">
-                      <label className="form-label">
-                        Vesting Entity Name *
-                      </label>
-                      <input
-                        type="text"
-                        className={`form-control ${
-                          fieldErrors["foreclosureSale.vestingEntityName"]
-                            ? "is-invalid"
-                            : ""
-                        }`}
-                        value={
-                          formData.foreclosureSale?.vestingEntityName || ""
-                        }
-                        readOnly={!isEditing}
-                        onChange={(e) =>
-                          updateForeclosureSale(
-                            "vestingEntityName",
-                            e.target.value
-                          )
-                        }
-                      />
-                      {fieldErrors["foreclosureSale.vestingEntityName"] && (
-                        <div className="text-danger small mt-1">
-                          {fieldErrors["foreclosureSale.vestingEntityName"]}
+                      </div>
+                      <div className="col-md-6">
+                        <div className="form-group mb-3">
+                          <label className="form-label">Sold To? *</label>
+                          {isEditing ? (
+                            <CustomDropdown
+                              name="soldToId"
+                              value={formData.foreclosureSale?.soldToId || ""}
+                              onChange={(e) =>
+                                updateForeclosureSale("soldToId", e.target.value)
+                              }
+                              placeholder="Select..."
+                              disabled={!isEditing}
+                              error={!!fieldErrors["foreclosureSale.soldToId"]}
+                              options={[
+                                { value: "", label: "Select..." },
+                                ...getBuyerTypes().map((buyerType) => ({
+                                  value: buyerType.id || buyerType.value,
+                                  label: buyerType.name || buyerType.value,
+                                })),
+                              ]}
+                            />
+                          ) : (
+                            <input
+                              type="text"
+                              className="form-control"
+                              value={
+                                selectedBuyerType
+                                  ? selectedBuyerType.name || selectedBuyerType.value || ""
+                                  : ""
+                              }
+                              readOnly
+                            />
+                          )}
+                          {fieldErrors["foreclosureSale.soldToId"] && (
+                            <div className="text-danger small mt-1">
+                              {fieldErrors["foreclosureSale.soldToId"]}
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="col-md-6">
-                    <div className="form-group mb-3">
-                      <label className="form-label">REO Entity Name</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={formData.foreclosureSale?.reoEntityName || ""}
-                        readOnly={!isEditing}
-                        onChange={(e) =>
-                          updateForeclosureSale("reoEntityName", e.target.value)
-                        }
-                      />
-                    </div>
-                  </div>
-                  <div className="col-md-6">
-                    <div className="form-group mb-3">
-                      <label className="form-label">
-                        REO Contact First Name *
-                      </label>
-                      <input
-                        type="text"
-                        className={`form-control ${
-                          fieldErrors["foreclosureSale.reoContactFirstName"]
-                            ? "is-invalid"
-                            : ""
-                        }`}
-                        value={
-                          formData.foreclosureSale?.reoContactFirstName || ""
-                        }
-                        readOnly={!isEditing}
-                        onChange={(e) =>
-                          updateForeclosureSale(
-                            "reoContactFirstName",
-                            e.target.value
-                          )
-                        }
-                      />
-                      {fieldErrors["foreclosureSale.reoContactFirstName"] && (
-                        <div className="text-danger small mt-1">
-                          {fieldErrors["foreclosureSale.reoContactFirstName"]}
+                      </div>
+                      <div className="col-md-6">
+                        <div className="form-group mb-3">
+                          <label className="form-label">
+                            Vesting Entity Name {isMortgageeInvestor ? "*" : ""}
+                            {isMortgageeInvestor && (
+                              <span className="text-muted small ms-1">(If Mortgagee/Investor)</span>
+                            )}
+                          </label>
+                          <input
+                            type="text"
+                            className={`form-control ${
+                              fieldErrors["foreclosureSale.vestingEntityName"]
+                                ? "is-invalid"
+                                : ""
+                            }`}
+                            value={
+                              formData.foreclosureSale?.vestingEntityName || ""
+                            }
+                            readOnly={!isEditing}
+                            onChange={(e) =>
+                              updateForeclosureSale(
+                                "vestingEntityName",
+                                e.target.value
+                              )
+                            }
+                          />
+                          {fieldErrors["foreclosureSale.vestingEntityName"] && (
+                            <div className="text-danger small mt-1">
+                              {fieldErrors["foreclosureSale.vestingEntityName"]}
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="col-md-6">
-                    <div className="form-group mb-3">
-                      <label className="form-label">
-                        REO Contact Last Name *
-                      </label>
-                      <input
-                        type="text"
-                        className={`form-control ${
-                          fieldErrors["foreclosureSale.reoContactLastName"]
-                            ? "is-invalid"
-                            : ""
-                        }`}
-                        value={
-                          formData.foreclosureSale?.reoContactLastName || ""
-                        }
-                        readOnly={!isEditing}
-                        onChange={(e) =>
-                          updateForeclosureSale(
-                            "reoContactLastName",
-                            e.target.value
-                          )
-                        }
-                      />
-                      {fieldErrors["foreclosureSale.reoContactLastName"] && (
-                        <div className="text-danger small mt-1">
-                          {fieldErrors["foreclosureSale.reoContactLastName"]}
+                      </div>
+                      <div className="col-md-6">
+                        <div className="form-group mb-3">
+                          <label className="form-label">REO Entity Name</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={formData.foreclosureSale?.reoEntityName || ""}
+                            readOnly={!isEditing}
+                            onChange={(e) =>
+                              updateForeclosureSale("reoEntityName", e.target.value)
+                            }
+                          />
                         </div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="col-md-6">
-                    <div className="form-group mb-3">
-                      <label className="form-label">REO Business Phone *</label>
-                      <input
-                        type="text"
-                        className={`form-control ${
-                          fieldErrors["foreclosureSale.reoBusinessPhone"]
-                            ? "is-invalid"
-                            : ""
-                        }`}
-                        value={formData.foreclosureSale?.reoBusinessPhone || ""}
-                        readOnly={!isEditing}
-                        onChange={(e) =>
-                          updateForeclosureSale(
-                            "reoBusinessPhone",
-                            e.target.value
-                          )
-                        }
-                      />
-                      {fieldErrors["foreclosureSale.reoBusinessPhone"] && (
-                        <div className="text-danger small mt-1">
-                          {fieldErrors["foreclosureSale.reoBusinessPhone"]}
+                      </div>
+                      <div className="col-md-6">
+                        <div className="form-group mb-3">
+                          <label className="form-label">
+                            REO Contact First Name {isMortgageeInvestor ? "*" : ""}
+                            {isMortgageeInvestor && (
+                              <span className="text-muted small ms-1">(If Mortgagee/Investor)</span>
+                            )}
+                          </label>
+                          <input
+                            type="text"
+                            className={`form-control ${
+                              fieldErrors["foreclosureSale.reoContactFirstName"]
+                                ? "is-invalid"
+                                : ""
+                            }`}
+                            value={
+                              formData.foreclosureSale?.reoContactFirstName || ""
+                            }
+                            readOnly={!isEditing}
+                            onChange={(e) =>
+                              updateForeclosureSale(
+                                "reoContactFirstName",
+                                e.target.value
+                              )
+                            }
+                          />
+                          {fieldErrors["foreclosureSale.reoContactFirstName"] && (
+                            <div className="text-danger small mt-1">
+                              {fieldErrors["foreclosureSale.reoContactFirstName"]}
+                            </div>
+                          )}
                         </div>
-                      )}
+                      </div>
+                      <div className="col-md-6">
+                        <div className="form-group mb-3">
+                          <label className="form-label">
+                            REO Contact Last Name {isMortgageeInvestor ? "*" : ""}
+                            {isMortgageeInvestor && (
+                              <span className="text-muted small ms-1">(If Mortgagee/Investor)</span>
+                            )}
+                          </label>
+                          <input
+                            type="text"
+                            className={`form-control ${
+                              fieldErrors["foreclosureSale.reoContactLastName"]
+                                ? "is-invalid"
+                                : ""
+                            }`}
+                            value={
+                              formData.foreclosureSale?.reoContactLastName || ""
+                            }
+                            readOnly={!isEditing}
+                            onChange={(e) =>
+                              updateForeclosureSale(
+                                "reoContactLastName",
+                                e.target.value
+                              )
+                            }
+                          />
+                          {fieldErrors["foreclosureSale.reoContactLastName"] && (
+                            <div className="text-danger small mt-1">
+                              {fieldErrors["foreclosureSale.reoContactLastName"]}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="col-md-6">
+                        <div className="form-group mb-3">
+                          <label className="form-label">
+                            REO Business Phone {isMortgageeInvestor ? "*" : ""}
+                            {isMortgageeInvestor && (
+                              <span className="text-muted small ms-1">(If Mortgagee/Investor)</span>
+                            )}
+                          </label>
+                          <input
+                            type="text"
+                            className={`form-control ${
+                              fieldErrors["foreclosureSale.reoBusinessPhone"]
+                                ? "is-invalid"
+                                : ""
+                            }`}
+                            value={formData.foreclosureSale?.reoBusinessPhone || ""}
+                            readOnly={!isEditing}
+                            onChange={(e) =>
+                              updateForeclosureSale(
+                                "reoBusinessPhone",
+                                e.target.value
+                              )
+                            }
+                          />
+                          {fieldErrors["foreclosureSale.reoBusinessPhone"] && (
+                            <div className="text-danger small mt-1">
+                              {fieldErrors["foreclosureSale.reoBusinessPhone"]}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="col-md-6">
+                        <div className="form-group mb-3">
+                          <label className="form-label">REO Emergency Phone</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={
+                              formData.foreclosureSale?.reoEmergencyPhone || ""
+                            }
+                            readOnly={!isEditing}
+                            onChange={(e) =>
+                              updateForeclosureSale(
+                                "reoEmergencyPhone",
+                                e.target.value
+                              )
+                            }
+                          />
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                  <div className="col-md-6">
-                    <div className="form-group mb-3">
-                      <label className="form-label">REO Emergency Phone</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={
-                          formData.foreclosureSale?.reoEmergencyPhone || ""
-                        }
-                        readOnly={!isEditing}
-                        onChange={(e) =>
-                          updateForeclosureSale(
-                            "reoEmergencyPhone",
-                            e.target.value
-                          )
-                        }
-                      />
-                    </div>
-                  </div>
-                </div>
+                  );
+                })()}
               </div>
             </div>
           )}

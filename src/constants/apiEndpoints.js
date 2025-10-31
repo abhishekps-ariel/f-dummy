@@ -41,6 +41,7 @@ export const COMMON_ENDPOINTS = {
   GET_PETITION_LOAN_TYPES: "/Common/get-petition-loan-types",
   GET_PETITION_ASSIGNEE_TYPES: "/Common/get-petition-assignee-types",
   GET_PETITION_ASSIGNEE_ROLES: "/Common/get-petition-assignee-roles",
+  GET_BUYER_TYPES: "/Common/get-buyer-type",
 };
 
 export const PETITION_ENDPOINTS = {
