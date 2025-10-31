@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { toast } from "react-toastify";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -35,6 +35,9 @@ const ViewAllPetitions = ({ onBack }) => {
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [petitionToDelete, setPetitionToDelete] = useState(null);
+  
+  // Use ref to store fetchPetitions so event listener always has latest version
+  const fetchPetitionsRef = useRef();
 
   const handleConfirmDelete = async () => {
     try {
@@ -114,6 +117,7 @@ const ViewAllPetitions = ({ onBack }) => {
       if (response.success) {
         const transformedPetitions =
           petitionApiService.transformApiResponseToDisplayFormat(response);
+        // Update state - this will trigger a re-render and show the updated table
         setPetitions(transformedPetitions);
 
         // Update pagination info from API response
@@ -136,6 +140,12 @@ const ViewAllPetitions = ({ onBack }) => {
       setLoading(false);
     }
   };
+
+  // Keep ref updated with latest fetchPetitions function
+  // The ref will be used in the event listener to access the current function
+  useEffect(() => {
+    fetchPetitionsRef.current = fetchPetitions;
+  }, [organization?.id, searchQuery, statusFilter, dateFilter, customDateFrom, customDateTo, sortBy, sortOrder]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Helper function to get status value for API
   const getStatusValue = (status) => {
@@ -447,15 +457,15 @@ const ViewAllPetitions = ({ onBack }) => {
     openTab(petition);
   };
 
-  const handlePetitionSubmitted = async () => {
+  const handlePetitionSubmitted = () => {
     // Reload petitions data to show the latest submitted petition
-    try {
-      await fetchPetitions(pagination.currentPage);
-    } catch (error) {
-      // Don't show error toast here as the submission was successful
-      // The user will see the success message from the submission itself
+    // Call fetchPetitions with page 1 - exactly like delete does but explicitly page 1
+    // fetchPetitions will update pagination state automatically
+    if (typeof fetchPetitions === "function") {
+      fetchPetitions(1);
     }
   };
+
 
   const handleSort = (field) => {
     if (sortBy === field) {
@@ -1278,7 +1288,10 @@ const ViewAllPetitions = ({ onBack }) => {
           } else if (activeTab.type === "petition") {
             return (
               <div className="shadow-custom bg-white org-search-box">
-                <PetitionTabContent petition={activeTab.data} />
+                <PetitionTabContent 
+                  petition={activeTab.data} 
+                  onPetitionUpdated={handlePetitionSubmitted}
+                />
               </div>
             );
           }

@@ -11,8 +11,8 @@ import "./PetitionForm.css";
 import { useJsApiLoader } from "@react-google-maps/api";
 import Config from "../../config/index";
 
-const PetitionTabContent = ({ petition }) => {
-  const { loadingTabs, activeTabId } = useTabs();
+const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
+  const { loadingTabs, activeTabId, refreshTab, tabs } = useTabs();
   const {
     getLoanTypes,
     getAssigneeTypes,
@@ -21,7 +21,7 @@ const PetitionTabContent = ({ petition }) => {
     getOptionName,
     loading: commonDataLoading,
   } = usePetitionCommonData();
-  const { submitPetition, hasOrganizationAccess } = usePetitions();
+  const { submitPetition, hasOrganizationAccess, fetchPetitions } = usePetitions();
 
   // Single edit mode state - makes all fields editable at once
   const [isEditing, setIsEditing] = useState(false);
@@ -42,6 +42,7 @@ const PetitionTabContent = ({ petition }) => {
   const [predictions, setPredictions] = useState([]);
   const [isLoadingPredictions, setIsLoadingPredictions] = useState(false);
   const propertyAddressInputRef = useRef(null);
+  const signatureSectionRef = useRef(null);
   // Borrower address autocomplete
   const [borrowerPredictions, setBorrowerPredictions] = useState({}); // { [borrowerId]: Prediction[] }
   const [isLoadingBorrowerPredictions, setIsLoadingBorrowerPredictions] =
@@ -726,7 +727,8 @@ const PetitionTabContent = ({ petition }) => {
     // Loan basics
     if (!formData.loanNumber) errors.loanNumber = "Required";
     if (!formData.petitionLoanTypeId) errors.petitionLoanTypeId = "Required";
-    if (!formData.lienPosition && formData.lienPosition !== 0)
+    // Note: lienPosition can be 0 (for "First"), so we check for null/undefined/empty string specifically
+    if (formData.lienPosition == null || formData.lienPosition === "")
       errors.lienPosition = "Required";
 
     // Borrowers: require at least one primary with name and address
@@ -774,16 +776,41 @@ const PetitionTabContent = ({ petition }) => {
       if (!emailOk) errors.filingContactEmail = "Invalid email";
     }
 
+    // E-consent validation - check if at least one signature has e-consent checked
+    const signatures = formData.signatures || [];
+    if (signatures.length > 0) {
+      const hasEconsent = signatures.some((sig) => sig.esignConsent === true);
+      if (!hasEconsent) {
+        errors.esignConsent = "E-sign consent is required before submission";
+      }
+    } else {
+      // If no signatures exist, that's also an error
+      errors.signatures = "At least one signature is required";
+    }
+
     if (Object.keys(errors).length) {
       setFieldErrors((prev) => ({ ...prev, ...errors }));
-      // Attempt to focus first invalid field
-      const firstKey = Object.keys(errors)[0];
-      const el =
-        document.querySelector(`[name="${firstKey}"]`) ||
-        document.querySelector(`[data-error-key="${firstKey}"]`);
-      if (el && typeof el.scrollIntoView === "function") {
-        el.scrollIntoView({ behavior: "smooth", block: "center" });
-        if (typeof el.focus === "function") el.focus();
+      
+      // Special handling for e-consent error - scroll to signature section if it's present
+      if (errors.esignConsent && signatureSectionRef.current) {
+        setTimeout(() => {
+          signatureSectionRef.current?.scrollIntoView({ 
+            behavior: "smooth", 
+            block: "center" 
+          });
+        }, 100);
+      } else {
+        // Attempt to focus first invalid field
+        const firstKey = Object.keys(errors)[0];
+        const el =
+          document.querySelector(`[name="${firstKey}"]`) ||
+          document.querySelector(`[data-error-key="${firstKey}"]`);
+        if (el && typeof el.scrollIntoView === "function") {
+          setTimeout(() => {
+            el.scrollIntoView({ behavior: "smooth", block: "center" });
+            if (typeof el.focus === "function") el.focus();
+          }, 100);
+        }
       }
       return false;
     }
@@ -1038,6 +1065,18 @@ const PetitionTabContent = ({ petition }) => {
       await submitPetition(petitionData, true, petition.id);
       // Toast message is shown by submitPetition function
       setIsEditing(false);
+      
+      // Call the callback to refresh the petitions list (just like delete does)
+      // Small delay to ensure backend has processed the update
+      setTimeout(() => {
+        if (onPetitionUpdated) {
+          onPetitionUpdated();
+        }
+      }, 200);
+      // Then refresh the tab data
+      if (activeTabId && refreshTab) {
+        await refreshTab(activeTabId);
+      }
     } catch (error) {
       toast.error("Failed to save draft. Please try again.");
     } finally {
@@ -1067,6 +1106,18 @@ const PetitionTabContent = ({ petition }) => {
       await submitPetition(petitionData, false, petition.id);
       // Toast message is shown by submitPetition function
       setIsEditing(false);
+      
+      // Call the callback to refresh the petitions list (just like delete does)
+      // Small delay to ensure backend has processed the update
+      setTimeout(() => {
+        if (onPetitionUpdated) {
+          onPetitionUpdated();
+        }
+      }, 200);
+      // Then refresh the tab data
+      if (activeTabId && refreshTab) {
+        await refreshTab(activeTabId);
+      }
     } catch (error) {
       toast.error("Failed to submit petition. Please try again.");
     } finally {
@@ -3612,12 +3663,22 @@ const PetitionTabContent = ({ petition }) => {
           </div>
 
           {/* Signatures Section */}
-          <div className={`card mb-4 ${isEditing ? "editing" : ""}`}>
+          <div 
+            ref={signatureSectionRef}
+            className={`card mb-4 ${isEditing ? "editing" : ""} ${
+              fieldErrors.esignConsent ? "border-danger" : ""
+            }`}
+          >
             <SectionHeader title="Signatures" />
             <div className="card-body">
-              {petition.details?.signatures &&
-              petition.details.signatures.length > 0 ? (
-                petition.details.signatures.map((signature, index) => (
+              {(() => {
+                // Use formData.signatures when editing, otherwise use petition.details.signatures
+                const signatures = isEditing 
+                  ? (formData?.signatures || [])
+                  : (petition.details?.signatures || []);
+                
+                return signatures.length > 0 ? (
+                  signatures.map((signature, index) => (
                   <div key={index} className="border rounded p-3 mb-3">
                     <h6 className="mb-3 fw-semibold">Signature {index + 1}</h6>
                     <div className="row">
@@ -3628,7 +3689,7 @@ const PetitionTabContent = ({ petition }) => {
                             type="text"
                             className="form-control"
                             value={signature.signerFullName || "N/A"}
-                            readOnly
+                            readOnly={!isEditing}
                           />
                         </div>
                       </div>
@@ -3639,7 +3700,7 @@ const PetitionTabContent = ({ petition }) => {
                             type="text"
                             className="form-control"
                             value={signature.signerTitle || "N/A"}
-                            readOnly
+                            readOnly={!isEditing}
                           />
                         </div>
                       </div>
@@ -3650,19 +3711,65 @@ const PetitionTabContent = ({ petition }) => {
                             type="text"
                             className="form-control"
                             value={signature.signerEmail || "N/A"}
-                            readOnly
+                            readOnly={!isEditing}
                           />
                         </div>
                       </div>
                       <div className="col-md-6">
                         <div className="form-group mb-3">
-                          <label className="form-label">E-Sign Consent</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            value={signature.esignConsent ? "Yes" : "No"}
-                            readOnly
-                          />
+                          <label className="form-label">
+                            E-Sign Consent {isEditing && "*"}
+                          </label>
+                          {isEditing ? (
+                            <>
+                              <div className="form-check">
+                                <input
+                                  className={`form-check-input ${
+                                    fieldErrors.esignConsent ? "is-invalid" : ""
+                                  }`}
+                                  type="checkbox"
+                                  id={`esignConsent_${index}`}
+                                  checked={signature.esignConsent || false}
+                                  onChange={(e) => {
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      signatures: prev.signatures.map((sig, idx) =>
+                                        idx === index
+                                          ? { ...sig, esignConsent: e.target.checked }
+                                          : sig
+                                      ),
+                                    }));
+                                    // Clear error when user checks the box
+                                    if (e.target.checked && fieldErrors.esignConsent) {
+                                      setFieldErrors((prev) => {
+                                        const newErrors = { ...prev };
+                                        delete newErrors.esignConsent;
+                                        return newErrors;
+                                      });
+                                    }
+                                  }}
+                                />
+                                <label
+                                  className="form-check-label"
+                                  htmlFor={`esignConsent_${index}`}
+                                >
+                                  I consent to electronic signature
+                                </label>
+                              </div>
+                              {fieldErrors.esignConsent && (
+                                <div className="text-danger small mt-1">
+                                  {fieldErrors.esignConsent}
+                                </div>
+                              )}
+                            </>
+                          ) : (
+                            <input
+                              type="text"
+                              className="form-control"
+                              value={signature.esignConsent ? "Yes" : "No"}
+                              readOnly
+                            />
+                          )}
                         </div>
                       </div>
                       <div className="col-md-6">
@@ -3703,9 +3810,10 @@ const PetitionTabContent = ({ petition }) => {
                     </div>
                   </div>
                 ))
-              ) : (
-                <p className="text-muted">No signature information available</p>
-              )}
+                ) : (
+                  <p className="text-muted">No signature information available</p>
+                );
+              })()}
             </div>
           </div>
         </form>

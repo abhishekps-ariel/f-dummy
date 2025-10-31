@@ -324,6 +324,62 @@ export const TabProvider = ({ children }) => {
     return tabs.find(tab => tab.id === activeTabId);
   };
 
+  // Refresh a specific tab's data (useful after submission/save)
+  const refreshTab = async (tabId) => {
+    const tab = tabs.find(t => t.id === tabId);
+    if (!tab || tab.type !== 'petition') return;
+    
+    const petitionId = tab.id.replace('petition-', '');
+    
+    // Set loading state
+    setTabs(prevTabs => 
+      prevTabs.map(t => 
+        t.id === tabId ? { ...t, isLoading: true, data: null } : t
+      )
+    );
+    setLoadingTabs(prev => new Set([...prev, tabId]));
+    
+    try {
+      // Fetch fresh petition data
+      const response = await petitionApiService.getPetitionById(petitionId);
+      const detailedPetition = petitionApiService.transformSinglePetitionResponse(response);
+      
+      if (detailedPetition) {
+        // Update tab with fresh data
+        setTabs(prevTabs => 
+          prevTabs.map(t => 
+            t.id === tabId 
+              ? {
+                  ...t,
+                  title: detailedPetition.petitionNumber,
+                  data: detailedPetition,
+                  isLoading: false
+                }
+              : t
+          )
+        );
+      }
+    } catch (error) {
+      // Keep existing data on error
+      setTabs(prevTabs => 
+        prevTabs.map(t => 
+          t.id === tabId 
+            ? {
+                ...t,
+                isLoading: false
+              }
+            : t
+        )
+      );
+    } finally {
+      setLoadingTabs(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(tabId);
+        return newSet;
+      });
+    }
+  };
+
  const value = {
     tabs,
     setTabs,
@@ -333,7 +389,8 @@ export const TabProvider = ({ children }) => {
     closeTab,
     switchToTab,
     getActiveTab,
-    loadingTabs
+    loadingTabs,
+    refreshTab
   };
 
   return (

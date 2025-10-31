@@ -2214,11 +2214,11 @@ const PetitionSteps = ({
     }
 
     // Lien Position is required
+    // Note: lienPosition can be 0 (for "First"), so we need to check for null/undefined/empty string specifically
 
     if (
-      !formData.lienPosition ||
-      formData.lienPosition === "" ||
-      formData.lienPosition === 0
+      formData.lienPosition == null ||
+      formData.lienPosition === ""
     ) {
       errors.lienPosition = "Lien Position is required";
 
@@ -3131,6 +3131,11 @@ const PetitionSteps = ({
       }
 
       // Prepare petition data with isAllStepsCompleted: false for draft
+      // For drafts, preserve existing signature data if available, otherwise create new
+
+      const existingSignature = formData.signatures && formData.signatures.length > 0 
+        ? formData.signatures[0] 
+        : null;
 
       const petitionData = {
         isAllStepsCompleted: false,
@@ -3147,15 +3152,17 @@ const PetitionSteps = ({
 
             signerEmail: formData.signerEmail || "",
 
-            esignConsent: true,
+            // For drafts, use certification_check if available, otherwise preserve existing esignConsent value
+            // This way if user checks the box and saves draft, it's preserved
+            esignConsent: formData.certification_check ?? existingSignature?.esignConsent ?? false,
 
-            signatureDrawnOrTyped: userProfile?.signatureUrl || "",
+            signatureDrawnOrTyped: existingSignature?.signatureDrawnOrTyped || userProfile?.signatureUrl || "",
 
-            signedAt: new Date().toISOString(),
+            signedAt: existingSignature?.signedAt || (existingSignature ? "" : new Date().toISOString()),
 
-            signerIp: "", // Will be filled by backend
+            signerIp: existingSignature?.signerIp || "", // Will be filled by backend
 
-            otpCode: "", // Will be filled by backend
+            otpCode: existingSignature?.otpCode || "", // Will be filled by backend
           },
         ],
       };
@@ -3525,6 +3532,11 @@ const PetitionSteps = ({
 
     try {
       // Prepare petition data with signature information
+      // For final submit, use certification_check to set esignConsent
+
+      const existingSignature = formData.signatures && formData.signatures.length > 0 
+        ? formData.signatures[0] 
+        : null;
 
       const petitionData = {
         isAllStepsCompleted: true,
@@ -3541,9 +3553,10 @@ const PetitionSteps = ({
 
             signerEmail: formData.signerEmail || "",
 
-            esignConsent: true,
+            // Use certification_check value for esignConsent (user must have checked it to get here)
+            esignConsent: formData.certification_check || false,
 
-            signatureDrawnOrTyped: userProfile?.signatureUrl || "",
+            signatureDrawnOrTyped: existingSignature?.signatureDrawnOrTyped || userProfile?.signatureUrl || "",
 
             signedAt: new Date().toISOString(),
 
