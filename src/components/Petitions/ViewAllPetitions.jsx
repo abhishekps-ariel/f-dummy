@@ -493,7 +493,7 @@ const ViewAllPetitions = ({ onBack }) => {
                 <div className="petitions-header-section mb-4">
                   {/* Desktop Layout */}
                   <div className="d-none d-md-flex align-items-center justify-content-between">
-                    <h2 className="font-med mb-0">All Petitions</h2>
+                    <h2 className="font-med mb-0">  Petitions</h2>
 
                     <div className="d-flex gap-3 align-items-center">
                       {/* Create New Petition Button */}
@@ -1291,7 +1291,11 @@ const ViewAllPetitions = ({ onBack }) => {
               </div>
             );
           } else if (activeTab.type === "petition") {
-            return <PetitionTabContent petition={activeTab.data} />;
+            return (
+              <div className="shadow-custom bg-white org-search-box">
+                <PetitionTabContent petition={activeTab.data} />
+              </div>
+            );
           }
 
           return null;
