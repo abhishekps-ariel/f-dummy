@@ -1,10 +1,10 @@
-import React from 'react'
+import React from "react";
 import logo from "../../assets/logo-index.png";
 
 export default function HomeFooter() {
   return (
     <div>
-        <footer className="app-footer py-4">
+      <footer className="app-footer py-4">
         <div className="container">
           <div className="row align-items-center">
             {/* Left Column: Seal/Logo */}
@@ -39,13 +39,13 @@ export default function HomeFooter() {
               </p>
               <p className="mb-0 font-sm text-gray-dark">
                 Mass.gov® is a registered service mark of the Commonwealth of
-                Massachusetts. 
+                Massachusetts.
                 <br></br>
                 <a href="#" className="text-decoration-underline">
-                  Mass.gov 
+                  Mass.gov
                 </a>
                 <a href="#" className="text-decoration-underline  ms-2">
-                 Privacy Policy
+                  Privacy Policy
                 </a>
               </p>
             </div>
@@ -53,5 +53,5 @@ export default function HomeFooter() {
         </div>
       </footer>
     </div>
-  )
+  );
 }

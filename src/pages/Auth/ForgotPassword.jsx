@@ -27,7 +27,7 @@ function ForgotPassword() {
   const handleChange = (e) => {
     const { value } = e.target;
     setEmail(value);
-    
+
     // Clear error when user typing
     if (errors.email) {
       setErrors({ ...errors, email: "" });
@@ -36,27 +36,31 @@ function ForgotPassword() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       toast.error("Please fix the errors below");
       return;
     }
 
     if (isSubmitting) return;
-    
+
     setIsSubmitting(true);
-    
+
     try {
       const response = await forgotPassword(email);
-      
+
       if (response.isSuccess) {
-        toast.success(response.msg || "Password reset email sent! Please check your inbox.");
+        toast.success(
+          response.msg || "Password reset email sent! Please check your inbox."
+        );
         // Store email in localStorage for resend functionality
-        localStorage.setItem('resetEmail', email);
+        localStorage.setItem("resetEmail", email);
         // Navigate to password email sent page
         window.location.href = "/password-email-sent";
       } else {
-        toast.error(response.msg || "Failed to send reset email. Please try again.");
+        toast.error(
+          response.msg || "Failed to send reset email. Please try again."
+        );
       }
     } catch (error) {
       // Handle specific error messages from API response
@@ -75,8 +79,7 @@ function ForgotPassword() {
       <div className="container container-md-auto">
         <div className="row m-0">
           <div className="col-lg-5 col-md-4 px-0">
-            <div className="login-right-image">
-            </div>
+            <div className="login-right-image"></div>
           </div>
           <div className="col-lg-7 col-md-8">
             <div className="login-inner d-flex flex-column align-items-center justify-content-center">
@@ -88,7 +91,10 @@ function ForgotPassword() {
                     </Link>
                   </div>
                   <h2 className="font-xl-med fw-bold">Forgot your password?</h2>
-                  <p className="font-base">Enter your email so that we can send you password reset link.</p>
+                  <p className="font-base">
+                    Enter your email so that we can send you password reset
+                    link.
+                  </p>
                 </div>
 
                 <div className="form-group">
@@ -99,7 +105,9 @@ function ForgotPassword() {
                     </div>
                     <input
                       type="email"
-                      className={`form-control ${errors.email ? 'is-invalid' : ''}`}
+                      className={`form-control ${
+                        errors.email ? "is-invalid" : ""
+                      }`}
                       placeholder="hello@example.com"
                       value={email}
                       onChange={handleChange}
@@ -113,30 +121,38 @@ function ForgotPassword() {
                   )}
                 </div>
 
-                <button 
-                  className="btn custom-btn theme-btn text-center w-100" 
+                <button
+                  className="btn custom-btn theme-btn text-center w-100"
                   type="submit"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? (
                     <>
-                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                      <span
+                        className="spinner-border spinner-border-sm me-2"
+                        role="status"
+                        aria-hidden="true"
+                      ></span>
                       Sending...
                     </>
                   ) : (
-                    'Send Email'
+                    "Send Email"
                   )}
                 </button>
                 <div className="text-center mt-4">
-                  <Link to="/login" className="font-base fw-medium text-decoration-none">
-                    <i className="fa-solid fa-chevron-left me-1"></i> Back to Login
+                  <Link
+                    to="/login"
+                    className="font-base fw-medium text-decoration-none"
+                  >
+                    <i className="fa-solid fa-chevron-left me-1"></i> Back to
+                    Login
                   </Link>
                 </div>
               </form>
             </div>
           </div>
         </div>
-      </div> 
+      </div>
     </div>
   );
 }

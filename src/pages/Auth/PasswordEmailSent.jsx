@@ -10,9 +10,9 @@ function PasswordEmailSent() {
   const [isResending, setIsResending] = useState(false);
 
   useEffect(() => {
-    const storedEmail = localStorage.getItem('resetEmail');
+    const storedEmail = localStorage.getItem("resetEmail");
     if (storedEmail) {
-      setEmail(storedEmail);  
+      setEmail(storedEmail);
     }
   }, []);
 
@@ -21,17 +21,21 @@ function PasswordEmailSent() {
       toast.error("Email not found. Please try again.");
       return;
     }
-     if (isResending) return;
-    
+    if (isResending) return;
+
     setIsResending(true);
-    
+
     try {
       const response = await forgotPassword(email);
-      
+
       if (response.isSuccess) {
-        toast.success(response.msg || "Reset email sent again! Please check your inbox.");
+        toast.success(
+          response.msg || "Reset email sent again! Please check your inbox."
+        );
       } else {
-        toast.error(response.msg || "Failed to resend email. Please try again.");
+        toast.error(
+          response.msg || "Failed to resend email. Please try again."
+        );
       }
     } catch (error) {
       toast.error("Failed to resend email. Please try again.");
@@ -45,8 +49,7 @@ function PasswordEmailSent() {
       <div className="container container-md-auto">
         <div className="row m-0">
           <div className="col-lg-5 col-md-4 px-0">
-            <div className="login-right-image">
-            </div>
+            <div className="login-right-image"></div>
           </div>
           <div className="col-lg-7 col-md-8">
             <div className="login-inner d-flex flex-column align-items-center justify-content-center">
@@ -59,17 +62,21 @@ function PasswordEmailSent() {
                   </div>
                   <h2 className="font-xl-med fw-bold">Check your email!</h2>
                   <p className="font-base">
-                    Thanks! An email has been sent with a link to reset your password. 
-                    Please check your inbox and follow the instructions to continue.
+                    Thanks! An email has been sent with a link to reset your
+                    password. Please check your inbox and follow the
+                    instructions to continue.
                   </p>
                 </div>
 
-                <Link to="/login" className="btn custom-btn theme-btn text-center w-100">
+                <Link
+                  to="/login"
+                  className="btn custom-btn theme-btn text-center w-100"
+                >
                   Back to Login
                 </Link>
-                
+
                 <div className="text-center mt-4">
-                  <button 
+                  <button
                     type="button"
                     onClick={handleResendEmail}
                     className="btn btn-link font-base fw-medium text-decoration-none p-0"
@@ -77,12 +84,17 @@ function PasswordEmailSent() {
                   >
                     {isResending ? (
                       <>
-                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        <span
+                          className="spinner-border spinner-border-sm me-2"
+                          role="status"
+                          aria-hidden="true"
+                        ></span>
                         Resending...
                       </>
                     ) : (
                       <>
-                        <i className="fa-solid fa-chevron-left me-1"></i> Resend Email
+                        <i className="fa-solid fa-chevron-left me-1"></i> Resend
+                        Email
                       </>
                     )}
                   </button>

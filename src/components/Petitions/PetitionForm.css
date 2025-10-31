@@ -174,16 +174,16 @@
   .petition-form .card-body {
     padding: 1rem;
   }
-  
+
   .petition-form .form-control {
     padding: 0.6rem 0.8rem;
     font-size: 0.9rem;
   }
-  
+
   .petition-form .card-header {
     padding: 0.8rem 1rem;
   }
-  
+
   .petition-form .card-header h5 {
     font-size: 1rem;
   }
@@ -290,7 +290,11 @@
 }
 
 .petition-form .card.editing .card-header {
-  background: linear-gradient(135deg, var(--theme-color) 0%, #015080 100%) !important;
+  background: linear-gradient(
+    135deg,
+    var(--theme-color) 0%,
+    #015080 100%
+  ) !important;
 }
 
 .petition-form .form-control.editing {

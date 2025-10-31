@@ -1,5 +1,5 @@
-import React from 'react';
-import { useTabs } from '../../context/TabContext';
+import React from "react";
+import { useTabs } from "../../context/TabContext";
 
 const TabBar = () => {
   const { tabs, activeTabId, switchToTab, closeTab, loadingTabs } = useTabs();
@@ -10,7 +10,7 @@ const TabBar = () => {
         {tabs.map((tab) => (
           <div
             key={tab.id}
-            className={`tab ${tab.id === activeTabId ? 'active' : ''}`}
+            className={`tab ${tab.id === activeTabId ? "active" : ""}`}
             onClick={() => switchToTab(tab.id)}
           >
             <div className="tab-content">
@@ -38,7 +38,6 @@ const TabBar = () => {
           </div>
         ))}
       </div>
-      
     </div>
   );
 };

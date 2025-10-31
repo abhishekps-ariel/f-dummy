@@ -2,7 +2,10 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { register } from "../../services/authService";
-import { getJoinRequest, bindUserToOrganization } from "../../services/organizationService";
+import {
+  getJoinRequest,
+  bindUserToOrganization,
+} from "../../services/organizationService";
 import { ROUTES } from "../../constants/routerConstants";
 import loginImg from "../../assets/logo-sample.png";
 import PasswordGuidelines from "../../components/shared/PasswordGuidelines";
@@ -13,7 +16,7 @@ import "../../styles/custom.css";
 function Register() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -31,9 +34,9 @@ function Register() {
     hasUppercase: false,
     hasLowercase: false,
     hasNumber: false,
-    hasSpecialChar: false
+    hasSpecialChar: false,
   });
-  
+
   // Invite flow state
   const [inviteData, setInviteData] = useState(null);
   const [isInviteFlow, setIsInviteFlow] = useState(false);
@@ -42,14 +45,14 @@ function Register() {
 
   // Handle invite parameters on component mount
   useEffect(() => {
-    const joinRequestId = searchParams.get('joinRequestId');
-    const isAdminInvite = searchParams.get('isAdminInvite') === 'true';
-    
+    const joinRequestId = searchParams.get("joinRequestId");
+    const isAdminInvite = searchParams.get("isAdminInvite") === "true";
+
     if (joinRequestId) {
       setIsInviteFlow(true);
       setIsLoadingInvite(true);
       setInviteError(null);
-      
+
       // Fetch invite data
       fetchInviteData(joinRequestId, isAdminInvite);
     }
@@ -58,22 +61,22 @@ function Register() {
   const fetchInviteData = async (joinRequestId, isAdminInvite) => {
     try {
       const response = await getJoinRequest(joinRequestId);
-      
+
       if (response.isSuccess) {
         // Access email from the nested data structure
         const email = response.data.data?.email || response.data.email;
-        
+
         if (email) {
           setInviteData({
             joinRequestId,
             isAdminInvite,
-            email: email
+            email: email,
           });
-          
+
           // Pre-fill email field
-          setFormData(prev => ({
+          setFormData((prev) => ({
             ...prev,
-            email: email
+            email: email,
           }));
         } else {
           setInviteError("Email not found in invite data");
@@ -82,7 +85,9 @@ function Register() {
         setInviteError("Invalid or expired invite link");
       }
     } catch (error) {
-      setInviteError("Failed to load invite details. Please check your link and try again.");
+      setInviteError(
+        "Failed to load invite details. Please check your link and try again."
+      );
     } finally {
       setIsLoadingInvite(false);
     }
@@ -94,7 +99,7 @@ function Register() {
       hasUppercase: /[A-Z]/.test(password),
       hasLowercase: /[a-z]/.test(password),
       hasNumber: /\d/.test(password),
-      hasSpecialChar: /[@#$%^&*]/.test(password)
+      hasSpecialChar: /[@#$%^&*]/.test(password),
     };
     setPasswordGuidelines(guidelines);
   };
@@ -132,13 +137,16 @@ function Register() {
       if (formData.password.length < 8) {
         newErrors.password = "Password must be at least 8 characters long";
       } else if (!/[A-Z]/.test(formData.password)) {
-        newErrors.password = "Password must contain at least one uppercase letter";
+        newErrors.password =
+          "Password must contain at least one uppercase letter";
       } else if (!/[a-z]/.test(formData.password)) {
-        newErrors.password = "Password must contain at least one lowercase letter";
+        newErrors.password =
+          "Password must contain at least one lowercase letter";
       } else if (!/\d/.test(formData.password)) {
         newErrors.password = "Password must contain at least one number";
       } else if (!/[@#$%^&*]/.test(formData.password)) {
-        newErrors.password = "Password must contain at least one special character (@#$%^&*)";
+        newErrors.password =
+          "Password must contain at least one special character (@#$%^&*)";
       }
     }
 
@@ -155,12 +163,12 @@ function Register() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
-    
+
     if (errors[name]) {
       setErrors({ ...errors, [name]: "" });
     }
 
-    if (name === 'password') {
+    if (name === "password") {
       if (value.length > 0) {
         setShowPasswordGuidelines(true);
       }
@@ -168,54 +176,63 @@ function Register() {
     }
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  if (!validateForm()) {
-    return;
-  }
+    if (!validateForm()) {
+      return;
+    }
 
-  if (isSubmitting) return;
+    if (isSubmitting) return;
 
-  setIsSubmitting(true);
+    setIsSubmitting(true);
 
-  try {
-    // For invite flow, pass invite data to registration
-    const response = await register(formData, inviteData);
-    
-    if (response.isSuccess) {
-      if (isInviteFlow) {
-        // For invite flow, bind user to organization if userId is returned
-        if (response.data && response.data.userId && inviteData) {
-          try {
-            await bindUserToOrganization(inviteData.joinRequestId, response.data.userId);
-            toast.success("Account created and organization access granted! Please login to continue.");
-          } catch (bindError) {
-            toast.success("Account created successfully! Please login to continue.");
-            // Still navigate to login even if binding fails
+    try {
+      // For invite flow, pass invite data to registration
+      const response = await register(formData, inviteData);
+
+      if (response.isSuccess) {
+        if (isInviteFlow) {
+          // For invite flow, bind user to organization if userId is returned
+          if (response.data && response.data.userId && inviteData) {
+            try {
+              await bindUserToOrganization(
+                inviteData.joinRequestId,
+                response.data.userId
+              );
+              toast.success(
+                "Account created and organization access granted! Please login to continue."
+              );
+            } catch (bindError) {
+              toast.success(
+                "Account created successfully! Please login to continue."
+              );
+              // Still navigate to login even if binding fails
+            }
+          } else {
+            toast.success(
+              "Account created successfully! Please login to continue."
+            );
           }
+          navigate(ROUTES.LOGIN);
         } else {
-          toast.success("Account created successfully! Please login to continue.");
+          // For normal registration, go to email verification
+          navigate(ROUTES.VERIFICATION_EMAIL_SENT);
         }
-        navigate(ROUTES.LOGIN);
       } else {
-        // For normal registration, go to email verification
-        navigate(ROUTES.VERIFICATION_EMAIL_SENT);
+        toast.error(response.msg || "Registration failed!");
       }
-    } else {
-      toast.error(response.msg || "Registration failed!");
+    } catch (err) {
+      // Handle specific error messages from API response
+      if (err.response?.data?.message) {
+        toast.error(err.response.data.message);
+      } else {
+        toast.error(err.message || "Registration failed!");
+      }
+    } finally {
+      setIsSubmitting(false);
     }
-  } catch (err) {
-    // Handle specific error messages from API response
-    if (err.response?.data?.message) {
-      toast.error(err.response.data.message);
-    } else {
-      toast.error(err.message || "Registration failed!");
-    }
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+  };
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -233,11 +250,16 @@ const handleSubmit = async (e) => {
             <div className="col-lg-7 col-md-8">
               <div className="login-inner d-flex flex-column align-items-center justify-content-center register-inner">
                 <div className="text-center">
-                  <div className="spinner-border text-primary mb-3" role="status">
+                  <div
+                    className="spinner-border text-primary mb-3"
+                    role="status"
+                  >
                     <span className="visually-hidden">Loading...</span>
                   </div>
                   <h5>Loading invite details...</h5>
-                  <p className="text-muted">Please wait while we verify your invite link.</p>
+                  <p className="text-muted">
+                    Please wait while we verify your invite link.
+                  </p>
                 </div>
               </div>
             </div>
@@ -281,8 +303,7 @@ const handleSubmit = async (e) => {
       <div className="container container-md-auto">
         <div className="row m-0">
           <div className="col-lg-5 col-md-4 px-0">
-            <div className="login-right-image">
-            </div>
+            <div className="login-right-image"></div>
           </div>
           <div className="col-lg-7 col-md-8">
             <div className="login-inner d-flex flex-column align-items-center justify-content-center register-inner">
@@ -299,7 +320,8 @@ const handleSubmit = async (e) => {
                   {isInviteFlow ? (
                     <div className="alert alert-info mb-3" role="alert">
                       <i className="fa-solid fa-info-circle me-2"></i>
-                      You've been invited to join an organization. Complete your registration below.
+                      You've been invited to join an organization. Complete your
+                      registration below.
                     </div>
                   ) : (
                     <p className="font-base">
@@ -320,7 +342,9 @@ const handleSubmit = async (e) => {
                     <input
                       name="firstName"
                       type="text"
-                      className={`form-control ${errors.firstName ? 'is-invalid' : ''}`}
+                      className={`form-control ${
+                        errors.firstName ? "is-invalid" : ""
+                      }`}
                       placeholder="First Name"
                       value={formData.firstName}
                       onChange={handleChange}
@@ -343,7 +367,9 @@ const handleSubmit = async (e) => {
                     <input
                       name="lastName"
                       type="text"
-                      className={`form-control ${errors.lastName ? 'is-invalid' : ''}`}
+                      className={`form-control ${
+                        errors.lastName ? "is-invalid" : ""
+                      }`}
                       placeholder="Last Name"
                       value={formData.lastName}
                       onChange={handleChange}
@@ -360,7 +386,7 @@ const handleSubmit = async (e) => {
                 <div className="form-group">
                   <label className="label-text">Phone Number</label>
                   <PhoneInput
-                    country={'us'}
+                    country={"us"}
                     value={formData.phoneNumber}
                     onChange={(phone) => {
                       setFormData({ ...formData, phoneNumber: `+${phone}` });
@@ -368,31 +394,39 @@ const handleSubmit = async (e) => {
                         setErrors({ ...errors, phoneNumber: "" });
                       }
                     }}
-                    inputClass={`form-control ${errors.phoneNumber ? 'is-invalid' : ''}`}
+                    inputClass={`form-control ${
+                      errors.phoneNumber ? "is-invalid" : ""
+                    }`}
                     containerClass="phone-input-container"
                     buttonClass="phone-input-button"
                     dropdownClass="phone-input-dropdown"
                     inputStyle={{
-                      width: '100%',
-                      height: '48px',
-                      fontSize: '16px',
-                      paddingLeft: '48px',
-                      borderRadius: '8px',
-                      border: errors.phoneNumber ? '1px solid #dc3545' : '1px solid #ced4da'
+                      width: "100%",
+                      height: "48px",
+                      fontSize: "16px",
+                      paddingLeft: "48px",
+                      borderRadius: "8px",
+                      border: errors.phoneNumber
+                        ? "1px solid #dc3545"
+                        : "1px solid #ced4da",
                     }}
                     buttonStyle={{
-                      borderRadius: '8px 0 0 8px',
-                      border: errors.phoneNumber ? '1px solid #dc3545' : '1px solid #ced4da',
-                      borderRight: 'none',
-                      backgroundColor: '#fff'
+                      borderRadius: "8px 0 0 8px",
+                      border: errors.phoneNumber
+                        ? "1px solid #dc3545"
+                        : "1px solid #ced4da",
+                      borderRight: "none",
+                      backgroundColor: "#fff",
                     }}
                     containerStyle={{
-                      width: '100%'
+                      width: "100%",
                     }}
                   />
                   {errors.phoneNumber && (
                     <div className="invalid-feedback d-block">
-                      <small className="text-danger">{errors.phoneNumber}</small>
+                      <small className="text-danger">
+                        {errors.phoneNumber}
+                      </small>
                     </div>
                   )}
                 </div>
@@ -406,13 +440,15 @@ const handleSubmit = async (e) => {
                     <input
                       name="email"
                       type="email"
-                      className={`form-control ${errors.email ? 'is-invalid' : ''} ${isInviteFlow ? 'bg-light' : ''}`}
+                      className={`form-control ${
+                        errors.email ? "is-invalid" : ""
+                      } ${isInviteFlow ? "bg-light" : ""}`}
                       placeholder="hello@example.com"
                       value={formData.email}
                       onChange={handleChange}
                       readOnly={isInviteFlow}
                       required
-                      style={isInviteFlow ? { cursor: 'not-allowed' } : {}}
+                      style={isInviteFlow ? { cursor: "not-allowed" } : {}}
                     />
                   </div>
                   {errors.email && (
@@ -426,7 +462,7 @@ const handleSubmit = async (e) => {
                     </small>
                   )}
                 </div>
-                
+
                 <div className="form-group">
                   <label className="label-text">Create Password</label>
                   <div className="input-group position-relative">
@@ -436,7 +472,9 @@ const handleSubmit = async (e) => {
                     <input
                       name="password"
                       type={showPassword ? "text" : "password"}
-                      className={`form-control ${errors.password ? 'is-invalid' : ''}`}
+                      className={`form-control ${
+                        errors.password ? "is-invalid" : ""
+                      }`}
                       placeholder="Password"
                       value={formData.password}
                       onChange={handleChange}
@@ -444,16 +482,20 @@ const handleSubmit = async (e) => {
                       onBlur={() => setShowPasswordGuidelines(false)}
                       required
                     />
-                    <span 
-                      className="password-eye" 
+                    <span
+                      className="password-eye"
                       onClick={togglePasswordVisibility}
-                      style={{ cursor: 'pointer' }}
-                      title={showPassword ? 'Hide password' : 'Show password'}
+                      style={{ cursor: "pointer" }}
+                      title={showPassword ? "Hide password" : "Show password"}
                     >
-                      <i className={`fa-solid ${showPassword ? 'fa-eye' : 'fa-eye-slash'}`}></i>
+                      <i
+                        className={`fa-solid ${
+                          showPassword ? "fa-eye" : "fa-eye-slash"
+                        }`}
+                      ></i>
                     </span>
                     {/* Password Guidelines Tooltip */}
-                    <PasswordGuidelines 
+                    <PasswordGuidelines
                       showGuidelines={showPasswordGuidelines}
                       passwordGuidelines={passwordGuidelines}
                     />
@@ -463,9 +505,8 @@ const handleSubmit = async (e) => {
                       <small className="text-danger">{errors.password}</small>
                     </div>
                   )}
-                  
                 </div>
-          
+
                 <div className="form-group">
                   <label className="label-text">Confirm Password</label>
                   <div className="input-group position-relative">
@@ -475,24 +516,32 @@ const handleSubmit = async (e) => {
                     <input
                       name="confirmPassword"
                       type={showPassword ? "text" : "password"}
-                      className={`form-control ${errors.confirmPassword ? 'is-invalid' : ''}`}
+                      className={`form-control ${
+                        errors.confirmPassword ? "is-invalid" : ""
+                      }`}
                       placeholder="Confirm Password"
                       value={formData.confirmPassword}
                       onChange={handleChange}
                       required
                     />
-                    <span 
-                      className="password-eye" 
+                    <span
+                      className="password-eye"
                       onClick={togglePasswordVisibility}
-                      style={{ cursor: 'pointer' }}
-                      title={showPassword ? 'Hide password' : 'Show password'}
+                      style={{ cursor: "pointer" }}
+                      title={showPassword ? "Hide password" : "Show password"}
                     >
-                      <i className={`fa-solid ${showPassword ? 'fa-eye' : 'fa-eye-slash'}`}></i>
+                      <i
+                        className={`fa-solid ${
+                          showPassword ? "fa-eye" : "fa-eye-slash"
+                        }`}
+                      ></i>
                     </span>
                   </div>
                   {errors.confirmPassword && (
                     <div className="invalid-feedback d-block">
-                      <small className="text-danger">{errors.confirmPassword}</small>
+                      <small className="text-danger">
+                        {errors.confirmPassword}
+                      </small>
                     </div>
                   )}
                 </div>
@@ -504,11 +553,19 @@ const handleSubmit = async (e) => {
                 >
                   {isSubmitting ? (
                     <>
-                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                      {isInviteFlow ? "Completing Registration..." : "Creating Account..."}
+                      <span
+                        className="spinner-border spinner-border-sm me-2"
+                        role="status"
+                        aria-hidden="true"
+                      ></span>
+                      {isInviteFlow
+                        ? "Completing Registration..."
+                        : "Creating Account..."}
                     </>
+                  ) : isInviteFlow ? (
+                    "Complete Registration"
                   ) : (
-                    isInviteFlow ? 'Complete Registration' : 'Create Account'
+                    "Create Account"
                   )}
                 </button>
               </form>

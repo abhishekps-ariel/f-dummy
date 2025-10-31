@@ -8,7 +8,7 @@ import "../../styles/custom.css";
 function VerificationPage() {
   const [searchParams] = useSearchParams();
   const { token: pathToken } = useParams();
-  
+
   const [isLoading, setIsLoading] = useState(true);
   const [isVerified, setIsVerified] = useState(false);
   const [verificationMessage, setVerificationMessage] = useState("");
@@ -49,41 +49,60 @@ function VerificationPage() {
 
         if (response.isSuccess) {
           setIsVerified(true);
-          setVerificationMessage(response.msg || "Your account has been verified successfully.");
-          
-          sessionStorage.setItem(`verify_${token}`, JSON.stringify({
-            isVerified: true,
-            message: response.msg || "Your account has been verified successfully."
-          }));
+          setVerificationMessage(
+            response.msg || "Your account has been verified successfully."
+          );
+
+          sessionStorage.setItem(
+            `verify_${token}`,
+            JSON.stringify({
+              isVerified: true,
+              message:
+                response.msg || "Your account has been verified successfully.",
+            })
+          );
         } else {
-          const backendMessage = response.msg || "Verification link expired or invalid.";
-          const isExpired = backendMessage === "Verification token has expired. Please request a new one.";
-          
+          const backendMessage =
+            response.msg || "Verification link expired or invalid.";
+          const isExpired =
+            backendMessage ===
+            "Verification token has expired. Please request a new one.";
+
           let userMessage;
           let showAsVerified = false;
-          
+
           if (isExpired) {
-            userMessage = "Your verification link has expired. Please request a new one to complete verification.";
-          } else if (backendMessage.includes("Invalid or unknown verification token")) {
-            userMessage = "Your account has already been verified. You can now log in!";
+            userMessage =
+              "Your verification link has expired. Please request a new one to complete verification.";
+          } else if (
+            backendMessage.includes("Invalid or unknown verification token")
+          ) {
+            userMessage =
+              "Your account has already been verified. You can now log in!";
             showAsVerified = true;
           } else {
-            userMessage = "Unable to verify your account. Please try again or contact support.";
+            userMessage =
+              "Unable to verify your account. Please try again or contact support.";
           }
-          
+
           setIsVerified(showAsVerified);
           setVerificationMessage(userMessage);
           setShowResendForm(isExpired);
-          
-          sessionStorage.setItem(`verify_${token}`, JSON.stringify({
-            isVerified: showAsVerified,
-            message: userMessage,
-            showResend: isExpired
-          }));
+
+          sessionStorage.setItem(
+            `verify_${token}`,
+            JSON.stringify({
+              isVerified: showAsVerified,
+              message: userMessage,
+              showResend: isExpired,
+            })
+          );
         }
       } catch {
         setIsVerified(false);
-        setVerificationMessage("An error occurred during verification. Please try again.");
+        setVerificationMessage(
+          "An error occurred during verification. Please try again."
+        );
         toast.error("Verification failed. Please try again.");
       } finally {
         setIsLoading(false);
@@ -113,7 +132,9 @@ function VerificationPage() {
         toast.success(response.msg || "Verification link sent to your email!");
         setUserEmail("");
       } else {
-        toast.error(response.msg || "Failed to send verification link. Please try again.");
+        toast.error(
+          response.msg || "Failed to send verification link. Please try again."
+        );
       }
     } catch {
       toast.error("Failed to send verification link. Please try again.");
@@ -121,7 +142,7 @@ function VerificationPage() {
       setIsResending(false);
     }
   };
-  
+
   return (
     <div className="login">
       <div className="container container-md-auto">
@@ -138,15 +159,21 @@ function VerificationPage() {
                       <img src={loginImg} alt="logo" className="w-100" />
                     </Link>
                   </div>
-                  
+
                   {isLoading ? (
                     <div className="mb-4">
                       <div className="verification-icon d-inline-flex align-items-center justify-content-center mb-3">
-                        <div className="spinner-border text-primary" role="status" style={{ width: '4rem', height: '4rem' }}>
+                        <div
+                          className="spinner-border text-primary"
+                          role="status"
+                          style={{ width: "4rem", height: "4rem" }}
+                        >
                           <span className="visually-hidden">Loading...</span>
                         </div>
                       </div>
-                      <h2 className="font-xl-med fw-bold">Verifying Email...</h2>
+                      <h2 className="font-xl-med fw-bold">
+                        Verifying Email...
+                      </h2>
                       <p className="font-base text-muted">
                         Please wait while we verify your email address.
                       </p>
@@ -155,14 +182,19 @@ function VerificationPage() {
                     <>
                       <div className="mb-4">
                         <div className="verification-icon d-inline-flex align-items-center justify-content-center mb-3">
-                          <i className="fa-solid fa-check-circle text-success" style={{ fontSize: '4rem' }}></i>
+                          <i
+                            className="fa-solid fa-check-circle text-success"
+                            style={{ fontSize: "4rem" }}
+                          ></i>
                         </div>
-                        <h2 className="font-xl-med fw-bold text-success">Account Verified!</h2>
+                        <h2 className="font-xl-med fw-bold text-success">
+                          Account Verified!
+                        </h2>
                         <p className="font-base text-muted">
                           {verificationMessage}
                         </p>
                       </div>
-                      
+
                       <Link
                         to="/login"
                         className="btn custom-btn theme-btn text-center w-100"
@@ -175,21 +207,32 @@ function VerificationPage() {
                     <>
                       <div className="mb-4">
                         <div className="verification-icon d-inline-flex align-items-center justify-content-center mb-3">
-                          <i className={`fa-solid ${showResendForm ? 'fa-clock' : 'fa-exclamation-circle'} text-warning`} style={{ fontSize: '4rem' }}></i>
+                          <i
+                            className={`fa-solid ${
+                              showResendForm
+                                ? "fa-clock"
+                                : "fa-exclamation-circle"
+                            } text-warning`}
+                            style={{ fontSize: "4rem" }}
+                          ></i>
                         </div>
                         <h2 className="font-xl-med fw-bold text-warning">
-                          {showResendForm ? 'Link Expired' : 'Verification Error'}
+                          {showResendForm
+                            ? "Link Expired"
+                            : "Verification Error"}
                         </h2>
                         <p className="font-base text-muted">
                           {verificationMessage}
                         </p>
                       </div>
-                      
+
                       <div className="d-flex flex-column gap-3">
                         {showResendForm ? (
                           <>
                             <div className="form-group text-start">
-                              <label className="label-text">Enter your email address</label>
+                              <label className="label-text">
+                                Enter your email address
+                              </label>
                               <div className="input-group">
                                 <div className="user-icon">
                                   <i className="fa-solid fa-envelope"></i>
@@ -204,7 +247,7 @@ function VerificationPage() {
                                 />
                               </div>
                             </div>
-                            
+
                             <button
                               onClick={handleResendLink}
                               className="btn custom-btn theme-btn text-center w-100"
@@ -212,7 +255,11 @@ function VerificationPage() {
                             >
                               {isResending ? (
                                 <>
-                                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                  <span
+                                    className="spinner-border spinner-border-sm me-2"
+                                    role="status"
+                                    aria-hidden="true"
+                                  ></span>
                                   Sending...
                                 </>
                               ) : (
@@ -222,7 +269,7 @@ function VerificationPage() {
                                 </>
                               )}
                             </button>
-                            
+
                             <Link
                               to="/login"
                               className="btn btn-link text-dark-black fw-medium"

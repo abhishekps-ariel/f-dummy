@@ -1,18 +1,25 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { getAllOrganizations, searchOrganizations, submitJoinRequest, getUserJoinRequests, createOrganization, getOrganizationById } from '../../services/organizationService';
-import { useDebounce } from '../../hooks/useDebounce';
-import { toast } from 'react-toastify';
-import { formatDate } from '../../utils/dateUtils';
-import { getAuthData } from '../../utils/storage';
-import { useJsApiLoader } from '@react-google-maps/api';
-import Config from '../../config/index';
+import React, { useState, useEffect, useRef } from "react";
+import {
+  getAllOrganizations,
+  searchOrganizations,
+  submitJoinRequest,
+  getUserJoinRequests,
+  createOrganization,
+  getOrganizationById,
+} from "../../services/organizationService";
+import { useDebounce } from "../../hooks/useDebounce";
+import { toast } from "react-toastify";
+import { formatDate } from "../../utils/dateUtils";
+import { getAuthData } from "../../utils/storage";
+import { useJsApiLoader } from "@react-google-maps/api";
+import Config from "../../config/index";
 
 const OrganizationActions = () => {
   // Google Maps API configuration
   const { isLoaded, loadError } = useJsApiLoader({
-    id: 'google-map-script',
+    id: "google-map-script",
     googleMapsApiKey: Config.GOOGLE_PLACES_API_KEY,
-    libraries: ['places']
+    libraries: ["places"],
   });
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -48,10 +55,11 @@ const OrganizationActions = () => {
   const [isLoadingPredictions, setIsLoadingPredictions] = useState(false);
   const [selectedPredictionIndex, setSelectedPredictionIndex] = useState(-1);
   const [isValidatingAddress, setIsValidatingAddress] = useState(false);
-  const [addressValidationError, setAddressValidationError] = useState('');
+  const [addressValidationError, setAddressValidationError] = useState("");
   const [isAddressVerified, setIsAddressVerified] = useState(false);
-  const [showAddressValidationDialog, setShowAddressValidationDialog] = useState(false);
-  const [addressValidationMessage, setAddressValidationMessage] = useState('');
+  const [showAddressValidationDialog, setShowAddressValidationDialog] =
+    useState(false);
+  const [addressValidationMessage, setAddressValidationMessage] = useState("");
 
   // Google Maps API refs
   const autocompleteServiceRef = useRef(null);
@@ -70,11 +78,13 @@ const OrganizationActions = () => {
   useEffect(() => {
     if (isLoaded && !loadError) {
       try {
-        autocompleteServiceRef.current = new window.google.maps.places.AutocompleteService();
-        placesServiceRef.current = new window.google.maps.places.PlacesService(document.createElement('div'));
+        autocompleteServiceRef.current =
+          new window.google.maps.places.AutocompleteService();
+        placesServiceRef.current = new window.google.maps.places.PlacesService(
+          document.createElement("div")
+        );
         geocoderRef.current = new window.google.maps.Geocoder();
-      } catch (error) {
-      }
+      } catch (error) {}
     } else {
     }
   }, [isLoaded, loadError]);
@@ -94,15 +104,17 @@ const OrganizationActions = () => {
       try {
         const { user } = getAuthData();
         if (user) {
-          setOrgFormData(prev => ({
+          setOrgFormData((prev) => ({
             ...prev,
-            contactName: user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.firstName || user.lastName || '',
-            contactEmail: user.email || '',
-            contactPhone: user.phone || ''
+            contactName:
+              user.firstName && user.lastName
+                ? `${user.firstName} ${user.lastName}`
+                : user.firstName || user.lastName || "",
+            contactEmail: user.email || "",
+            contactPhone: user.phone || "",
           }));
         }
-      } catch (error) {
-      }
+      } catch (error) {}
     };
 
     prefillContactFields();
@@ -202,13 +214,25 @@ const OrganizationActions = () => {
         const requestsWithOrgNames = await Promise.all(
           sortedRequests.map(async (request) => {
             try {
-              const orgResponse = await getOrganizationById(request.organizationId);
+              const orgResponse = await getOrganizationById(
+                request.organizationId
+              );
               if (orgResponse.isSuccess && orgResponse.data) {
                 return {
                   ...request,
                   organizationName: orgResponse.data.name,
                   organizationType: orgResponse.data.type,
-                  organizationAddress: `${orgResponse.data.addressStreet1 || ''}${orgResponse.data.addressStreet2 ? ', ' + orgResponse.data.addressStreet2 : ''}, ${orgResponse.data.addressCity || ''}, ${orgResponse.data.addressState || ''} ${orgResponse.data.addressZip || ''}`.replace(/^,\s*/, '').replace(/,\s*$/, ''),
+                  organizationAddress: `${
+                    orgResponse.data.addressStreet1 || ""
+                  }${
+                    orgResponse.data.addressStreet2
+                      ? ", " + orgResponse.data.addressStreet2
+                      : ""
+                  }, ${orgResponse.data.addressCity || ""}, ${
+                    orgResponse.data.addressState || ""
+                  } ${orgResponse.data.addressZip || ""}`
+                    .replace(/^,\s*/, "")
+                    .replace(/,\s*$/, ""),
                   primaryContactName: orgResponse.data.primaryContactName,
                   primaryContactEmail: orgResponse.data.primaryContactEmail,
                   primaryContactPhone: orgResponse.data.primaryContactPhone,
@@ -261,16 +285,15 @@ const OrganizationActions = () => {
   const handleOrgFormChange = (e) => {
     const { id, value } = e.target;
     setOrgFormData({ ...orgFormData, [id]: value });
-    
+
     // Clear error for this field when user starts typing
     if (orgFormErrors[id]) {
-      setOrgFormErrors({ ...orgFormErrors, [id]: '' });
+      setOrgFormErrors({ ...orgFormErrors, [id]: "" });
     }
   };
 
   // Address autocomplete functionality
   const handleAddressInput = (input) => {
-    
     if (!autocompleteServiceRef.current || !input || !input.trim()) {
       setPredictions([]);
       setShowPredictions(false);
@@ -278,26 +301,32 @@ const OrganizationActions = () => {
     }
 
     setIsLoadingPredictions(true);
-    
+
     const request = {
       input: input,
-      types: ['address'],
-      componentRestrictions: { country: 'us' }
+      types: ["address"],
+      componentRestrictions: { country: "us" },
     };
 
     try {
-      autocompleteServiceRef.current.getPlacePredictions(request, (predictions, status) => {
-        setIsLoadingPredictions(false);
-        
-        if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
-          setPredictions(predictions);
-          setShowPredictions(true);
-          setSelectedPredictionIndex(-1);
-        } else {
-          setPredictions([]);
-          setShowPredictions(false);
+      autocompleteServiceRef.current.getPlacePredictions(
+        request,
+        (predictions, status) => {
+          setIsLoadingPredictions(false);
+
+          if (
+            status === window.google.maps.places.PlacesServiceStatus.OK &&
+            predictions
+          ) {
+            setPredictions(predictions);
+            setShowPredictions(true);
+            setSelectedPredictionIndex(-1);
+          } else {
+            setPredictions([]);
+            setShowPredictions(false);
+          }
         }
-      });
+      );
     } catch (error) {
       setIsLoadingPredictions(false);
       setPredictions([]);
@@ -322,47 +351,50 @@ const OrganizationActions = () => {
 
     const request = {
       placeId: placeId,
-      fields: ['address_components', 'formatted_address', 'geometry']
+      fields: ["address_components", "formatted_address", "geometry"],
     };
 
     placesServiceRef.current.getDetails(request, (place, status) => {
-      if (status === window.google.maps.places.PlacesServiceStatus.OK && place) {
+      if (
+        status === window.google.maps.places.PlacesServiceStatus.OK &&
+        place
+      ) {
         const addressComponents = place.address_components;
-        let streetNumber = '';
-        let route = '';
-        let city = '';
-        let state = '';
-        let zipCode = '';
+        let streetNumber = "";
+        let route = "";
+        let city = "";
+        let state = "";
+        let zipCode = "";
 
-        addressComponents.forEach(component => {
+        addressComponents.forEach((component) => {
           const types = component.types;
-          if (types.includes('street_number')) {
+          if (types.includes("street_number")) {
             streetNumber = component.long_name;
-          } else if (types.includes('route')) {
+          } else if (types.includes("route")) {
             route = component.long_name;
-          } else if (types.includes('locality')) {
+          } else if (types.includes("locality")) {
             city = component.long_name;
-          } else if (types.includes('administrative_area_level_1')) {
+          } else if (types.includes("administrative_area_level_1")) {
             state = component.short_name;
-          } else if (types.includes('postal_code')) {
+          } else if (types.includes("postal_code")) {
             zipCode = component.long_name;
           }
         });
 
         const fullAddress = `${streetNumber} ${route}`.trim();
-        
-        setOrgFormData(prev => ({
+
+        setOrgFormData((prev) => ({
           ...prev,
           addressStreet: fullAddress,
           addressCity: city,
           addressState: state,
-          addressZip: zipCode
+          addressZip: zipCode,
         }));
 
         setShowPredictions(false);
         setPredictions([]);
         setIsAddressVerified(true);
-        setAddressValidationError('');
+        setAddressValidationError("");
       }
     });
   };
@@ -372,25 +404,28 @@ const OrganizationActions = () => {
     if (!showPredictions || predictions.length === 0) return;
 
     switch (e.key) {
-      case 'ArrowDown':
+      case "ArrowDown":
         e.preventDefault();
-        setSelectedPredictionIndex(prev => 
+        setSelectedPredictionIndex((prev) =>
           prev < predictions.length - 1 ? prev + 1 : 0
         );
         break;
-      case 'ArrowUp':
+      case "ArrowUp":
         e.preventDefault();
-        setSelectedPredictionIndex(prev => 
+        setSelectedPredictionIndex((prev) =>
           prev > 0 ? prev - 1 : predictions.length - 1
         );
         break;
-      case 'Enter':
+      case "Enter":
         e.preventDefault();
-        if (selectedPredictionIndex >= 0 && selectedPredictionIndex < predictions.length) {
+        if (
+          selectedPredictionIndex >= 0 &&
+          selectedPredictionIndex < predictions.length
+        ) {
           selectPrediction(predictions[selectedPredictionIndex].place_id);
         }
         break;
-      case 'Escape':
+      case "Escape":
         setShowPredictions(false);
         setSelectedPredictionIndex(-1);
         break;
@@ -401,117 +436,133 @@ const OrganizationActions = () => {
   const validateAddressWithGeocoding = () => {
     return new Promise((resolve) => {
       if (!geocoderRef.current || !orgFormData.addressStreet.trim()) {
-        resolve({ isValid: false, error: 'Street address is required' });
+        resolve({ isValid: false, error: "Street address is required" });
         return;
       }
 
       setIsValidatingAddress(true);
-      setAddressValidationError('');
+      setAddressValidationError("");
 
-      const fullAddress = `${orgFormData.addressStreet}, ${orgFormData.addressCity}, ${orgFormData.addressState} ${orgFormData.addressZip}`.trim();
+      const fullAddress =
+        `${orgFormData.addressStreet}, ${orgFormData.addressCity}, ${orgFormData.addressState} ${orgFormData.addressZip}`.trim();
 
-      geocoderRef.current.geocode({ address: fullAddress }, (results, status) => {
-        setIsValidatingAddress(false);
+      geocoderRef.current.geocode(
+        { address: fullAddress },
+        (results, status) => {
+          setIsValidatingAddress(false);
 
-        if (status === 'OK' && results && results.length > 0) {
-          const result = results[0];
-          const addressComponents = result.address_components;
-          
-          let foundCity = false;
-          let foundState = false;
-          let foundZip = false;
-          let actualState = '';
-          
-          addressComponents.forEach(component => {
-            const types = component.types;
-            if (types.includes('locality') || types.includes('administrative_area_level_2')) {
-              if (component.long_name.toLowerCase().includes(orgFormData.addressCity.toLowerCase())) {
-                foundCity = true;
+          if (status === "OK" && results && results.length > 0) {
+            const result = results[0];
+            const addressComponents = result.address_components;
+
+            let foundCity = false;
+            let foundState = false;
+            let foundZip = false;
+            let actualState = "";
+
+            addressComponents.forEach((component) => {
+              const types = component.types;
+              if (
+                types.includes("locality") ||
+                types.includes("administrative_area_level_2")
+              ) {
+                if (
+                  component.long_name
+                    .toLowerCase()
+                    .includes(orgFormData.addressCity.toLowerCase())
+                ) {
+                  foundCity = true;
+                }
               }
-            }
-            if (types.includes('administrative_area_level_1')) {
-              actualState = component.short_name;
-              if (component.short_name === orgFormData.addressState) {
-                foundState = true;
+              if (types.includes("administrative_area_level_1")) {
+                actualState = component.short_name;
+                if (component.short_name === orgFormData.addressState) {
+                  foundState = true;
+                }
               }
-            }
-            if (types.includes('postal_code')) {
-              if (component.long_name === orgFormData.addressZip) {
-                foundZip = true;
+              if (types.includes("postal_code")) {
+                if (component.long_name === orgFormData.addressZip) {
+                  foundZip = true;
+                }
               }
-            }
-          });
+            });
 
-          if (foundState && foundCity && foundZip) {
-            setIsAddressVerified(true);
-            resolve({ isValid: true, coordinates: result.geometry.location });
+            if (foundState && foundCity && foundZip) {
+              setIsAddressVerified(true);
+              resolve({ isValid: true, coordinates: result.geometry.location });
+            } else {
+              setIsAddressVerified(false);
+              let errorMessage = "Address verification failed. Please check:";
+              if (!foundCity)
+                errorMessage += " City does not match the address";
+              if (!foundZip)
+                errorMessage += " ZIP code does not match the address";
+              if (!foundState)
+                errorMessage += " State does not match the address";
+
+              setAddressValidationError(errorMessage);
+              resolve({ isValid: false, error: "Address verification failed" });
+            }
           } else {
             setIsAddressVerified(false);
-            let errorMessage = 'Address verification failed. Please check:';
-            if (!foundCity) errorMessage += ' City does not match the address';
-            if (!foundZip) errorMessage += ' ZIP code does not match the address';
-            if (!foundState) errorMessage += ' State does not match the address';
-            
-            setAddressValidationError(errorMessage);
-            resolve({ isValid: false, error: 'Address verification failed' });
+            setAddressValidationError(
+              "Invalid address. Please select from suggestions or enter a valid address."
+            );
+            resolve({ isValid: false, error: "Invalid address" });
           }
-        } else {
-          setIsAddressVerified(false);
-          setAddressValidationError('Invalid address. Please select from suggestions or enter a valid address.');
-          resolve({ isValid: false, error: 'Invalid address' });
         }
-      });
+      );
     });
   };
 
   const validateOrgForm = () => {
     const errors = {};
-    
+
     if (!orgFormData.orgName.trim()) {
-      errors.orgName = 'Organization name is required';
+      errors.orgName = "Organization name is required";
     }
-    
+
     if (!orgFormData.orgType.trim()) {
-      errors.orgType = 'Organization type is required';
+      errors.orgType = "Organization type is required";
     }
-    
+
     if (!orgFormData.addressStreet.trim()) {
-      errors.addressStreet = 'Street address is required';
+      errors.addressStreet = "Street address is required";
     }
-    
+
     if (!orgFormData.addressCity.trim()) {
-      errors.addressCity = 'City is required';
+      errors.addressCity = "City is required";
     }
-    
+
     if (!orgFormData.addressState.trim()) {
-      errors.addressState = 'State is required';
+      errors.addressState = "State is required";
     }
-    
+
     if (!orgFormData.addressZip.trim()) {
-      errors.addressZip = 'ZIP code is required';
+      errors.addressZip = "ZIP code is required";
     }
-    
+
     if (!orgFormData.contactName.trim()) {
-      errors.contactName = 'Contact name is required';
+      errors.contactName = "Contact name is required";
     }
-    
+
     if (!orgFormData.contactEmail.trim()) {
-      errors.contactEmail = 'Email is required';
+      errors.contactEmail = "Email is required";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(orgFormData.contactEmail)) {
-      errors.contactEmail = 'Please enter a valid email address';
+      errors.contactEmail = "Please enter a valid email address";
     }
-    
+
     if (!orgFormData.contactPhone.trim()) {
-      errors.contactPhone = 'Phone number is required';
+      errors.contactPhone = "Phone number is required";
     }
-    
+
     setOrgFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
   const handleOrgSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Validate form before submission
     if (!validateOrgForm()) {
       toast.error("Please fill in all required fields correctly");
@@ -521,11 +572,13 @@ const OrganizationActions = () => {
     // Validate address with Geocoding API
     const addressValidation = await validateAddressWithGeocoding();
     if (!addressValidation.isValid) {
-      setAddressValidationMessage(addressValidationError || 'Address validation failed');
+      setAddressValidationMessage(
+        addressValidationError || "Address validation failed"
+      );
       setShowAddressValidationDialog(true);
       return;
     }
-    
+
     setIsCreatingOrg(true);
 
     try {
@@ -705,600 +758,719 @@ const OrganizationActions = () => {
 
   return (
     <>
-    <div className="shadow-custom bg-white org-search-box">
-      {/* Show organization search section only if user has no join requests */}
-      {hasLoadedJoinRequests && joinRequests.length === 0 && (
-        <>
-          <div className="d-flex align-items-center justify-content-between mb-3">
-            <h2 className="h5 mb-0">Organization Required</h2>
-            <button
-              className="dashboard-btn-create"
-              data-bs-toggle="modal"
-              data-bs-target="#createorganizationModal"
-            >
-              <i className="fa-solid fa-plus me-1"></i> Create Organization
-            </button>
-          </div>
-
-          <p className="text-muted mb-4">
-            You need to be part of an organization to access the Petition Dashboard. You can either join an existing organization or create a new organization.
-          </p>
-
-          {/* Organization Search */}
-          <div className="search-form-wrapper mb-4" ref={searchRef}>
-            <form
-              className="search-form"
-              role="search"
-              onSubmit={handleJoinRequest}
-            >
-              {/* Selected Organization Display */}
-              {selectedOrganization ? (
-                <div className="selected-org-container">
-                  <div className="selected-org-badge">
-                    <div className="selected-org-icon">
-                      <i className="fa-solid fa-building"></i>
-                    </div>
-                    <div className="selected-org-info">
-                      <div className="selected-org-name">
-                        {selectedOrganization.name}
-                      </div>
-                      <div className="selected-org-details">
-                        {selectedOrganization.type && (
-                          <span className="selected-org-type">
-                            {selectedOrganization.type}
-                          </span>
-                        )}
-                        {selectedOrganization.addressStreet1 && (
-                          <span className="selected-org-address">
-                            {" "}
-                            • {`${selectedOrganization.addressStreet1 || ''}${selectedOrganization.addressStreet2 ? ', ' + selectedOrganization.addressStreet2 : ''}, ${selectedOrganization.addressCity || ''}, ${selectedOrganization.addressState || ''} ${selectedOrganization.addressZip || ''}`.replace(/^,\s*/, '').replace(/,\s*$/, '')}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      className="selected-org-remove"
-                      onClick={handleRemoveOrganization}
-                      title="Remove selection"
-                    >
-                      <i className="fa-solid fa-times"></i>
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="search-input-container">
-                  <input
-                    className="form-control"
-                    type="search"
-                    placeholder="Search by organization name or EIN"
-                    aria-label="Search"
-                    value={searchQuery}
-                    onChange={handleSearchInputChange}
-                    onFocus={handleSearchFocus}
-                  />
-
-                  {/* Search Dropdown */}
-                  {showDropdown && (
-                    <div className="org-search-dropdown">
-                      {isLoadingOrgs ? (
-                        <div className="org-search-loading">
-                          <div
-                            className="spinner-border spinner-border-sm text-primary me-2"
-                            role="status"
-                          >
-                            <span className="visually-hidden">Loading...</span>
-                          </div>
-                          <span>Loading organizations...</span>
-                        </div>
-                      ) : organizations.length > 0 ? (
-                        <div className="org-search-results">
-                          {organizations.map((org) => (
-                            <div
-                              key={org.id}
-                              className="org-search-item"
-                              onClick={() => handleOrganizationSelect(org)}
-                            >
-                              <div className="org-item-name">{org.name}</div>
-                              <div className="org-item-details">
-                                <span className="org-item-type">
-                                  <i className="fa-solid fa-building me-1"></i>
-                                  {org.type || "N/A"}
-                                </span>
-                                {(org.addressStreet1 || org.addressCity || org.addressState || org.addressZip) && (
-                                  <span className="org-item-address ms-3">
-                                    <i className="fa-solid fa-location-dot me-1"></i>
-                                    {`${org.addressStreet1 || ''}${org.addressStreet2 ? ', ' + org.addressStreet2 : ''}, ${org.addressCity || ''}, ${org.addressState || ''} ${org.addressZip || ''}`.replace(/^,\s*/, '').replace(/,\s*$/, '')}
-                                  </span>
-                                )}
-                              </div>
-                              {(org.primaryContactName || org.primaryContactEmail || org.primaryContactPhone) && (
-                                <div className="org-item-contact">
-                                  <i className="fa-solid fa-user me-1"></i>
-                                  {org.primaryContactName && <span>{org.primaryContactName}</span>}
-                                  {org.primaryContactEmail && <span className="ms-2">{org.primaryContactEmail}</span>}
-                                  {org.primaryContactPhone && <span className="ms-2">{org.primaryContactPhone}</span>}
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="org-search-no-results">
-                          <i className="fa-solid fa-search me-2"></i>
-                          No organizations found.
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              <div className="mt-3">
-                <button
-                  className="dashboard-btn-submit"
-                  type="submit"
-                  disabled={!selectedOrganization || isSubmittingJoinRequest}
-                >
-                  {isSubmittingJoinRequest ? (
-                    <>
-                      <span
-                        className="spinner-border spinner-border-sm me-2"
-                        role="status"
-                        aria-hidden="true"
-                      ></span>
-                      Submitting...
-                    </>
-                  ) : (
-                    "Submit Join Request"
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        </>
-      )}
-
-      {/* Join Request Status */}
-      {(isLoadingJoinRequests || (hasLoadedJoinRequests && joinRequests.length > 0)) && (
-        <div className="join-requests-section">
-          <div className="d-flex align-items-center justify-content-between mb-4">
-            <h2 className="h4 mb-0 fw-bold">Request Status</h2>
-            <button
-              className="dashboard-btn-refresh"
-              onClick={loadJoinRequests}
-              disabled={isLoadingJoinRequests}
-            >
-              <i
-                className={`fa-solid fa-refresh ${isLoadingJoinRequests ? "fa-spin" : ""}`}
-              ></i>
-            </button>
-          </div>
-
-          {isLoadingJoinRequests ? (
-            <div className="text-center py-4">
-              <div className="spinner-border text-primary" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </div>
-              <p className="mt-2 text-muted fs-6">Loading join requests...</p>
-            </div>
-          ) : joinRequests.length > 0 ? (
-            <>
-              {/* Status Message */}
-              <div className="alert alert-info mb-4" role="alert">
-                <div className="d-flex align-items-center">
-                  <i className="fa-solid fa-info-circle me-3 fs-5"></i>
-                  <div>
-                    <h6 className="alert-heading mb-1">Join Request Already Sent</h6>
-                    <p className="mb-0 fs-6">Your request has been submitted successfully. Please wait for organization approval.</p>
-                  </div>
-                </div>
-              </div>
-            <div className="join-requests-list">
-              {joinRequests.map((request) => {
-                const statusInfo = getStatusInfo(request.status);
-                return (
-                  <div key={request.id} className="join-request-item p-4 border rounded-3 mb-3">
-                    <div className="join-request-header d-flex justify-content-between align-items-start mb-3">
-                      <div className="join-request-org">
-                        <i className="fa-solid fa-building me-2 fs-5"></i>
-                        <span className="org-name fs-5 fw-bold">
-                          {request.organizationName || "Organization"}
-                        </span>
-                      </div>
-                      <div className={`join-request-status ${statusInfo.class} px-3 py-2 rounded-pill`}>
-                        <i className={`fa-solid ${statusInfo.icon} me-2`}></i>
-                        <span className="fw-semibold">{statusInfo.text}</span>
-                      </div>
-                    </div>
-                    <div className="join-request-details">
-                      {request.organizationType && (
-                        <div className="join-request-org-details mb-2">
-                          <i className="fa-solid fa-tag me-2 text-muted"></i>
-                          <span className="fs-6">
-                            <strong>Type:</strong> {request.organizationType}
-                          </span>
-                        </div>
-                      )}
-                      {request.organizationAddress && (
-                        <div className="join-request-org-details mb-2">
-                          <i className="fa-solid fa-location-dot me-2 text-muted"></i>
-                          <span className="fs-6">
-                            <strong>Address:</strong> {request.organizationAddress}
-                          </span>
-                        </div>
-                      )}
-                      <div className="join-request-date mb-2">
-                        <i className="fa-solid fa-calendar me-2 text-muted"></i>
-                        <span className="fs-6">
-                          <strong>Requested:</strong> {formatDate(request.requestedOn)}
-                        </span>
-                      </div>
-                      {request.respondedOn && (
-                        <div className="join-request-response-date mb-2">
-                          <i className="fa-solid fa-check me-2 text-muted"></i>
-                          <span className="fs-6">
-                            <strong>Responded:</strong> {formatDate(request.respondedOn)}
-                          </span>
-                        </div>
-                      )}
-                      {request.adminComment && (
-                        <div className="join-request-comment mt-3 p-3 bg-light rounded">
-                          <i className="fa-solid fa-comment me-2 text-muted"></i>
-                          <span className="fs-6">
-                            <strong>Admin Comment:</strong> {request.adminComment}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            </>
-          ) : null}
-        </div>
-      )}
-
-      {/* Create Organization Modal */}
-      <div
-        className="modal fade"
-        id="createorganizationModal"
-        tabIndex="-1"
-        aria-labelledby="organizationModalLabel"
-        aria-hidden="true"
-      >
-        <div className="modal-dialog modal-lg modal-dialog-centered">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h5 className="modal-title" id="organizationModalLabel">
-                Create Organization
-              </h5>
+      <div className="shadow-custom bg-white org-search-box">
+        {/* Show organization search section only if user has no join requests */}
+        {hasLoadedJoinRequests && joinRequests.length === 0 && (
+          <>
+            <div className="d-flex align-items-center justify-content-between mb-3">
+              <h2 className="h5 mb-0">Organization Required</h2>
               <button
-                type="button"
-                className="btn-close"
-                data-bs-dismiss="modal"
-                aria-label="Close"
-              ></button>
+                className="dashboard-btn-create"
+                data-bs-toggle="modal"
+                data-bs-target="#createorganizationModal"
+              >
+                <i className="fa-solid fa-plus me-1"></i> Create Organization
+              </button>
             </div>
-            <div className="modal-body p-4">
-              <form id="organizationForm" onSubmit={handleOrgSubmit}>
-                <div className="row g-3">
-                  <div className="col-12">
-                    <label htmlFor="orgName" className="form-label">
-                      Organization Name <span className="text-danger">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      className={`form-control ${orgFormErrors.orgName ? 'is-invalid' : ''}`}
-                      id="orgName"
-                      value={orgFormData.orgName}
-                      onChange={handleOrgFormChange}
-                    />
-                    {orgFormErrors.orgName && (
-                      <div className="text-danger small mt-1">
-                        {orgFormErrors.orgName}
+
+            <p className="text-muted mb-4">
+              You need to be part of an organization to access the Petition
+              Dashboard. You can either join an existing organization or create
+              a new organization.
+            </p>
+
+            {/* Organization Search */}
+            <div className="search-form-wrapper mb-4" ref={searchRef}>
+              <form
+                className="search-form"
+                role="search"
+                onSubmit={handleJoinRequest}
+              >
+                {/* Selected Organization Display */}
+                {selectedOrganization ? (
+                  <div className="selected-org-container">
+                    <div className="selected-org-badge">
+                      <div className="selected-org-icon">
+                        <i className="fa-solid fa-building"></i>
                       </div>
-                    )}
-                  </div>
-                  <div className="col-12">
-                    <label htmlFor="orgType" className="form-label">
-                      Type <span className="text-danger">*</span>
-                    </label>
-                    <select
-                      className={`form-select ${orgFormErrors.orgType ? 'is-invalid' : ''}`}
-                      id="orgType"
-                      value={orgFormData.orgType}
-                      onChange={handleOrgFormChange}
-                    >
-                      <option value="">Select type</option>
-                      <option value="corporate">Corporate</option>
-                      <option value="nonprofit">Non-Profit</option>
-                      <option value="government">Government</option>
-                      <option value="educational">Educational</option>
-                      <option value="other">Other</option>
-                    </select>
-                    {orgFormErrors.orgType && (
-                      <div className="text-danger small mt-1">
-                        {orgFormErrors.orgType}
-                      </div>
-                    )}
-                  </div>
-                  <div className="col-12">
-                    <label htmlFor="addressStreet" className="form-label">
-                      Street Address <span className="text-danger">*</span>
-                      {isAddressVerified && <span className="text-success ms-2">✓ Verified</span>}
-                    </label>
-                    {loadError ? (
-                      <div>
-                    <input
-                      type="text"
-                          className={`form-control ${orgFormErrors.addressStreet ? 'is-invalid' : ''}`}
-                      id="addressStreet"
-                      value={orgFormData.addressStreet}
-                      onChange={handleOrgFormChange}
-                          placeholder="Enter address manually (Google Maps unavailable)"
-                        />
-                        {orgFormErrors.addressStreet && (
-                          <div className="text-danger small mt-1">
-                            {orgFormErrors.addressStreet}
-                          </div>
-                        )}
-                        <div className="text-danger small mt-1">
-                          ⚠️ Google Maps API failed to load. Please enter address manually.
+                      <div className="selected-org-info">
+                        <div className="selected-org-name">
+                          {selectedOrganization.name}
+                        </div>
+                        <div className="selected-org-details">
+                          {selectedOrganization.type && (
+                            <span className="selected-org-type">
+                              {selectedOrganization.type}
+                            </span>
+                          )}
+                          {selectedOrganization.addressStreet1 && (
+                            <span className="selected-org-address">
+                              {" "}
+                              •{" "}
+                              {`${selectedOrganization.addressStreet1 || ""}${
+                                selectedOrganization.addressStreet2
+                                  ? ", " + selectedOrganization.addressStreet2
+                                  : ""
+                              }, ${selectedOrganization.addressCity || ""}, ${
+                                selectedOrganization.addressState || ""
+                              } ${selectedOrganization.addressZip || ""}`
+                                .replace(/^,\s*/, "")
+                                .replace(/,\s*$/, "")}
+                            </span>
+                          )}
                         </div>
                       </div>
-                    ) : isLoaded ? (
-                      <div className="position-relative">
-                        <input
-                          ref={autocompleteRef}
-                          type="text"
-                          className={`form-control ${orgFormErrors.addressStreet ? 'is-invalid' : ''}`}
-                          id="addressStreet"
-                          value={orgFormData.addressStreet}
-                          onChange={(e) => {
-                            handleOrgFormChange(e);
-                            handleDebouncedAddressInput(e.target.value);
-                          }}
-                          onKeyDown={handleKeyDown}
-                          onBlur={() => {
-                            setTimeout(() => setShowPredictions(false), 300);
-                          }}
-                          onFocus={() => {
-                            if (predictions.length > 0) {
-                              setShowPredictions(true);
-                            }
-                          }}
-                          placeholder="Start typing an address..."
-                          autoComplete="off"
-                        />
-                        
-                        {/* Loading indicator */}
-                        {isLoadingPredictions && (
-                          <div className="position-absolute top-50 end-0 translate-middle-y me-3">
-                            <div className="spinner-border spinner-border-sm text-muted" role="status">
-                              <span className="visually-hidden">Loading...</span>
+                      <button
+                        type="button"
+                        className="selected-org-remove"
+                        onClick={handleRemoveOrganization}
+                        title="Remove selection"
+                      >
+                        <i className="fa-solid fa-times"></i>
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="search-input-container">
+                    <input
+                      className="form-control"
+                      type="search"
+                      placeholder="Search by organization name or EIN"
+                      aria-label="Search"
+                      value={searchQuery}
+                      onChange={handleSearchInputChange}
+                      onFocus={handleSearchFocus}
+                    />
+
+                    {/* Search Dropdown */}
+                    {showDropdown && (
+                      <div className="org-search-dropdown">
+                        {isLoadingOrgs ? (
+                          <div className="org-search-loading">
+                            <div
+                              className="spinner-border spinner-border-sm text-primary me-2"
+                              role="status"
+                            >
+                              <span className="visually-hidden">
+                                Loading...
+                              </span>
                             </div>
+                            <span>Loading organizations...</span>
                           </div>
-                        )}
-                        
-                        {/* Address suggestions dropdown */}
-                        {showPredictions && predictions.length > 0 && (
-                          <div className="position-absolute w-100 bg-white border border-top-0 rounded-bottom shadow-sm" style={{ zIndex: 1050, maxHeight: '200px', overflowY: 'auto' }}>
-                            {predictions.map((prediction, index) => (
+                        ) : organizations.length > 0 ? (
+                          <div className="org-search-results">
+                            {organizations.map((org) => (
                               <div
-                                key={prediction.place_id}
-                                className={`px-3 py-2 cursor-pointer border-bottom ${
-                                  index === selectedPredictionIndex ? 'bg-primary text-white' : 'hover-bg-light'
-                                }`}
-                                onMouseDown={() => selectPrediction(prediction.place_id)}
-                                style={{ cursor: 'pointer' }}
+                                key={org.id}
+                                className="org-search-item"
+                                onClick={() => handleOrganizationSelect(org)}
                               >
-                                <div className="fw-medium">{prediction.structured_formatting.main_text}</div>
-                                <div className="small text-muted">{prediction.structured_formatting.secondary_text}</div>
+                                <div className="org-item-name">{org.name}</div>
+                                <div className="org-item-details">
+                                  <span className="org-item-type">
+                                    <i className="fa-solid fa-building me-1"></i>
+                                    {org.type || "N/A"}
+                                  </span>
+                                  {(org.addressStreet1 ||
+                                    org.addressCity ||
+                                    org.addressState ||
+                                    org.addressZip) && (
+                                    <span className="org-item-address ms-3">
+                                      <i className="fa-solid fa-location-dot me-1"></i>
+                                      {`${org.addressStreet1 || ""}${
+                                        org.addressStreet2
+                                          ? ", " + org.addressStreet2
+                                          : ""
+                                      }, ${org.addressCity || ""}, ${
+                                        org.addressState || ""
+                                      } ${org.addressZip || ""}`
+                                        .replace(/^,\s*/, "")
+                                        .replace(/,\s*$/, "")}
+                                    </span>
+                                  )}
+                                </div>
+                                {(org.primaryContactName ||
+                                  org.primaryContactEmail ||
+                                  org.primaryContactPhone) && (
+                                  <div className="org-item-contact">
+                                    <i className="fa-solid fa-user me-1"></i>
+                                    {org.primaryContactName && (
+                                      <span>{org.primaryContactName}</span>
+                                    )}
+                                    {org.primaryContactEmail && (
+                                      <span className="ms-2">
+                                        {org.primaryContactEmail}
+                                      </span>
+                                    )}
+                                    {org.primaryContactPhone && (
+                                      <span className="ms-2">
+                                        {org.primaryContactPhone}
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
                               </div>
                             ))}
                           </div>
-                        )}
-                        
-                        {/* Field error display */}
-                        {orgFormErrors.addressStreet && (
-                          <div className="text-danger small mt-1">
-                            {orgFormErrors.addressStreet}
-                          </div>
-                        )}
-                        
-                        {/* Address validation error */}
-                        {addressValidationError && (
-                          <div className="text-danger small mt-2">
-                            {addressValidationError}
-                          </div>
-                        )}
-                        
-                        {/* Address validation loading */}
-                        {isValidatingAddress && (
-                          <div className="text-muted small mt-2">
-                            Validating address...
+                        ) : (
+                          <div className="org-search-no-results">
+                            <i className="fa-solid fa-search me-2"></i>
+                            No organizations found.
                           </div>
                         )}
                       </div>
-                    ) : (
-                      <div className="form-control d-flex align-items-center justify-content-center" style={{ height: '38px' }}>
-                        <div className="spinner-border spinner-border-sm text-muted me-2" role="status">
-                          <span className="visually-hidden">Loading...</span>
-                        </div>
-                        <span className="text-muted">Loading Google Maps...</span>
-                      </div>
                     )}
                   </div>
-                  <div className="col-md-6">
-                    <label htmlFor="addressCity" className="form-label">
-                      City <span className="text-danger">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      className={`form-control ${orgFormErrors.addressCity ? 'is-invalid' : ''} ${isAddressVerified ? 'bg-light' : ''}`}
-                      id="addressCity"
-                      value={orgFormData.addressCity}
-                      onChange={handleOrgFormChange}
-                      readOnly={isAddressVerified}
-                    />
-                    {orgFormErrors.addressCity && (
-                      <div className="text-danger small mt-1">
-                        {orgFormErrors.addressCity}
-                      </div>
-                    )}
-                  </div>
-                  <div className="col-md-3">
-                    <label htmlFor="addressState" className="form-label">
-                      State <span className="text-danger">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      className={`form-control ${orgFormErrors.addressState ? 'is-invalid' : ''} ${isAddressVerified ? 'bg-light' : ''}`}
-                      id="addressState"
-                      value={orgFormData.addressState}
-                      onChange={handleOrgFormChange}
-                      readOnly={isAddressVerified}
-                    />
-                    {orgFormErrors.addressState && (
-                      <div className="text-danger small mt-1">
-                        {orgFormErrors.addressState}
-                      </div>
-                    )}
-                  </div>
-                  <div className="col-md-3">
-                    <label htmlFor="addressZip" className="form-label">
-                      Zip Code <span className="text-danger">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      className={`form-control ${orgFormErrors.addressZip ? 'is-invalid' : ''} ${isAddressVerified ? 'bg-light' : ''}`}
-                      id="addressZip"
-                      value={orgFormData.addressZip}
-                      onChange={handleOrgFormChange}
-                      readOnly={isAddressVerified}
-                    />
-                    {orgFormErrors.addressZip && (
-                      <div className="text-danger small mt-1">
-                        {orgFormErrors.addressZip}
-                      </div>
-                    )}
-                  </div>
-                  <div className="col-12">
-                    <label htmlFor="contactName" className="form-label">
-                      Contact Name <span className="text-danger">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      className={`form-control ${orgFormErrors.contactName ? 'is-invalid' : ''}`}
-                      id="contactName"
-                      value={orgFormData.contactName}
-                      onChange={handleOrgFormChange}
-                    />
-                    {orgFormErrors.contactName && (
-                      <div className="text-danger small mt-1">
-                        {orgFormErrors.contactName}
-                      </div>
-                    )}
-                  </div>
-                  <div className="col-md-6">
-                    <label htmlFor="contactEmail" className="form-label">
-                      Email <span className="text-danger">*</span>
-                    </label>
-                    <input
-                      type="email"
-                      className={`form-control ${orgFormErrors.contactEmail ? 'is-invalid' : ''}`}
-                      id="contactEmail"
-                      value={orgFormData.contactEmail}
-                      onChange={handleOrgFormChange}
-                    />
-                    {orgFormErrors.contactEmail && (
-                      <div className="text-danger small mt-1">
-                        {orgFormErrors.contactEmail}
-                      </div>
-                    )}
-                  </div>
-                  <div className="col-md-6">
-                    <label htmlFor="contactPhone" className="form-label">
-                      Phone <span className="text-danger">*</span>
-                    </label>
-                    <input
-                      type="tel"
-                      className={`form-control ${orgFormErrors.contactPhone ? 'is-invalid' : ''}`}
-                      id="contactPhone"
-                      value={orgFormData.contactPhone}
-                      onChange={handleOrgFormChange}
-                    />
-                    {orgFormErrors.contactPhone && (
-                      <div className="text-danger small mt-1">
-                        {orgFormErrors.contactPhone}
-                      </div>
-                    )}
-                  </div>
+                )}
 
-                </div>
-
-                <div className="mt-4">
+                <div className="mt-3">
                   <button
-                    className="dashboard-btn-submit w-100"
+                    className="dashboard-btn-submit"
                     type="submit"
-                    disabled={isCreatingOrg}
+                    disabled={!selectedOrganization || isSubmittingJoinRequest}
                   >
-                    {isCreatingOrg ? (
+                    {isSubmittingJoinRequest ? (
                       <>
                         <span
                           className="spinner-border spinner-border-sm me-2"
                           role="status"
                           aria-hidden="true"
                         ></span>
-                        Creating...
+                        Submitting...
                       </>
                     ) : (
-                      "Create Organization"
+                      "Submit Join Request"
                     )}
                   </button>
                 </div>
               </form>
             </div>
+          </>
+        )}
+
+        {/* Join Request Status */}
+        {(isLoadingJoinRequests ||
+          (hasLoadedJoinRequests && joinRequests.length > 0)) && (
+          <div className="join-requests-section">
+            <div className="d-flex align-items-center justify-content-between mb-4">
+              <h2 className="h4 mb-0 fw-bold">Request Status</h2>
+              <button
+                className="dashboard-btn-refresh"
+                onClick={loadJoinRequests}
+                disabled={isLoadingJoinRequests}
+              >
+                <i
+                  className={`fa-solid fa-refresh ${
+                    isLoadingJoinRequests ? "fa-spin" : ""
+                  }`}
+                ></i>
+              </button>
+            </div>
+
+            {isLoadingJoinRequests ? (
+              <div className="text-center py-4">
+                <div className="spinner-border text-primary" role="status">
+                  <span className="visually-hidden">Loading...</span>
+                </div>
+                <p className="mt-2 text-muted fs-6">Loading join requests...</p>
+              </div>
+            ) : joinRequests.length > 0 ? (
+              <>
+                {/* Status Message */}
+                <div className="alert alert-info mb-4" role="alert">
+                  <div className="d-flex align-items-center">
+                    <i className="fa-solid fa-info-circle me-3 fs-5"></i>
+                    <div>
+                      <h6 className="alert-heading mb-1">
+                        Join Request Already Sent
+                      </h6>
+                      <p className="mb-0 fs-6">
+                        Your request has been submitted successfully. Please
+                        wait for organization approval.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="join-requests-list">
+                  {joinRequests.map((request) => {
+                    const statusInfo = getStatusInfo(request.status);
+                    return (
+                      <div
+                        key={request.id}
+                        className="join-request-item p-4 border rounded-3 mb-3"
+                      >
+                        <div className="join-request-header d-flex justify-content-between align-items-start mb-3">
+                          <div className="join-request-org">
+                            <i className="fa-solid fa-building me-2 fs-5"></i>
+                            <span className="org-name fs-5 fw-bold">
+                              {request.organizationName || "Organization"}
+                            </span>
+                          </div>
+                          <div
+                            className={`join-request-status ${statusInfo.class} px-3 py-2 rounded-pill`}
+                          >
+                            <i
+                              className={`fa-solid ${statusInfo.icon} me-2`}
+                            ></i>
+                            <span className="fw-semibold">
+                              {statusInfo.text}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="join-request-details">
+                          {request.organizationType && (
+                            <div className="join-request-org-details mb-2">
+                              <i className="fa-solid fa-tag me-2 text-muted"></i>
+                              <span className="fs-6">
+                                <strong>Type:</strong>{" "}
+                                {request.organizationType}
+                              </span>
+                            </div>
+                          )}
+                          {request.organizationAddress && (
+                            <div className="join-request-org-details mb-2">
+                              <i className="fa-solid fa-location-dot me-2 text-muted"></i>
+                              <span className="fs-6">
+                                <strong>Address:</strong>{" "}
+                                {request.organizationAddress}
+                              </span>
+                            </div>
+                          )}
+                          <div className="join-request-date mb-2">
+                            <i className="fa-solid fa-calendar me-2 text-muted"></i>
+                            <span className="fs-6">
+                              <strong>Requested:</strong>{" "}
+                              {formatDate(request.requestedOn)}
+                            </span>
+                          </div>
+                          {request.respondedOn && (
+                            <div className="join-request-response-date mb-2">
+                              <i className="fa-solid fa-check me-2 text-muted"></i>
+                              <span className="fs-6">
+                                <strong>Responded:</strong>{" "}
+                                {formatDate(request.respondedOn)}
+                              </span>
+                            </div>
+                          )}
+                          {request.adminComment && (
+                            <div className="join-request-comment mt-3 p-3 bg-light rounded">
+                              <i className="fa-solid fa-comment me-2 text-muted"></i>
+                              <span className="fs-6">
+                                <strong>Admin Comment:</strong>{" "}
+                                {request.adminComment}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            ) : null}
+          </div>
+        )}
+
+        {/* Create Organization Modal */}
+        <div
+          className="modal fade"
+          id="createorganizationModal"
+          tabIndex="-1"
+          aria-labelledby="organizationModalLabel"
+          aria-hidden="true"
+        >
+          <div className="modal-dialog modal-lg modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title" id="organizationModalLabel">
+                  Create Organization
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                ></button>
+              </div>
+              <div className="modal-body p-4">
+                <form id="organizationForm" onSubmit={handleOrgSubmit}>
+                  <div className="row g-3">
+                    <div className="col-12">
+                      <label htmlFor="orgName" className="form-label">
+                        Organization Name <span className="text-danger">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        className={`form-control ${
+                          orgFormErrors.orgName ? "is-invalid" : ""
+                        }`}
+                        id="orgName"
+                        value={orgFormData.orgName}
+                        onChange={handleOrgFormChange}
+                      />
+                      {orgFormErrors.orgName && (
+                        <div className="text-danger small mt-1">
+                          {orgFormErrors.orgName}
+                        </div>
+                      )}
+                    </div>
+                    <div className="col-12">
+                      <label htmlFor="orgType" className="form-label">
+                        Type <span className="text-danger">*</span>
+                      </label>
+                      <select
+                        className={`form-select ${
+                          orgFormErrors.orgType ? "is-invalid" : ""
+                        }`}
+                        id="orgType"
+                        value={orgFormData.orgType}
+                        onChange={handleOrgFormChange}
+                      >
+                        <option value="">Select type</option>
+                        <option value="corporate">Corporate</option>
+                        <option value="nonprofit">Non-Profit</option>
+                        <option value="government">Government</option>
+                        <option value="educational">Educational</option>
+                        <option value="other">Other</option>
+                      </select>
+                      {orgFormErrors.orgType && (
+                        <div className="text-danger small mt-1">
+                          {orgFormErrors.orgType}
+                        </div>
+                      )}
+                    </div>
+                    <div className="col-12">
+                      <label htmlFor="addressStreet" className="form-label">
+                        Street Address <span className="text-danger">*</span>
+                        {isAddressVerified && (
+                          <span className="text-success ms-2">✓ Verified</span>
+                        )}
+                      </label>
+                      {loadError ? (
+                        <div>
+                          <input
+                            type="text"
+                            className={`form-control ${
+                              orgFormErrors.addressStreet ? "is-invalid" : ""
+                            }`}
+                            id="addressStreet"
+                            value={orgFormData.addressStreet}
+                            onChange={handleOrgFormChange}
+                            placeholder="Enter address manually (Google Maps unavailable)"
+                          />
+                          {orgFormErrors.addressStreet && (
+                            <div className="text-danger small mt-1">
+                              {orgFormErrors.addressStreet}
+                            </div>
+                          )}
+                          <div className="text-danger small mt-1">
+                            ⚠️ Google Maps API failed to load. Please enter
+                            address manually.
+                          </div>
+                        </div>
+                      ) : isLoaded ? (
+                        <div className="position-relative">
+                          <input
+                            ref={autocompleteRef}
+                            type="text"
+                            className={`form-control ${
+                              orgFormErrors.addressStreet ? "is-invalid" : ""
+                            }`}
+                            id="addressStreet"
+                            value={orgFormData.addressStreet}
+                            onChange={(e) => {
+                              handleOrgFormChange(e);
+                              handleDebouncedAddressInput(e.target.value);
+                            }}
+                            onKeyDown={handleKeyDown}
+                            onBlur={() => {
+                              setTimeout(() => setShowPredictions(false), 300);
+                            }}
+                            onFocus={() => {
+                              if (predictions.length > 0) {
+                                setShowPredictions(true);
+                              }
+                            }}
+                            placeholder="Start typing an address..."
+                            autoComplete="off"
+                          />
+
+                          {/* Loading indicator */}
+                          {isLoadingPredictions && (
+                            <div className="position-absolute top-50 end-0 translate-middle-y me-3">
+                              <div
+                                className="spinner-border spinner-border-sm text-muted"
+                                role="status"
+                              >
+                                <span className="visually-hidden">
+                                  Loading...
+                                </span>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Address suggestions dropdown */}
+                          {showPredictions && predictions.length > 0 && (
+                            <div
+                              className="position-absolute w-100 bg-white border border-top-0 rounded-bottom shadow-sm"
+                              style={{
+                                zIndex: 1050,
+                                maxHeight: "200px",
+                                overflowY: "auto",
+                              }}
+                            >
+                              {predictions.map((prediction, index) => (
+                                <div
+                                  key={prediction.place_id}
+                                  className={`px-3 py-2 cursor-pointer border-bottom ${
+                                    index === selectedPredictionIndex
+                                      ? "bg-primary text-white"
+                                      : "hover-bg-light"
+                                  }`}
+                                  onMouseDown={() =>
+                                    selectPrediction(prediction.place_id)
+                                  }
+                                  style={{ cursor: "pointer" }}
+                                >
+                                  <div className="fw-medium">
+                                    {prediction.structured_formatting.main_text}
+                                  </div>
+                                  <div className="small text-muted">
+                                    {
+                                      prediction.structured_formatting
+                                        .secondary_text
+                                    }
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Field error display */}
+                          {orgFormErrors.addressStreet && (
+                            <div className="text-danger small mt-1">
+                              {orgFormErrors.addressStreet}
+                            </div>
+                          )}
+
+                          {/* Address validation error */}
+                          {addressValidationError && (
+                            <div className="text-danger small mt-2">
+                              {addressValidationError}
+                            </div>
+                          )}
+
+                          {/* Address validation loading */}
+                          {isValidatingAddress && (
+                            <div className="text-muted small mt-2">
+                              Validating address...
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div
+                          className="form-control d-flex align-items-center justify-content-center"
+                          style={{ height: "38px" }}
+                        >
+                          <div
+                            className="spinner-border spinner-border-sm text-muted me-2"
+                            role="status"
+                          >
+                            <span className="visually-hidden">Loading...</span>
+                          </div>
+                          <span className="text-muted">
+                            Loading Google Maps...
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="col-md-6">
+                      <label htmlFor="addressCity" className="form-label">
+                        City <span className="text-danger">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        className={`form-control ${
+                          orgFormErrors.addressCity ? "is-invalid" : ""
+                        } ${isAddressVerified ? "bg-light" : ""}`}
+                        id="addressCity"
+                        value={orgFormData.addressCity}
+                        onChange={handleOrgFormChange}
+                        readOnly={isAddressVerified}
+                      />
+                      {orgFormErrors.addressCity && (
+                        <div className="text-danger small mt-1">
+                          {orgFormErrors.addressCity}
+                        </div>
+                      )}
+                    </div>
+                    <div className="col-md-3">
+                      <label htmlFor="addressState" className="form-label">
+                        State <span className="text-danger">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        className={`form-control ${
+                          orgFormErrors.addressState ? "is-invalid" : ""
+                        } ${isAddressVerified ? "bg-light" : ""}`}
+                        id="addressState"
+                        value={orgFormData.addressState}
+                        onChange={handleOrgFormChange}
+                        readOnly={isAddressVerified}
+                      />
+                      {orgFormErrors.addressState && (
+                        <div className="text-danger small mt-1">
+                          {orgFormErrors.addressState}
+                        </div>
+                      )}
+                    </div>
+                    <div className="col-md-3">
+                      <label htmlFor="addressZip" className="form-label">
+                        Zip Code <span className="text-danger">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        className={`form-control ${
+                          orgFormErrors.addressZip ? "is-invalid" : ""
+                        } ${isAddressVerified ? "bg-light" : ""}`}
+                        id="addressZip"
+                        value={orgFormData.addressZip}
+                        onChange={handleOrgFormChange}
+                        readOnly={isAddressVerified}
+                      />
+                      {orgFormErrors.addressZip && (
+                        <div className="text-danger small mt-1">
+                          {orgFormErrors.addressZip}
+                        </div>
+                      )}
+                    </div>
+                    <div className="col-12">
+                      <label htmlFor="contactName" className="form-label">
+                        Contact Name <span className="text-danger">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        className={`form-control ${
+                          orgFormErrors.contactName ? "is-invalid" : ""
+                        }`}
+                        id="contactName"
+                        value={orgFormData.contactName}
+                        onChange={handleOrgFormChange}
+                      />
+                      {orgFormErrors.contactName && (
+                        <div className="text-danger small mt-1">
+                          {orgFormErrors.contactName}
+                        </div>
+                      )}
+                    </div>
+                    <div className="col-md-6">
+                      <label htmlFor="contactEmail" className="form-label">
+                        Email <span className="text-danger">*</span>
+                      </label>
+                      <input
+                        type="email"
+                        className={`form-control ${
+                          orgFormErrors.contactEmail ? "is-invalid" : ""
+                        }`}
+                        id="contactEmail"
+                        value={orgFormData.contactEmail}
+                        onChange={handleOrgFormChange}
+                      />
+                      {orgFormErrors.contactEmail && (
+                        <div className="text-danger small mt-1">
+                          {orgFormErrors.contactEmail}
+                        </div>
+                      )}
+                    </div>
+                    <div className="col-md-6">
+                      <label htmlFor="contactPhone" className="form-label">
+                        Phone <span className="text-danger">*</span>
+                      </label>
+                      <input
+                        type="tel"
+                        className={`form-control ${
+                          orgFormErrors.contactPhone ? "is-invalid" : ""
+                        }`}
+                        id="contactPhone"
+                        value={orgFormData.contactPhone}
+                        onChange={handleOrgFormChange}
+                      />
+                      {orgFormErrors.contactPhone && (
+                        <div className="text-danger small mt-1">
+                          {orgFormErrors.contactPhone}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="mt-4">
+                    <button
+                      className="dashboard-btn-submit w-100"
+                      type="submit"
+                      disabled={isCreatingOrg}
+                    >
+                      {isCreatingOrg ? (
+                        <>
+                          <span
+                            className="spinner-border spinner-border-sm me-2"
+                            role="status"
+                            aria-hidden="true"
+                          ></span>
+                          Creating...
+                        </>
+                      ) : (
+                        "Create Organization"
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
       {/* Address Validation Dialog */}
       {showAddressValidationDialog && (
-        <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1060 }} tabIndex="-1">
+        <div
+          className="modal fade show d-block"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)", zIndex: 1060 }}
+          tabIndex="-1"
+        >
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">Organization Address Validation</h5>
-                <button 
-                  type="button" 
-                  className="btn-close" 
+                <button
+                  type="button"
+                  className="btn-close"
                   onClick={() => setShowAddressValidationDialog(false)}
                   aria-label="Close"
                 ></button>
               </div>
               <div className="modal-body">
                 <div className="text-center mb-3">
-                  <i className="fas fa-exclamation-triangle text-warning" style={{ fontSize: '3rem' }}></i>
+                  <i
+                    className="fas fa-exclamation-triangle text-warning"
+                    style={{ fontSize: "3rem" }}
+                  ></i>
                 </div>
                 <p className="text-center mb-3">
-                  {addressValidationMessage || 'We couldn\'t verify the address you entered. Would you like to correct it, or continue creating the organization with the current address?'}
+                  {addressValidationMessage ||
+                    "We couldn't verify the address you entered. Would you like to correct it, or continue creating the organization with the current address?"}
                 </p>
               </div>
               <div className="modal-footer justify-content-center">
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   className="dashboard-btn-refresh me-2"
                   onClick={handleAddressValidationEdit}
                 >
                   <i className="fas fa-edit me-2"></i>
                   Edit Address
                 </button>
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   className="dashboard-btn-create"
                   onClick={handleAddressValidationProceed}
                 >
@@ -1315,4 +1487,3 @@ const OrganizationActions = () => {
 };
 
 export default OrganizationActions;
-

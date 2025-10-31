@@ -23,20 +23,20 @@ function TwoFactorAuth() {
   const phoneNumberMasked = location.state?.phoneNumberMasked;
 
   useEffect(() => {
-    // Redirect to login if no email in location state 
+    // Redirect to login if no email in location state
     if (!email) {
       toast.error("Access denied. Please login first.");
       navigate(ROUTES.LOGIN, { replace: true });
       return;
     }
-    
+
     // Additional check: ensure we have required data for 2FA
     if (!location.state?.password) {
       toast.error("Session expired. Please login again.");
       navigate(ROUTES.LOGIN, { replace: true });
       return;
     }
-    
+
     // Start 30-second timer when component mounts
     setResendTimer(60);
   }, [email, navigate, location.state]);
@@ -46,7 +46,7 @@ function TwoFactorAuth() {
     let interval = null;
     if (resendTimer > 0) {
       interval = setInterval(() => {
-        setResendTimer(timer => timer - 1);
+        setResendTimer((timer) => timer - 1);
       }, 1000);
     } else if (resendTimer === 0) {
       clearInterval(interval);
@@ -65,7 +65,7 @@ function TwoFactorAuth() {
   const handleCodeChange = (index, value) => {
     // Only allow single digit
     if (value.length > 1) return;
-    
+
     const newCodes = [...codes];
     newCodes[index] = value;
     setCodes(newCodes);
@@ -78,45 +78,47 @@ function TwoFactorAuth() {
 
   const handleKeyDown = (index, e) => {
     // Handle backspace
-    if (e.key === 'Backspace' && !codes[index] && index > 0) {
+    if (e.key === "Backspace" && !codes[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
   };
 
   const handlePaste = (e) => {
     e.preventDefault();
-    const pastedData = e.clipboardData.getData('text');
-    const pastedCodes = pastedData.replace(/\D/g, '').slice(0, 6);
-    
+    const pastedData = e.clipboardData.getData("text");
+    const pastedCodes = pastedData.replace(/\D/g, "").slice(0, 6);
+
     if (pastedCodes.length === 6) {
-      setCodes(pastedCodes.split(''));
+      setCodes(pastedCodes.split(""));
       inputRefs.current[5]?.focus();
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    const fullCode = codes.join('');
+
+    const fullCode = codes.join("");
     if (fullCode.length !== 6) {
       toast.error("Please enter the complete 6-digit code");
       return;
     }
 
     if (isSubmitting) return;
-    
+
     setIsSubmitting(true);
-    
+
     try {
       const response = await verifyOtp(email, fullCode);
-      
+
       if (response.isSuccess) {
         storeAuthData(response.data);
         authLogin(response.data.user);
         toast.success("Login successful!");
         navigate(ROUTES.DASHBOARD);
       } else {
-        toast.error(response.msg || "Invalid authentication code. Please try again.");
+        toast.error(
+          response.msg || "Invalid authentication code. Please try again."
+        );
       }
     } catch (error) {
       toast.error("Invalid authentication code. Please try again.");
@@ -127,13 +129,13 @@ function TwoFactorAuth() {
 
   const handleResendCode = async () => {
     if (resendTimer > 0 || isResending) return;
-    
+
     setIsResending(true);
-    
+
     try {
       // Get password from location state
       const password = location.state?.password;
-      
+
       if (!password || !email) {
         toast.error("Session expired. Please login again.");
         navigate(ROUTES.LOGIN, { replace: true });
@@ -141,12 +143,14 @@ function TwoFactorAuth() {
       }
 
       const response = await sendOtp(email, password);
-      
+
       if (response.isSuccess) {
         toast.success(response.msg || "New code sent successfully!");
         setResendTimer(60); // Restart 60-second timer
       } else {
-        toast.error(response.msg || "Failed to send new code. Please try again.");
+        toast.error(
+          response.msg || "Failed to send new code. Please try again."
+        );
       }
     } catch {
       toast.error("Failed to send new code. Please try again.");
@@ -171,9 +175,12 @@ function TwoFactorAuth() {
                       <img src={loginImg} alt="logo" className="w-100" />
                     </Link>
                   </div>
-                  <h2 className="font-xl-med fw-bold">Two Factor Authentication</h2>
+                  <h2 className="font-xl-med fw-bold">
+                    Two Factor Authentication
+                  </h2>
                   <p className="font-base">
-                    Enter the six-digit code sent to {phoneNumberMasked || "your device"}
+                    Enter the six-digit code sent to{" "}
+                    {phoneNumberMasked || "your device"}
                   </p>
                 </div>
 
@@ -214,9 +221,7 @@ function TwoFactorAuth() {
                 </button>
 
                 <div className="text-center mt-4">
-                  <p className="font-base mb-2">
-                    Didn't receive the code?
-                  </p>
+                  <p className="font-base mb-2">Didn't receive the code?</p>
                   {resendTimer > 0 ? (
                     <p className="font-sm text-muted">
                       Resend code in {resendTimer}s

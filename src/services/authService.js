@@ -1,6 +1,10 @@
 import client from "../api/axiosInstance";
 import { AUTH_ENDPOINTS } from "../constants/apiEndpoints";
-import { storeAuthData, clearAuthData, setImpersonationState } from "../utils/storage";
+import {
+  storeAuthData,
+  clearAuthData,
+  setImpersonationState,
+} from "../utils/storage";
 
 export const checkMfa = async (email, password) => {
   const response = await client.post(
@@ -120,7 +124,6 @@ export const verifyEmail = async (token) => {
   const response = await client.get(AUTH_ENDPOINTS.VERIFY_EMAIL(token), {
     headers: { Accept: "text/plain" },
   });
-
 
   return {
     isSuccess: response.data.success,
@@ -245,7 +248,12 @@ export const resetPassword = async (userId, password, token) => {
   };
 };
 
-export const updateUser = async (userId, filingEntityTypeId, firstName, lastName) => {
+export const updateUser = async (
+  userId,
+  filingEntityTypeId,
+  firstName,
+  lastName
+) => {
   const response = await client.post(
     AUTH_ENDPOINTS.UPDATE_USER,
     {
@@ -290,8 +298,8 @@ export const getUserById = async (userId) => {
 
 export const uploadUserSignature = async (userId, signatureFile) => {
   const formData = new FormData();
-  formData.append('UserId', userId);
-  formData.append('File', signatureFile);
+  formData.append("UserId", userId);
+  formData.append("File", signatureFile);
 
   const response = await client.post(
     AUTH_ENDPOINTS.UPLOAD_USER_SIGNATURE,
@@ -314,7 +322,7 @@ export const uploadUserSignature = async (userId, signatureFile) => {
 export const getSignatureById = async (userId) => {
   const response = await client.post(
     AUTH_ENDPOINTS.GET_SIGNATURE_BY_ID(userId),
-    {}, 
+    {},
     {
       headers: {
         Accept: "text/plain",
@@ -377,7 +385,7 @@ export const verifySignatureOtp = async (userId, otpCode) => {
 export const impersonateByUserId = async (userId) => {
   const response = await client.post(
     AUTH_ENDPOINTS.IMPERSONATE_BY_USER_ID(userId),
-    '',
+    "",
     {
       headers: {
         Accept: "text/plain",
@@ -395,7 +403,7 @@ export const impersonateByUserId = async (userId) => {
 export const managerImpersonate = async (managerUserId, userId) => {
   const response = await client.post(
     AUTH_ENDPOINTS.MANAGER_IMPERSONATE(managerUserId, userId),
-    '',
+    "",
     {
       headers: {
         Accept: "text/plain",
@@ -411,15 +419,11 @@ export const managerImpersonate = async (managerUserId, userId) => {
 };
 
 export const exitImpersonation = async () => {
-  const response = await client.post(
-    AUTH_ENDPOINTS.EXIT_IMPERSONATION,
-    '',
-    {
-      headers: {
-        Accept: "text/plain",
-      },
-    }
-  );
+  const response = await client.post(AUTH_ENDPOINTS.EXIT_IMPERSONATION, "", {
+    headers: {
+      Accept: "text/plain",
+    },
+  });
 
   return {
     isSuccess: response.data.success,

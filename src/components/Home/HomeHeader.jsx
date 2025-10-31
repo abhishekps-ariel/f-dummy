@@ -1,13 +1,13 @@
 import { Link } from "react-router-dom";
 import logo from "../../assets/logo-index.png";
 
-function HomeHeader({ 
-  featureRef, 
-  contactRef, 
-  whoWeServeRef, 
-  actionsRef, 
-  newsRef, 
-  eventsRef 
+function HomeHeader({
+  featureRef,
+  contactRef,
+  whoWeServeRef,
+  actionsRef,
+  newsRef,
+  eventsRef,
 }) {
   return (
     <>
