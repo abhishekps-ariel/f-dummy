@@ -1063,7 +1063,7 @@ const PetitionTabContent = ({ petition }) => {
       }
       const petitionData = { ...formData, isAllStepsCompleted: true };
       await submitPetition(petitionData, false, petition.id);
-      toast.success("Petition submitted successfully!");
+      // Toast message is shown by submitPetition function
       setIsEditing(false);
     } catch (error) {
       toast.error("Failed to submit petition. Please try again.");
