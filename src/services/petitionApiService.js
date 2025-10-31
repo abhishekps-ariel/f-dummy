@@ -28,7 +28,7 @@ class PetitionApiService {
       throw new Error('Petition ID is required to delete a petition.');
     }
  
-    const response = await axiosInstance.delete(PETITION_ENDPOINTS.DELETE_PETITION_BY_ID(petitionId), {
+    const response = await axiosInstance.post(PETITION_ENDPOINTS.DELETE_PETITION_BY_ID(petitionId), {
       headers: {
         'Accept': 'text/plain'
       }
@@ -180,7 +180,10 @@ class PetitionApiService {
         loanNumber: formData.loanNumber || "",
         petitionLoanTypeId: formData.petitionLoanTypeId && formData.petitionLoanTypeId.trim() !== '' ? formData.petitionLoanTypeId : null,
         petitionLoanTypeName: formData.petitionLoanTypeName || "",
-        lienPosition: parseInt(formData.lienPosition) || 0,
+        // lienPosition can be 0 (for "First"), so only convert to null if not selected
+        lienPosition: (formData.lienPosition === null || formData.lienPosition === undefined || formData.lienPosition === "") 
+          ? null 
+          : (typeof formData.lienPosition === 'number' ? formData.lienPosition : parseInt(formData.lienPosition)),
         originationDate: safeDateConversion(formData.originationDate),
         originalPrincipalAmount: parseFloat(formData.originalPrincipalAmount) || 0,
         currentPrincipalBalance: parseFloat(formData.currentPrincipalBalance) || 0,

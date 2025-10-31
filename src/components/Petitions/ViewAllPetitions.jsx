@@ -62,7 +62,7 @@ const ViewAllPetitions = ({ onBack }) => {
       }
     } catch (error) {
       console.error("Error deleting petition:", error);
-      alert("Failed to delete petition. Please try again.");
+      toast.error("Failed to delete petition. Please try again.");
     }
   };
 
@@ -441,15 +441,14 @@ const ViewAllPetitions = ({ onBack }) => {
       if (!confirmDelete) return;
 
       await petitionApiService.deletePetitionById(petitionId);
-      alert("Petition deleted successfully!");
+      toast.success("Petition deleted successfully!");
 
-      // ✅ Optional: refresh the petition list after deletion
       if (typeof fetchPetitions === "function") {
         fetchPetitions();
       }
     } catch (error) {
       console.error("Error deleting petition:", error);
-      alert("Failed to delete petition. Please try again.");
+      toast.error("Failed to delete petition. Please try again.");
     }
   };
 
