@@ -8997,29 +8997,31 @@ const PetitionSteps = ({ isOpen, onClose, organization, onPetitionSubmitted }) =
               </div>
               <div className="modal-body">
                 <p className="mb-4">Your petition changes are not saved.</p>
-                <div className="d-flex justify-content-end gap-2">
+                <div className="d-flex justify-content-between gap-2">
                   <button 
                     type="button" 
-                    className="btn btn-outline-secondary"
+                    className="dashboard-btn-refresh"
                     onClick={() => setShowCloseConfirmDialog(false)}
                   >
                     Cancel
                   </button>
-                  <button 
-                    type="button" 
-                    className="dashboard-btn-refresh"
-                    onClick={handleDiscardAndClose}
-                  >
-                    Don't save
-                  </button>
-                  <button 
-                    type="button" 
-                    className="dashboard-btn-create"
-                    onClick={handleSaveDraftAndClose}
-                    disabled={isSaving}
-                  >
-                    {isSaving ? 'Saving…' : 'Save as draft'}
-                  </button>
+                  <div className="d-flex gap-2">
+                    <button 
+                      type="button" 
+                      className="dashboard-btn-refresh"
+                      onClick={handleDiscardAndClose}
+                    >
+                      Don't save
+                    </button>
+                    <button 
+                      type="button" 
+                      className="dashboard-btn-create"
+                      onClick={handleSaveDraftAndClose}
+                      disabled={isSaving}
+                    >
+                      {isSaving ? 'Saving…' : 'Save as draft'}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
