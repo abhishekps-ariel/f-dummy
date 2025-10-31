@@ -825,7 +825,7 @@ const PetitionTabContent = ({ petition }) => {
     setIsEditing(!isEditing);
   };
   
-  // Save as Draft (does not mark submitted)
+  // Save as Draft (does not mark submitted) - no validation required for drafts
   const handleSaveDraft = async () => {
     setIsSavingDraft(true);
     try {
@@ -833,14 +833,10 @@ const PetitionTabContent = ({ petition }) => {
         toast.error('You must be part of an organization to save petition drafts.');
         return;
       }
-      const addressValidation = await validatePropertyAddressWithGeocoding();
-      if (!addressValidation.isValid) {
-        toast.error('Please verify the property address before saving.');
-        return;
-      }
+      // No address validation required for drafts - user can save incomplete data
       const petitionData = { ...formData, isAllStepsCompleted: false };
       await submitPetition(petitionData, true, petition.id);
-      toast.success('Draft saved successfully.');
+      // Toast message is shown by submitPetition function
       setIsEditing(false);
     } catch (error) {
       toast.error('Failed to save draft. Please try again.');

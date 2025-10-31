@@ -107,7 +107,7 @@ export const usePetitions = () => {
       
       if (response.success) {
         if (isDraft) {
-          toast.success('Petition saved as draft!');
+          toast.success('Draft saved successfully.');
         } else {
           toast.success('Petition submitted successfully!');
         }
