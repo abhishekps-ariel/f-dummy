@@ -1,11 +1,11 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  base: '/', // or the subpath your app is served from, e.g. '/filir/'
   server: {
-    host: true, 
+    host: true,
     port: 5173,
     allowedHosts: ['bloodstained-superornamentally-ivonne.ngrok-free.dev'],
     proxy: {
@@ -15,5 +15,10 @@ export default defineConfig({
         secure: false,
       },
     },
-  }
+  },
+  build: {
+    outDir: 'dist',
+    manifest: true,
+    sourcemap: false,
+  },
 })

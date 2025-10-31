@@ -617,22 +617,13 @@ const PetitionTabContent = ({ petition }) => {
     }
   }, [initialFormData]);
 
-  // Reset edit mode when switching to a different petition or to a non-draft
+  // Reset edit mode when switching to a different petition
   useEffect(() => {
     setIsEditing(false);
     setFieldErrors({});
   }, [petition?.id]);
 
-  useEffect(() => {
-    if (
-      petition?.status &&
-      petition.status.toLowerCase() !== "draft" &&
-      isEditing
-    ) {
-      setIsEditing(false);
-      setFieldErrors({});
-    }
-  }, [petition?.status]);
+  // Removed status check - now all petitions (draft and submitted) can be edited
 
   if (!petition || !formData) return null;
 
@@ -1588,17 +1579,15 @@ const PetitionTabContent = ({ petition }) => {
                 <div className="d-flex align-items-center gap-2">
                   {!isEditing ? (
                     <>
-                      {petition.status?.toLowerCase() === "draft" && (
-                        <button
-                          type="button"
-                          className="dashboard-btn-create"
-                          onClick={handleEditToggle}
-                          title="Edit petition"
-                        >
-                          <i className="fas fa-edit me-1"></i>
-                          Edit
-                        </button>
-                      )}
+                      <button
+                        type="button"
+                        className="dashboard-btn-create"
+                        onClick={handleEditToggle}
+                        title="Edit petition"
+                      >
+                        <i className="fas fa-edit me-1"></i>
+                        Edit
+                      </button>
                       <button
                         type="button"
                         className="dashboard-btn-refresh"
