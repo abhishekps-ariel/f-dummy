@@ -78,7 +78,7 @@ body {
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   background: white;
   overflow-x: auto;
-  overflow-y: auto;
+  /* Removed overflow-y to allow table to scroll with page, not separately */
 }
 
 .petition-table-container table {
@@ -131,9 +131,8 @@ body {
 @media (max-width: 991.98px) {
   .petition-table-container {
     overflow-x: auto;
-    overflow-y: auto;
+    /* Removed overflow-y and max-height to allow table to scroll with page */
     -webkit-overflow-scrolling: touch;
-    max-height: 400px; /* Reduced height for mobile */
   }
   
   .petition-table-container table {

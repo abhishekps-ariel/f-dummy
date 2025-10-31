@@ -1,13 +1,12 @@
 /* Tabbed Workspace Styles */
 .petitions-workspace {
-  height: 100vh;
+  /* Removed fixed height to allow natural page scrolling */
   display: flex;
   flex-direction: column;
 }
 
 .tab-content-area {
-  flex: 1;
-  overflow-y: auto;
+  /* Removed flex: 1 and overflow-y to allow content to flow naturally with page scroll */
   background-color: #ffffff;
 }
 
