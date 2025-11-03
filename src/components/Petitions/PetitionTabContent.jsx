@@ -791,8 +791,10 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
       errors.signatures = "At least one signature is required";
     }
 
-    // Foreclosure Sale validation - only if noticeSent is true
-    if (formData.noticeSent === true) {
+    // Foreclosure Sale validation - only if noticeSent is true AND petition is not Draft
+    if (formData.noticeSent === true && 
+        petition.status?.toLowerCase() !== "draft" && 
+        petition.statusClass?.toLowerCase() !== "draft") {
       const foreclosureSale = formData.foreclosureSale || {};
       
       // Sale Date is required
@@ -1793,9 +1795,11 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
           </div>
         </div>
 
-        {/* Warning message for foreclosure sale info - show at top when noticeSent is true and info is missing */}
+        {/* Warning message for foreclosure sale info - show at top when noticeSent is true and info is missing, but not for Draft petitions */}
         {formData.noticeSent === true && 
-          (!formData.foreclosureSale?.saleDate || !formData.foreclosureSale?.soldToId) && (
+         petition.status?.toLowerCase() !== "draft" && 
+         petition.statusClass?.toLowerCase() !== "draft" &&
+         (!formData.foreclosureSale?.saleDate || !formData.foreclosureSale?.soldToId) && (
           <div className="alert alert-warning mb-4">
             <strong>Please fill foreclosure sale info</strong> - Sale Date and Sold To fields are required before committing the petition sale.
           </div>
@@ -3128,8 +3132,10 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
             </div>
           </div>
 
-          {/* Foreclosure Sale Section - Only show if Right to Cure is "Yes" */}
-          {formData.noticeSent === true && (
+          {/* Foreclosure Sale Section - Only show if Right to Cure is "Yes" AND petition is not Draft */}
+          {formData.noticeSent === true && 
+           petition.status?.toLowerCase() !== "draft" && 
+           petition.statusClass?.toLowerCase() !== "draft" && (
             <div 
               ref={foreclosureSaleSectionRef}
               className={`card mb-4 ${isEditing ? "editing" : ""} ${
