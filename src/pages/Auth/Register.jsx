@@ -46,6 +46,10 @@ function Register() {
   // Role selection state (Filer or Organisation Admin)
   const [selectedRole, setSelectedRole] = useState(null);
 
+  // Organization input state (for Organisation Admin registration)
+  // Static field for now - will be replaced with API search later
+  const [organizationName, setOrganizationName] = useState("");
+
   // Handle invite parameters and role on component mount
   useEffect(() => {
     const joinRequestId = searchParams.get("joinRequestId");
@@ -120,6 +124,18 @@ function Register() {
     if (!isInviteFlow && !selectedRole) {
       toast.error("Please select a registration type (Filer or Organisation Admin)");
       return false;
+    }
+
+    // Validate organization input for Organisation Admin
+    if (!isInviteFlow && selectedRole === "orgAdmin" && !organizationName.trim()) {
+      setErrors((prev) => ({ ...prev, organization: "Please enter organization name" }));
+      return false;
+    } else if (organizationName.trim()) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors.organization;
+        return newErrors;
+      });
     }
 
     if (!formData.firstName.trim()) {
@@ -360,6 +376,43 @@ function Register() {
                     </div>
                   )}
                 </div>
+
+                {/* Organization Input - Only for Organisation Admin */}
+                {selectedRole === "orgAdmin" && !isInviteFlow && (
+                  <div className="form-group mb-4">
+                    <label className="label-text">Organization Name</label>
+                    <div className="input-group">
+                      <div className="user-icon">
+                        <i className="fa-solid fa-building"></i>
+                      </div>
+                      <input
+                        name="organizationName"
+                        type="text"
+                        className={`form-control ${
+                          errors.organization ? "is-invalid" : ""
+                        }`}
+                        placeholder="Enter organization name"
+                        value={organizationName}
+                        onChange={(e) => {
+                          setOrganizationName(e.target.value);
+                          if (errors.organization) {
+                            setErrors({ ...errors, organization: "" });
+                          }
+                        }}
+                        required
+                      />
+                    </div>
+                    {errors.organization && (
+                      <div className="invalid-feedback d-block">
+                        <small className="text-danger">{errors.organization}</small>
+                      </div>
+                    )}
+                    <small className="text-muted">
+                      Enter the name of the organization you want to register as admin for.
+                      {/* Note: This will be replaced with a searchable dropdown when the API is updated. */}
+                    </small>
+                  </div>
+                )}
 
                 <div className="form-group">
                   <label className="label-text">First Name</label>
