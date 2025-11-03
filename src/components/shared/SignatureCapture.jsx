@@ -41,7 +41,8 @@ const SignatureCapture = ({ isOpen, onClose, onSave, isUploading = false }) => {
 
     if (typedSignature.trim()) {
       // Set cursive font - try Great Vibes first, fallback to Dancing Script
-      ctx.font = 'bold 48px "Great Vibes", "Dancing Script", cursive';
+      // ctx.font = 'bold 42px "Great Vibes", cursive';
+      ctx.font = 'bold 42px "Great Vibes", cursive'; 
       ctx.fillStyle = '#000000';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
@@ -235,7 +236,7 @@ const SignatureCapture = ({ isOpen, onClose, onSave, isUploading = false }) => {
                           className="signature-canvas"
                         />
                       ) : (
-                        <div className="text-muted" style={{ fontFamily: '"Great Vibes", "Dancing Script", cursive', fontSize: '32px' }}>
+                        <div className="text-muted" style={{ fontFamily: '"Great Vibes", serif', fontWeight: 'bold', fontSize: '42px' }}>
                           Your signature will appear here
                         </div>
                       )}
