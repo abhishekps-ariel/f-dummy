@@ -15,12 +15,11 @@ const stepLabels = [
 ];
 
 const PetitionStepper = () => {
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
   const { currentStep, completedSteps, goToStep, canAccessStep } =
     usePetitionWizard();
   const stepperNavRef = useRef(null);
 
-  // Auto-scroll to current step
+  // Auto-scroll to current step (works for both horizontal and vertical)
   useEffect(() => {
     if (stepperNavRef.current) {
       const currentStepElement = stepperNavRef.current.querySelector(
@@ -29,8 +28,8 @@ const PetitionStepper = () => {
       if (currentStepElement) {
         currentStepElement.scrollIntoView({
           behavior: "smooth",
-          block: "center",
-          inline: "nearest",
+          block: "nearest",
+          inline: "center",
         });
       }
     }
@@ -56,57 +55,40 @@ const PetitionStepper = () => {
   };
 
   return (
-    <>
-      {/* Mobile Toggle Button */}
-      <button
-        className="btn btn-outline-primary w-100 d-lg-none mb-3"
-        onClick={() => setIsMobileOpen(!isMobileOpen)}
-      >
-        <i
-          className={`fas fa-chevron-${isMobileOpen ? "up" : "down"} me-2`}
-        ></i>
-        {isMobileOpen ? "Hide" : "Show"} Progress ({currentStep}/9)
-      </button>
+    <div className="petition-stepper-container">
+      <h5 className="stepper-title">Petition Form Progress</h5>
+      <div className="stepper-nav" ref={stepperNavRef}>
+        {stepLabels.map((label, index) => {
+          const stepNumber = index + 1;
+          const status = getStepStatus(stepNumber);
+          const isClickable = status !== "locked";
 
-      <div
-        className={`petition-stepper-container ${
-          !isMobileOpen ? "d-none d-lg-block" : ""
-        }`}
-      >
-        <h5 className="stepper-title">Petition Form Progress</h5>
-        <div className="stepper-nav" ref={stepperNavRef}>
-          {stepLabels.map((label, index) => {
-            const stepNumber = index + 1;
-            const status = getStepStatus(stepNumber);
-            const isClickable = status !== "locked";
-
-            return (
-              <div
-                key={stepNumber}
-                data-step={stepNumber}
-                className={`stepper-item ${status} ${
-                  isClickable ? "clickable" : ""
-                }`}
-                onClick={() => handleStepClick(stepNumber)}
-                title={!isClickable ? "Complete previous steps first" : label}
-              >
-                <div className="stepper-number">
-                  {status === "completed" ? (
-                    <i className="fas fa-check"></i>
-                  ) : (
-                    stepNumber
-                  )}
-                </div>
-                <div className="stepper-label">{label}</div>
-                {status === "current" && (
-                  <div className="stepper-indicator"></div>
+          return (
+            <div
+              key={stepNumber}
+              data-step={stepNumber}
+              className={`stepper-item ${status} ${
+                isClickable ? "clickable" : ""
+              }`}
+              onClick={() => handleStepClick(stepNumber)}
+              title={!isClickable ? "Complete previous steps first" : label}
+            >
+              <div className="stepper-number">
+                {status === "completed" ? (
+                  <i className="fas fa-check"></i>
+                ) : (
+                  stepNumber
                 )}
               </div>
-            );
-          })}
-        </div>
+              <div className="stepper-label">{label}</div>
+              {status === "current" && (
+                <div className="stepper-indicator"></div>
+              )}
+            </div>
+          );
+        })}
       </div>
-    </>
+    </div>
   );
 };
 

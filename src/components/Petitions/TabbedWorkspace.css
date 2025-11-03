@@ -152,17 +152,37 @@
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
+  .tab-bar {
+    padding: 6px 4px 0 4px;
+    gap: 4px;
+  }
+
   .tab {
-    min-width: 100px;
-    max-width: 150px;
+    min-width: auto;
+    max-width: none;
+    flex: 0 1 auto;
+  }
+  
+  .tab.active {
+    flex: 0 1 auto;
+    min-width: fit-content;
   }
   
   .tab-content {
     padding: 6px 8px;
+    min-width: fit-content;
   }
   
   .tab-title {
     font-size: 12px;
+    white-space: nowrap;
+    overflow: visible;
+    text-overflow: clip;
+  }
+
+  .tab.active .tab-title {
+    overflow: visible;
+    text-overflow: clip;
   }
   
   .petition-tab-content {
@@ -210,6 +230,29 @@
 
 /* Extra small devices (phones, 576px and down) */
 @media (max-width: 576px) {
+  .tab-bar {
+    padding: 6px 2px 0 2px;
+    gap: 3px;
+  }
+
+  .tab-content {
+    padding: 6px 6px;
+  }
+
+  .tab-title {
+    font-size: 11px;
+  }
+
+  .tab-close {
+    width: 16px;
+    height: 16px;
+    margin-left: 2px;
+  }
+
+  .tab-close i {
+    font-size: 9px;
+  }
+
   .petition-header-card {
     padding: 12px;
   }
