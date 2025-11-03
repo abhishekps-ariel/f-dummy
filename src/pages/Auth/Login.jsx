@@ -8,6 +8,31 @@ import { toast } from "react-toastify";
 import loginImg from "../../assets/logo-sample.png";
 import "../../styles/custom.css";
 
+// Org admin redirect URL
+const ORG_ADMIN_REDIRECT_URL = "https://admin.dob.arielsoftwares.in/LoginPage";
+
+// Helper function to check if user is org admin
+const isOrgAdmin = (userData) => {
+  if (!userData) return false;
+  
+  // Check if isManager is true
+  if (userData.isManager === true) {
+    return true;
+  }
+  
+  // Check roles array for "Organisation Admin"
+  if (userData.roles && Array.isArray(userData.roles)) {
+    return userData.roles.some(
+      (role) =>
+        role === "Organisation Admin" ||
+        role === "Organization Admin" ||
+        role === "orgAdmin"
+    );
+  }
+  
+  return false;
+};
+
 function Login() {
   const [formData, setFormData] = useState({
     email: "",
@@ -18,6 +43,7 @@ function Login() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showMfaSelection, setShowMfaSelection] = useState(false);
   const [selectedMfaMethod, setSelectedMfaMethod] = useState("");
+  const [isOrgAdminUser, setIsOrgAdminUser] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -28,6 +54,10 @@ function Login() {
 
     if (!formData.email.trim()) {
       newErrors.email = "This field can't be empty";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = "Please enter a valid email address";
+    } else if (formData.email.toLowerCase().endsWith("@gmail.com")) {
+      newErrors.email = "Gmail addresses are not accepted. Please use a different email domain.";
     }
 
     if (!formData.password.trim()) {
@@ -44,6 +74,15 @@ function Login() {
 
     if (errors[name]) {
       setErrors({ ...errors, [name]: "" });
+    }
+
+    // Real-time email validation to block @gmail.com
+    if (name === "email" && value.trim()) {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+        setErrors({ ...errors, email: "Please enter a valid email address" });
+      } else if (value.toLowerCase().endsWith("@gmail.com")) {
+        setErrors({ ...errors, email: "Gmail addresses are not accepted. Please use a different email domain." });
+      }
     }
   };
 
@@ -87,6 +126,11 @@ function Login() {
         return;
       }
 
+      // Check if user is org admin from checkMfa response
+      if (mfaResponse.data?.user) {
+        setIsOrgAdminUser(isOrgAdmin(mfaResponse.data.user));
+      }
+
       const { isMfaSetupRequired } = mfaResponse.data;
 
       if (!isMfaSetupRequired) {
@@ -118,12 +162,31 @@ function Login() {
   // Direct login when MFA not required
   const handleDirectLogin = async () => {
     try {
-      const response = await login(formData.email, formData.password);
+      const response = await login(formData.email, formData.password, true, isOrgAdminUser);
 
       if (response.isSuccess) {
+        const userData = response.data?.user;
+        
+        // Check if user is org admin - check response isManager field and roles
+        const userIsOrgAdmin = 
+          isOrgAdminUser ||
+          userData?.isManager === true ||
+          isOrgAdmin(userData);
+        
+        if (userIsOrgAdmin) {
+          // Redirect org admins to external URL immediately WITHOUT storing data
+          toast.success("Redirecting to admin portal...");
+          setTimeout(() => {
+            window.location.href = ORG_ADMIN_REDIRECT_URL;
+          }, 100);
+          return;
+        }
+        
+        // Only store data for non-org-admin users
         storeAuthData(response.data);
-        authLogin(response.data.user);
+        authLogin(userData);
         toast.success("Login successful!");
+        
         const from = location.state?.from?.pathname || ROUTES.DASHBOARD;
         navigate(from, { replace: true });
       } else {
@@ -172,12 +235,13 @@ function Login() {
 
       if (response.isSuccess) {
         toast.success(response.msg || "OTP sent successfully!");
-        // Navigate to TwoFactorAuth page with email and password
+        // Navigate to TwoFactorAuth page with email, password, and isManager flag
         navigate(ROUTES.TWO_FACTOR_AUTH, {
           state: {
             email: formData.email,
             password: formData.password,
             phoneNumberMasked: response.data.phoneNumberMasked,
+            isManager: isOrgAdminUser,
           },
         });
       } else {

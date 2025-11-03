@@ -8,6 +8,31 @@ import { ROUTES } from "../../constants/routerConstants";
 import loginImg from "../../assets/logo-sample.png";
 import "../../styles/custom.css";
 
+// Org admin redirect URL
+const ORG_ADMIN_REDIRECT_URL = "https://admin.dob.arielsoftwares.in/LoginPage";
+
+// Helper function to check if user is org admin
+const isOrgAdmin = (userData) => {
+  if (!userData) return false;
+  
+  // Check if isManager is true
+  if (userData.isManager === true) {
+    return true;
+  }
+  
+  // Check roles array for "Organisation Admin"
+  if (userData.roles && Array.isArray(userData.roles)) {
+    return userData.roles.some(
+      (role) =>
+        role === "Organisation Admin" ||
+        role === "Organization Admin" ||
+        role === "orgAdmin"
+    );
+  }
+  
+  return false;
+};
+
 function TwoFactorAuth() {
   const [codes, setCodes] = useState(["", "", "", "", "", ""]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -18,9 +43,10 @@ function TwoFactorAuth() {
   const location = useLocation();
   const { login: authLogin } = useAuth();
 
-  // Get email and phone from navigation state
+  // Get email, phone, and isManager from navigation state
   const email = location.state?.email;
   const phoneNumberMasked = location.state?.phoneNumberMasked;
+  const isManager = location.state?.isManager || false;
 
   useEffect(() => {
     // Redirect to login if no email in location state
@@ -108,12 +134,31 @@ function TwoFactorAuth() {
     setIsSubmitting(true);
 
     try {
-      const response = await verifyOtp(email, fullCode);
+      const response = await verifyOtp(email, fullCode, isManager);
 
       if (response.isSuccess) {
+        const userData = response.data?.user;
+        
+        // Check if user is org admin - check passed flag, response isManager field, and roles
+        const userIsOrgAdmin = 
+          isManager || 
+          userData?.isManager === true ||
+          isOrgAdmin(userData);
+        
+        if (userIsOrgAdmin) {
+          // Redirect org admins to external URL immediately WITHOUT storing data
+          toast.success("Redirecting to admin portal...");
+          setTimeout(() => {
+            window.location.href = ORG_ADMIN_REDIRECT_URL;
+          }, 100);
+          return;
+        }
+        
+        // Only store data for non-org-admin users
         storeAuthData(response.data);
-        authLogin(response.data.user);
+        authLogin(userData);
         toast.success("Login successful!");
+        
         navigate(ROUTES.DASHBOARD);
       } else {
         toast.error(

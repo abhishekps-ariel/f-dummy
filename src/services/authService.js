@@ -27,14 +27,21 @@ export const checkMfa = async (email, password) => {
   };
 };
 
-export const login = async (email, password, rememberMe = true) => {
+export const login = async (email, password, rememberMe = true, isManager = false) => {
+  const requestBody = {
+    email,
+    password,
+    rememberMe,
+  };
+
+  // Add isManager flag for org admin login
+  if (isManager) {
+    requestBody.isManager = true;
+  }
+
   const response = await client.post(
     AUTH_ENDPOINTS.LOGIN,
-    {
-      email,
-      password,
-      rememberMe,
-    },
+    requestBody,
     {
       headers: {
         Accept: "text/plain",
@@ -70,13 +77,20 @@ export const sendOtp = async (email, password) => {
   };
 };
 
-export const verifyOtp = async (email, otpCode) => {
+export const verifyOtp = async (email, otpCode, isManager = false) => {
+  const requestBody = {
+    email,
+    otpCode,
+  };
+
+  // Add isManager flag for org admin login
+  if (isManager) {
+    requestBody.isManager = true;
+  }
+
   const response = await client.post(
     AUTH_ENDPOINTS.VERIFY_OTP,
-    {
-      email,
-      otpCode,
-    },
+    requestBody,
     {
       headers: {
         Accept: "text/plain",

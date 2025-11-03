@@ -210,6 +210,8 @@ function Register() {
       newErrors.email = "Email is required";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = "Please enter a valid email address";
+    } else if (formData.email.toLowerCase().endsWith("@gmail.com")) {
+      newErrors.email = "Gmail addresses are not accepted. Please use a different email domain.";
     }
 
     if (!formData.password.trim()) {
@@ -247,6 +249,15 @@ function Register() {
 
     if (errors[name]) {
       setErrors({ ...errors, [name]: "" });
+    }
+
+    // Real-time email validation to block @gmail.com
+    if (name === "email" && value.trim()) {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+        setErrors({ ...errors, email: "Please enter a valid email address" });
+      } else if (value.toLowerCase().endsWith("@gmail.com")) {
+        setErrors({ ...errors, email: "Gmail addresses are not accepted. Please use a different email domain." });
+      }
     }
 
     if (name === "password") {
@@ -455,12 +466,6 @@ function Register() {
                   <h2 className="font-xl-med fw-bold">
                     {isInviteFlow ? "Complete Your Registration" : "Register"}
                   </h2>
-                  {selectedRole && !isInviteFlow && (
-                    <div className="alert alert-info mb-3" role="alert">
-                      <i className="fa-solid fa-info-circle me-2"></i>
-                      Registering as: <strong>{selectedRole === "orgAdmin" ? "Organisation Admin" : "Filer"}</strong>
-                    </div>
-                  )}
                   {isInviteFlow ? (
                     <div className="alert alert-info mb-3" role="alert">
                       <i className="fa-solid fa-info-circle me-2"></i>
@@ -475,10 +480,77 @@ function Register() {
                       </Link>
                     </p>
                   )}
-                  {!selectedRole && !isInviteFlow && (
-                    <div className="alert alert-warning mb-3" role="alert">
-                      <i className="fa-solid fa-exclamation-triangle me-2"></i>
-                      Please select a registration type from the Register dropdown on the landing page.
+                  {!isInviteFlow && (
+                    <div className="role-selection-container mb-4">
+                      <label className="label-text mb-3 d-block text-center">
+                        Select Registration Type
+                      </label>
+                      <div className="d-flex gap-3 justify-content-center">
+                        <button
+                          type="button"
+                          className={`btn role-toggle-btn ${selectedRole === "filer" ? "active" : ""}`}
+                          onClick={() => {
+                            setSelectedRole("filer");
+                            setSelectedOrganization(null);
+                            setOrganizationSearchQuery("");
+                          }}
+                          style={{
+                            flex: 1,
+                            maxWidth: "200px",
+                            padding: "12px 24px",
+                            border: selectedRole === "filer" ? "2px solid #0265A3" : "2px solid #dee2e6",
+                            borderRadius: "8px",
+                            backgroundColor: selectedRole === "filer" ? "#0265A3" : "#fff",
+                            color: selectedRole === "filer" ? "#fff" : "#333",
+                            fontWeight: "600",
+                            transition: "all 0.3s ease",
+                            cursor: "pointer"
+                          }}
+                          onMouseEnter={(e) => {
+                            if (selectedRole !== "filer") {
+                              e.target.style.borderColor = "#0265A3";
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (selectedRole !== "filer") {
+                              e.target.style.borderColor = "#dee2e6";
+                            }
+                          }}
+                        >
+                          <i className="fa-solid fa-user me-2"></i>
+                          Filer
+                        </button>
+                        <button
+                          type="button"
+                          className={`btn role-toggle-btn ${selectedRole === "orgAdmin" ? "active" : ""}`}
+                          onClick={() => setSelectedRole("orgAdmin")}
+                          style={{
+                            flex: 1,
+                            maxWidth: "200px",
+                            padding: "12px 24px",
+                            border: selectedRole === "orgAdmin" ? "2px solid #0265A3" : "2px solid #dee2e6",
+                            borderRadius: "8px",
+                            backgroundColor: selectedRole === "orgAdmin" ? "#0265A3" : "#fff",
+                            color: selectedRole === "orgAdmin" ? "#fff" : "#333",
+                            fontWeight: "600",
+                            transition: "all 0.3s ease",
+                            cursor: "pointer"
+                          }}
+                          onMouseEnter={(e) => {
+                            if (selectedRole !== "orgAdmin") {
+                              e.target.style.borderColor = "#0265A3";
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (selectedRole !== "orgAdmin") {
+                              e.target.style.borderColor = "#dee2e6";
+                            }
+                          }}
+                        >
+                          <i className="fa-solid fa-building me-2"></i>
+                          Organisation Admin
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
