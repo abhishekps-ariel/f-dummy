@@ -124,7 +124,7 @@ body {
   font-size: 0.75rem;
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 /* Mobile Table Responsive Styles */
@@ -185,6 +185,7 @@ body {
   .petition-table-container .status-badge {
     font-size: 0.65rem;
     padding: 0.2rem 0.4rem;
+    font-weight: 600;
   }
   
   /* Ensure action buttons are touch-friendly and compact */
@@ -1797,7 +1798,7 @@ input, textarea, select {
     display: inline-block;
     padding: 5px 13px;
     font-size: var(--text-sm);
-    font-weight: 400;
+    font-weight: 600;
     border-radius: 20px;
     text-align: center;
     min-width: 92px;
@@ -1832,6 +1833,56 @@ input, textarea, select {
     background-color: #495057;
     color: #ffffff;
 }
+
+/* Lowercase status classes (used in ViewAllPetitions) */
+.status-draft {
+    background-color: #6c757d;
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.status-submitted {
+    background-color: #0d6efd;
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.status-returned {
+    background-color: #ffc107;
+    color: #212529;
+    font-weight: 600;
+}
+
+.status-resubmitted {
+    background-color: #8e44ad;
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.status-accepted {
+    background-color: #198754;
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.status-closed {
+    background-color: #495057;
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.status-under-review {
+    background-color: #17a2b8;
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.status-rejected {
+    background-color: #dc3545;
+    color: #ffffff;
+    font-weight: 600;
+}
+
 .stat-card {
     padding: 1.5rem 2.25rem;
     box-shadow: 0px 0px 10px #e7e7e7b8;

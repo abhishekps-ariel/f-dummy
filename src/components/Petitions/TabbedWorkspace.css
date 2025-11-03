@@ -50,7 +50,6 @@
   color: #111827;
   border-color: #d1d5db;
   border-bottom-color: transparent; /* visually flows into content */
-  margin-bottom: -4px; /* overlap the content top border slightly */
   z-index: 2;
   box-shadow: 0 2px 6px rgba(0,0,0,0.04);
 }
