@@ -538,12 +538,20 @@ const ViewAllPetitions = ({ onBack }) => {
   };
 
   const handlePetitionSubmitted = () => {
-    // Reload petitions data to show the latest submitted petition
-    // Call fetchPetitions with page 1 - exactly like delete does but explicitly page 1
-    // fetchPetitions will update pagination state automatically
-    if (typeof fetchPetitions === "function") {
-      fetchPetitions(1);
-    }
+    // Clear all filters and search, then refresh the table
+    // The backend needs time to process and index the new petition
+    // So we'll refresh multiple times with delays to ensure the new petition appears
+    
+    // First refresh - clear filters and refresh after a short delay
+    setTimeout(() => {
+      handleRefresh();
+      // Second refresh - in case backend took longer to process the new petition
+      setTimeout(() => {
+        if (organization?.id && fetchPetitionsRef.current) {
+          fetchPetitionsRef.current(1);
+        }
+      }, 1000);
+    }, 500);
   };
 
 
