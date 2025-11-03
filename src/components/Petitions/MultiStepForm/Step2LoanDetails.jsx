@@ -1,0 +1,377 @@
+import React from "react";
+import CustomDropdown from "../../shared/CustomDropdown"; 
+
+const Step2LoanDetails = ({
+  commonDataError,
+  commonDataLoading,
+  fieldErrors,
+  formData,
+  handleInputChange,
+  getLoanTypes,
+  getLienPositions,
+}) => {
+  return (
+          <div>
+            <h2 className="theme-color font-med mb-1">2. Loan Details</h2>
+
+            <p className="text-muted small mb-3">
+              Provide the key financial information for the loan.{" "}
+              <span className="fw-semibold text-success">
+                MERS Integration:
+              </span>{" "}
+              System validates Loan Account Number.
+            </p>
+
+            {commonDataError && (
+              <div className="alert alert-warning" role="alert">
+                <i className="fas fa-exclamation-triangle me-2"></i>
+
+                {commonDataError}
+              </div>
+            )}
+
+            <div className="row g-3">
+              <div className="col-md-6">
+                <label htmlFor="minNumber" className="form-label">
+                  MIN Number *
+                </label>
+
+                <input
+                  type="text"
+                  id="minNumber"
+                  name="minNumber"
+                  className={`form-control ${
+                    fieldErrors.minNumber ? "is-invalid" : ""
+                  }`}
+                  value={formData.minNumber}
+                  onChange={handleInputChange}
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  placeholder="Enter MIN number"
+                />
+
+                {fieldErrors.minNumber && (
+                  <div className="text-danger small mt-1">
+                    {fieldErrors.minNumber}
+                  </div>
+                )}
+              </div>
+
+              <div className="col-md-6">
+                <label htmlFor="loanNumber" className="form-label">
+                  Loan Number *
+                </label>
+
+                <input
+                  type="text"
+                  id="loanNumber"
+                  name="loanNumber"
+                  className={`form-control ${
+                    fieldErrors.loanNumber ? "is-invalid" : ""
+                  }`}
+                  value={formData.loanNumber}
+                  onChange={handleInputChange}
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  placeholder="Enter loan number"
+                />
+
+                {fieldErrors.loanNumber && (
+                  <div className="text-danger small mt-1">
+                    {fieldErrors.loanNumber}
+                  </div>
+                )}
+              </div>
+
+              <div className="col-md-6">
+                <label htmlFor="petitionLoanTypeId" className="form-label">
+                  Loan Type *
+                </label>
+
+                <CustomDropdown
+                  id="petitionLoanTypeId"
+                  name="petitionLoanTypeId"
+                  value={formData.petitionLoanTypeId}
+                  onChange={handleInputChange}
+                  placeholder="Select Loan Type"
+                  disabled={commonDataLoading}
+                  error={!!fieldErrors.petitionLoanTypeId}
+                  options={[
+                    { value: "", label: "Select Loan Type" },
+                    ...getLoanTypes().map((loanType) => ({
+                      value: loanType.id,
+                      label: loanType.name,
+                    })),
+                  ]}
+                />
+
+                {fieldErrors.petitionLoanTypeId && (
+                  <div className="text-danger small mt-1">
+                    {fieldErrors.petitionLoanTypeId}
+                  </div>
+                )}
+
+                {commonDataLoading && (
+                  <div className="form-text">
+                    <i className="fas fa-spinner fa-spin me-1"></i>
+                    Loading loan types...
+                  </div>
+                )}
+              </div>
+
+              <div className="col-md-6">
+                <label htmlFor="lienPosition" className="form-label">
+                  Lien Position *
+                </label>
+
+                <CustomDropdown
+                  id="lienPosition"
+                  name="lienPosition"
+                  value={formData.lienPosition}
+                  onChange={handleInputChange}
+                  placeholder="Select Position"
+                  disabled={commonDataLoading}
+                  error={!!fieldErrors.lienPosition}
+                  options={[
+                    { value: "", label: "Select Position" },
+                    ...getLienPositions().map((position) => ({
+                      value: position.value,
+                      label: position.name,
+                    })),
+                  ]}
+                />
+
+                {fieldErrors.lienPosition && (
+                  <div className="text-danger small mt-1">
+                    {fieldErrors.lienPosition}
+                  </div>
+                )}
+
+                {commonDataLoading && (
+                  <div className="form-text">
+                    <i className="fas fa-spinner fa-spin me-1"></i>
+                    Loading lien positions...
+                  </div>
+                )}
+              </div>
+
+              <div className="col-md-6">
+                <label htmlFor="originationDate" className="form-label">
+                  Origination Date *
+                </label>
+
+                <input
+                  type="date"
+                  id="originationDate"
+                  name="originationDate"
+                  className={`form-control ${
+                    fieldErrors.originationDate ? "is-invalid" : ""
+                  }`}
+                  value={formData.originationDate}
+                  onChange={handleInputChange}
+                />
+
+                {fieldErrors.originationDate && (
+                  <div className="text-danger small mt-1">
+                    {fieldErrors.originationDate}
+                  </div>
+                )}
+              </div>
+
+              <div className="col-md-6">
+                <label htmlFor="originalPrincipalAmount" className="form-label">
+                  Original Principal Amount ($) *
+                </label>
+
+                <input
+                  type="number"
+                  step="0.01"
+                  id="originalPrincipalAmount"
+                  name="originalPrincipalAmount"
+                  className={`form-control ${
+                    fieldErrors.originalPrincipalAmount ? "is-invalid" : ""
+                  }`}
+                  value={formData.originalPrincipalAmount}
+                  onChange={handleInputChange}
+                />
+
+                {fieldErrors.originalPrincipalAmount && (
+                  <div className="text-danger small mt-1">
+                    {fieldErrors.originalPrincipalAmount}
+                  </div>
+                )}
+              </div>
+
+              <div className="col-md-6">
+                <label htmlFor="currentPrincipalBalance" className="form-label">
+                  Current Principal Balance ($) *
+                </label>
+
+                <input
+                  type="number"
+                  step="0.01"
+                  id="currentPrincipalBalance"
+                  name="currentPrincipalBalance"
+                  className={`form-control ${
+                    fieldErrors.currentPrincipalBalance ? "is-invalid" : ""
+                  }`}
+                  value={formData.currentPrincipalBalance}
+                  onChange={handleInputChange}
+                />
+
+                {fieldErrors.currentPrincipalBalance && (
+                  <div className="text-danger small mt-1">
+                    {fieldErrors.currentPrincipalBalance}
+                  </div>
+                )}
+              </div>
+
+              <div className="col-md-6">
+                <label htmlFor="interestRatePercent" className="form-label">
+                  Interest Rate (%) *
+                </label>
+
+                <input
+                  type="number"
+                  step="0.001"
+                  id="interestRatePercent"
+                  name="interestRatePercent"
+                  className={`form-control ${
+                    fieldErrors.interestRatePercent ? "is-invalid" : ""
+                  }`}
+                  value={formData.interestRatePercent}
+                  onChange={handleInputChange}
+                />
+
+                {fieldErrors.interestRatePercent && (
+                  <div className="text-danger small mt-1">
+                    {fieldErrors.interestRatePercent}
+                  </div>
+                )}
+              </div>
+
+              <div className="col-md-6">
+                <label htmlFor="monthlyPaymentAmount" className="form-label">
+                  Monthly Payment Amount ($) *
+                </label>
+
+                <input
+                  type="number"
+                  step="0.01"
+                  id="monthlyPaymentAmount"
+                  name="monthlyPaymentAmount"
+                  className={`form-control ${
+                    fieldErrors.monthlyPaymentAmount ? "is-invalid" : ""
+                  }`}
+                  value={formData.monthlyPaymentAmount}
+                  onChange={handleInputChange}
+                />
+
+                {fieldErrors.monthlyPaymentAmount && (
+                  <div className="text-danger small mt-1">
+                    {fieldErrors.monthlyPaymentAmount}
+                  </div>
+                )}
+              </div>
+
+              <div className="col-md-6">
+                <label htmlFor="delinquencyDaysAtFiling" className="form-label">
+                  Delinquency Days at Filing *
+                </label>
+
+                <input
+                  type="number"
+                  id="delinquencyDaysAtFiling"
+                  name="delinquencyDaysAtFiling"
+                  min="0"
+                  className={`form-control ${
+                    fieldErrors.delinquencyDaysAtFiling ? "is-invalid" : ""
+                  }`}
+                  value={
+                    formData.delinquencyDaysAtFiling === "" ||
+                    formData.delinquencyDaysAtFiling === null ||
+                    formData.delinquencyDaysAtFiling === undefined
+                      ? ""
+                      : String(
+                          Math.floor(Number(formData.delinquencyDaysAtFiling))
+                        )
+                  }
+                  onChange={handleInputChange}
+                />
+
+                {fieldErrors.delinquencyDaysAtFiling && (
+                  <div className="text-danger small mt-1">
+                    {fieldErrors.delinquencyDaysAtFiling}
+                  </div>
+                )}
+              </div>
+
+              <div className="col-12">
+                <div className="row">
+                  <div className="col-md-4">
+                    <div className="form-check">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        id="variableRate"
+                        name="variableRate"
+                        checked={formData.variableRate}
+                        onChange={handleInputChange}
+                      />
+
+                      <label
+                        className="form-check-label"
+                        htmlFor="variableRate"
+                      >
+                        Variable Rate
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="col-md-4">
+                    <div className="form-check">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        id="interestOnly"
+                        name="interestOnly"
+                        checked={formData.interestOnly}
+                        onChange={handleInputChange}
+                      />
+
+                      <label
+                        className="form-check-label"
+                        htmlFor="interestOnly"
+                      >
+                        Interest Only
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="col-md-4">
+                    <div className="form-check">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        id="negativeAmortization"
+                        name="negativeAmortization"
+                        checked={formData.negativeAmortization}
+                        onChange={handleInputChange}
+                      />
+
+                      <label
+                        className="form-check-label"
+                        htmlFor="negativeAmortization"
+                      >
+                        Negative Amortization
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+};
+
+export default Step2LoanDetails;
