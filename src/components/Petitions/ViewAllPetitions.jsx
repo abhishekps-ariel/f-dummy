@@ -11,6 +11,8 @@ import petitionApiService from "../../services/petitionApiService";
 import CustomDropdown from "../shared/CustomDropdown";
 import "../shared/CustomDropdown.css";
 import "./TabbedWorkspace.css";
+import { getUserById, getSignatureById } from "../../services/authService";
+import { useAuth } from "../../context/AuthContext";
 
 const ViewAllPetitions = ({ onBack }) => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -36,8 +38,87 @@ const ViewAllPetitions = ({ onBack }) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [petitionToDelete, setPetitionToDelete] = useState(null);
   
+  // Profile validation dialog state
+  const [showProfileValidationDialog, setShowProfileValidationDialog] = useState(false);
+  const [profileValidationErrors, setProfileValidationErrors] = useState({
+    missingFilingEntityType: false,
+    missingSignature: false
+  });
+  const [isValidatingProfile, setIsValidatingProfile] = useState(false);
+  
   // Use ref to store fetchPetitions so event listener always has latest version
   const fetchPetitionsRef = useRef();
+
+  // Get user info from auth context
+  const { user } = useAuth();
+
+  // Validate user profile before opening petition creation modal
+  const validateUserProfileBeforeCreate = async () => {
+    if (!user?.id) {
+      toast.error("User information not found. Please log in again.");
+      return false;
+    }
+
+    setIsValidatingProfile(true);
+    try {
+      // Load user profile
+      const profileResponse = await getUserById(user.id);
+
+      if (!profileResponse.isSuccess) {
+        toast.error("Failed to load user profile. Please try again.");
+        setIsValidatingProfile(false);
+        return false;
+      }
+
+      const userProfile = profileResponse.data;
+      let hasErrors = false;
+      const errors = {
+        missingFilingEntityType: false,
+        missingSignature: false
+      };
+
+      // Check if filing entity type is set
+      if (!userProfile.filingEntityTypeId) {
+        errors.missingFilingEntityType = true;
+        hasErrors = true;
+      }
+
+      // Check if signature is uploaded
+      try {
+        const signatureResponse = await getSignatureById(user.id);
+        if (!signatureResponse.isSuccess || !signatureResponse.data || !signatureResponse.data.signatureUrl) {
+          errors.missingSignature = true;
+          hasErrors = true;
+        }
+      } catch (error) {
+        errors.missingSignature = true;
+        hasErrors = true;
+      }
+
+      setIsValidatingProfile(false);
+
+      if (hasErrors) {
+        setProfileValidationErrors(errors);
+        setShowProfileValidationDialog(true);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Error validating user profile:", error);
+      toast.error("Failed to validate user profile. Please try again.");
+      setIsValidatingProfile(false);
+      return false;
+    }
+  };
+
+  // Handle create new petition button click
+  const handleCreateNewPetition = async () => {
+    const isValid = await validateUserProfileBeforeCreate();
+    if (isValid) {
+      setShowPetitionSteps(true);
+    }
+  };
 
   const handleConfirmDelete = async () => {
     try {
@@ -517,7 +598,7 @@ const ViewAllPetitions = ({ onBack }) => {
                       {/* Create New Petition Button */}
                       <button
                         className="dashboard-btn-create"
-                        onClick={() => setShowPetitionSteps(true)}
+                        onClick={handleCreateNewPetition}
                       >
                         <i className="fa-solid fa-plus me-1"></i> Create New
                         Petition
@@ -585,7 +666,7 @@ const ViewAllPetitions = ({ onBack }) => {
                       <div className="col-7">
                         <button
                           className="dashboard-btn-create w-100"
-                          onClick={() => setShowPetitionSteps(true)}
+                          onClick={handleCreateNewPetition}
                         >
                           <i className="fa-solid fa-plus me-1"></i> Create New
                           Petition
@@ -1298,6 +1379,97 @@ const ViewAllPetitions = ({ onBack }) => {
           return null;
         })()}
       </div>
+
+      {/* Profile Validation Dialog */}
+      {showProfileValidationDialog && (
+        <div
+          className="modal fade show d-block"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)", zIndex: 1070 }}
+          tabIndex="-1"
+        >
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Profile Information Required</h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setShowProfileValidationDialog(false)}
+                  aria-label="Close"
+                ></button>
+              </div>
+              <div className="modal-body">
+                <div className="p-4">
+                  <div className="d-flex align-items-center mb-3">
+                    <i
+                      className="fas fa-exclamation-triangle text-danger me-3"
+                      style={{ fontSize: "24px" }}
+                    ></i>
+                    <h5 className="fw-bold mb-0">Complete Your Profile</h5>
+                  </div>
+                  <p className="mb-4">
+                    You need to complete your profile information before creating a petition:
+                  </p>
+
+                  {/* Filing Entity Type Alert */}
+                  {profileValidationErrors.missingFilingEntityType && (
+                    <div className="p-3 border border-danger bg-danger-subtle rounded mb-3">
+                      <div className="d-flex align-items-center">
+                        <i className="fas fa-building text-danger me-2"></i>
+                        <div className="flex-grow-1">
+                          <h6 className="fw-bold text-danger mb-1">
+                            Filing Entity Type Required
+                          </h6>
+                          <p className="mb-0 small">
+                            You must set your filing entity type in your profile.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Signature Alert */}
+                  {profileValidationErrors.missingSignature && (
+                    <div className="p-3 border border-danger bg-danger-subtle rounded mb-3">
+                      <div className="d-flex align-items-center">
+                        <i className="fas fa-signature text-danger me-2"></i>
+                        <div className="flex-grow-1">
+                          <h6 className="fw-bold text-danger mb-1">
+                            Digital Signature Required
+                          </h6>
+                          <p className="mb-0 small">
+                            You must upload a digital signature in your profile.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="dashboard-btn-refresh"
+                  onClick={() => setShowProfileValidationDialog(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="dashboard-btn-create"
+                  onClick={() => {
+                    setShowProfileValidationDialog(false);
+                    window.location.href = "/profile";
+                  }}
+                >
+                  <i className="fas fa-user me-2"></i>
+                  Go to Profile
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Petition Steps Modal */}
       <PetitionSteps
