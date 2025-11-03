@@ -43,10 +43,19 @@ function Register() {
   const [isLoadingInvite, setIsLoadingInvite] = useState(false);
   const [inviteError, setInviteError] = useState(null);
 
-  // Handle invite parameters on component mount
+  // Role selection state (Filer or Organisation Admin)
+  const [selectedRole, setSelectedRole] = useState(null);
+
+  // Handle invite parameters and role on component mount
   useEffect(() => {
     const joinRequestId = searchParams.get("joinRequestId");
     const isAdminInvite = searchParams.get("isAdminInvite") === "true";
+    const role = searchParams.get("role");
+
+    // Set role if provided
+    if (role) {
+      setSelectedRole(role === "orgAdmin" ? "orgAdmin" : "filer");
+    }
 
     if (joinRequestId) {
       setIsInviteFlow(true);
@@ -106,6 +115,12 @@ function Register() {
 
   const validateForm = () => {
     const newErrors = {};
+
+    // Validate role selection (only for non-invite flows)
+    if (!isInviteFlow && !selectedRole) {
+      toast.error("Please select a registration type (Filer or Organisation Admin)");
+      return false;
+    }
 
     if (!formData.firstName.trim()) {
       newErrors.firstName = "First name is required";
@@ -189,7 +204,8 @@ function Register() {
 
     try {
       // For invite flow, pass invite data to registration
-      const response = await register(formData, inviteData);
+      // Pass selectedRole if not in invite flow (invite flow role is determined by invite)
+      const response = await register(formData, inviteData, !isInviteFlow ? selectedRole : null);
 
       if (response.isSuccess) {
         if (isInviteFlow) {
@@ -317,6 +333,12 @@ function Register() {
                   <h2 className="font-xl-med fw-bold">
                     {isInviteFlow ? "Complete Your Registration" : "Register"}
                   </h2>
+                  {selectedRole && !isInviteFlow && (
+                    <div className="alert alert-info mb-3" role="alert">
+                      <i className="fa-solid fa-info-circle me-2"></i>
+                      Registering as: <strong>{selectedRole === "orgAdmin" ? "Organisation Admin" : "Filer"}</strong>
+                    </div>
+                  )}
                   {isInviteFlow ? (
                     <div className="alert alert-info mb-3" role="alert">
                       <i className="fa-solid fa-info-circle me-2"></i>
@@ -330,6 +352,12 @@ function Register() {
                         Login{" "}
                       </Link>
                     </p>
+                  )}
+                  {!selectedRole && !isInviteFlow && (
+                    <div className="alert alert-warning mb-3" role="alert">
+                      <i className="fa-solid fa-exclamation-triangle me-2"></i>
+                      Please select a registration type from the Register dropdown on the landing page.
+                    </div>
                   )}
                 </div>
 

@@ -125,40 +125,40 @@ function HomeHeader({
             </div>
 
             <div className="d-flex gap-2 align-items-center flex-wrap">
-              <Link
-                className="font-base fw-medium sign-in-btn text-decoration-none"
-                to="/register"
-                role="button"
-                aria-label="Register"
-              >
-                <i className="fa-solid fa-user me-1"></i> Register
-              </Link>
               <div className="dropdown">
                 <button
                   className="font-base fw-medium sign-in-btn dropdown-toggle"
                   type="button"
-                  id="signInDropdown"
+                  id="registerDropdown"
                   data-bs-toggle="dropdown"
                   aria-expanded="false"
                 >
-                  <i className="fa-solid fa-user me-1"></i> Sign in
+                  <i className="fa-solid fa-user me-1"></i> Register
                 </button>
                 <ul
                   className="dropdown-menu dropdown-menu-end theme-dropdown"
-                  aria-labelledby="signInDropdown"
+                  aria-labelledby="registerDropdown"
                 >
                   <li>
-                    <Link className="dropdown-item" to="/login">
-                      User
+                    <Link className="dropdown-item" to="/register?role=filer">
+                      Filer
                     </Link>
                   </li>
                   <li>
-                    <a className="dropdown-item" href="#">
-                      Agency Workbench
-                    </a>
+                    <Link className="dropdown-item" to="/register?role=orgAdmin">
+                      Organisation Admin
+                    </Link>
                   </li>
                 </ul>
               </div>
+              <Link
+                className="font-base fw-medium sign-in-btn text-decoration-none"
+                to="/login"
+                role="button"
+                aria-label="Sign in"
+              >
+                <i className="fa-solid fa-user me-1"></i> Sign in
+              </Link>
             </div>
           </div>
         </div>

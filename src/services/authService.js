@@ -91,13 +91,21 @@ export const verifyOtp = async (email, otpCode) => {
   };
 };
 
-export const register = async (formData, inviteData = null) => {
+export const register = async (formData, inviteData = null, role = null) => {
+  // Map role values to backend expected values
+  let roleValue = "Normal User"; // Default
+  if (role === "orgAdmin") {
+    roleValue = "Organisation Admin";
+  } else if (role === "filer") {
+    roleValue = "Filer";
+  }
+
   const requestBody = {
     firstName: formData.firstName,
     lastName: formData.lastName,
     email: formData.email,
     password: formData.password,
-    role: "Normal User",
+    role: roleValue,
     phone: formData.phoneNumber,
   };
 
