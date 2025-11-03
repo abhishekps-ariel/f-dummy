@@ -1,7 +1,7 @@
 import { lazy } from 'react';
 import { createBrowserRouter } from 'react-router-dom';
 import Layout from '../layout/Layout';
-import RouteGuard from '../components/RouteGuard';
+import RouteGuard from './RouteGuard';
 import { ROUTES } from '../constants/routerConstants';
 
 const Home = lazy(() => import('../pages/Home'));

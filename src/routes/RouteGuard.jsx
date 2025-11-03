@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthCheck } from '../hooks/useAuthCheck';
-import LoadingFallback from './shared/LoadingFallback';
+import LoadingFallback from '../components/shared/LoadingFallback';
 
 const RouteGuard = ({ children }) => {
   const { isChecking } = useAuthCheck();
