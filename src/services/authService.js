@@ -91,7 +91,7 @@ export const verifyOtp = async (email, otpCode) => {
   };
 };
 
-export const register = async (formData, inviteData = null, role = null) => {
+export const register = async (formData, inviteData = null, role = null, organizationId = null) => {
   // Map role values to backend expected values
   let roleValue = "Normal User"; // Default
   if (role === "orgAdmin") {
@@ -109,7 +109,13 @@ export const register = async (formData, inviteData = null, role = null) => {
     phone: formData.phoneNumber,
   };
 
+  // Add organizationId if provided (for org admin registration)
+  if (organizationId) {
+    requestBody.organizationId = organizationId;
+  }
+
   // Add invite-related parameters if provided
+  // Note: Do not send joinRequestId for org admin registration
   if (inviteData) {
     requestBody.joinRequestId = inviteData.joinRequestId;
     requestBody.isAdminInvite = inviteData.isAdminInvite;

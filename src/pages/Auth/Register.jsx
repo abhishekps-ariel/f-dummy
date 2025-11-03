@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { register } from "../../services/authService";
 import {
   getJoinRequest,
   bindUserToOrganization,
+  searchOrganizations,
 } from "../../services/organizationService";
+import { useDebounce } from "../../hooks/useDebounce";
 import { ROUTES } from "../../constants/routerConstants";
 import loginImg from "../../assets/logo-sample.png";
 import PasswordGuidelines from "../../components/shared/PasswordGuidelines";
@@ -46,9 +48,15 @@ function Register() {
   // Role selection state (Filer or Organisation Admin)
   const [selectedRole, setSelectedRole] = useState(null);
 
-  // Organization input state (for Organisation Admin registration)
-  // Static field for now - will be replaced with API search later
-  const [organizationName, setOrganizationName] = useState("");
+  // Organization search state (for Organisation Admin registration)
+  const [organizationSearchQuery, setOrganizationSearchQuery] = useState("");
+  const [organizations, setOrganizations] = useState([]);
+  const [selectedOrganization, setSelectedOrganization] = useState(null);
+  const [showOrgDropdown, setShowOrgDropdown] = useState(false);
+  const [isLoadingOrgs, setIsLoadingOrgs] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
+  const orgSearchRef = useRef(null);
+  const debouncedOrgSearchQuery = useDebounce(organizationSearchQuery, 300);
 
   // Handle invite parameters and role on component mount
   useEffect(() => {
@@ -70,6 +78,48 @@ function Register() {
       fetchInviteData(joinRequestId, isAdminInvite);
     }
   }, [searchParams]);
+
+  // Organization search effect
+  useEffect(() => {
+    const performOrgSearch = async () => {
+      if (!hasSearched) return;
+
+      setIsLoadingOrgs(true);
+      try {
+        // Use searchOrganizations - API should handle empty queries
+        const response = await searchOrganizations(debouncedOrgSearchQuery || "");
+        if (response.isSuccess) {
+          setOrganizations(response.data || []);
+          setShowOrgDropdown(true);
+        } else {
+          setOrganizations([]);
+        }
+      } catch (error) {
+        setOrganizations([]);
+      } finally {
+        setIsLoadingOrgs(false);
+      }
+    };
+
+    performOrgSearch();
+  }, [debouncedOrgSearchQuery, hasSearched]);
+
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        orgSearchRef.current &&
+        !orgSearchRef.current.contains(event.target)
+      ) {
+        setShowOrgDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const fetchInviteData = async (joinRequestId, isAdminInvite) => {
     try {
@@ -126,11 +176,11 @@ function Register() {
       return false;
     }
 
-    // Validate organization input for Organisation Admin
-    if (!isInviteFlow && selectedRole === "orgAdmin" && !organizationName.trim()) {
-      setErrors((prev) => ({ ...prev, organization: "Please enter organization name" }));
+    // Validate organization selection for Organisation Admin
+    if (!isInviteFlow && selectedRole === "orgAdmin" && !selectedOrganization) {
+      setErrors((prev) => ({ ...prev, organization: "Please select an organization" }));
       return false;
-    } else if (organizationName.trim()) {
+    } else if (selectedOrganization) {
       setErrors((prev) => {
         const newErrors = { ...prev };
         delete newErrors.organization;
@@ -207,6 +257,53 @@ function Register() {
     }
   };
 
+  const handleSearchInputChange = (e) => {
+    setOrganizationSearchQuery(e.target.value);
+    setHasSearched(true);
+    setShowOrgDropdown(true);
+    if (errors.organization) {
+      setErrors({ ...errors, organization: "" });
+    }
+  };
+
+  const handleOrganizationSelect = (org) => {
+    setSelectedOrganization(org);
+    setOrganizationSearchQuery("");
+    setShowOrgDropdown(false);
+    if (errors.organization) {
+      setErrors({ ...errors, organization: "" });
+    }
+  };
+
+  const handleRemoveOrganization = () => {
+    setSelectedOrganization(null);
+    setOrganizationSearchQuery("");
+    setShowOrgDropdown(false);
+    setHasSearched(false);
+  };
+
+  const handleSearchFocus = async () => {
+    setHasSearched(true);
+    if (organizationSearchQuery.trim() === "") {
+      setIsLoadingOrgs(true);
+      try {
+        const response = await searchOrganizations("");
+        if (response.isSuccess) {
+          setOrganizations(response.data || []);
+          setShowOrgDropdown(true);
+        } else {
+          setOrganizations([]);
+        }
+      } catch (error) {
+        setOrganizations([]);
+      } finally {
+        setIsLoadingOrgs(false);
+      }
+    } else {
+      setShowOrgDropdown(true);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -220,8 +317,17 @@ function Register() {
 
     try {
       // For invite flow, pass invite data to registration
-      // Pass selectedRole if not in invite flow (invite flow role is determined by invite)
-      const response = await register(formData, inviteData, !isInviteFlow ? selectedRole : null);
+      // Pass selectedRole and organizationId if not in invite flow (invite flow role is determined by invite)
+      const organizationId = !isInviteFlow && selectedRole === "orgAdmin" && selectedOrganization
+        ? selectedOrganization.id
+        : null;
+      
+      const response = await register(
+        formData,
+        inviteData,
+        !isInviteFlow ? selectedRole : null,
+        organizationId
+      );
 
       if (response.isSuccess) {
         if (isInviteFlow) {
@@ -377,39 +483,157 @@ function Register() {
                   )}
                 </div>
 
-                {/* Organization Input - Only for Organisation Admin */}
+                {/* Organization Search - Only for Organisation Admin */}
                 {selectedRole === "orgAdmin" && !isInviteFlow && (
                   <div className="form-group mb-4">
-                    <label className="label-text">Organization Name</label>
-                    <div className="input-group">
-                      <div className="user-icon">
-                        <i className="fa-solid fa-building"></i>
-                      </div>
-                      <input
-                        name="organizationName"
-                        type="text"
-                        className={`form-control ${
-                          errors.organization ? "is-invalid" : ""
-                        }`}
-                        placeholder="Enter organization name"
-                        value={organizationName}
-                        onChange={(e) => {
-                          setOrganizationName(e.target.value);
-                          if (errors.organization) {
-                            setErrors({ ...errors, organization: "" });
-                          }
-                        }}
-                        required
-                      />
+                    <label className="label-text mb-2">Organization</label>
+                    <div className="search-form-wrapper" ref={orgSearchRef}>
+                      {selectedOrganization ? (
+                        <div className="selected-org-container">
+                          <div className="selected-org-badge">
+                            <div className="selected-org-icon">
+                              <i className="fa-solid fa-building"></i>
+                            </div>
+                            <div className="selected-org-info">
+                              <div className="selected-org-name">
+                                {selectedOrganization.name}
+                              </div>
+                              <div className="selected-org-details">
+                                {selectedOrganization.type && (
+                                  <span className="selected-org-type">
+                                    {selectedOrganization.type}
+                                  </span>
+                                )}
+                                {selectedOrganization.addressStreet1 && (
+                                  <span className="selected-org-address">
+                                    {" "}
+                                    •{" "}
+                                    {`${selectedOrganization.addressStreet1 || ""}${
+                                      selectedOrganization.addressStreet2
+                                        ? ", " + selectedOrganization.addressStreet2
+                                        : ""
+                                    }, ${selectedOrganization.addressCity || ""}, ${
+                                      selectedOrganization.addressState || ""
+                                    } ${selectedOrganization.addressZip || ""}`
+                                      .replace(/^,\s*/, "")
+                                      .replace(/,\s*$/, "")}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              className="selected-org-remove"
+                              onClick={handleRemoveOrganization}
+                              title="Remove selection"
+                            >
+                              <i className="fa-solid fa-times"></i>
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="search-input-container">
+                          <input
+                            className={`form-control ${
+                              errors.organization ? "is-invalid" : ""
+                            }`}
+                            type="search"
+                            placeholder="Search by organization name or EIN"
+                            aria-label="Search"
+                            value={organizationSearchQuery}
+                            onChange={handleSearchInputChange}
+                            onFocus={handleSearchFocus}
+                            required
+                          />
+
+                          {/* Search Dropdown */}
+                          {showOrgDropdown && (
+                            <div className="org-search-dropdown">
+                              {isLoadingOrgs ? (
+                                <div className="org-search-loading">
+                                  <div
+                                    className="spinner-border spinner-border-sm text-primary me-2"
+                                    role="status"
+                                  >
+                                    <span className="visually-hidden">
+                                      Loading...
+                                    </span>
+                                  </div>
+                                  <span>Loading organizations...</span>
+                                </div>
+                              ) : organizations.length > 0 ? (
+                                <div className="org-search-results">
+                                  {organizations.map((org) => (
+                                    <div
+                                      key={org.id}
+                                      className="org-search-item"
+                                      onClick={() => handleOrganizationSelect(org)}
+                                    >
+                                      <div className="org-item-name">{org.name}</div>
+                                      <div className="org-item-details">
+                                        <span className="org-item-type">
+                                          <i className="fa-solid fa-building me-1"></i>
+                                          {org.type || "N/A"}
+                                        </span>
+                                        {(org.addressStreet1 ||
+                                          org.addressCity ||
+                                          org.addressState ||
+                                          org.addressZip) && (
+                                          <span className="org-item-address ms-3">
+                                            <i className="fa-solid fa-location-dot me-1"></i>
+                                            {`${org.addressStreet1 || ""}${
+                                              org.addressStreet2
+                                                ? ", " + org.addressStreet2
+                                                : ""
+                                            }, ${org.addressCity || ""}, ${
+                                              org.addressState || ""
+                                            } ${org.addressZip || ""}`
+                                              .replace(/^,\s*/, "")
+                                              .replace(/,\s*$/, "")}
+                                          </span>
+                                        )}
+                                      </div>
+                                      {(org.primaryContactName ||
+                                        org.primaryContactEmail ||
+                                        org.primaryContactPhone) && (
+                                        <div className="org-item-contact">
+                                          <i className="fa-solid fa-user me-1"></i>
+                                          {org.primaryContactName && (
+                                            <span>{org.primaryContactName}</span>
+                                          )}
+                                          {org.primaryContactEmail && (
+                                            <span className="ms-2">
+                                              {org.primaryContactEmail}
+                                            </span>
+                                          )}
+                                          {org.primaryContactPhone && (
+                                            <span className="ms-2">
+                                              {org.primaryContactPhone}
+                                            </span>
+                                          )}
+                                        </div>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <div className="org-search-no-results">
+                                  <i className="fa-solid fa-search me-2"></i>
+                                  No organizations found.
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                     {errors.organization && (
-                      <div className="invalid-feedback d-block">
+                      <div className="invalid-feedback d-block mt-2">
                         <small className="text-danger">{errors.organization}</small>
                       </div>
                     )}
-                    <small className="text-muted">
-                      Enter the name of the organization you want to register as admin for.
-                      {/* Note: This will be replaced with a searchable dropdown when the API is updated. */}
+                    <small className="text-muted d-block mt-2">
+                      Search and select the organization you want to register as admin for.
                     </small>
                   </div>
                 )}
