@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { getAllOrganizationJoinRequests, reviewJoinRequest } from "../../services/organizationService";
-import { getJoinRequestStatusEnum } from "../../services/commonService";
+import { getJoinRequestStatusEnum, getFilingEntityTypes } from "../../services/commonService";
 import { getUserById } from "../../services/authService";
 import { toast } from "react-toastify";
 import { ROUTES } from "../../constants/routerConstants";
@@ -10,8 +10,6 @@ import { logout as logoutApi } from "../../services/authService";
 import { clearAuthData, getAuthData, getUserRole } from "../../utils/storage";
 import Sidebar from "../../components/shared/Sidebar";
 import Header from "../../components/shared/Header";
-import CustomDropdown from "../../components/shared/CustomDropdown";
-import "../../components/shared/CustomDropdown.css";
 import "../../styles/custom.css";
 
 // Helper function to check if user is org admin (matches Login.jsx logic)
@@ -52,9 +50,9 @@ const OrganizationJoinRequests = () => {
   const [requests, setRequests] = useState([]);
   const [requestsWithUserDetails, setRequestsWithUserDetails] = useState([]);
   const [statusEnum, setStatusEnum] = useState([]);
+  const [filingEntityTypes, setFilingEntityTypes] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [isLoadingUserDetails, setIsLoadingUserDetails] = useState(false);
   const [openDropdownId, setOpenDropdownId] = useState(null);
   const [pagination, setPagination] = useState({
     currentPage: 1,
@@ -74,11 +72,22 @@ const OrganizationJoinRequests = () => {
     if (organizationId) {
       loadRequests();
       loadStatusEnum();
+      loadFilingEntityTypes();
     }
   }, [organizationId]);
 
+  // Reload user details when filing entity types are loaded
+  useEffect(() => {
+    if (filingEntityTypes.length > 0 && requests.length > 0 && requestsWithUserDetails.length === 0 && !isLoadingUserDetails) {
+      fetchUserDetailsForRequests(requests).then(requestsWithDetails => {
+        setRequestsWithUserDetails(requestsWithDetails);
+      });
+    }
+  }, [filingEntityTypes, requests.length]);
+
   // Fetch user details for each request
   const fetchUserDetailsForRequests = async (requestsList) => {
+    setIsLoadingUserDetails(true);
     try {
       const requestsWithDetails = await Promise.all(
         requestsList.map(async (request) => {
@@ -86,10 +95,16 @@ const OrganizationJoinRequests = () => {
             if (request.userId) {
               const userResponse = await getUserById(request.userId);
               if (userResponse.isSuccess && userResponse.data) {
+                // Find filing entity type name
+                const filingEntityTypeName = userResponse.data.filingEntityTypeId
+                  ? filingEntityTypes.find(et => et.id === userResponse.data.filingEntityTypeId)?.name || 'Not Set'
+                  : 'Not Set';
+                
                 return {
                   ...request,
                   userEmail: userResponse.data.email || request.email,
                   userFullName: `${userResponse.data.firstName || ''} ${userResponse.data.lastName || ''}`.trim() || 'N/A',
+                  filingEntityTypeName: filingEntityTypeName,
                 };
               }
             }
@@ -97,6 +112,7 @@ const OrganizationJoinRequests = () => {
               ...request,
               userEmail: request.email || 'N/A',
               userFullName: 'N/A',
+              filingEntityTypeName: 'Not Set',
             };
           } catch (error) {
             console.error(`Error fetching user details for ${request.userId}:`, error);
@@ -104,6 +120,7 @@ const OrganizationJoinRequests = () => {
               ...request,
               userEmail: request.email || 'N/A',
               userFullName: 'N/A',
+              filingEntityTypeName: 'Not Set',
             };
           }
         })
@@ -112,6 +129,8 @@ const OrganizationJoinRequests = () => {
     } catch (error) {
       console.error("Error fetching user details:", error);
       return requestsList;
+    } finally {
+      setIsLoadingUserDetails(false);
     }
   };
 
@@ -119,6 +138,7 @@ const OrganizationJoinRequests = () => {
     if (!organizationId) return;
     
     setIsLoading(true);
+    setRequestsWithUserDetails([]); // Clear existing data immediately
     try {
       const response = await getAllOrganizationJoinRequests(organizationId);
       console.log("API Response:", response); // Debug log
@@ -129,10 +149,18 @@ const OrganizationJoinRequests = () => {
         
         console.log("Parsed requests data:", requestsData); // Debug log
         
-        // Fetch user details for each request
-        const requestsWithDetails = await fetchUserDetailsForRequests(requestsData);
+        // Store requests
         setRequests(requestsData);
-        setRequestsWithUserDetails(requestsWithDetails);
+        
+        // If filing entity types are already loaded, fetch user details immediately
+        if (filingEntityTypes.length > 0 && requestsData.length > 0) {
+          const requestsWithDetails = await fetchUserDetailsForRequests(requestsData);
+          setRequestsWithUserDetails(requestsWithDetails);
+        } else if (requestsData.length === 0) {
+          // No requests, set empty array and stop loading
+          setRequestsWithUserDetails([]);
+        }
+        // If filing entity types not loaded yet, the useEffect will handle fetching details when they load
       } else {
         toast.error(response.msg || "Failed to load join requests");
         setRequests([]);
@@ -164,12 +192,23 @@ const OrganizationJoinRequests = () => {
     }
   };
 
+  const loadFilingEntityTypes = async () => {
+    try {
+      const response = await getFilingEntityTypes();
+      if (response.isSuccess && response.data) {
+        setFilingEntityTypes(response.data || []);
+      }
+    } catch (error) {
+      console.error("Error loading filing entity types:", error);
+    }
+  };
+
   const getStatusInfo = (status) => {
     const statusItem = statusEnum.find(item => item.value === status);
     if (statusItem) {
       let badgeClass = "status-badge";
       if (status === 1) badgeClass += " status-approved"; // Approved
-      else if (status === 2) badgeClass += " status-denied"; // Denied
+      else if (status === 2) badgeClass += " status-denied status-rejected"; // Denied
       else badgeClass += " status-pending"; // Pending
       
       return {
@@ -179,7 +218,7 @@ const OrganizationJoinRequests = () => {
     }
     // Fallback
     if (status === 1) return { text: "Approved", class: "status-badge status-approved" };
-    if (status === 2) return { text: "Denied", class: "status-badge status-denied" };
+    if (status === 2) return { text: "Denied", class: "status-badge status-denied status-rejected" };
     return { text: "Pending", class: "status-badge status-pending" };
   };
 
@@ -221,41 +260,14 @@ const OrganizationJoinRequests = () => {
     }
   };
 
-  const filteredRequests = requestsWithUserDetails.filter(request => {
-    // Search filter
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      const matchesSearch = 
-        request.userEmail?.toLowerCase().includes(query) ||
-        request.userFullName?.toLowerCase().includes(query) ||
-        request.id?.toLowerCase().includes(query);
-      if (!matchesSearch) return false;
-    }
-    
-    // Status filter
-    if (statusFilter !== "all") {
-      const statusValue = statusFilter === "pending" ? 0 : statusFilter === "approved" ? 1 : 2;
-      if (request.status !== statusValue) return false;
-    }
-    
-    return true;
-  });
-
-  const paginatedRequests = filteredRequests.slice(
+  const paginatedRequests = requestsWithUserDetails.slice(
     (pagination.currentPage - 1) * pagination.pageSize,
     pagination.currentPage * pagination.pageSize
   );
-  const totalPages = Math.ceil(filteredRequests.length / pagination.pageSize);
+  const totalPages = Math.ceil(requestsWithUserDetails.length / pagination.pageSize);
 
   const handlePageChange = (page) => {
     setPagination(prev => ({ ...prev, currentPage: page }));
-  };
-
-  const handleRefresh = () => {
-    setSearchQuery("");
-    setStatusFilter("all");
-    setPagination(prev => ({ ...prev, currentPage: 1 }));
-    loadRequests();
   };
 
   const handleLogout = async () => {
@@ -312,7 +324,7 @@ const OrganizationJoinRequests = () => {
           onLogout={handleLogout}
         />
         <div className="dashboard-content-section">
-          <div className="shadow-custom bg-white org-search-box">
+          <div className="shadow-custom bg-white org-search-box" style={{ width: "100%" }}>
             {/* Header Section */}
             <div className="petitions-header-section mb-4">
               <div className="d-none d-md-flex align-items-center justify-content-between">
@@ -325,58 +337,6 @@ const OrganizationJoinRequests = () => {
               </div>
             </div>
 
-            {/* Search and Filter Controls */}
-            <div className="row mb-4 g-3">
-              <div className="col-12 col-md-4">
-                <div className="input-group">
-                  <span className="input-group-text bg-white border-end-0">
-                    <i className="fas fa-search"></i>
-                  </span>
-                  <input
-                    type="text"
-                    className="form-control border-start-0 shadow-none"
-                    placeholder="Search by email or name..."
-                    value={searchQuery}
-                    onChange={(e) => {
-                      setSearchQuery(e.target.value);
-                      setPagination(prev => ({ ...prev, currentPage: 1 }));
-                    }}
-                  />
-                </div>
-              </div>
-              <div className="col-6 col-md-2">
-                <CustomDropdown
-                  name="statusFilter"
-                  value={statusFilter}
-                  onChange={(e) => {
-                    setStatusFilter(e.target.value);
-                    setPagination(prev => ({ ...prev, currentPage: 1 }));
-                  }}
-                  placeholder="All Statuses"
-                  options={[
-                    { value: "all", label: "All Statuses" },
-                    { value: "pending", label: "Pending" },
-                    { value: "approved", label: "Approved" },
-                    { value: "denied", label: "Denied" },
-                  ]}
-                />
-              </div>
-              <div className="col-4 col-md-1">
-                <button
-                  className="dashboard-btn-refresh w-100"
-                  onClick={handleRefresh}
-                  disabled={isLoading}
-                  title="Reset all filters and refresh"
-                >
-                  <i
-                    className={`fa-solid fa-refresh ${
-                      isLoading ? "fa-spin" : ""
-                    }`}
-                  ></i>
-                </button>
-              </div>
-            </div>
-
             {/* Results Summary */}
             <div className="d-flex justify-content-between align-items-center mb-3">
               <div>
@@ -385,9 +345,9 @@ const OrganizationJoinRequests = () => {
                     const startIndex = (pagination.currentPage - 1) * pagination.pageSize + 1;
                     const endIndex = Math.min(
                       pagination.currentPage * pagination.pageSize,
-                      filteredRequests.length
+                      requestsWithUserDetails.length
                     );
-                    return `Showing ${startIndex}-${endIndex} of ${filteredRequests.length} requests`;
+                    return `Showing ${startIndex}-${endIndex} of ${requestsWithUserDetails.length} requests`;
                   })()}
                   {isLoading && <span className="ms-2">(Loading...)</span>}
                 </span>
@@ -395,22 +355,23 @@ const OrganizationJoinRequests = () => {
             </div>
 
             {/* Desktop Table View */}
-            <div className="d-none d-lg-block table-responsive petition-table-container">
+            <div className="d-none d-lg-block table-responsive petition-table-container" style={{ width: "100%" }}>
               <table className="table table-hover w-100 mb-0">
                 <thead className="table-light">
                   <tr>
-                    <th style={{ width: "20%", minWidth: "200px" }}>Email</th>
-                    <th style={{ width: "25%", minWidth: "200px" }}>Full Name</th>
-                    <th style={{ width: "15%", minWidth: "120px" }}>Requested On</th>
-                    <th style={{ width: "12%", minWidth: "100px" }}>Admin Invite</th>
-                    <th style={{ width: "12%", minWidth: "100px" }}>Status</th>
-                    <th style={{ width: "30px" }}></th>
+                    <th style={{ width: "22%", minWidth: "200px" }}>Email</th>
+                    <th style={{ width: "22%", minWidth: "200px" }}>Full Name</th>
+                    <th style={{ width: "12%", minWidth: "110px" }}>Requested On</th>
+                    <th style={{ width: "10%", minWidth: "90px" }}>Admin Invite</th>
+                    <th style={{ width: "16%", minWidth: "150px" }}>Filing Entity Type</th>
+                    <th style={{ width: "12%", minWidth: "120px" }}>Status</th>
+                    <th style={{ width: "30px", minWidth: "30px", maxWidth: "30px", padding: "0.25rem 0.1rem", textAlign: "center" }}></th>
                   </tr>
                 </thead>
                 <tbody>
-                  {isLoading ? (
+                  {isLoading || isLoadingUserDetails || (requests.length > 0 && requestsWithUserDetails.length === 0) ? (
                     <tr>
-                      <td colSpan="6" className="text-center py-4">
+                      <td colSpan="7" className="text-center py-4">
                         <div className="spinner-border text-primary" role="status">
                           <span className="visually-hidden">Loading...</span>
                         </div>
@@ -423,12 +384,12 @@ const OrganizationJoinRequests = () => {
                       return (
                         <tr key={request.id} className="petition-row">
                           <td>
-                            <div className="text-truncate" style={{ maxWidth: "200px" }}>
+                            <div className="text-truncate">
                               {request.userEmail || "N/A"}
                             </div>
                           </td>
                           <td>
-                            <div style={{ maxWidth: "200px", whiteSpace: "normal", wordBreak: "break-word" }}>
+                            <div style={{ whiteSpace: "normal", wordBreak: "break-word" }}>
                               {request.userFullName || "N/A"}
                             </div>
                           </td>
@@ -451,11 +412,14 @@ const OrganizationJoinRequests = () => {
                             </span>
                           </td>
                           <td>
+                            {request.filingEntityTypeName || "Not Set"}
+                          </td>
+                          <td>
                             <span className={statusInfo.class}>
                               {statusInfo.text}
                             </span>
                           </td>
-                          <td>
+                          <td style={{ width: "30px", minWidth: "30px", maxWidth: "30px", padding: "0.25rem 0.1rem", textAlign: "center" }}>
                             <div className="petition-action-expansion">
                               <button
                                 className="btn btn-sm border-0"
@@ -463,6 +427,9 @@ const OrganizationJoinRequests = () => {
                                 style={{
                                   background: "transparent",
                                   color: "#6c757d",
+                                  minWidth: "24px",
+                                  minHeight: "24px",
+                                  padding: "0.15rem",
                                 }}
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -507,7 +474,7 @@ const OrganizationJoinRequests = () => {
                     })
                   ) : (
                     <tr>
-                      <td colSpan="6" className="text-center py-4">
+                      <td colSpan="7" className="text-center py-4">
                         <i
                           className="fa-solid fa-search text-muted mb-2"
                           style={{ fontSize: "2rem" }}
@@ -521,7 +488,7 @@ const OrganizationJoinRequests = () => {
             </div>
 
             {/* Pagination */}
-            {!isLoading && filteredRequests.length > 0 && totalPages >= 1 && (
+            {!isLoading && !isLoadingUserDetails && requestsWithUserDetails.length > 0 && totalPages >= 1 && (
               <div className="d-flex justify-content-center mt-4">
                 <div className="pagination-minimal">
                   <button
@@ -657,21 +624,23 @@ const OrganizationJoinRequests = () => {
               <div className="modal-footer">
                 <button
                   type="button"
-                  className="btn btn-secondary"
+                  className="dashboard-btn-refresh"
                   onClick={() => {
                     setShowActionModal(false);
                     setSelectedRequest(null);
                     setAdminComment("");
                   }}
                   disabled={isSubmitting}
+                  style={{ minWidth: '80px' }}
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
-                  className={`btn ${actionType === "approve" ? "btn-success" : "btn-danger"}`}
+                  className={actionType === "approve" ? "dashboard-btn-create" : "dashboard-btn-refresh text-danger"}
                   onClick={handleSubmitAction}
                   disabled={isSubmitting}
+                  style={{ minWidth: '120px' }}
                 >
                   {isSubmitting ? (
                     <>
@@ -682,10 +651,7 @@ const OrganizationJoinRequests = () => {
                       Processing...
                     </>
                   ) : (
-                    <>
-                      <i className={`fa-solid ${actionType === "approve" ? "fa-check" : "fa-times"} me-2`}></i>
-                      {actionType === "approve" ? "Approve" : "Deny"}
-                    </>
+                    actionType === "approve" ? "Approve" : "Deny"
                   )}
                 </button>
               </div>
