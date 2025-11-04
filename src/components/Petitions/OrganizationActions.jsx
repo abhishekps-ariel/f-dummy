@@ -768,6 +768,7 @@ const OrganizationActions = () => {
                 className="dashboard-btn-create"
                 data-bs-toggle="modal"
                 data-bs-target="#createorganizationModal"
+                style={{ display: 'none' }}
               >
                 <i className="fa-solid fa-plus me-1"></i> Create Organization
               </button>
@@ -775,8 +776,7 @@ const OrganizationActions = () => {
 
             <p className="text-muted mb-4">
               You need to be part of an organization to access the Petition
-              Dashboard. You can either join an existing organization or create
-              a new organization.
+              Dashboard. Please search and join an existing organization.
             </p>
 
             {/* Organization Search */}
