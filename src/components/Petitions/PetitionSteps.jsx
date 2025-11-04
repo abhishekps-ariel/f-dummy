@@ -135,12 +135,17 @@ const PetitionSteps = ({
   const {
     submitPetition,
     hasOrganizationAccess,
+    organization: organizationFromContext,
     loading: petitionLoading,
   } = usePetitions();
 
   // Get user info from auth context
 
   const { user } = useAuth();
+
+  // Get organization ID from user object (stored in browser storage) or organization prop/context
+  // Priority: user.organizationId > organization.id (from prop) > organizationFromContext.id
+  const organizationId = user?.organizationId || organization?.id || organizationFromContext?.id || null;
 
   // Google Places API state
 
@@ -306,14 +311,14 @@ const PetitionSteps = ({
 
   useEffect(() => {
     const loadOrganizationData = async () => {
-      if (!organization?.id) return;
+      if (!organizationId) return;
 
       setOrganizationLoading(true);
 
       try {
         // Fetch full organization details using the new API structure
 
-        const orgResponse = await getOrganizationById(organization.id);
+        const orgResponse = await getOrganizationById(organizationId);
 
         if (orgResponse.isSuccess && orgResponse.data) {
           const orgData = orgResponse.data;
@@ -398,7 +403,7 @@ const PetitionSteps = ({
     };
 
     loadOrganizationData();
-  }, [organization?.id]);
+  }, [organizationId]);
 
   // Prefill signer fields from user data
 

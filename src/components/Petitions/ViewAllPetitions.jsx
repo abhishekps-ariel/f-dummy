@@ -155,6 +155,10 @@ const ViewAllPetitions = ({ onBack }) => {
   const { tabs, setTabs, activeTabId, setActiveTabId, getActiveTab, openTab } =
     useTabs();
 
+  // Get organization ID from user object (stored in browser storage) or organization context
+  // Priority: user.organizationId > organization.id
+  const organizationId = user?.organizationId || organization?.id || null;
+
   // Handle date filter change
   const handleDateFilterChange = (value) => {
     setDateFilter(value);
@@ -163,7 +167,7 @@ const ViewAllPetitions = ({ onBack }) => {
       setCustomDateFrom("");
       setCustomDateTo("");
       // Only trigger fetch for non-custom options
-      if (organization?.id) {
+      if (organizationId) {
         setPagination((prev) => ({ ...prev, currentPage: 1 }));
         fetchPetitions(1);
       }
@@ -173,14 +177,14 @@ const ViewAllPetitions = ({ onBack }) => {
 
   // Fetch petitions using paged API
   const fetchPetitions = async (page = 1) => {
-    if (!organization?.id) {
+    if (!organizationId) {
       return;
     }
 
     setLoading(true);
     try {
       const paginationParams = {
-        organizationId: organization.id,
+        organizationId: organizationId,
         pageNumber: page, // Use 1-based pagination as expected by API
         pageSize: 10, // 10 petitions per page
         searchText: searchQuery.trim() || "",
@@ -226,7 +230,7 @@ const ViewAllPetitions = ({ onBack }) => {
   // The ref will be used in the event listener to access the current function
   useEffect(() => {
     fetchPetitionsRef.current = fetchPetitions;
-  }, [organization?.id, searchQuery, statusFilter, dateFilter, customDateFrom, customDateTo, sortBy, sortOrder]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [organizationId, searchQuery, statusFilter, dateFilter, customDateFrom, customDateTo, sortBy, sortOrder]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Helper function to get status value for API
   const getStatusValue = (status) => {
@@ -437,15 +441,15 @@ const ViewAllPetitions = ({ onBack }) => {
 
   // Load initial data when component mounts
   useEffect(() => {
-    if (organization?.id && organizationCheckComplete) {
+    if (organizationId && organizationCheckComplete) {
       fetchPetitions(1);
     }
-  }, [organization?.id, organizationCheckComplete]);
+  }, [organizationId, organizationCheckComplete]);
 
   // Handle filter changes with debouncing (excluding custom date fields)
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      if (organization?.id) {
+      if (organizationId) {
         setPagination((prev) => ({ ...prev, currentPage: 1 }));
         fetchPetitions(1);
       }
@@ -460,7 +464,7 @@ const ViewAllPetitions = ({ onBack }) => {
 
   // Handle sorting changes
   useEffect(() => {
-    if (organization?.id) {
+    if (organizationId) {
       setPagination((prev) => ({ ...prev, currentPage: 1 }));
       fetchPetitions(1);
     }
@@ -547,7 +551,7 @@ const ViewAllPetitions = ({ onBack }) => {
       handleRefresh();
       // Second refresh - in case backend took longer to process the new petition
       setTimeout(() => {
-        if (organization?.id && fetchPetitionsRef.current) {
+        if (organizationId && fetchPetitionsRef.current) {
           fetchPetitionsRef.current(1);
         }
       }, 1000);

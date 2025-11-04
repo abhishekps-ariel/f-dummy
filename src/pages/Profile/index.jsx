@@ -40,10 +40,14 @@ function Profile() {
   const [isUploadingSignature, setIsUploadingSignature] = useState(false);
   const [isImageLoading, setIsImageLoading] = useState(false);
   const navigate = useNavigate();
-  const { logout: authLogout, login, updateUserSignature } = useAuth();
+  const { logout: authLogout, login, updateUserSignature, organization: organizationFromContext } = useAuth();
   
   // Get resetWizard function from PetitionWizard context
   const { resetWizard } = usePetitionWizard();
+
+  // Use organization from context (for org admins) or from join requests (for regular users)
+  // Priority: organizationFromContext > userOrganization
+  const displayOrganization = organizationFromContext || userOrganization;
 
   useEffect(() => {
     const { user: userData, token } = getAuthData();
@@ -101,12 +105,18 @@ function Profile() {
     fetchFilingEntityTypes();
   }, []); // Load on page load instead of only when entering edit mode
 
-  // Load organization data
+  // Load organization data (only for join requests, not for org admins who already have organizationId)
   useEffect(() => {
-    if (user) {
+    if (user && !organizationFromContext) {
+      // Only load join requests if user doesn't have organization from context
+      // Org admins already have organizationId in their user object, so we skip this
       loadOrganizationData();
+    } else if (organizationFromContext) {
+      // If we have organization from context, mark as loaded
+      setIsLoadingOrgData(false);
+      setHasLoadedOrgData(true);
     }
-  }, [user]);
+  }, [user, organizationFromContext]);
 
   // Load signature separately to avoid infinite loop
   useEffect(() => {
@@ -152,6 +162,15 @@ function Profile() {
   const loadOrganizationData = async () => {
     setIsLoadingOrgData(true);
     try {
+      // If user has organizationId from context (org admins), use that instead of join requests
+      if (organizationFromContext) {
+        // Organization already loaded from AuthContext, just mark as complete
+        setHasLoadedOrgData(true);
+        setIsLoadingOrgData(false);
+        return;
+      }
+
+      // For regular users, fetch join requests to see pending/approved status
       const response = await getUserJoinRequests();
       if (response.isSuccess) {
         const requests = response.data || [];
@@ -187,6 +206,7 @@ function Profile() {
         setJoinRequests(requestsWithOrgNames);
         
         // Check if user has any approved requests and load their organization
+        // Note: This is only for display - actual organizationId should come from AuthContext
         const approvedRequest = requestsWithOrgNames.find(request => request.status === 1);
         if (approvedRequest) {
           setUserOrganization(approvedRequest);
@@ -756,44 +776,47 @@ function Profile() {
                     Organization Information
                   </h4>
                   
-                  {isLoadingOrgData ? (
+                  {isLoadingOrgData && !organizationFromContext ? (
                     <div className="text-center py-3">
                       <div className="spinner-border spinner-border-sm text-primary" role="status">
                         <span className="visually-hidden">Loading...</span>
                       </div>
                       <p className="mt-2 text-muted small">Loading...</p>
                     </div>
-                  ) : hasLoadedOrgData ? (
+                  ) : hasLoadedOrgData || organizationFromContext ? (
                     <>
-                      {userOrganization ? (
+                      {displayOrganization ? (
                         // User is part of an organization
                         <div className="row g-3">
                           <div className="col-12">
                             <label className="form-label text-muted small">Organization</label>
-                            <p className="fw-medium mb-0">{userOrganization.organizationName}</p>
+                            <p className="fw-medium mb-0">{displayOrganization.organizationName || displayOrganization.name}</p>
                           </div>
                           <div className="col-12">
                             <label className="form-label text-muted small">Type</label>
-                            <p className="fw-medium mb-0">{userOrganization.organizationType || "N/A"}</p>
+                            <p className="fw-medium mb-0">{displayOrganization.organizationType || displayOrganization.type || "N/A"}</p>
                           </div>
-                          {userOrganization.organizationAddress && (
+                          {(displayOrganization.organizationAddress || (displayOrganization.addressStreet1 || displayOrganization.addressCity)) && (
                             <div className="col-12">
                               <label className="form-label text-muted small">Address</label>
-                              <p className="fw-medium mb-0 small">{userOrganization.organizationAddress}</p>
+                              <p className="fw-medium mb-0 small">
+                                {displayOrganization.organizationAddress || 
+                                 `${displayOrganization.addressStreet1 || ''}${displayOrganization.addressStreet2 ? ', ' + displayOrganization.addressStreet2 : ''}, ${displayOrganization.addressCity || ''}, ${displayOrganization.addressState || ''} ${displayOrganization.addressZip || ''}`.replace(/^,\s*/, '').replace(/,\s*$/, '')}
+                              </p>
                             </div>
                           )}
-                          {(userOrganization.primaryContactName || userOrganization.primaryContactEmail || userOrganization.primaryContactPhone) && (
+                          {(displayOrganization.primaryContactName || displayOrganization.primaryContactEmail || displayOrganization.primaryContactPhone) && (
                             <div className="col-12">
                               <label className="form-label text-muted small">Primary Contact</label>
                               <div className="fw-medium mb-0 small">
-                                {userOrganization.primaryContactName && (
-                                  <div><i className="fa-solid fa-user me-1"></i>{userOrganization.primaryContactName}</div>
+                                {displayOrganization.primaryContactName && (
+                                  <div><i className="fa-solid fa-user me-1"></i>{displayOrganization.primaryContactName}</div>
                                 )}
-                                {userOrganization.primaryContactEmail && (
-                                  <div><i className="fa-solid fa-envelope me-1"></i>{userOrganization.primaryContactEmail}</div>
+                                {displayOrganization.primaryContactEmail && (
+                                  <div><i className="fa-solid fa-envelope me-1"></i>{displayOrganization.primaryContactEmail}</div>
                                 )}
-                                {userOrganization.primaryContactPhone && (
-                                  <div><i className="fa-solid fa-phone me-1"></i>{userOrganization.primaryContactPhone}</div>
+                                {displayOrganization.primaryContactPhone && (
+                                  <div><i className="fa-solid fa-phone me-1"></i>{displayOrganization.primaryContactPhone}</div>
                                 )}
                               </div>
                             </div>
@@ -807,12 +830,14 @@ function Profile() {
                               </span>
                             </p>
                           </div>
-                          <div className="col-12">
-                            <label className="form-label text-muted small">Joined</label>
-                            <p className="fw-medium mb-0">
-                              {new Date(userOrganization.respondedOn || userOrganization.requestedOn).toLocaleDateString()}
-                            </p>
-                          </div>
+                          {(displayOrganization.respondedOn || displayOrganization.requestedOn) && (
+                            <div className="col-12">
+                              <label className="form-label text-muted small">Joined</label>
+                              <p className="fw-medium mb-0">
+                                {new Date(displayOrganization.respondedOn || displayOrganization.requestedOn).toLocaleDateString()}
+                              </p>
+                            </div>
+                          )}
                         </div>
                       ) : joinRequests.length > 0 ? (
                         // User has pending requests

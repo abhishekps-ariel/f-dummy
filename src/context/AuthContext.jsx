@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { getAuthData } from '../utils/storage';
-import { getUserJoinRequests, getOrganizationById } from '../services/organizationService';
+import { getOrganizationById } from '../services/organizationService';
 
 const AuthContext = createContext();
 
@@ -20,43 +20,40 @@ export const AuthProvider = ({ children }) => {
   const [hasOrganizationAccess, setHasOrganizationAccess] = useState(false);
   const [organizationCheckComplete, setOrganizationCheckComplete] = useState(false);
 
-  // Check organization access when user is authenticated
+  // Check organization access based on organizationId in user object
   const checkOrganizationAccess = async () => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated || !user) {
       setHasOrganizationAccess(false);
       setOrganizationCheckComplete(true);
       return;
     }
 
     try {
-      const response = await getUserJoinRequests();
-      
-      if (response.isSuccess && response.data) {
-        // Look for approved join request (status: 1)
-        const approvedRequest = response.data.find(request => request.status === 1);
-        if (approvedRequest) {
-          setHasOrganizationAccess(true);
-          // Fetch full organization details
-          try {
-            const orgResponse = await getOrganizationById(approvedRequest.organizationId);
-            if (orgResponse.isSuccess && orgResponse.data) {
-              setOrganization(orgResponse.data);
-            } else {
-              // Fallback to just ID if full details can't be fetched
-              setOrganization({ id: approvedRequest.organizationId });
-            }
-          } catch (error) {
+      // Check if user has organizationId
+      // Handle both string and null/undefined cases
+      const orgId = user.organizationId;
+      if (orgId && typeof orgId === 'string' && orgId.trim() !== '') {
+        setHasOrganizationAccess(true);
+        // Optionally fetch full organization details
+        try {
+          const orgResponse = await getOrganizationById(orgId);
+          if (orgResponse.isSuccess && orgResponse.data) {
+            setOrganization(orgResponse.data);
+          } else {
             // Fallback to just ID if full details can't be fetched
-            setOrganization({ id: approvedRequest.organizationId });
+            setOrganization({ id: orgId });
           }
-        } else {
-          setHasOrganizationAccess(false);
+        } catch (error) {
+          // Fallback to just ID if full details can't be fetched
+          setOrganization({ id: orgId });
         }
       } else {
         setHasOrganizationAccess(false);
+        setOrganization(null);
       }
     } catch (error) {
       setHasOrganizationAccess(false);
+      setOrganization(null);
     } finally {
       setOrganizationCheckComplete(true);
     }
@@ -70,10 +67,19 @@ export const AuthProvider = ({ children }) => {
         if (token && userData) {
           setIsAuthenticated(true);
           setUser(userData);
-          // Set organization if available in user data
-          if (userData.organization) {
-            setOrganization(userData.organization);
+          
+          // Check organization access immediately based on organizationId
+          // Handle both string and null/undefined cases
+          const orgId = userData.organizationId;
+          if (orgId && typeof orgId === 'string' && orgId.trim() !== '') {
+            setHasOrganizationAccess(true);
+            // Set organization with ID, will fetch full details in useEffect
+            setOrganization({ id: orgId });
+          } else {
+            setHasOrganizationAccess(false);
+            setOrganization(null);
           }
+          setOrganizationCheckComplete(true);
         } else {
           setIsAuthenticated(false);
           setUser(null);
@@ -111,22 +117,80 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Check organization access when authentication status changes
+  // Check organization access and fetch full organization details when user is available
   useEffect(() => {
-    if (isAuthenticated && !organizationCheckComplete) {
-      checkOrganizationAccess();
+    if (isAuthenticated && user) {
+      const orgId = user.organizationId;
+      // Check if user has organizationId (handle string and non-string cases)
+      if (orgId && typeof orgId === 'string' && orgId.trim() !== '') {
+        // Only fetch if organization is not set or only has ID (no full details)
+        const needsFullDetails = !organization || (organization && !organization.name && organization.id === orgId);
+        
+        if (needsFullDetails) {
+          // Fetch full organization details if we have organizationId
+          const fetchOrgDetails = async () => {
+            try {
+              const orgResponse = await getOrganizationById(orgId);
+              if (orgResponse.isSuccess && orgResponse.data) {
+                setOrganization(orgResponse.data);
+              } else {
+                // Ensure we at least have the ID
+                if (!organization || organization.id !== orgId) {
+                  setOrganization({ id: orgId });
+                }
+              }
+            } catch (error) {
+              // Keep organization with just ID if fetch fails
+              console.error('Failed to fetch organization details:', error);
+              if (!organization || organization.id !== orgId) {
+                setOrganization({ id: orgId });
+              }
+            }
+          };
+          fetchOrgDetails();
+        }
+      } else if (!hasOrganizationAccess && orgId) {
+        // If we have orgId but access is false, set it
+        setHasOrganizationAccess(true);
+        setOrganization({ id: orgId });
+      }
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, user, organization, hasOrganizationAccess]);
 
 
   const login = (userData) => {
     setIsAuthenticated(true);
     setUser(userData);
-    if (userData.organization) {
-      setOrganization(userData.organization);
+    
+    // Check organization access immediately based on organizationId
+    // Handle both string and null/undefined cases
+    const orgId = userData.organizationId;
+    if (orgId && typeof orgId === 'string' && orgId.trim() !== '') {
+      setHasOrganizationAccess(true);
+      setOrganization({ id: orgId });
+      setOrganizationCheckComplete(true);
+      // Fetch full organization details
+      const fetchOrgDetails = async () => {
+        try {
+          const orgResponse = await getOrganizationById(orgId);
+          if (orgResponse.isSuccess && orgResponse.data) {
+            setOrganization(orgResponse.data);
+          } else {
+            // Ensure we at least have the ID
+            setOrganization({ id: orgId });
+          }
+        } catch (error) {
+          // Keep organization with just ID if fetch fails
+          console.error('Failed to fetch organization details:', error);
+          setOrganization({ id: orgId });
+        }
+      };
+      fetchOrgDetails();
+    } else {
+      setHasOrganizationAccess(false);
+      setOrganization(null);
+      setOrganizationCheckComplete(true);
     }
-    // Reset organization check states for new login
-    setOrganizationCheckComplete(false);
   };
 
   const logout = () => {

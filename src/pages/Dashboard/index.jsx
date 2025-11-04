@@ -51,7 +51,11 @@ function Dashboard() {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const { logout: authLogout } = useAuth();
+  const { logout: authLogout, organization: organizationFromContext } = useAuth();
+
+  // Use organization from context (for org admins) or from join requests (for regular users)
+  // Priority: organizationFromContext > userOrganization
+  const displayOrganization = organizationFromContext || userOrganization;
 
 
   useEffect(() => {
@@ -82,14 +86,31 @@ function Dashboard() {
   // Load organization data when user is available
   useEffect(() => {
     if (user) {
-      loadOrganizationData();
+      // Only load join requests if user doesn't have organization from context
+      // Org admins already have organizationId in their user object, so we skip this
+      if (!organizationFromContext) {
+        loadOrganizationData();
+      } else {
+        // If we have organization from context, mark as loaded
+        setIsLoadingOrgData(false);
+        setHasLoadedOrgData(true);
+      }
       loadFilingEntityTypes();
     }
-  }, [user]);
+  }, [user, organizationFromContext]);
 
   const loadOrganizationData = async () => {
     setIsLoadingOrgData(true);
     try {
+      // If user has organizationId from context (org admins), use that instead of join requests
+      if (organizationFromContext) {
+        // Organization already loaded from AuthContext, just mark as complete
+        setHasLoadedOrgData(true);
+        setIsLoadingOrgData(false);
+        return;
+      }
+
+      // For regular users, fetch join requests to see pending/approved status
       const response = await getUserJoinRequests();
       if (response.isSuccess) {
         const requests = response.data || [];
@@ -121,6 +142,7 @@ function Dashboard() {
         );
         
         // Check if user has any approved requests and load their organization
+        // Note: This is only for display - actual organizationId should come from AuthContext
         const approvedRequest = requestsWithOrgNames.find(request => request.status === 1);
         if (approvedRequest) {
           setUserOrganization(approvedRequest);
@@ -264,23 +286,25 @@ function Dashboard() {
                         </div>
                         <p className="mt-2 text-muted small">Loading organization details...</p>
                       </div>
-                    ) : userOrganization ? (
+                    ) : displayOrganization ? (
                       <div className="organization-info">
-                        <h6 className="mb-2 fw-bold">{userOrganization.organizationName || userOrganization.name}</h6>
+                        <h6 className="mb-2 fw-bold">{displayOrganization.organizationName || displayOrganization.name}</h6>
                         <p className="text-muted small mb-1">
                           <i className="fa-solid fa-tag me-1"></i>
-                          Type: {userOrganization.organizationType || userOrganization.type || "N/A"}
+                          Type: {displayOrganization.organizationType || displayOrganization.type || "N/A"}
                         </p>
-                        {userOrganization.organizationAddress && (
+                        {(displayOrganization.organizationAddress || (displayOrganization.addressStreet1 || displayOrganization.addressCity)) && (
                             <p className="text-muted small mb-1">
                               <i className="fa-solid fa-location-dot me-1"></i>
-                            Address: {userOrganization.organizationAddress}
+                            Address: {displayOrganization.organizationAddress || 
+                                     `${displayOrganization.addressStreet1 || ''}${displayOrganization.addressStreet2 ? ', ' + displayOrganization.addressStreet2 : ''}, ${displayOrganization.addressCity || ''}, ${displayOrganization.addressState || ''} ${displayOrganization.addressZip || ''}`.replace(/^,\s*/, '').replace(/,\s*$/, '')}
                             </p>
                         )}
-                        {userOrganization.primaryContact && (
+                        {(displayOrganization.primaryContact || (displayOrganization.primaryContactName || displayOrganization.primaryContactEmail || displayOrganization.primaryContactPhone)) && (
                             <p className="text-muted small mb-1">
                               <i className="fa-solid fa-user me-1"></i>
-                            Contact: {userOrganization.primaryContact}
+                            Contact: {displayOrganization.primaryContact || 
+                                     `${displayOrganization.primaryContactName || ''}${displayOrganization.primaryContactEmail ? ', ' + displayOrganization.primaryContactEmail : ''}${displayOrganization.primaryContactPhone ? ', ' + displayOrganization.primaryContactPhone : ''}`.replace(/^,\s*/, '').replace(/,\s*$/, '')}
                           </p>
                         )}
                         <span className="badge bg-success">
