@@ -361,11 +361,11 @@ const OrganizationJoinRequests = () => {
                   <tr>
                     <th style={{ width: "22%", minWidth: "200px" }}>Email</th>
                     <th style={{ width: "22%", minWidth: "200px" }}>Full Name</th>
-                    <th style={{ width: "12%", minWidth: "110px" }}>Requested On</th>
-                    <th style={{ width: "10%", minWidth: "90px" }}>Admin Invite</th>
-                    <th style={{ width: "16%", minWidth: "150px" }}>Filing Entity Type</th>
-                    <th style={{ width: "12%", minWidth: "120px" }}>Status</th>
-                    <th style={{ width: "30px", minWidth: "30px", maxWidth: "30px", padding: "0.25rem 0.1rem", textAlign: "center" }}></th>
+                    <th style={{ width: "12%", minWidth: "110px" }} className="text-center">Requested On</th>
+                    <th style={{ width: "13%", minWidth: "110px" }} className="text-center">Admin Invite</th>
+                    <th style={{ width: "16%", minWidth: "150px" }} className="text-center">Filing Entity Type</th>
+                    <th style={{ width: "12%", minWidth: "120px" }} className="text-center">Status</th>
+                    <th style={{ width: "20px", minWidth: "20px", maxWidth: "20px", padding: "0.25rem 0.1rem", textAlign: "center" }}></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -393,7 +393,7 @@ const OrganizationJoinRequests = () => {
                               {request.userFullName || "N/A"}
                             </div>
                           </td>
-                          <td>
+                          <td className="text-center">
                             {request.requestedOn
                               ? new Date(request.requestedOn).toLocaleDateString("en-US", {
                                   year: "numeric",
@@ -402,7 +402,7 @@ const OrganizationJoinRequests = () => {
                                 })
                               : "N/A"}
                           </td>
-                          <td>
+                          <td className="text-center">
                             <span
                               className={`badge ${
                                 request.isAdminInvite ? "bg-success" : "bg-danger"
@@ -411,15 +411,15 @@ const OrganizationJoinRequests = () => {
                               {request.isAdminInvite ? "YES" : "NO"}
                             </span>
                           </td>
-                          <td>
+                          <td className="text-center">
                             {request.filingEntityTypeName || "Not Set"}
                           </td>
-                          <td>
+                          <td className="text-center">
                             <span className={statusInfo.class}>
                               {statusInfo.text}
                             </span>
                           </td>
-                          <td style={{ width: "30px", minWidth: "30px", maxWidth: "30px", padding: "0.25rem 0.1rem", textAlign: "center" }}>
+                          <td style={{ width: "20px", minWidth: "20px", maxWidth: "20px", padding: "0.25rem 0.1rem", textAlign: "center" }}>
                             <div className="petition-action-expansion">
                               <button
                                 className="btn btn-sm border-0"
@@ -485,6 +485,124 @@ const OrganizationJoinRequests = () => {
                   )}
                 </tbody>
               </table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="d-lg-none">
+              {isLoading || isLoadingUserDetails || (requests.length > 0 && requestsWithUserDetails.length === 0) ? (
+                <div className="text-center py-4">
+                  <div className="spinner-border text-primary" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                  </div>
+                  <p className="mt-2 text-muted">Loading join requests...</p>
+                </div>
+              ) : paginatedRequests.length > 0 ? (
+                <div className="row g-3">
+                  {paginatedRequests.map((request) => {
+                    const statusInfo = getStatusInfo(request.status);
+                    return (
+                      <div key={request.id} className="col-12">
+                        <div className="petition-mobile-row">
+                          <div className="d-flex justify-content-between align-items-start">
+                            <div className="petition-main-info">
+                              <div className="d-flex align-items-center gap-2 mb-2 flex-wrap">
+                                <div className="fw-medium text-dark" style={{ fontSize: "0.9rem" }}>
+                                  {request.userEmail || "N/A"}
+                                </div>
+                                <span className={statusInfo.class}>
+                                  {statusInfo.text}
+                                </span>
+                              </div>
+                              <div className="petition-details-row">
+                                <span className="small text-muted">
+                                  {request.userFullName || "N/A"}
+                                </span>
+                                <span className="small text-muted">
+                                  {request.requestedOn
+                                    ? new Date(request.requestedOn).toLocaleDateString("en-US", {
+                                        year: "numeric",
+                                        month: "2-digit",
+                                        day: "2-digit",
+                                      })
+                                    : "N/A"}
+                                </span>
+                                <span className="small">
+                                  <span
+                                    className={`badge ${
+                                      request.isAdminInvite ? "bg-success" : "bg-danger"
+                                    }`}
+                                    style={{ fontSize: "0.65rem" }}
+                                  >
+                                    {request.isAdminInvite ? "YES" : "NO"}
+                                  </span>
+                                </span>
+                                <span className="small text-muted">
+                                  {request.filingEntityTypeName || "Not Set"}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="petition-action-expansion">
+                              <button
+                                className="btn btn-sm border-0"
+                                type="button"
+                                style={{
+                                  background: "transparent",
+                                  color: "#6c757d",
+                                }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setOpenDropdownId(
+                                    openDropdownId === request.id ? null : request.id
+                                  );
+                                }}
+                                title="Actions"
+                              >
+                                <i className="fas fa-ellipsis-v"></i>
+                              </button>
+                              {openDropdownId === request.id && (
+                                <div className="petition-action-buttons">
+                                  {request.status !== 1 && (
+                                    <button
+                                      className="btn btn-view"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setOpenDropdownId(null);
+                                        handleAction(request, "approve");
+                                      }}
+                                    >
+                                      Approve
+                                    </button>
+                                  )}
+                                  {request.status !== 2 && (
+                                    <button
+                                      className="btn btn-delete"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setOpenDropdownId(null);
+                                        handleAction(request, "deny");
+                                      }}
+                                    >
+                                      Deny
+                                    </button>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-4">
+                  <i
+                    className="fa-solid fa-search text-muted mb-2"
+                    style={{ fontSize: "2rem" }}
+                  ></i>
+                  <p className="text-muted mb-0">No join requests found</p>
+                </div>
+              )}
             </div>
 
             {/* Pagination */}
