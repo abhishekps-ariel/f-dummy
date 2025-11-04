@@ -14,6 +14,8 @@ import { useAuth } from "../../context/AuthContext";
 
 import { usePetitionWizard } from "../../context/PetitionWizardContext";
 
+import { getUserRole } from "../../utils/storage";
+
 import { getUserById, getSignatureById } from "../../services/authService";
 
 import { getFilingEntityTypes } from "../../services/commonService";
@@ -415,7 +417,7 @@ const PetitionSteps = ({
 
         signerEmail: user.email || "",
 
-        signerTitle: user.role || "Filer User",
+        signerTitle: getUserRole(user) || "User",
       }));
     }
   }, [user]);
@@ -862,7 +864,7 @@ const PetitionSteps = ({
           : "";
         const signerLastName = user.lastName || "";
         const signerEmail = user.email || "";
-        const signerTitle = user.role || "Filer User";
+        const signerTitle = getUserRole(user) || "User";
         const signerFullName = [
           signerFirstName,
           signerMiddleInitial,
@@ -3157,7 +3159,7 @@ const PetitionSteps = ({
               formData.signerMiddleInitial || ""
             } ${formData.signerLastName || ""}`.trim(),
 
-            signerTitle: formData.signerTitle || user?.role || "Filer",
+            signerTitle: formData.signerTitle || getUserRole(user) || "User",
 
             signerEmail: formData.signerEmail || "",
 
@@ -3558,7 +3560,7 @@ const PetitionSteps = ({
               formData.signerMiddleInitial || ""
             } ${formData.signerLastName || ""}`.trim(),
 
-            signerTitle: formData.signerTitle || user?.role || "Filer",
+            signerTitle: formData.signerTitle || getUserRole(user) || "User",
 
             signerEmail: formData.signerEmail || "",
 

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
-import { getAuthData, clearAuthData } from "../../utils/storage";
+import { getAuthData, clearAuthData, getUserRole } from "../../utils/storage";
 import { useAuth } from "../../context/AuthContext";
 import { usePetitionWizard } from "../../context/PetitionWizardContext";
 import { ROUTES } from "../../constants/routerConstants";
@@ -308,7 +308,7 @@ function Dashboard() {
                       </p>
                       <p className="text-muted small mb-1">
                         <i className="fa-solid fa-user-tag me-1"></i>
-                        Role: {user.role || "Filer"}
+                        Role: {getUserRole(user) || "N/A"}
                           </p>
                           <p className="text-muted small mb-0">
                             <i className="fa-solid fa-tag me-1"></i>

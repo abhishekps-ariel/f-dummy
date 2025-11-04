@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { getAuthData, clearAuthData } from "../../utils/storage";
+import { getAuthData, clearAuthData, getUserRole } from "../../utils/storage";
 import { useAuth } from "../../context/AuthContext";
 import { usePetitionWizard } from "../../context/PetitionWizardContext";
 import { ROUTES } from "../../constants/routerConstants";
@@ -488,7 +488,7 @@ function Profile() {
                       </p>
                       <p className="text-muted mb-0">
                         <i className="fas fa-user-tag me-2"></i>
-                        {user.role || "Filer"}
+                        {getUserRole(user) || "N/A"}
                       </p>
                     </div>
                     <div className="d-flex gap-2">
@@ -644,7 +644,7 @@ function Profile() {
                     <div className="col-sm-6">
                       <label className="form-label text-muted small">Role</label>
                       <p className="fw-medium mb-0">
-                        <span className="badge bg-primary fs-6">{user.role || "Filer"}</span>
+                        <span className="badge bg-primary fs-6">{getUserRole(user) || "N/A"}</span>
                       </p>
                     </div>
                     <div className="col-sm-6">

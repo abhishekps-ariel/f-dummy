@@ -50,3 +50,25 @@ export const getImpersonationState = () => {
   return { isImpersonating, impersonatedUserName };
 };
 
+/**
+ * Get user role from user object
+ * Checks user.role first, then user.roles array, then returns null if neither exists
+ * @param {Object} user - User object from storage
+ * @returns {string|null} - User role or null if not found
+ */
+export const getUserRole = (user) => {
+  if (!user) return null;
+  
+  // Check for single role field first
+  if (user.role) {
+    return user.role;
+  }
+  
+  // Check for roles array
+  if (user.roles && Array.isArray(user.roles) && user.roles.length > 0) {
+    return user.roles[0];
+  }
+  
+  return null;
+};
+

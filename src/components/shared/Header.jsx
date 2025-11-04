@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import NotificationDropdown from "./NotificationDropdown";
 import ImpersonationBanner from "./ImpersonationBanner";
+import { getUserRole } from "../../utils/storage";
 
 const Header = ({ user, pageTitle, showMobileMenu = true, onLogout }) => {
   return (
@@ -79,7 +80,7 @@ const Header = ({ user, pageTitle, showMobileMenu = true, onLogout }) => {
                 {user?.firstName} {user?.lastName}
               </p>
               <p className="font-sm mb-0 text-gray-dark">
-                {user?.role || "Filer"}
+                {getUserRole(user) || "N/A"}
               </p>
             </div>
             <i className="fas fa-chevron-down small ms-2 text-secondary d-none d-lg-block"></i>

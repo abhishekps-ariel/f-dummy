@@ -8,9 +8,6 @@ import { ROUTES } from "../../constants/routerConstants";
 import loginImg from "../../assets/logo-sample.png";
 import "../../styles/custom.css";
 
-// Org admin redirect URL
-const ORG_ADMIN_REDIRECT_URL = "https://admin.dob.arielsoftwares.in/LoginPage";
-
 // Helper function to check if user is org admin
 const isOrgAdmin = (userData) => {
   if (!userData) return false;
@@ -139,22 +136,7 @@ function TwoFactorAuth() {
       if (response.isSuccess) {
         const userData = response.data?.user;
         
-        // Check if user is org admin - check passed flag, response isManager field, and roles
-        const userIsOrgAdmin = 
-          isManager || 
-          userData?.isManager === true ||
-          isOrgAdmin(userData);
-        
-        if (userIsOrgAdmin) {
-          // Redirect org admins to external URL immediately WITHOUT storing data
-          toast.success("Redirecting to admin portal...");
-          setTimeout(() => {
-            window.location.href = ORG_ADMIN_REDIRECT_URL;
-          }, 100);
-          return;
-        }
-        
-        // Only store data for non-org-admin users
+        // Store auth data and login for all users (including org admins)
         storeAuthData(response.data);
         authLogin(userData);
         toast.success("Login successful!");
