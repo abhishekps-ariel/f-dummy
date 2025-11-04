@@ -11,6 +11,7 @@ import { clearAuthData, getAuthData, getUserRole } from "../../utils/storage";
 import Sidebar from "../../components/shared/Sidebar";
 import Header from "../../components/shared/Header";
 import CustomDropdown from "../../components/shared/CustomDropdown";
+import "../../components/shared/CustomDropdown.css";
 import "../../styles/custom.css";
 
 // Helper function to check if user is org admin (matches Login.jsx logic)

@@ -33,7 +33,7 @@ export const ORGANIZATION_ENDPOINTS = {
   SUBMIT_JOIN_REQUEST: "/api/OrganizationJoinRequest/request",
   GET_MY_REQUESTS: "/api/OrganizationJoinRequest/my-requests",
   GET_JOIN_REQUEST: (joinRequestId) => `/api/OrganizationJoinRequest/join-request/${joinRequestId}`,
-  GET_ALL_REQUESTS: "/api/OrganizationJoinRequest/request", // POST with organizationId
+  GET_ALL_REQUESTS: (organizationId) => `/api/OrganizationJoinRequest/by-organization/${organizationId}`, // GET by organizationId
   REVIEW_JOIN_REQUEST: "/api/OrganizationJoinRequest/review", // POST with requestId, status, adminComment
 };
 

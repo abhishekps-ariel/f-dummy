@@ -126,15 +126,11 @@ export const bindUserToOrganization = async (joinRequestId, userId) => {
 
 // Get all join requests for an organization (for org admins)
 export const getAllOrganizationJoinRequests = async (organizationId) => {
-  const response = await client.post(
-    ORGANIZATION_ENDPOINTS.GET_ALL_REQUESTS,
-    {
-      organizationId,
-    },
+  const response = await client.get(
+    ORGANIZATION_ENDPOINTS.GET_ALL_REQUESTS(organizationId),
     {
       headers: {
         Accept: "text/plain",
-        "Content-Type": "application/json",
       },
     }
   );
