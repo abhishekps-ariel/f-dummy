@@ -49,19 +49,30 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Check organization access based on organizationId in user object
-  const checkOrganizationAccess = async () => {
-    if (!isAuthenticated || !user) {
+  const checkOrganizationAccess = async (userDataOverride = null) => {
+    // Use provided userData or fall back to state user
+    const userToCheck = userDataOverride || user;
+    
+    // If userDataOverride is provided, we're checking during login, so skip isAuthenticated check
+    if (!userToCheck) {
+      setHasOrganizationAccess(false);
+      setOrganizationCheckComplete(true);
+      return;
+    }
+    
+    // If using state user, check isAuthenticated
+    if (!userDataOverride && !isAuthenticated) {
       setHasOrganizationAccess(false);
       setOrganizationCheckComplete(true);
       return;
     }
 
     try {
-      const isOrgAdmin = isOrgAdminUser(user);
+      const isOrgAdmin = isOrgAdminUser(userToCheck);
       
       // For org admins: check organizationId directly
       if (isOrgAdmin) {
-        const orgId = user.organizationId;
+        const orgId = userToCheck.organizationId;
         if (orgId && typeof orgId === 'string' && orgId.trim() !== '') {
           setHasOrganizationAccess(true);
           // Fetch full organization details
@@ -91,7 +102,7 @@ export const AuthProvider = ({ children }) => {
             );
             
             // Get user's current organizationId from user object
-            const userOrgId = user.organizationId;
+            const userOrgId = userToCheck.organizationId;
             const approvedOrgId = approvedRequest?.organizationId;
             
             // If user has an approved request, grant access
@@ -161,9 +172,9 @@ export const AuthProvider = ({ children }) => {
           setIsAuthenticated(true);
           setUser(userData);
           
-          // Check organization access using the proper check function
+          // Check organization access immediately
           // This will handle org admins vs regular users correctly
-          // We'll check access after user is set in the next useEffect
+          await checkOrganizationAccess();
         } else {
           setIsAuthenticated(false);
           setUser(null);
@@ -183,6 +194,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     checkAuthStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Function to validate token expiry
@@ -201,28 +213,23 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Re-check organization access when user changes (important for non-org admins)
-  useEffect(() => {
-    if (isAuthenticated && user && !organizationCheckComplete) {
-      checkOrganizationAccess();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, user]);
 
 
   const login = async (userData) => {
     setIsAuthenticated(true);
     setUser(userData);
     
-    // Check organization access using the proper check function
-    // This will handle org admins vs regular users correctly
-    await checkOrganizationAccess();
-    
     // Store organizationId in localStorage for backward compatibility
     const orgId = userData.organizationId;
     if (orgId && typeof orgId === 'string' && orgId.trim() !== '') {
       localStorage.setItem("organizationId", orgId);
     }
+    
+    // Check organization access using the proper check function
+    // Pass userData directly to avoid race condition with state update
+    // This will handle org admins vs regular users correctly
+    // IMPORTANT: Wait for this to complete so org admins get immediate access
+    await checkOrganizationAccess(userData);
   };
 
   const logout = () => {

@@ -166,7 +166,12 @@ function Login() {
         
         // Store auth data and login for all users (including org admins)
         storeAuthData(response.data);
+        // Wait for login to complete (including organization access check)
         await authLogin(userData);
+        
+        // Small delay to ensure state updates are propagated
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         toast.success("Login successful!");
         
         const from = location.state?.from?.pathname || ROUTES.DASHBOARD;
