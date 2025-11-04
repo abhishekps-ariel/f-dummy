@@ -138,7 +138,7 @@ function TwoFactorAuth() {
         
         // Store auth data and login for all users (including org admins)
         storeAuthData(response.data);
-        authLogin(userData);
+        await authLogin(userData);
         toast.success("Login successful!");
         
         navigate(ROUTES.DASHBOARD);

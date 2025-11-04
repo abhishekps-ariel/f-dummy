@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { getAuthData } from '../utils/storage';
-import { getOrganizationById } from '../services/organizationService';
+import { getAuthData, getUserRole } from '../utils/storage';
+import { getOrganizationById, getUserJoinRequests } from '../services/organizationService';
 
 const AuthContext = createContext();
 
@@ -20,6 +20,34 @@ export const AuthProvider = ({ children }) => {
   const [hasOrganizationAccess, setHasOrganizationAccess] = useState(false);
   const [organizationCheckComplete, setOrganizationCheckComplete] = useState(false);
 
+  // Helper function to check if user is org admin
+  const isOrgAdminUser = (userData) => {
+    if (!userData) return false;
+    
+    // Check if isManager is true
+    if (userData.isManager === true) {
+      return true;
+    }
+    
+    // Check roles array for "Organisation Admin"
+    if (userData.roles && Array.isArray(userData.roles)) {
+      return userData.roles.some(
+        (role) =>
+          role === "Organisation Admin" ||
+          role === "Organization Admin" ||
+          role === "orgAdmin"
+      );
+    }
+    
+    // Check single role field
+    const userRole = getUserRole(userData);
+    if (userRole === "orgAdmin" || userRole === "Organisation Admin" || userRole === "Organization Admin") {
+      return true;
+    }
+    
+    return false;
+  };
+
   // Check organization access based on organizationId in user object
   const checkOrganizationAccess = async () => {
     if (!isAuthenticated || !user) {
@@ -29,27 +57,92 @@ export const AuthProvider = ({ children }) => {
     }
 
     try {
-      // Check if user has organizationId
-      // Handle both string and null/undefined cases
-      const orgId = user.organizationId;
-      if (orgId && typeof orgId === 'string' && orgId.trim() !== '') {
-        setHasOrganizationAccess(true);
-        // Optionally fetch full organization details
-        try {
-          const orgResponse = await getOrganizationById(orgId);
-          if (orgResponse.isSuccess && orgResponse.data) {
-            setOrganization(orgResponse.data);
-          } else {
-            // Fallback to just ID if full details can't be fetched
+      const isOrgAdmin = isOrgAdminUser(user);
+      
+      // For org admins: check organizationId directly
+      if (isOrgAdmin) {
+        const orgId = user.organizationId;
+        if (orgId && typeof orgId === 'string' && orgId.trim() !== '') {
+          setHasOrganizationAccess(true);
+          // Fetch full organization details
+          try {
+            const orgResponse = await getOrganizationById(orgId);
+            if (orgResponse.isSuccess && orgResponse.data) {
+              setOrganization(orgResponse.data);
+            } else {
+              setOrganization({ id: orgId });
+            }
+          } catch (error) {
             setOrganization({ id: orgId });
           }
-        } catch (error) {
-          // Fallback to just ID if full details can't be fetched
-          setOrganization({ id: orgId });
+        } else {
+          setHasOrganizationAccess(false);
+          setOrganization(null);
         }
       } else {
-        setHasOrganizationAccess(false);
-        setOrganization(null);
+        // For non-org admins: check my-requests to verify active access
+        // This ensures that if org admin removes them, they'll be blocked immediately
+        try {
+          const requestsResponse = await getUserJoinRequests();
+          if (requestsResponse.isSuccess && Array.isArray(requestsResponse.data)) {
+            // Find approved request (status === 1 means Approved)
+            const approvedRequest = requestsResponse.data.find(
+              (request) => request.status === 1
+            );
+            
+            // Get user's current organizationId from user object
+            const userOrgId = user.organizationId;
+            const approvedOrgId = approvedRequest?.organizationId;
+            
+            // If user has an approved request, grant access
+            // Also verify that if user has organizationId, it matches the approved request
+            // This ensures that if org admin removes them, their organizationId will be null/empty
+            // and they'll be blocked on next check
+            if (approvedRequest && approvedOrgId) {
+              // Check if user's organizationId matches (if it exists)
+              // If userOrgId is null/empty but approved request exists, still grant access
+              // (user might not have orgId synced yet but request is approved)
+              const orgIdMatches = !userOrgId || 
+                (typeof userOrgId === 'string' && userOrgId.trim() !== '' && userOrgId === approvedOrgId);
+              
+              if (orgIdMatches) {
+                // User has approved access
+                setHasOrganizationAccess(true);
+                
+                // Use the approved request's organizationId (more reliable than user's orgId)
+                const orgIdToUse = approvedOrgId;
+                
+                // Fetch full organization details
+                try {
+                  const orgResponse = await getOrganizationById(orgIdToUse);
+                  if (orgResponse.isSuccess && orgResponse.data) {
+                    setOrganization(orgResponse.data);
+                  } else {
+                    setOrganization({ id: orgIdToUse });
+                  }
+                } catch (error) {
+                  setOrganization({ id: orgIdToUse });
+                }
+              } else {
+                // User's organizationId doesn't match approved request - they were removed
+                setHasOrganizationAccess(false);
+                setOrganization(null);
+              }
+            } else {
+              // No approved request found - user doesn't have access
+              setHasOrganizationAccess(false);
+              setOrganization(null);
+            }
+          } else {
+            // API call failed or no requests
+            setHasOrganizationAccess(false);
+            setOrganization(null);
+          }
+        } catch (error) {
+          console.error('Error checking join requests:', error);
+          setHasOrganizationAccess(false);
+          setOrganization(null);
+        }
       }
     } catch (error) {
       setHasOrganizationAccess(false);
@@ -60,7 +153,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    const checkAuthStatus = () => {
+    const checkAuthStatus = async () => {
       try {
         const { token, user: userData } = getAuthData();
         
@@ -68,18 +161,9 @@ export const AuthProvider = ({ children }) => {
           setIsAuthenticated(true);
           setUser(userData);
           
-          // Check organization access immediately based on organizationId
-          // Handle both string and null/undefined cases
-          const orgId = userData.organizationId;
-          if (orgId && typeof orgId === 'string' && orgId.trim() !== '') {
-            setHasOrganizationAccess(true);
-            // Set organization with ID, will fetch full details in useEffect
-            setOrganization({ id: orgId });
-          } else {
-            setHasOrganizationAccess(false);
-            setOrganization(null);
-          }
-          setOrganizationCheckComplete(true);
+          // Check organization access using the proper check function
+          // This will handle org admins vs regular users correctly
+          // We'll check access after user is set in the next useEffect
         } else {
           setIsAuthenticated(false);
           setUser(null);
@@ -117,80 +201,27 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Check organization access and fetch full organization details when user is available
+  // Re-check organization access when user changes (important for non-org admins)
   useEffect(() => {
-    if (isAuthenticated && user) {
-      const orgId = user.organizationId;
-      // Check if user has organizationId (handle string and non-string cases)
-      if (orgId && typeof orgId === 'string' && orgId.trim() !== '') {
-        // Only fetch if organization is not set or only has ID (no full details)
-        const needsFullDetails = !organization || (organization && !organization.name && organization.id === orgId);
-        
-        if (needsFullDetails) {
-          // Fetch full organization details if we have organizationId
-          const fetchOrgDetails = async () => {
-            try {
-              const orgResponse = await getOrganizationById(orgId);
-              if (orgResponse.isSuccess && orgResponse.data) {
-                setOrganization(orgResponse.data);
-              } else {
-                // Ensure we at least have the ID
-                if (!organization || organization.id !== orgId) {
-                  setOrganization({ id: orgId });
-                }
-              }
-            } catch (error) {
-              // Keep organization with just ID if fetch fails
-              console.error('Failed to fetch organization details:', error);
-              if (!organization || organization.id !== orgId) {
-                setOrganization({ id: orgId });
-              }
-            }
-          };
-          fetchOrgDetails();
-        }
-      } else if (!hasOrganizationAccess && orgId) {
-        // If we have orgId but access is false, set it
-        setHasOrganizationAccess(true);
-        setOrganization({ id: orgId });
-      }
+    if (isAuthenticated && user && !organizationCheckComplete) {
+      checkOrganizationAccess();
     }
-  }, [isAuthenticated, user, organization, hasOrganizationAccess]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, user]);
 
 
-  const login = (userData) => {
+  const login = async (userData) => {
     setIsAuthenticated(true);
     setUser(userData);
     
-    // Check organization access immediately based on organizationId
-    // Handle both string and null/undefined cases
+    // Check organization access using the proper check function
+    // This will handle org admins vs regular users correctly
+    await checkOrganizationAccess();
+    
+    // Store organizationId in localStorage for backward compatibility
     const orgId = userData.organizationId;
-      localStorage.setItem("organizationId", orgId);
     if (orgId && typeof orgId === 'string' && orgId.trim() !== '') {
-      setHasOrganizationAccess(true);
-      setOrganization({ id: orgId });
-      setOrganizationCheckComplete(true);
-      // Fetch full organization details
-      const fetchOrgDetails = async () => {
-        try {
-          const orgResponse = await getOrganizationById(orgId);
-          if (orgResponse.isSuccess && orgResponse.data) {
-            setOrganization(orgResponse.data);
-          } else {
-            // Ensure we at least have the ID
-            setOrganization({ id: orgId });
-          }
-        } catch (error) {
-          // Keep organization with just ID if fetch fails
-          console.error('Failed to fetch organization details:', error);
-          setOrganization({ id: orgId });
-        }
-      };
-      fetchOrgDetails();
-    } else {
-      setHasOrganizationAccess(false);
-      setOrganization(null);
-      setOrganizationCheckComplete(true);
+      localStorage.setItem("organizationId", orgId);
     }
   };
 
@@ -241,6 +272,9 @@ export const AuthProvider = ({ children }) => {
     updateOrganization,
     updateUserSignature,
     isTokenExpired,
+    setHasOrganizationAccess,
+    setOrganizationCheckComplete,
+    setOrganization,
   };
 
   return (
