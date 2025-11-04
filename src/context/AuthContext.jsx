@@ -165,6 +165,7 @@ export const AuthProvider = ({ children }) => {
     // Check organization access immediately based on organizationId
     // Handle both string and null/undefined cases
     const orgId = userData.organizationId;
+      localStorage.setItem("organizationId", orgId);
     if (orgId && typeof orgId === 'string' && orgId.trim() !== '') {
       setHasOrganizationAccess(true);
       setOrganization({ id: orgId });

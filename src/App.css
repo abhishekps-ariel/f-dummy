@@ -72,3 +72,39 @@
   margin-right: 7px;
   cursor: pointer;
 }
+
+
+/* Custom styled checkboxes */
+table input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #ccc;
+  border-radius: 6px; /* ✅ curved cubical edges */
+  background-color: #fff; /* ✅ white background */
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+}
+ 
+table input[type="checkbox"]:checked {
+  background-color: #0265a3;
+  border-color: orchid;
+}
+ 
+table input[type="checkbox"]:checked::after {
+  content: "✔";
+  color: white;
+  font-size: 12px;
+  position: absolute;
+  top: 0px;
+  left: 3px;
+}
+ 
+/* Optional subtle hover effect */
+table input[type="checkbox"]:hover {
+  border-color: orchid;
+}
+ 

@@ -7,6 +7,7 @@ export const ROUTES = {
   FAQ: '/faq',
   TRAINING: '/training',
   ORGANIZATION_JOIN_REQUESTS: '/organization-join-requests',
+    ORGANISATION_USERS: '/organisation-users',
   LOGIN: '/login',
   REGISTER: '/register',
   FORGOT_PASSWORD: '/forgot-password',

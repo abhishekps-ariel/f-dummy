@@ -17,6 +17,7 @@ export const AUTH_ENDPOINTS = {
   GET_SIGNATURE_BY_ID: (userId) => `/api/Account/get-signature-by-id/${userId}`,
   SEND_SIGNATURE_OTP: "/api/Account/send-signature-otp",
   VERIFY_SIGNATURE_OTP: "/api/Account/verify-signature-otp",
+  ORGANISATION_USERS_API: "/api/Account/list",
   // Impersonation
   IMPERSONATE_BY_USER_ID: (userId) => `/api/Auth/impersonate/${userId}`,
   EXIT_IMPERSONATION: "/api/Auth/exit-impersonation",

@@ -58,6 +58,8 @@ const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
       navigate(ROUTES.TRAINING);
     } else if (section === 'organization-join-requests') {
       navigate(ROUTES.ORGANIZATION_JOIN_REQUESTS);
+    }else if (section === 'organisationUsers') {  
+      navigate(ROUTES.ORGANISATION_USERS);
     }
     onSectionChange(section);
   };
@@ -163,6 +165,23 @@ const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
               >
                 <i className="fa-solid fa-graduation-cap me-2"></i>
                 <span>Training</span>
+              </a>
+            </li>
+            <li className={`dashboard-nav-item`}>
+              <a
+                href="#"
+                className={`dashboard-nav-link ${
+                  activeSection === "organisationUsers"
+                    ? "dashboard-active-link"
+                    : ""
+                }`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleNavigation("organisationUsers");
+                }}
+              >
+                <i className="fa-solid fa-users me-2"></i>
+                <span>Organisation Users</span>
               </a>
             </li>
           </ul>
@@ -337,6 +356,27 @@ const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
               >
                 <i className="fa-solid fa-graduation-cap me-2"></i>
                 <span>Training</span>
+              </a>
+            </li>
+            <li className="dashboard-nav-item">
+              <a
+                href="#"
+                className={`dashboard-nav-link ${activeSection === "organisationUsers" ? "dashboard-active-link" : ""}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleNavigation("organisationUsers");
+                  // Close mobile sidebar if open
+                  const mobileSidebar = document.getElementById("mobileSidebar");
+                  if (mobileSidebar) {
+                    const bsOffcanvas = window.bootstrap.Offcanvas.getInstance(mobileSidebar);
+                    if (bsOffcanvas) {
+                      bsOffcanvas.hide();
+                    }
+                  }
+                }}
+              >
+                <i className="fa-solid fa-graduation-cap me-2"></i>
+                <span>Organisation Users</span>
               </a>
             </li>
           </ul>

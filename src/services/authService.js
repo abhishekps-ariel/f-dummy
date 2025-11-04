@@ -475,3 +475,26 @@ export const performExitImpersonation = async () => {
   } catch {}
   return { isSuccess: true };
 };
+
+
+export const getorganisationUsersList = async (payload) => {
+  console.log("Payload sent:", payload);
+  const response = await client.post(
+    AUTH_ENDPOINTS.ORGANISATION_USERS_API,
+    payload,
+    {
+      headers: { Accept: "application/json" },
+    }
+  );
+ 
+  console.log("API Raw Response:", response.data);
+ 
+  return {
+    isSuccess: response.data.success,
+    msg: response.data.message,
+    data: response.data.data,
+    totalRecords: response.data.totalRecords || 0, // ✅ include totalRecords
+    pageNumber: response.data.pageNumber || 1, // ✅ include page info
+    pageSize: response.data.pageSize || payload.pageSize, // ✅ include size info
+  };
+};
