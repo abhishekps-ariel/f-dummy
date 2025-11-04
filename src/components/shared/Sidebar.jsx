@@ -167,23 +167,25 @@ const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
                 <span>Training</span>
               </a>
             </li>
-            <li className={`dashboard-nav-item`}>
-              <a
-                href="#"
-                className={`dashboard-nav-link ${
-                  activeSection === "organisationUsers"
-                    ? "dashboard-active-link"
-                    : ""
-                }`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleNavigation("organisationUsers");
-                }}
-              >
-                <i className="fa-solid fa-users me-2"></i>
-                <span>Organisation Users</span>
-              </a>
-            </li>
+            {isOrgAdmin && (
+              <li className="dashboard-nav-item">
+                <a
+                  href="#"
+                  className={`dashboard-nav-link ${
+                    activeSection === "organisationUsers"
+                      ? "dashboard-active-link"
+                      : ""
+                  }`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleNavigation("organisationUsers");
+                  }}
+                >
+                  <i className="fa-solid fa-users me-2"></i>
+                  <span>Organisation Users</span>
+                </a>
+              </li>
+            )}
           </ul>
         </nav>
 
@@ -358,27 +360,29 @@ const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
                 <span>Training</span>
               </a>
             </li>
-            <li className="dashboard-nav-item">
-              <a
-                href="#"
-                className={`dashboard-nav-link ${activeSection === "organisationUsers" ? "dashboard-active-link" : ""}`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleNavigation("organisationUsers");
-                  // Close mobile sidebar if open
-                  const mobileSidebar = document.getElementById("mobileSidebar");
-                  if (mobileSidebar) {
-                    const bsOffcanvas = window.bootstrap.Offcanvas.getInstance(mobileSidebar);
-                    if (bsOffcanvas) {
-                      bsOffcanvas.hide();
+            {isOrgAdmin && (
+              <li className="dashboard-nav-item">
+                <a
+                  href="#"
+                  className={`dashboard-nav-link ${activeSection === "organisationUsers" ? "dashboard-active-link" : ""}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleNavigation("organisationUsers");
+                    // Close mobile sidebar if open
+                    const mobileSidebar = document.getElementById("mobileSidebar");
+                    if (mobileSidebar) {
+                      const bsOffcanvas = window.bootstrap.Offcanvas.getInstance(mobileSidebar);
+                      if (bsOffcanvas) {
+                        bsOffcanvas.hide();
+                      }
                     }
-                  }
-                }}
-              >
-                <i className="fa-solid fa-graduation-cap me-2"></i>
-                <span>Organisation Users</span>
-              </a>
-            </li>
+                  }}
+                >
+                  <i className="fa-solid fa-users me-2"></i>
+                  <span>Organisation Users</span>
+                </a>
+              </li>
+            )}
           </ul>
 
           <div className="mt-auto pt-4 border-top">

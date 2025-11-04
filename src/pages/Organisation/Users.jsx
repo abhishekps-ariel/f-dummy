@@ -2,13 +2,40 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { logout as logoutApi } from '../../services/authService';
-import { clearAuthData, getAuthData } from '../../utils/storage';
+import { clearAuthData, getAuthData, getUserRole } from '../../utils/storage';
 import { ROUTES } from '../../constants/routerConstants';
 import Sidebar from '../../components/shared/Sidebar';
 import Header from '../../components/shared/Header';
 import { getorganisationUsersList } from "../../services/authService";
 import UserDetails from "./UserDetails";
 
+// Helper function to check if user is org admin (matches Login.jsx logic)
+const isOrgAdminUser = (userData) => {
+  if (!userData) return false;
+  
+  // Check if isManager is true
+  if (userData.isManager === true) {
+    return true;
+  }
+  
+  // Check roles array for "Organisation Admin"
+  if (userData.roles && Array.isArray(userData.roles)) {
+    return userData.roles.some(
+      (role) =>
+        role === "Organisation Admin" ||
+        role === "Organization Admin" ||
+        role === "orgAdmin"
+    );
+  }
+  
+  // Check single role field
+  const userRole = getUserRole(userData);
+  if (userRole === "orgAdmin" || userRole === "Organisation Admin" || userRole === "Organization Admin") {
+    return true;
+  }
+  
+  return false;
+};
 
 const Users = () => {
   const [users, setUsers] = useState([]);
@@ -18,12 +45,14 @@ const Users = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
 
-
-
-  const { user, logout } = useAuth();
+  const { user, logout, organization } = useAuth();
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState('organisationUsers');
+  
+  // Check if user is org admin
+  const isOrgAdmin = isOrgAdminUser(user);
+  const organizationId = user?.organizationId || organization?.id;
 
   const handleLogout = async () => {
     try {
@@ -83,6 +112,43 @@ const Users = () => {
 
     fetchUsers();
   }, [pageNumber, pageSize, searchTerm]);
+
+  if (!organizationId || !isOrgAdmin) {
+    return (
+      <div className="dashboard-wrapper">
+        <Sidebar 
+          activeSection={activeSection}
+          onSectionChange={(section) => {
+            if (section === 'dashboard') {
+              navigate(ROUTES.DASHBOARD);
+            } else if (section === 'organizations') {
+              navigate(ROUTES.DASHBOARD, { state: { activeSection: 'organizations' } });
+            } else if (section === 'petitions') {
+              navigate(ROUTES.PETITIONS);
+            } else if (section === 'messages') {
+              navigate(ROUTES.MESSAGES);
+            } else if (section === 'faq') {
+              navigate(ROUTES.FAQ);
+            }
+          }}
+          onLogout={handleLogout}
+        />
+        <main className="dashboard-main-area container-fluid">
+          <Header 
+            user={user}
+            pageTitle="Organisation Users"
+            onLogout={handleLogout}
+          />
+          <div className="dashboard-content-section">
+            <div className="alert alert-warning">
+              <i className="fa-solid fa-exclamation-triangle me-2"></i>
+              Access Denied. This page is only accessible to organization administrators.
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="dashboard-wrapper">
