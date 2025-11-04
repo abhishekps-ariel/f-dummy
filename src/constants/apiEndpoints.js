@@ -33,6 +33,8 @@ export const ORGANIZATION_ENDPOINTS = {
   SUBMIT_JOIN_REQUEST: "/api/OrganizationJoinRequest/request",
   GET_MY_REQUESTS: "/api/OrganizationJoinRequest/my-requests",
   GET_JOIN_REQUEST: (joinRequestId) => `/api/OrganizationJoinRequest/join-request/${joinRequestId}`,
+  GET_ALL_REQUESTS: "/api/OrganizationJoinRequest/request", // POST with organizationId
+  REVIEW_JOIN_REQUEST: "/api/OrganizationJoinRequest/review", // POST with requestId, status, adminComment
 };
 
 export const COMMON_ENDPOINTS = {
@@ -42,6 +44,7 @@ export const COMMON_ENDPOINTS = {
   GET_PETITION_ASSIGNEE_TYPES: "/Common/get-petition-assignee-types",
   GET_PETITION_ASSIGNEE_ROLES: "/Common/get-petition-assignee-roles",
   GET_BUYER_TYPES: "/Common/get-buyer-type",
+  GET_JOIN_REQUEST_STATUS_ENUM: "/Common/join-request-status-enum",
 };
 
 export const PETITION_ENDPOINTS = {

@@ -123,3 +123,67 @@ export const bindUserToOrganization = async (joinRequestId, userId) => {
     data: response.data.data,
   };
 };
+
+// Get all join requests for an organization (for org admins)
+export const getAllOrganizationJoinRequests = async (organizationId) => {
+  const response = await client.post(
+    ORGANIZATION_ENDPOINTS.GET_ALL_REQUESTS,
+    {
+      organizationId,
+    },
+    {
+      headers: {
+        Accept: "text/plain",
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  // Handle the response structure - API might return single object or array
+  let requestsData = null;
+  if (response.data && response.data.data) {
+    // If nested in data property
+    requestsData = response.data.data;
+  } else if (response.data) {
+    // If directly in response.data
+    requestsData = response.data;
+  }
+
+  // Ensure it's always an array
+  if (requestsData && !Array.isArray(requestsData)) {
+    // If it's a single object, wrap it in an array
+    requestsData = [requestsData];
+  } else if (!requestsData) {
+    requestsData = [];
+  }
+
+  return {
+    isSuccess: response.data.success || true,
+    msg: response.data.message || "Join requests fetched successfully",
+    data: requestsData,
+  };
+};
+
+// Review/approve/deny a join request (for org admins)
+export const reviewJoinRequest = async (requestId, status, adminComment = "") => {
+  const response = await client.post(
+    ORGANIZATION_ENDPOINTS.REVIEW_JOIN_REQUEST,
+    {
+      requestId,
+      status,
+      adminComment,
+    },
+    {
+      headers: {
+        Accept: "text/plain",
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  return {
+    isSuccess: response.data.success || true,
+    msg: response.data.message || "Join request reviewed successfully",
+    data: response.data.data || response.data,
+  };
+};

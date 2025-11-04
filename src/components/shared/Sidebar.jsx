@@ -1,10 +1,49 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
+import { getUserRole } from "../../utils/storage";
 import { ROUTES } from "../../constants/routerConstants";
 import loginImg from "../../assets/logo-sample.png";
 
+// Helper function to check if user is org admin (matches Login.jsx logic)
+const isOrgAdminUser = (userData) => {
+  if (!userData) return false;
+  
+  // Check if isManager is true
+  if (userData.isManager === true) {
+    return true;
+  }
+  
+  // Check roles array for "Organisation Admin"
+  if (userData.roles && Array.isArray(userData.roles)) {
+    return userData.roles.some(
+      (role) =>
+        role === "Organisation Admin" ||
+        role === "Organization Admin" ||
+        role === "orgAdmin"
+    );
+  }
+  
+  // Check single role field
+  const userRole = getUserRole(userData);
+  if (userRole === "orgAdmin" || userRole === "Organisation Admin" || userRole === "Organization Admin") {
+    return true;
+  }
+  
+  return false;
+};
+
 const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  
+  // Check if user is org admin
+  const isOrgAdmin = isOrgAdminUser(user);
+  
+  // Debug: Log user and role check (remove after debugging)
+  // console.log('Sidebar - User:', user);
+  // console.log('Sidebar - Is Org Admin:', isOrgAdmin);
+  // console.log('Sidebar - User Role:', getUserRole(user));
 
   const handleNavigation = (section) => {
     if (section === 'dashboard') {
@@ -17,6 +56,8 @@ const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
       navigate(ROUTES.FAQ);
     } else if (section === 'training') {
       navigate(ROUTES.TRAINING);
+    } else if (section === 'organization-join-requests') {
+      navigate(ROUTES.ORGANIZATION_JOIN_REQUESTS);
     }
     onSectionChange(section);
   };
@@ -109,6 +150,21 @@ const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
                 <span>Training</span>
               </a>
             </li>
+            {isOrgAdmin && (
+              <li className="dashboard-nav-item">
+                <a
+                  href="#"
+                  className={`dashboard-nav-link ${activeSection === "organization-join-requests" ? "dashboard-active-link" : ""}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleNavigation("organization-join-requests");
+                  }}
+                >
+                  <i className="fa-solid fa-users me-2"></i>
+                  <span>Organisations Join Requests</span>
+                </a>
+              </li>
+            )}
           </ul>
         </nav>
 
@@ -260,6 +316,29 @@ const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
                 <span>Training</span>
               </a>
             </li>
+            {isOrgAdmin && (
+              <li className="dashboard-nav-item">
+                <a
+                  href="#"
+                  className={`dashboard-nav-link ${activeSection === "organization-join-requests" ? "dashboard-active-link" : ""}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleNavigation("organization-join-requests");
+                    // Close mobile sidebar if open
+                    const mobileSidebar = document.getElementById("mobileSidebar");
+                    if (mobileSidebar) {
+                      const bsOffcanvas = window.bootstrap.Offcanvas.getInstance(mobileSidebar);
+                      if (bsOffcanvas) {
+                        bsOffcanvas.hide();
+                      }
+                    }
+                  }}
+                >
+                  <i className="fa-solid fa-users me-2"></i>
+                  <span>Organisations Join Requests</span>
+                </a>
+              </li>
+            )}
           </ul>
 
           <div className="mt-auto pt-4 border-top">

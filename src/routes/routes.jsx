@@ -11,6 +11,7 @@ const Petitions = lazy(() => import('../pages/Petitions'));
 const Messages = lazy(() => import('../pages/Messages'));
 const FAQ = lazy(() => import('../pages/FAQ'));
 const Training = lazy(() => import('../pages/Training'));
+const OrganizationJoinRequests = lazy(() => import('../pages/OrganizationJoinRequests'));
 const Login = lazy(() => import('../pages/Auth/Login'));
 const Register = lazy(() => import('../pages/Auth/Register'));
 const ForgotPassword = lazy(() => import('../pages/Auth/ForgotPassword'));
@@ -117,6 +118,14 @@ export const router = createBrowserRouter([
     element: (
       <Layout>
         <Training />
+      </Layout>
+    ),
+  },
+  {
+    path: ROUTES.ORGANIZATION_JOIN_REQUESTS,
+    element: (
+      <Layout>
+        <OrganizationJoinRequests />
       </Layout>
     ),
   },
