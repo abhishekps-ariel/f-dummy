@@ -146,8 +146,13 @@ export const getAllOrganizationJoinRequests = async (
     // Note: API expects status: null for "all"
     // pageNumber is 1-based (not 0-based)
     // When no date filter, send default dates (old date to current date)
+    // Ensure organizationId is always included and not null
+    if (!organizationId) {
+      throw new Error("organizationId is required for getAllOrganizationJoinRequests");
+    }
+    
     const requestBody = {
-      organizationId: organizationId || "",
+      organizationId: organizationId, // Always include the organizationId
       status: status !== null && status !== "all" ? parseInt(status) : null,
       pageNumber: pageNumber + 1, // Convert 0-based to 1-based
       pageSize,

@@ -62,6 +62,7 @@ const Users = () => {
   const [users, setUsers] = useState([]);
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize] = useState(10);
+  const [displayPageSize] = useState(10); // Number of users to display per page
   const [totalUsers, setTotalUsers] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
@@ -105,9 +106,11 @@ const Users = () => {
       try {
         const orgId = localStorage.getItem("organizationId");
 
+        // Request more users per page to account for client-side filtering of org admins
+        // We request 15 users per page but only display 10, to ensure we have enough after filtering
         const payload = {
           pageNumber,
-          pageSize,
+          pageSize: 15, // Request more to account for filtered org admins
           organizationId: orgId,
           searchTerm,
           sortBy: "",
@@ -246,10 +249,15 @@ const Users = () => {
                       );
                     });
                     const filteredCount = filteredUsers.length;
-                    const startIndex = filteredCount > 0 ? (pageNumber - 1) * pageSize + 1 : 0;
-                    const endIndex = Math.min(pageNumber * pageSize, filteredCount);
-                    return filteredCount > 0 
-                      ? `Showing ${startIndex}-${endIndex} of ${filteredCount} users`
+                    // Only show up to displayPageSize users per page
+                    const displayUsers = filteredUsers.slice(0, displayPageSize);
+                    const displayCount = displayUsers.length;
+                    const startIndex = displayCount > 0 ? (pageNumber - 1) * displayPageSize + 1 : 0;
+                    const endIndex = displayCount > 0 ? (pageNumber - 1) * displayPageSize + displayCount : 0;
+                    // Subtract 1 from totalUsers to account for the org admin that's always filtered out
+                    const displayTotalUsers = totalUsers > 0 ? totalUsers - 1 : 0;
+                    return displayCount > 0 
+                      ? `Showing ${startIndex}-${endIndex} of ${displayTotalUsers} users`
                       : "No users found";
                   })()}
                   {loading && <span className="ms-2">(Loading...)</span>}
@@ -300,6 +308,7 @@ const Users = () => {
                           role === "orgAdmin"
                         );
                       })
+                      .slice(0, displayPageSize) // Only show displayPageSize users per page
                       .map((user) => (
                         <tr key={user.id} className="petition-row" onClick={() => handleUserClick(user.id)} style={{ cursor: "pointer" }}>
                           <td>
@@ -383,6 +392,7 @@ const Users = () => {
                         role === "orgAdmin"
                       );
                     })
+                    .slice(0, displayPageSize) // Only show displayPageSize users per page
                     .map((user) => (
                       <div key={user.id} className="col-12">
                         <div className="petition-mobile-row" onClick={() => handleUserClick(user.id)} style={{ cursor: "pointer" }}>
@@ -445,85 +455,103 @@ const Users = () => {
 
 
             {/* Pagination */}
-            {!loading && users.length > 0 && Math.ceil(totalUsers / pageSize) >= 1 && (
-              <div className="d-flex justify-content-center mt-4">
-                <div className="pagination-minimal">
-                  <button
-                    className={`pagination-btn ${pageNumber === 1 ? "disabled" : ""}`}
-                    onClick={() => {
-                      if (pageNumber > 1) {
-                        setPageNumber((prev) => prev - 1);
-                      }
-                    }}
-                    disabled={pageNumber === 1}
-                  >
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
+            {(() => {
+              // Filter out org admins to get accurate count for pagination
+              const filteredUsers = users.filter(user => {
+                const roles = Array.isArray(user.roles) ? user.roles : [];
+                return !roles.some(role => 
+                  role === "Organization Admin" || 
+                  role === "Organisation Admin" || 
+                  role === "orgAdmin"
+                );
+              });
+              const filteredCount = filteredUsers.length;
+              
+              // Calculate total pages based on displayPageSize (not the API pageSize)
+              // Only show pagination if we have more filtered users than displayPageSize
+              const totalPages = Math.ceil(totalUsers / displayPageSize);
+              const shouldShowPagination = filteredCount > displayPageSize || (pageNumber > 1 && filteredCount > 0);
+              
+              return !loading && users.length > 0 && shouldShowPagination && (
+                <div className="d-flex justify-content-center mt-4">
+                  <div className="pagination-minimal">
+                    <button
+                      className={`pagination-btn ${pageNumber === 1 ? "disabled" : ""}`}
+                      onClick={() => {
+                        if (pageNumber > 1) {
+                          setPageNumber((prev) => prev - 1);
+                        }
+                      }}
+                      disabled={pageNumber === 1}
                     >
-                      <path
-                        d="M15 18L9 12L15 6"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                    Previous
-                  </button>
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M15 18L9 12L15 6"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                      Previous
+                    </button>
 
-                  <div className="pagination-pages">
-                    {Array.from(
-                      { length: Math.min(Math.ceil(totalUsers / pageSize), 5) },
-                      (_, i) => {
-                        const page = i + 1;
-                        return (
-                          <button
-                            key={page}
-                            className={`pagination-page ${page === pageNumber ? "active" : ""}`}
-                            onClick={() => setPageNumber(page)}
-                          >
-                            {page}
-                          </button>
-                        );
-                      }
-                    )}
+                    <div className="pagination-pages">
+                      {Array.from(
+                        { length: Math.min(totalPages, 5) },
+                        (_, i) => {
+                          const page = i + 1;
+                          return (
+                            <button
+                              key={page}
+                              className={`pagination-page ${page === pageNumber ? "active" : ""}`}
+                              onClick={() => setPageNumber(page)}
+                            >
+                              {page}
+                            </button>
+                          );
+                        }
+                      )}
+                    </div>
+
+                    <button
+                      className={`pagination-btn ${
+                        pageNumber >= totalPages || filteredCount <= displayPageSize ? "disabled" : ""
+                      }`}
+                      onClick={() => {
+                        if (pageNumber < totalPages && filteredCount > displayPageSize) {
+                          setPageNumber((prev) => prev + 1);
+                        }
+                      }}
+                      disabled={pageNumber >= totalPages || filteredCount <= displayPageSize}
+                    >
+                      Next
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M9 18L15 12L9 6"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </button>
                   </div>
-
-                  <button
-                    className={`pagination-btn ${
-                      pageNumber >= Math.ceil(totalUsers / pageSize) ? "disabled" : ""
-                    }`}
-                    onClick={() => {
-                      if (pageNumber < Math.ceil(totalUsers / pageSize)) {
-                        setPageNumber((prev) => prev + 1);
-                      }
-                    }}
-                    disabled={pageNumber >= Math.ceil(totalUsers / pageSize)}
-                  >
-                    Next
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M9 18L15 12L9 6"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </button>
                 </div>
-              </div>
-            )}
+              );
+            })()}
           </div>
         </div>
       </main>
