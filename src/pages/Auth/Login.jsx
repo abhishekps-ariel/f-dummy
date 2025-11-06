@@ -298,7 +298,7 @@ function Login() {
                               <h5 className="fw-bold mb-2">{mfaType.name}</h5>
                               <p className="font-sm text-muted mb-0">
                                 {mfaType.name === "SMS"
-                                  ? "Receive verification codes via text message"
+                                  ? "Receive verification codes via sms"
                                   : "Receive verification codes via email"}
                               </p>
                             </div>
