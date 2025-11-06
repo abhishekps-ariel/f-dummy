@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { getUserById } from '../services/authService';
+import { getAllOrganizationJoinRequests } from '../services/organizationService';
 
 const JoinRequestTabContext = createContext();
 
@@ -211,15 +212,17 @@ export const JoinRequestTabProvider = ({ children }) => {
     return tabs.find(tab => tab.id === activeTabId);
   };
 
-  // Refresh a specific tab's data using userId from stored data
+  // Refresh a specific tab's data by fetching updated request from list API and user details
   const refreshTab = async (tabId) => {
     const tab = tabs.find(t => t.id === tabId);
     if (!tab || tab.type !== 'join-request') return;
     
-    // Get userId from stored data or tab metadata
-    const userId = tab.data?.request?.userId || tab.userId;
-    if (!userId) {
-      console.error('No userId found for tab:', tabId);
+    // Get request ID and organizationId from tab
+    const requestId = tab.id.replace('join-request-', '');
+    const organizationId = tab.organizationId || tab.data?.request?.organizationId;
+    
+    if (!organizationId) {
+      console.error('No organizationId found for tab:', tabId);
       return;
     }
     
@@ -232,34 +235,89 @@ export const JoinRequestTabProvider = ({ children }) => {
     setLoadingTabs(prev => new Set([...prev, tabId]));
     
     try {
-      // Fetch fresh user details using getUserById
-      let userDetails = null;
-      try {
-        const userResponse = await getUserById(userId);
-        if (userResponse.isSuccess && userResponse.data) {
-          userDetails = userResponse.data;
-        }
-      } catch (error) {
-        console.error('Error fetching user details:', error);
-      }
+      // Fetch updated request from list API (same as when opening tab)
+      // Use minimal filters to get all requests, then find the specific one
+      const filters = {
+        status: null, // Get all statuses
+        searchTerm: '',
+        pageNumber: 0,
+        pageSize: 100, // Get enough to find our request
+        startDate: '2020-01-01T00:00:00.000Z',
+        endDate: new Date().toISOString(),
+      };
       
-      // Update tab with fresh data (preserve request data, update user details)
-      setTabs(prevTabs => 
-        prevTabs.map(t => 
-          t.id === tabId 
-            ? {
-                ...t,
-                title: userDetails?.fullName || userDetails?.email || tab.data?.request?.email || 'Join Request',
-                data: {
-                  ...tab.data,
-                  userDetails: userDetails || tab.data?.userDetails
-                },
-                isLoading: false,
-                hasError: false
-              }
-            : t
-        )
-      );
+      const response = await getAllOrganizationJoinRequests(organizationId, filters);
+      
+      if (response.isSuccess && response.data) {
+        // Find the specific request by ID
+        const updatedRequest = Array.isArray(response.data) 
+          ? response.data.find(req => req.id === requestId)
+          : null;
+        
+        if (!updatedRequest) {
+          console.error('Request not found in list:', requestId);
+          // Keep existing data but mark as error
+          setTabs(prevTabs => 
+            prevTabs.map(t => 
+              t.id === tabId 
+                ? {
+                    ...t,
+                    isLoading: false,
+                    hasError: true
+                  }
+                : t
+            )
+          );
+          return;
+        }
+        
+        // Fetch fresh user details using getUserById
+        let userDetails = null;
+        if (updatedRequest.userId) {
+          try {
+            const userResponse = await getUserById(updatedRequest.userId);
+            if (userResponse.isSuccess && userResponse.data) {
+              userDetails = userResponse.data;
+            }
+          } catch (error) {
+            console.error('Error fetching user details:', error);
+            // Use existing user details if available
+            userDetails = tab.data?.userDetails || null;
+          }
+        }
+        
+        // Update tab with fresh data (both request and user details)
+        setTabs(prevTabs => 
+          prevTabs.map(t => 
+            t.id === tabId 
+              ? {
+                  ...t,
+                  title: userDetails?.fullName || userDetails?.email || updatedRequest.email || 'Join Request',
+                  data: {
+                    request: updatedRequest,
+                    userDetails: userDetails || tab.data?.userDetails
+                  },
+                  isLoading: false,
+                  hasError: false
+                }
+              : t
+          )
+        );
+      } else {
+        console.error('Failed to fetch updated request:', response.msg);
+        // Keep existing data but mark as error
+        setTabs(prevTabs => 
+          prevTabs.map(t => 
+            t.id === tabId 
+              ? {
+                  ...t,
+                  isLoading: false,
+                  hasError: true
+                }
+              : t
+          )
+        );
+      }
     } catch (error) {
       console.error('Error refreshing join request tab:', error);
       // Keep existing data on error
