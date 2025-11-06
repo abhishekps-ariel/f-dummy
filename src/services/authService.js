@@ -56,12 +56,13 @@ export const login = async (email, password, rememberMe = true, isManager = fals
   };
 };
 
-export const sendOtp = async (email, password) => {
+export const sendOtp = async (email, password, mfaType = "None") => {
   const response = await client.post(
     AUTH_ENDPOINTS.SEND_OTP,
     {
       email,
       password,
+      mfaType,
     },
     {
       headers: {

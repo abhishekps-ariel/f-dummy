@@ -1,34 +1,11 @@
-import { useState } from "react";
-import { checkMfa, login, sendOtp } from "../../services/authService";
-import { storeAuthData } from "../../utils/storage";
+import { useState, useEffect } from "react";
+import { checkMfa, sendOtp } from "../../services/authService";
+import { getMfaTypesEnum } from "../../services/commonService";
 import { useNavigate, Link, useLocation } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
 import { ROUTES } from "../../constants/routerConstants";
 import { toast } from "react-toastify";
 import loginImg from "../../assets/logo-sample.png";
 import "../../styles/custom.css";
-
-// Helper function to check if user is org admin
-const isOrgAdmin = (userData) => {
-  if (!userData) return false;
-  
-  // Check if isManager is true
-  if (userData.isManager === true) {
-    return true;
-  }
-  
-  // Check roles array for "Organisation Admin"
-  if (userData.roles && Array.isArray(userData.roles)) {
-    return userData.roles.some(
-      (role) =>
-        role === "Organisation Admin" ||
-        role === "Organization Admin" ||
-        role === "orgAdmin"
-    );
-  }
-  
-  return false;
-};
 
 function Login() {
   const [formData, setFormData] = useState({
@@ -40,11 +17,35 @@ function Login() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showMfaSelection, setShowMfaSelection] = useState(false);
   const [selectedMfaMethod, setSelectedMfaMethod] = useState("");
-  const [isOrgAdminUser, setIsOrgAdminUser] = useState(false);
+  const [mfaTypes, setMfaTypes] = useState([]);
+  const [preferredMfaMethod, setPreferredMfaMethod] = useState(null);
 
   const navigate = useNavigate();
   const location = useLocation();
-  const { login: authLogin } = useAuth();
+
+  // Load MFA types enum on mount
+  useEffect(() => {
+    const loadMfaTypes = async () => {
+      try {
+        const response = await getMfaTypesEnum();
+        if (response.isSuccess && response.data) {
+          // Filter out "None" and "AuthenticatorApp" for now, only show SMS and Email
+          const availableTypes = response.data.filter(
+            (type) => type.name === "SMS" || type.name === "Email"
+          );
+          setMfaTypes(availableTypes);
+        }
+      } catch (error) {
+        console.error("Error loading MFA types:", error);
+        // Fallback to default types
+        setMfaTypes([
+          { name: "SMS", value: 1 },
+          { name: "Email", value: 2 },
+        ]);
+      }
+    };
+    loadMfaTypes();
+  }, []);
 
   const validateForm = () => {
     const newErrors = {};
@@ -123,20 +124,21 @@ function Login() {
         return;
       }
 
-      // Check if user is org admin from checkMfa response
-      if (mfaResponse.data?.user) {
-        setIsOrgAdminUser(isOrgAdmin(mfaResponse.data.user));
-      }
-
-      const { isMfaSetupRequired } = mfaResponse.data;
-
-      if (!isMfaSetupRequired) {
-        // No MFA required - directly login
-        await handleDirectLogin();
+      // MFA is now required on every login
+      const { isMfaEnabled, preferredMfaMethod: preferredMethod, isMfaSetupRequired } = mfaResponse.data || {};
+      
+      // Set preferred MFA method if available
+      if (preferredMethod) {
+        setPreferredMfaMethod(preferredMethod);
+        // Pre-select the preferred method
+        setSelectedMfaMethod(preferredMethod);
       } else {
-        // MFA required - show setup screen
-        setShowMfaSelection(true);
+        // Default to SMS if no preference
+        setSelectedMfaMethod("SMS");
       }
+
+      // Always show MFA selection screen
+      setShowMfaSelection(true);
     } catch (error) {
       // Handle specific error messages from API response
       if (error.response?.data?.message) {
@@ -156,58 +158,6 @@ function Login() {
     }
   };
 
-  // Direct login when MFA not required
-  const handleDirectLogin = async () => {
-    try {
-      const response = await login(formData.email, formData.password, true, isOrgAdminUser);
-
-      if (response.isSuccess) {
-        const userData = response.data?.user;
-        
-        // Store auth data and login for all users (including org admins)
-        storeAuthData(response.data);
-        // Wait for login to complete (including organization access check)
-        await authLogin(userData);
-        
-        // Small delay to ensure state updates are propagated
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-        toast.success("Login successful!");
-        
-        const from = location.state?.from?.pathname || ROUTES.DASHBOARD;
-        navigate(from, { replace: true });
-      } else {
-        // Handle specific error messages for direct login
-        if (
-          response.msg &&
-          response.msg.toLowerCase().includes("user not found")
-        ) {
-          toast.error("User not found");
-        } else if (
-          response.msg &&
-          response.msg.toLowerCase().includes("invalid email or password")
-        ) {
-          toast.error("Incorrect password");
-        } else {
-          toast.error(response.msg || "Login failed");
-        }
-      }
-    } catch (error) {
-      // Handle specific error messages from API response
-      if (error.response?.data?.message) {
-        const errorMessage = error.response.data.message.toLowerCase();
-        if (errorMessage.includes("user not found")) {
-          toast.error("User not found");
-        } else if (errorMessage.includes("invalid email or password")) {
-          toast.error("Incorrect password");
-        } else {
-          toast.error(error.response.data.message);
-        }
-      } else {
-        toast.error("Login failed. Please try again.");
-      }
-    }
-  };
 
   // MFA Setup - send OTP and navigate to TwoFactorAuth page
   const handleMfaProceed = async () => {
@@ -218,17 +168,19 @@ function Login() {
 
     setIsSubmitting(true);
     try {
-      const response = await sendOtp(formData.email, formData.password);
+      const response = await sendOtp(formData.email, formData.password, selectedMfaMethod);
 
       if (response.isSuccess) {
         toast.success(response.msg || "OTP sent successfully!");
-        // Navigate to TwoFactorAuth page with email, password, and isManager flag
+        // Navigate to TwoFactorAuth page with email, password, mfaType, and masked values
         navigate(ROUTES.TWO_FACTOR_AUTH, {
           state: {
             email: formData.email,
             password: formData.password,
-            phoneNumberMasked: response.data.phoneNumberMasked,
-            isManager: isOrgAdminUser,
+            mfaType: selectedMfaMethod,
+            phoneNumberMasked: response.data?.phoneNumberMasked || null,
+            emailMasked: response.data?.emailMasked || null,
+            isManager: false, // Will be determined from verifyOtp response
           },
         });
       } else {
@@ -321,26 +273,37 @@ function Login() {
                       </p>
 
                       <div className="mfa-card-area row g-3 justify-content-center">
-                        <div className="col-md-8 col-lg-6">
-                          <div
-                            className={`mfa-option-card p-4 text-center ${
-                              selectedMfaMethod === "sms" ? "selected" : ""
-                            }`}
-                            onClick={() => setSelectedMfaMethod("sms")}
-                            style={{ cursor: "pointer" }}
-                          >
-                            <div className="mb-3">
-                              <i
-                                className="fa-solid fa-message"
-                                style={{ fontSize: "3rem", color: "#34a853" }}
-                              ></i>
+                        {mfaTypes.map((mfaType) => (
+                          <div key={mfaType.name} className="col-md-8 col-lg-6">
+                            <div
+                              className={`mfa-option-card p-4 text-center ${
+                                selectedMfaMethod === mfaType.name ? "selected" : ""
+                              }`}
+                              onClick={() => setSelectedMfaMethod(mfaType.name)}
+                              style={{ cursor: "pointer" }}
+                            >
+                              <div className="mb-3">
+                                {mfaType.name === "SMS" ? (
+                                  <i
+                                    className="fa-solid fa-message"
+                                    style={{ fontSize: "3rem", color: "#34a853" }}
+                                  ></i>
+                                ) : (
+                                  <i
+                                    className="fa-solid fa-envelope"
+                                    style={{ fontSize: "3rem", color: "#4285f4" }}
+                                  ></i>
+                                )}
+                              </div>
+                              <h5 className="fw-bold mb-2">{mfaType.name}</h5>
+                              <p className="font-sm text-muted mb-0">
+                                {mfaType.name === "SMS"
+                                  ? "Receive verification codes via text message"
+                                  : "Receive verification codes via email"}
+                              </p>
                             </div>
-                            <h5 className="fw-bold mb-2">SMS</h5>
-                            <p className="font-sm text-muted  mb-0">
-                              Receive verification codes via text message
-                            </p>
                           </div>
-                        </div>
+                        ))}
                       </div>
                     </div>
 

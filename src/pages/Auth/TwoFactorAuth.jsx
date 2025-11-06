@@ -40,9 +40,11 @@ function TwoFactorAuth() {
   const location = useLocation();
   const { login: authLogin } = useAuth();
 
-  // Get email, phone, and isManager from navigation state
+  // Get email, phone, mfaType, and isManager from navigation state
   const email = location.state?.email;
   const phoneNumberMasked = location.state?.phoneNumberMasked;
+  const emailMasked = location.state?.emailMasked;
+  const mfaType = location.state?.mfaType || "SMS";
   const isManager = location.state?.isManager || false;
 
   useEffect(() => {
@@ -174,7 +176,7 @@ function TwoFactorAuth() {
         return;
       }
 
-      const response = await sendOtp(email, password);
+      const response = await sendOtp(email, password, mfaType);
 
       if (response.isSuccess) {
         toast.success(response.msg || "New code sent successfully!");
@@ -212,7 +214,9 @@ function TwoFactorAuth() {
                   </h2>
                   <p className="font-base">
                     Enter the six-digit code sent to{" "}
-                    {phoneNumberMasked || "your device"}
+                    {mfaType === "Email" 
+                      ? (emailMasked || "your email")
+                      : (phoneNumberMasked || "your device")}
                   </p>
                 </div>
 

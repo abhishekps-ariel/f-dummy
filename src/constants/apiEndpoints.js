@@ -46,6 +46,7 @@ export const COMMON_ENDPOINTS = {
   GET_PETITION_ASSIGNEE_ROLES: "/Common/get-petition-assignee-roles",
   GET_BUYER_TYPES: "/Common/get-buyer-type",
   GET_JOIN_REQUEST_STATUS_ENUM: "/Common/join-request-status-enum",
+  GET_MFA_TYPES_ENUM: "/Common/mfa-types-enum",
 };
 
 export const PETITION_ENDPOINTS = {
