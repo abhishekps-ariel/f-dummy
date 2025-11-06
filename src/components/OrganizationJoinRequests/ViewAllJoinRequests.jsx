@@ -10,6 +10,7 @@ import CustomDropdown from "../shared/CustomDropdown";
 import "../shared/CustomDropdown.css";
 import "../../components/Petitions/TabbedWorkspace.css";
 
+
 const ViewAllJoinRequests = ({ organizationId, onRefresh }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -22,6 +23,11 @@ const ViewAllJoinRequests = ({ organizationId, onRefresh }) => {
   const [filingEntityTypes, setFilingEntityTypes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isLoadingUserDetails, setIsLoadingUserDetails] = useState(false);
+   const [showCustomDateRange, setShowCustomDateRange] = useState(false);
+   const [dateFilter, setDateFilter] = useState("all");
+   const [customDateFrom, setCustomDateFrom] = useState("");
+    const [customDateTo, setCustomDateTo] = useState("");
+
   const [pagination, setPagination] = useState({
     currentPage: 1,
     pageSize: 10,
@@ -29,6 +35,43 @@ const ViewAllJoinRequests = ({ organizationId, onRefresh }) => {
 
   const { openTab, getActiveTab } = useJoinRequestTabs();
 
+  const handleDateFilterChange = (value) => {
+  setDateFilter(value);
+
+  if (value === "custom") {
+    setShowCustomDateRange(true);
+  } else {
+    setShowCustomDateRange(false);
+    setCustomDateFrom("");
+    setCustomDateTo("");
+    // Optionally reload data automatically when not custom
+    setPagination((prev) => ({ ...prev, currentPage: 1 }));
+    loadRequests();
+  }
+};
+
+
+  const getFromDate = () => {
+    if (dateFilter === "custom" && customDateFrom) {
+      return new Date(customDateFrom).toISOString();
+    }
+    if (dateFilter === "today") {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return today.toISOString();
+    }
+    if (dateFilter === "week") {
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      return weekAgo.toISOString();
+    }
+    if (dateFilter === "month") {
+      const monthAgo = new Date();
+      monthAgo.setMonth(monthAgo.getMonth() - 1);
+      return monthAgo.toISOString();
+    }
+    return new Date("2020-01-01").toISOString(); // Default to a very old date
+  };
   // Fetch user details for each request
   const fetchUserDetailsForRequests = async (requestsList) => {
     setIsLoadingUserDetails(true);
@@ -78,39 +121,59 @@ const ViewAllJoinRequests = ({ organizationId, onRefresh }) => {
     }
   };
 
-  const loadRequests = async () => {
-    if (!organizationId) return;
-    
-    setLoading(true);
-    setRequestsWithUserDetails([]);
-    try {
-      const response = await getAllOrganizationJoinRequests(organizationId);
-      
-      if (response.isSuccess) {
-        const requestsData = Array.isArray(response.data) ? response.data : [];
-        setRequests(requestsData);
-        
-        // If filing entity types are already loaded, fetch user details immediately
-        if (filingEntityTypes.length > 0 && requestsData.length > 0) {
-          const requestsWithDetails = await fetchUserDetailsForRequests(requestsData);
-          setRequestsWithUserDetails(requestsWithDetails);
-        } else if (requestsData.length === 0) {
-          setRequestsWithUserDetails([]);
-        }
-      } else {
-        toast.error(response.msg || "Failed to load join requests");
-        setRequests([]);
+ const loadRequests = async () => {
+  if (!organizationId) return;
+
+  setLoading(true);
+  setRequestsWithUserDetails([]);
+  try {
+    const payload = {
+      organizationId: organizationId,
+      status:
+  statusFilter === "" || statusFilter === "all" || statusFilter === null
+    ? null
+    : Number(statusFilter),
+
+      startDate:
+        dateFilter === "custom" && customDateFrom
+          ? new Date(customDateFrom).toISOString()
+          : getFromDate(),
+      endDate:
+        dateFilter === "custom" && customDateTo
+          ? new Date(customDateTo).toISOString()
+          : new Date().toISOString(),
+      pageNumber: pagination.currentPage,
+      pageSize: pagination.pageSize, // Always 10 as you wanted
+      searchTerm: searchQuery || "",
+    };
+
+    const response = await getAllOrganizationJoinRequests(payload);
+
+    if (response.isSuccess) {
+      const requestsData = Array.isArray(response.data) ? response.data : [];
+      setRequests(requestsData);
+
+      if (filingEntityTypes.length > 0 && requestsData.length > 0) {
+        const requestsWithDetails = await fetchUserDetailsForRequests(requestsData);
+        setRequestsWithUserDetails(requestsWithDetails);
+      } else if (requestsData.length === 0) {
         setRequestsWithUserDetails([]);
       }
-    } catch (error) {
-      console.error("Error loading join requests:", error);
-      toast.error("Failed to load join requests");
+    } else {
+      toast.error(response.msg || "Failed to load join requests");
       setRequests([]);
       setRequestsWithUserDetails([]);
-    } finally {
-      setLoading(false);
     }
-  };
+  } catch (error) {
+    console.error("Error loading join requests:", error);
+    toast.error("Failed to load join requests");
+    setRequests([]);
+    setRequestsWithUserDetails([]);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const loadStatusEnum = async () => {
     try {
@@ -328,13 +391,86 @@ const ViewAllJoinRequests = ({ organizationId, onRefresh }) => {
                       }}
                       placeholder="All Statuses"
                       options={[
-                        { value: "all", label: "All Statuses" },
+                        { value: "", label: "All Statuses" },
                         { value: "0", label: "Pending" },
-                        { value: "1", label: "Approved" },
+                        { value: "1", label: "Approved" },  
                         { value: "2", label: "Denied" },
                       ]}
                     />
                   </div>
+                  <div className="col-6 col-md-2">
+                    <CustomDropdown
+                      name="dateFilter"
+                      value={dateFilter}
+                      onChange={(e) => handleDateFilterChange(e.target.value)}
+                      placeholder="All Dates"
+                      options={[
+                        { value: "all", label: "All Dates" },
+                        { value: "today", label: "Today" },
+                        { value: "week", label: "Last 7 Days" },
+                        { value: "month", label: "Last Month" },
+                        { value: "quarter", label: "Last 3 Months" },
+                        { value: "year", label: "Last Year" },
+                        { value: "custom", label: "Custom Range" },
+                      ]}
+                    />
+                  </div>
+                   {showCustomDateRange && (
+                  <div className="row mb-4">
+                    <div className="col-md-3">
+                      <label className="form-label">From Date</label>
+                      <input
+                        type="date"
+                        className="form-control"
+                        value={customDateFrom}
+                        onChange={(e) => setCustomDateFrom(e.target.value)}
+                      />
+                    </div>
+                    <div className="col-md-3">
+                      <label className="form-label">To Date</label>
+                      <input
+                        type="date"
+                        className="form-control"
+                        value={customDateTo}
+                        onChange={(e) => setCustomDateTo(e.target.value)}
+                      />
+                    </div>
+                    <div className="col-md-3 d-flex align-items-end gap-2 mb-1">
+                      <button
+                        className="dashboard-btn-create"
+                        onClick={() => {
+                          setPagination((prev) => ({
+                            ...prev,
+                            currentPage: 1,
+                            
+                          }));
+                          loadRequests();
+                         
+                        }}
+                        disabled={!customDateFrom || !customDateTo}
+                      >
+                        Apply Filter
+                      </button>
+                      <button
+                        className="dashboard-btn-refresh"
+                        onClick={() => {
+                          setDateFilter("all");
+                          setShowCustomDateRange(false);
+                          setCustomDateFrom("");
+                          setCustomDateTo("");
+                          setPagination((prev) => ({
+                            ...prev,
+                            currentPage: 1,
+                          }));
+                          loadRequests();
+                         
+                        }}
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  </div>
+                )}
                 </div>
 
                 {/* Results Summary */}
