@@ -136,6 +136,19 @@ const JoinRequestTabContent = ({ requestData, organizationId, onRefresh }) => {
             Join Request Details
           </h2>
           <div className="d-flex gap-2">
+            <button
+              className="dashboard-btn-refresh"
+              onClick={async () => {
+                const activeTab = getActiveTab();
+                if (activeTab) {
+                  await refreshTab(activeTab.id);
+                }
+              }}
+              title="Refresh join request data"
+            >
+              <i className="fa-solid fa-sync-alt me-2"></i>
+              Refresh
+            </button>
             {request?.status !== 1 && (
               <button
                 className="dashboard-btn-refresh text-success"

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { getJoinRequest } from '../services/organizationService';
 
 const JoinRequestTabContext = createContext();
@@ -64,6 +64,7 @@ export const JoinRequestTabProvider = ({ children }) => {
   const [tabs, setTabs] = useState(initialState.tabs);
   const [activeTabId, setActiveTabId] = useState(initialState.activeTabId);
   const [loadingTabs, setLoadingTabs] = useState(new Set());
+  const hasRefreshedOnMount = useRef(false);
 
   // Save tabs to localStorage whenever tabs change (including data)
   useEffect(() => {
@@ -87,6 +88,119 @@ export const JoinRequestTabProvider = ({ children }) => {
       }
     }
   }, [activeTabId]);
+
+  // Fetch data for active tab when it changes or when tabs are restored from localStorage
+  useEffect(() => {
+    const fetchActiveTabData = async () => {
+      if (!activeTabId) return;
+      
+      const tab = tabs.find(t => t.id === activeTabId);
+      
+      // If it's a join request tab and data is missing, fetch fresh data
+      if (tab && tab.type === 'join-request' && !tab.data && !tab.isLoading) {
+        const requestId = tab.id.replace('join-request-', '');
+        
+        // Set loading state
+        setTabs(prevTabs => 
+          prevTabs.map(t => 
+            t.id === activeTabId ? { ...t, isLoading: true } : t
+          )
+        );
+        setLoadingTabs(prev => new Set([...prev, activeTabId]));
+        
+        try {
+          // Fetch fresh request data using getJoinRequest API
+          const response = await getJoinRequest(requestId);
+          
+          if (response.isSuccess && response.data) {
+            const fullRequest = response.data;
+            
+            // Update tab with fresh data
+            setTabs(prevTabs => 
+              prevTabs.map(t => 
+                t.id === activeTabId 
+                  ? {
+                      ...t,
+                      title: fullRequest.userDetail?.fullName || fullRequest.userDetail?.email || fullRequest.email || 'Join Request',
+                      data: fullRequest,
+                      isLoading: false,
+                      hasError: false
+                    }
+                  : t
+              )
+            );
+          } else {
+            // API call failed
+            setTabs(prevTabs => 
+              prevTabs.map(t => 
+                t.id === activeTabId 
+                  ? {
+                      ...t,
+                      isLoading: false,
+                      hasError: true
+                    }
+                  : t
+              )
+            );
+          }
+        } catch (error) {
+          console.error('Error fetching join request data:', error);
+          // Update tab to show error state
+          setTabs(prevTabs => 
+            prevTabs.map(t => 
+              t.id === activeTabId 
+                ? {
+                    ...t,
+                    isLoading: false,
+                    hasError: true
+                  }
+                : t
+            )
+          );
+        } finally {
+          setLoadingTabs(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(activeTabId);
+            return newSet;
+          });
+        }
+      }
+      // If tab has data and we haven't refreshed on mount yet (page reload), refresh it in the background
+      else if (tab && tab.type === 'join-request' && tab.data && !hasRefreshedOnMount.current && !tab.isLoading) {
+        const requestId = tab.id.replace('join-request-', '');
+        hasRefreshedOnMount.current = true; // Mark as refreshed
+        
+        // Refresh data in background (don't show loading spinner since we have cached data)
+        try {
+          const response = await getJoinRequest(requestId);
+          
+          if (response.isSuccess && response.data) {
+            const fullRequest = response.data;
+            
+            // Update tab with fresh data
+            setTabs(prevTabs => 
+              prevTabs.map(t => 
+                t.id === activeTabId 
+                  ? {
+                      ...t,
+                      title: fullRequest.userDetail?.fullName || fullRequest.userDetail?.email || fullRequest.email || 'Join Request',
+                      data: fullRequest,
+                      isLoading: false,
+                      hasError: false
+                    }
+                  : t
+              )
+            );
+          }
+        } catch (error) {
+          console.error('Error refreshing join request data on mount:', error);
+          // Keep existing data on error
+        }
+      }
+    };
+    
+    fetchActiveTabData();
+  }, [activeTabId, tabs]);
 
   const openTab = async (request, organizationId) => {
     const tabId = `join-request-${request.id}`;
