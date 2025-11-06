@@ -124,50 +124,40 @@ export const bindUserToOrganization = async (joinRequestId, userId) => {
   };
 };
 
-//get all join request
-export const getAllOrganizationJoinRequests = async (payload) => {
-  try {
-    // POST request with payload directly
-    const response = await client.post(
-      "/api/OrganizationJoinRequest/list-by-organization",
-      payload,
-      {
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-      }
-    );
- 
-    // Handle response structure - API might return nested or direct data
-    let requestsData = null;
-    if (response.data && response.data.data) {
-      requestsData = response.data.data;
-    } else if (response.data) {
-      requestsData = response.data;
+// Get all join requests for an organization (for org admins)
+export const getAllOrganizationJoinRequests = async (organizationId) => {
+  const response = await client.get(
+    ORGANIZATION_ENDPOINTS.GET_ALL_REQUESTS(organizationId),
+    {
+      headers: {
+        Accept: "text/plain",
+      },
     }
- 
-    // Ensure result is always an array
-    if (requestsData && !Array.isArray(requestsData)) {
-      requestsData = [requestsData];
-    } else if (!requestsData) {
-      requestsData = [];
-    }
- 
-    return {
-      isSuccess: response.data?.success ?? true,
-      msg: response.data?.message || "Join requests fetched successfully",
-      data: requestsData,
-    };
-  } catch (error) {
-    console.error("Error fetching organization join requests:", error);
- 
-    return {
-      isSuccess: false,
-      msg: error.response?.data?.message || "Failed to fetch join requests",
-      data: [],
-    };
+  );
+
+  // Handle the response structure - API might return single object or array
+  let requestsData = null;
+  if (response.data && response.data.data) {
+    // If nested in data property
+    requestsData = response.data.data;
+  } else if (response.data) {
+    // If directly in response.data
+    requestsData = response.data;
   }
+
+  // Ensure it's always an array
+  if (requestsData && !Array.isArray(requestsData)) {
+    // If it's a single object, wrap it in an array
+    requestsData = [requestsData];
+  } else if (!requestsData) {
+    requestsData = [];
+  }
+
+  return {
+    isSuccess: response.data.success || true,
+    msg: response.data.message || "Join requests fetched successfully",
+    data: requestsData,
+  };
 };
 
 // Review/approve/deny a join request (for org admins)
