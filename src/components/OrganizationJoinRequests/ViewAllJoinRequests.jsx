@@ -78,7 +78,7 @@ const ViewAllJoinRequests = ({ organizationId, onRefresh }) => {
     return null; // "all" - no date filter
   };
 
-  const loadRequests = async () => {
+  const loadRequests = async (overrideFilters = {}) => {
     if (!organizationId) {
       console.warn("No organizationId provided to loadRequests");
       return;
@@ -88,13 +88,14 @@ const ViewAllJoinRequests = ({ organizationId, onRefresh }) => {
     try {
       // Prepare filters for server-side filtering, searching, and pagination
       // Note: API uses 1-based pageNumber, so we pass currentPage (which is already 1-based)
+      // Use overrideFilters if provided (for immediate refresh), otherwise use current state
       const filters = {
-        status: statusFilter,
-        searchTerm: debouncedSearchQuery,
-        pageNumber: pagination.currentPage - 1, // Convert to 0-based for service, which will convert back to 1-based
+        status: overrideFilters.status !== undefined ? overrideFilters.status : (statusFilter === "all" ? null : statusFilter),
+        searchTerm: overrideFilters.searchTerm !== undefined ? overrideFilters.searchTerm : debouncedSearchQuery,
+        pageNumber: overrideFilters.pageNumber !== undefined ? overrideFilters.pageNumber : (pagination.currentPage - 1), // Convert to 0-based for service, which will convert back to 1-based
         pageSize: pagination.pageSize,
-        startDate: getFromDate(),
-        endDate: getToDate(),
+        startDate: overrideFilters.startDate !== undefined ? overrideFilters.startDate : getFromDate(),
+        endDate: overrideFilters.endDate !== undefined ? overrideFilters.endDate : getToDate(),
       };
 
       console.log("Loading join requests with filters:", { organizationId, filters });
@@ -248,14 +249,26 @@ const ViewAllJoinRequests = ({ organizationId, onRefresh }) => {
   };
 
   const handleRefresh = () => {
+    // Reset all filters and state
     setSearchQuery("");
     setStatusFilter("all");
     setDateFilter("all");
     setCustomDateFrom("");
     setCustomDateTo("");
     setShowCustomDateRange(false);
-    setPagination(prev => ({ ...prev, currentPage: 1 }));
-    // loadRequests will be triggered by useEffect when state changes
+    setPagination((prev) => ({ ...prev, currentPage: 1 }));
+    
+    // Directly call loadRequests with reset values to refresh the table immediately
+    // This ensures the refresh happens immediately with cleared filters, not waiting for debounce
+    if (organizationId) {
+      loadRequests({
+        status: null, // "all" means null for API
+        searchTerm: "", // Empty search
+        pageNumber: 0, // Page 1 (0-based for service)
+        startDate: "2020-01-01T00:00:00.000Z", // Default start date
+        endDate: new Date().toISOString(), // Current date
+      });
+    }
     if (onRefresh) {
       onRefresh();
     }

@@ -178,7 +178,7 @@ const JoinRequestTabContent = ({ requestData, organizationId, onRefresh }) => {
             </div>
           </div>
 
-          {/* Row 2: Email and Filing Entity Type */}
+          {/* Row 2: Email and Phone Number */}
           <div className="col-md-6">
             <div className="mb-3">
               <label className="form-label fw-semibold text-muted small">Email</label>
@@ -189,14 +189,14 @@ const JoinRequestTabContent = ({ requestData, organizationId, onRefresh }) => {
           </div>
           <div className="col-md-6">
             <div className="mb-3">
-              <label className="form-label fw-semibold text-muted small">Filing Entity Type</label>
+              <label className="form-label fw-semibold text-muted small">Phone Number</label>
               <div className="form-control-plaintext">
-                {userDetails?.filingEntityTypeName || getFilingEntityTypeName(userDetails?.filingEntityTypeId) || "Not Set"}
+                {userDetails?.phone || "N/A"}
               </div>
             </div>
           </div>
 
-          {/* Row 3: Status */}
+          {/* Row 3: Status and Filing Entity Type */}
           <div className="col-md-6">
             <div className="mb-3">
               <label className="form-label fw-semibold text-muted small">Status</label>
@@ -204,6 +204,14 @@ const JoinRequestTabContent = ({ requestData, organizationId, onRefresh }) => {
                 <span className={statusInfo.class}>
                   {statusInfo.text}
                 </span>
+              </div>
+            </div>
+          </div>
+          <div className="col-md-6">
+            <div className="mb-3">
+              <label className="form-label fw-semibold text-muted small">Filing Entity Type</label>
+              <div className="form-control-plaintext">
+                {userDetails?.filingEntityTypeName || getFilingEntityTypeName(userDetails?.filingEntityTypeId) || "Not Set"}
               </div>
             </div>
           </div>
