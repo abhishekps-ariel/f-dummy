@@ -5,7 +5,10 @@ import { getFilingEntityTypes, getJoinRequestStatusEnum } from "../../services/c
 import { useJoinRequestTabs } from "../../context/JoinRequestTabContext";
 import "../../components/Petitions/PetitionForm.css";
 
-const JoinRequestTabContent = ({ request, userDetails, organizationId, onRefresh }) => {
+const JoinRequestTabContent = ({ requestData, organizationId, onRefresh }) => {
+  // requestData now contains the full request with userDetail
+  const request = requestData;
+  const userDetails = requestData?.userDetail;
   const [filingEntityTypes, setFilingEntityTypes] = useState([]);
   const [statusEnum, setStatusEnum] = useState([]);
   const [showActionModal, setShowActionModal] = useState(false);
@@ -188,7 +191,7 @@ const JoinRequestTabContent = ({ request, userDetails, organizationId, onRefresh
             <div className="mb-3">
               <label className="form-label fw-semibold text-muted small">Filing Entity Type</label>
               <div className="form-control-plaintext">
-                {getFilingEntityTypeName(userDetails?.filingEntityTypeId)}
+                {userDetails?.filingEntityTypeName || getFilingEntityTypeName(userDetails?.filingEntityTypeId) || "Not Set"}
               </div>
             </div>
           </div>

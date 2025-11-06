@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { getUserById } from '../services/authService';
-import { getAllOrganizationJoinRequests } from '../services/organizationService';
+import { getJoinRequest } from '../services/organizationService';
 
 const JoinRequestTabContext = createContext();
 
@@ -103,13 +102,12 @@ export const JoinRequestTabProvider = ({ children }) => {
     // Create new tab with loading state
     const newTab = {
       id: tabId,
-      title: request.userEmail || request.email || 'Loading...',
+      title: request.userDetail?.fullName || request.userDetail?.email || request.email || 'Loading...',
       type: 'join-request',
       data: null,
       isClosable: true,
       isLoading: true,
-      organizationId: organizationId,
-      userId: request.userId // Store userId for future use
+      organizationId: organizationId
     };
 
     setTabs(prevTabs => [...prevTabs, newTab]);
@@ -117,44 +115,52 @@ export const JoinRequestTabProvider = ({ children }) => {
     setLoadingTabs(prev => new Set([...prev, tabId]));
 
     try {
-      // Fetch user details using getUserById
-      let userDetails = null;
-      if (request.userId) {
-        try {
-          const userResponse = await getUserById(request.userId);
-          if (userResponse.isSuccess && userResponse.data) {
-            userDetails = userResponse.data;
-          }
-        } catch (error) {
-          console.error('Error fetching user details:', error);
-        }
-      }
+      // Fetch full request details using getJoinRequest API (includes userDetail)
+      const response = await getJoinRequest(request.id);
       
-      // Update tab with data (this will be saved to localStorage via useEffect)
-      setTabs(prevTabs => 
-        prevTabs.map(tab => 
-          tab.id === tabId 
-            ? {
-                ...tab,
-                title: userDetails?.fullName || userDetails?.email || request.email || 'Join Request',
-                data: {
-                  request,
-                  userDetails
-                },
-                isLoading: false
-              }
-            : tab
-        )
-      );
+      if (response.isSuccess && response.data) {
+        const fullRequest = response.data;
+        
+        // Update tab with full data (this will be saved to localStorage via useEffect)
+        setTabs(prevTabs => 
+          prevTabs.map(tab => 
+            tab.id === tabId 
+              ? {
+                  ...tab,
+                  title: fullRequest.userDetail?.fullName || fullRequest.userDetail?.email || fullRequest.email || 'Join Request',
+                  data: fullRequest, // Store the full request with userDetail
+                  isLoading: false,
+                  hasError: false
+                }
+              : tab
+          )
+        );
+      } else {
+        // API call failed, use the request data we have
+        setTabs(prevTabs => 
+          prevTabs.map(tab => 
+            tab.id === tabId 
+              ? {
+                  ...tab,
+                  title: request.userDetail?.fullName || request.userDetail?.email || request.email || 'Join Request',
+                  data: request, // Use the request from list (may have userDetail)
+                  isLoading: false,
+                  hasError: false
+                }
+              : tab
+          )
+        );
+      }
     } catch (error) {
-      // Update tab to show error state
+      console.error('Error fetching join request details:', error);
+      // Update tab to show error state, but use available data
       setTabs(prevTabs => 
         prevTabs.map(tab => 
           tab.id === tabId 
             ? {
                 ...tab,
-                title: request.email || 'Error',
-                data: { request, userDetails: null },
+                title: request.userDetail?.fullName || request.userDetail?.email || request.email || 'Error',
+                data: request, // Use the request from list (may have userDetail)
                 isLoading: false,
                 hasError: true
               }
@@ -212,19 +218,13 @@ export const JoinRequestTabProvider = ({ children }) => {
     return tabs.find(tab => tab.id === activeTabId);
   };
 
-  // Refresh a specific tab's data by fetching updated request from list API and user details
+  // Refresh a specific tab's data by fetching updated request using getJoinRequest API
   const refreshTab = async (tabId) => {
     const tab = tabs.find(t => t.id === tabId);
     if (!tab || tab.type !== 'join-request') return;
     
-    // Get request ID and organizationId from tab
+    // Get request ID from tab
     const requestId = tab.id.replace('join-request-', '');
-    const organizationId = tab.organizationId || tab.data?.request?.organizationId;
-    
-    if (!organizationId) {
-      console.error('No organizationId found for tab:', tabId);
-      return;
-    }
     
     // Set loading state
     setTabs(prevTabs => 
@@ -235,68 +235,20 @@ export const JoinRequestTabProvider = ({ children }) => {
     setLoadingTabs(prev => new Set([...prev, tabId]));
     
     try {
-      // Fetch updated request from list API (same as when opening tab)
-      // Use minimal filters to get all requests, then find the specific one
-      const filters = {
-        status: null, // Get all statuses
-        searchTerm: '',
-        pageNumber: 0,
-        pageSize: 100, // Get enough to find our request
-        startDate: '2020-01-01T00:00:00.000Z',
-        endDate: new Date().toISOString(),
-      };
-      
-      const response = await getAllOrganizationJoinRequests(organizationId, filters);
+      // Fetch updated request using getJoinRequest API (includes userDetail)
+      const response = await getJoinRequest(requestId);
       
       if (response.isSuccess && response.data) {
-        // Find the specific request by ID
-        const updatedRequest = Array.isArray(response.data) 
-          ? response.data.find(req => req.id === requestId)
-          : null;
+        const updatedRequest = response.data;
         
-        if (!updatedRequest) {
-          console.error('Request not found in list:', requestId);
-          // Keep existing data but mark as error
-          setTabs(prevTabs => 
-            prevTabs.map(t => 
-              t.id === tabId 
-                ? {
-                    ...t,
-                    isLoading: false,
-                    hasError: true
-                  }
-                : t
-            )
-          );
-          return;
-        }
-        
-        // Fetch fresh user details using getUserById
-        let userDetails = null;
-        if (updatedRequest.userId) {
-          try {
-            const userResponse = await getUserById(updatedRequest.userId);
-            if (userResponse.isSuccess && userResponse.data) {
-              userDetails = userResponse.data;
-            }
-          } catch (error) {
-            console.error('Error fetching user details:', error);
-            // Use existing user details if available
-            userDetails = tab.data?.userDetails || null;
-          }
-        }
-        
-        // Update tab with fresh data (both request and user details)
+        // Update tab with fresh data (includes userDetail)
         setTabs(prevTabs => 
           prevTabs.map(t => 
             t.id === tabId 
               ? {
                   ...t,
-                  title: userDetails?.fullName || userDetails?.email || updatedRequest.email || 'Join Request',
-                  data: {
-                    request: updatedRequest,
-                    userDetails: userDetails || tab.data?.userDetails
-                  },
+                  title: updatedRequest.userDetail?.fullName || updatedRequest.userDetail?.email || updatedRequest.email || 'Join Request',
+                  data: updatedRequest, // Store the full request with userDetail
                   isLoading: false,
                   hasError: false
                 }

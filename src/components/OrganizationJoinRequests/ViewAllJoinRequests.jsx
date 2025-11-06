@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { toast } from "react-toastify";
 import { getAllOrganizationJoinRequests } from "../../services/organizationService";
-import { getJoinRequestStatusEnum, getFilingEntityTypes } from "../../services/commonService";
-import { getUserById } from "../../services/authService";
+import { getJoinRequestStatusEnum } from "../../services/commonService";
 import { useJoinRequestTabs } from "../../context/JoinRequestTabContext";
 import { useDebounce } from "../../hooks/useDebounce";
 import JoinRequestTabBar from "./JoinRequestTabBar";
@@ -21,11 +20,8 @@ const ViewAllJoinRequests = ({ organizationId, onRefresh }) => {
   const [showCustomDateRange, setShowCustomDateRange] = useState(false);
   const [openDropdownId, setOpenDropdownId] = useState(null);
   const [requests, setRequests] = useState([]);
-  const [requestsWithUserDetails, setRequestsWithUserDetails] = useState([]);
   const [statusEnum, setStatusEnum] = useState([]);
-  const [filingEntityTypes, setFilingEntityTypes] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [isLoadingUserDetails, setIsLoadingUserDetails] = useState(false);
   const [pagination, setPagination] = useState({
     currentPage: 1,
     pageSize: 10,
@@ -35,55 +31,6 @@ const ViewAllJoinRequests = ({ organizationId, onRefresh }) => {
 
   const { openTab, getActiveTab } = useJoinRequestTabs();
   const prevDateFilterRef = useRef(dateFilter);
-
-  // Fetch user details for each request
-  const fetchUserDetailsForRequests = async (requestsList) => {
-    setIsLoadingUserDetails(true);
-    try {
-      const requestsWithDetails = await Promise.all(
-        requestsList.map(async (request) => {
-          try {
-            if (request.userId) {
-              const userResponse = await getUserById(request.userId);
-              if (userResponse.isSuccess && userResponse.data) {
-                // Find filing entity type name
-                const filingEntityTypeName = userResponse.data.filingEntityTypeId
-                  ? filingEntityTypes.find(et => et.id === userResponse.data.filingEntityTypeId)?.name || 'Not Set'
-                  : 'Not Set';
-                
-                return {
-                  ...request,
-                  userEmail: userResponse.data.email || request.email,
-                  userFullName: `${userResponse.data.firstName || ''} ${userResponse.data.lastName || ''}`.trim() || 'N/A',
-                  filingEntityTypeName: filingEntityTypeName,
-                };
-              }
-            }
-            return {
-              ...request,
-              userEmail: request.email || 'N/A',
-              userFullName: 'N/A',
-              filingEntityTypeName: 'Not Set',
-            };
-          } catch (error) {
-            console.error(`Error fetching user details for ${request.userId}:`, error);
-            return {
-              ...request,
-              userEmail: request.email || 'N/A',
-              userFullName: 'N/A',
-              filingEntityTypeName: 'Not Set',
-            };
-          }
-        })
-      );
-      return requestsWithDetails;
-    } catch (error) {
-      console.error("Error fetching user details:", error);
-      return requestsList;
-    } finally {
-      setIsLoadingUserDetails(false);
-    }
-  };
 
   // Helper function to get from date
   const getFromDate = () => {
@@ -138,7 +85,6 @@ const ViewAllJoinRequests = ({ organizationId, onRefresh }) => {
     }
     
     setLoading(true);
-    setRequestsWithUserDetails([]);
     try {
       // Prepare filters for server-side filtering, searching, and pagination
       // Note: API uses 1-based pageNumber, so we pass currentPage (which is already 1-based)
@@ -157,7 +103,6 @@ const ViewAllJoinRequests = ({ organizationId, onRefresh }) => {
       
       if (response.isSuccess) {
         const requestsData = Array.isArray(response.data) ? response.data : [];
-        setRequests(requestsData);
         
         // Update pagination from server response
         if (response.pagination) {
@@ -168,17 +113,11 @@ const ViewAllJoinRequests = ({ organizationId, onRefresh }) => {
           }));
         }
         
-        // If filing entity types are already loaded, fetch user details immediately
-        if (filingEntityTypes.length > 0 && requestsData.length > 0) {
-          const requestsWithDetails = await fetchUserDetailsForRequests(requestsData);
-          setRequestsWithUserDetails(requestsWithDetails);
-        } else if (requestsData.length === 0) {
-          setRequestsWithUserDetails([]);
-        }
+        // API now includes userDetail in each request, so no need for additional getUserById calls
+        setRequests(requestsData);
       } else {
         toast.error(response.msg || "Failed to load join requests");
         setRequests([]);
-        setRequestsWithUserDetails([]);
       }
     } catch (error) {
       console.error("Error loading join requests:", error);
@@ -191,7 +130,6 @@ const ViewAllJoinRequests = ({ organizationId, onRefresh }) => {
                           "Failed to load join requests";
       toast.error(errorMessage);
       setRequests([]);
-      setRequestsWithUserDetails([]);
     } finally {
       setLoading(false);
     }
@@ -278,15 +216,6 @@ const ViewAllJoinRequests = ({ organizationId, onRefresh }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [organizationId, debouncedSearchQuery, statusFilter, dateFilter, pagination.currentPage, pagination.pageSize]);
 
-  // Reload user details when filing entity types are loaded
-  useEffect(() => {
-    if (filingEntityTypes.length > 0 && requests.length > 0 && requestsWithUserDetails.length === 0 && !isLoadingUserDetails && !loading) {
-      fetchUserDetailsForRequests(requests).then(requestsWithDetails => {
-        setRequestsWithUserDetails(requestsWithDetails);
-      });
-    }
-  }, [filingEntityTypes, requests.length, loading]);
-
   const getStatusInfo = (status) => {
     const statusItem = statusEnum.find(item => item.value === status);
     if (statusItem) {
@@ -306,9 +235,8 @@ const ViewAllJoinRequests = ({ organizationId, onRefresh }) => {
   };
 
   // Server-side filtering and sorting is now handled by the API
-  // requestsWithUserDetails already contains the filtered and paginated results
-  const paginatedRequests = requestsWithUserDetails;
-  const totalPages = pagination.totalPages || 0;
+  // API response now includes userDetail in each request
+  const paginatedRequests = requests;
 
   const handlePageChange = (page) => {
     setPagination(prev => ({ ...prev, currentPage: page }));
@@ -351,7 +279,7 @@ const ViewAllJoinRequests = ({ organizationId, onRefresh }) => {
   }, [openDropdownId]);
 
   // Show loading state
-  if (loading || (requests.length > 0 && requestsWithUserDetails.length === 0 && isLoadingUserDetails)) {
+  if (loading) {
     return (
       <div className="shadow-custom bg-white org-search-box">
         <div className="text-center py-5">
@@ -558,12 +486,12 @@ const ViewAllJoinRequests = ({ organizationId, onRefresh }) => {
                             >
                               <td>
                                 <div className="text-truncate">
-                                  {request.userEmail || "N/A"}
+                                  {request.userDetail?.email || request.email || "N/A"}
                                 </div>
                               </td>
                               <td>
                                 <div style={{ whiteSpace: "normal", wordBreak: "break-word" }}>
-                                  {request.userFullName || "N/A"}
+                                  {request.userDetail?.fullName || "N/A"}
                                 </div>
                               </td>
                               <td className="text-center">
@@ -585,7 +513,7 @@ const ViewAllJoinRequests = ({ organizationId, onRefresh }) => {
                                   : "N/A"}
                               </td>
                               <td className="text-center">
-                                {request.filingEntityTypeName || "Not Set"}
+                                {request.userDetail?.filingEntityTypeName || "Not Set"}
                               </td>
                               <td className="text-center">
                                 <span className={statusInfo.class}>
@@ -627,7 +555,7 @@ const ViewAllJoinRequests = ({ organizationId, onRefresh }) => {
                                 <div className="petition-main-info">
                                   <div className="d-flex align-items-center gap-2 mb-2 flex-wrap">
                                     <div className="fw-medium text-dark" style={{ fontSize: "0.9rem" }}>
-                                      {request.userEmail || "N/A"}
+                                      {request.userDetail?.email || request.email || "N/A"}
                                     </div>
                                     <span className={statusInfo.class}>
                                       {statusInfo.text}
@@ -635,7 +563,7 @@ const ViewAllJoinRequests = ({ organizationId, onRefresh }) => {
                                   </div>
                                   <div className="petition-details-row">
                                     <span className="small text-muted">
-                                      {request.userFullName || "N/A"}
+                                      {request.userDetail?.fullName || "N/A"}
                                     </span>
                                     <span className="small text-muted">
                                       Requested: {request.requestedOn
@@ -656,7 +584,7 @@ const ViewAllJoinRequests = ({ organizationId, onRefresh }) => {
                                         : "N/A"}
                                     </span>
                                     <span className="small text-muted">
-                                      {request.filingEntityTypeName || "Not Set"}
+                                      {request.userDetail?.filingEntityTypeName || "Not Set"}
                                     </span>
                                   </div>
                                 </div>
@@ -678,43 +606,93 @@ const ViewAllJoinRequests = ({ organizationId, onRefresh }) => {
                 </div>
 
                 {/* Pagination */}
-                {totalPages > 1 && (
+                {pagination.totalPages >= 1 && (
                   <div className="d-flex justify-content-center mt-4">
-                    <nav>
-                      <ul className="pagination mb-0">
-                        <li className={`page-item ${pagination.currentPage === 1 ? "disabled" : ""}`}>
-                          <button
-                            className="page-link"
-                            onClick={() => handlePageChange(pagination.currentPage - 1)}
-                            disabled={pagination.currentPage === 1}
-                          >
-                            Previous
-                          </button>
-                        </li>
-                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                          <li
-                            key={page}
-                            className={`page-item ${pagination.currentPage === page ? "active" : ""}`}
-                          >
-                            <button
-                              className="page-link"
-                              onClick={() => handlePageChange(page)}
-                            >
-                              {page}
-                            </button>
-                          </li>
-                        ))}
-                        <li className={`page-item ${pagination.currentPage === totalPages ? "disabled" : ""}`}>
-                          <button
-                            className="page-link"
-                            onClick={() => handlePageChange(pagination.currentPage + 1)}
-                            disabled={pagination.currentPage === totalPages}
-                          >
-                            Next
-                          </button>
-                        </li>
-                      </ul>
-                    </nav>
+                    <div className="pagination-minimal">
+                      <button
+                        className={`pagination-btn ${
+                          pagination.currentPage === 1 ? "disabled" : ""
+                        }`}
+                        onClick={() => {
+                          if (pagination.currentPage > 1) {
+                            handlePageChange(pagination.currentPage - 1);
+                          }
+                        }}
+                        disabled={pagination.currentPage === 1}
+                      >
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M15 18L9 12L15 6"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                        Previous
+                      </button>
+
+                      <div className="pagination-pages">
+                        {Array.from(
+                          { length: Math.min(pagination.totalPages, 5) },
+                          (_, i) => {
+                            const page = i + 1;
+                            return (
+                              <button
+                                key={page}
+                                className={`pagination-page ${
+                                  page === pagination.currentPage
+                                    ? "active"
+                                    : ""
+                                }`}
+                                onClick={() => handlePageChange(page)}
+                              >
+                                {page}
+                              </button>
+                            );
+                          }
+                        )}
+                      </div>
+
+                      <button
+                        className={`pagination-btn ${
+                          pagination.currentPage >= pagination.totalPages
+                            ? "disabled"
+                            : ""
+                        }`}
+                        onClick={() => {
+                          if (pagination.currentPage < pagination.totalPages) {
+                            handlePageChange(pagination.currentPage + 1);
+                          }
+                        }}
+                        disabled={
+                          pagination.currentPage >= pagination.totalPages
+                        }
+                      >
+                        Next
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M9 18L15 12L9 6"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -750,11 +728,11 @@ const ViewAllJoinRequests = ({ organizationId, onRefresh }) => {
             }
             
             // Show content if data is available
+            // activeTab.data now contains the full request with userDetail
             if (activeTab.data) {
               return (
                 <JoinRequestTabContent
-                  request={activeTab.data.request}
-                  userDetails={activeTab.data.userDetails}
+                  requestData={activeTab.data}
                   organizationId={organizationId}
                   onRefresh={handleRefresh}
                 />

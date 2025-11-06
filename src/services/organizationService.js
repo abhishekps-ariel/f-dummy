@@ -96,9 +96,9 @@ export const getJoinRequest = async (joinRequestId) => {
   });
 
   return {
-    isSuccess: response.status === 200,
-    msg: "Join request fetched successfully",
-    data: response.data, // This should contain the email
+    isSuccess: response.data?.success !== false && response.status === 200,
+    msg: response.data?.message || "Join request fetched successfully",
+    data: response.data?.data || response.data, // Contains request with userDetail
   };
 };
 
@@ -197,25 +197,31 @@ export const getAllOrganizationJoinRequests = async (
     }
 
     // Handle paginated response structure
+    // New API response includes userDetail in each request item
+    // Response structure: { success, message, data: [...], totalRecords, pageNumber, pageSize }
     let requestsData = [];
     let totalCount = 0;
     let totalPages = 0;
 
     if (response.data) {
-      if (response.data.data) {
-        // Check if it's a paginated response with items and totalCount
-        if (response.data.data.items && Array.isArray(response.data.data.items)) {
-          requestsData = response.data.data.items;
-          totalCount = response.data.data.totalCount || response.data.data.items.length;
-          totalPages = response.data.data.totalPages || Math.ceil(totalCount / pageSize);
-        } else if (Array.isArray(response.data.data)) {
-          // If it's just an array
-          requestsData = response.data.data;
-          totalCount = requestsData.length;
-        }
-      } else if (Array.isArray(response.data)) {
+      // Check if data is an array (new API structure)
+      if (Array.isArray(response.data.data)) {
+        requestsData = response.data.data;
+        totalCount = response.data.totalRecords || 0;
+        const responsePageSize = response.data.pageSize || pageSize;
+        totalPages = responsePageSize > 0 ? Math.ceil(totalCount / responsePageSize) : 0;
+      } 
+      // Fallback: check if data.data has items array
+      else if (response.data.data && response.data.data.items && Array.isArray(response.data.data.items)) {
+        requestsData = response.data.data.items;
+        totalCount = response.data.data.totalCount || response.data.totalRecords || 0;
+        totalPages = response.data.data.totalPages || Math.ceil(totalCount / pageSize);
+      }
+      // Fallback: check if response.data is directly an array
+      else if (Array.isArray(response.data)) {
         requestsData = response.data;
         totalCount = requestsData.length;
+        totalPages = Math.ceil(totalCount / pageSize);
       }
     }
 
