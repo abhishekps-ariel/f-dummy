@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -13,6 +14,7 @@ import "../shared/CustomDropdown.css";
 import "./TabbedWorkspace.css";
 import { getUserById, getSignatureById } from "../../services/authService";
 import { useAuth } from "../../context/AuthContext";
+import { ROUTES } from "../../constants/routerConstants";
 
 const ViewAllPetitions = ({ onBack }) => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -51,6 +53,7 @@ const ViewAllPetitions = ({ onBack }) => {
 
   // Get user info from auth context
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   // Validate user profile before opening petition creation modal
   const validateUserProfileBeforeCreate = async () => {
@@ -1471,7 +1474,7 @@ const ViewAllPetitions = ({ onBack }) => {
                   className="dashboard-btn-create"
                   onClick={() => {
                     setShowProfileValidationDialog(false);
-                    window.location.href = "/profile";
+                    navigate(ROUTES.PROFILE);
                   }}
                 >
                   <i className="fas fa-user me-2"></i>

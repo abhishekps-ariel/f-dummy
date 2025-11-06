@@ -40,7 +40,7 @@ function Profile() {
   const [isUploadingSignature, setIsUploadingSignature] = useState(false);
   const [isImageLoading, setIsImageLoading] = useState(false);
   const navigate = useNavigate();
-  const { logout: authLogout, login, updateUserSignature, organization: organizationFromContext } = useAuth();
+  const { logout: authLogout, login, updateUserSignature, organization: organizationFromContext, checkOrganizationAccess } = useAuth();
   
   // Get resetWizard function from PetitionWizard context
   const { resetWizard } = usePetitionWizard();
@@ -104,6 +104,16 @@ function Profile() {
 
     fetchFilingEntityTypes();
   }, []); // Load on page load instead of only when entering edit mode
+
+  // Re-check organization access when Profile mounts or user changes
+  // This ensures access is always validated when navigating to Profile
+  useEffect(() => {
+    if (user) {
+      // Re-check organization access to ensure it's current
+      checkOrganizationAccess();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]); // Only depend on user, not checkOrganizationAccess function reference
 
   // Load organization data (only for join requests, not for org admins who already have organizationId)
   useEffect(() => {

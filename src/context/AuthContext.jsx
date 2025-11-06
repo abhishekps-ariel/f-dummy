@@ -282,6 +282,7 @@ export const AuthProvider = ({ children }) => {
     setHasOrganizationAccess,
     setOrganizationCheckComplete,
     setOrganization,
+    checkOrganizationAccess, // Expose for manual re-checking
   };
 
   return (

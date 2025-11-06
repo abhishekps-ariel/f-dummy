@@ -51,7 +51,7 @@ function Dashboard() {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const { logout: authLogout, organization: organizationFromContext } = useAuth();
+  const { logout: authLogout, organization: organizationFromContext, checkOrganizationAccess } = useAuth();
 
   // Use organization from context (for org admins) or from join requests (for regular users)
   // Priority: organizationFromContext > userOrganization
@@ -82,6 +82,16 @@ function Dashboard() {
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, [navigate]);
+
+  // Re-check organization access when Dashboard mounts or user changes
+  // This ensures access is always validated when navigating to Dashboard
+  useEffect(() => {
+    if (user) {
+      // Re-check organization access to ensure it's current
+      checkOrganizationAccess();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]); // Only depend on user, not checkOrganizationAccess function reference
 
   // Load organization data when user is available
   useEffect(() => {

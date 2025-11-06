@@ -1,4 +1,6 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
+import { ROUTES } from "../../../constants/routerConstants";
 
 const Step8PetitionAttestation = ({
   formData,
@@ -6,6 +8,7 @@ const Step8PetitionAttestation = ({
   userProfile,
   onClose,
 }) => {
+  const navigate = useNavigate();
    return (
           <div>
             <h2 className="theme-color font-med mb-1">
@@ -202,10 +205,8 @@ const Step8PetitionAttestation = ({
                       className="dashboard-btn-create"
                       onClick={() => {
                         // Close petition modal and navigate to profile
-
                         onClose();
-
-                        window.location.href = "/profile";
+                        navigate(ROUTES.PROFILE);
                       }}
                     >
                       <i className="fas fa-user me-2"></i>
