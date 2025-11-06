@@ -177,23 +177,30 @@ const UserDetails = ({ userId, onClose }) => {
           </div>
           <div className="modal-body">
             <div className="row g-3">
-              {/* LEFT COLUMN */}
+              {/* Row 1: First Name and Last Name */}
               <div className="col-md-6">
                 <div className="mb-3">
                   <label className="form-label fw-semibold text-muted small">First Name</label>
                   <div className="form-control-plaintext">{userData.firstName || "N/A"}</div>
                 </div>
+              </div>
 
+              <div className="col-md-6">
                 <div className="mb-3">
                   <label className="form-label fw-semibold text-muted small">Last Name</label>
                   <div className="form-control-plaintext">{userData.lastName || "N/A"}</div>
                 </div>
+              </div>
 
+              {/* Row 2: Email and Filing Entity Type */}
+              <div className="col-md-6">
                 <div className="mb-3">
                   <label className="form-label fw-semibold text-muted small">Email</label>
                   <div className="form-control-plaintext">{userData.email || "N/A"}</div>
                 </div>
+              </div>
 
+              <div className="col-md-6">
                 <div className="mb-3">
                   <label className="form-label fw-semibold text-muted small">Filing Entity Type</label>
                   <div className="form-control-plaintext">
@@ -202,7 +209,7 @@ const UserDetails = ({ userId, onClose }) => {
                 </div>
               </div>
 
-              {/* RIGHT COLUMN */}
+              {/* Row 3: Status */}
               <div className="col-md-6">
                 <div className="mb-3">
                   <label className="form-label fw-semibold text-muted small">Status</label>
@@ -211,28 +218,6 @@ const UserDetails = ({ userId, onClose }) => {
                       <span className="badge bg-success">Active</span>
                     ) : (
                       <span className="badge bg-secondary">Inactive</span>
-                    )}
-                  </div>
-                </div>
-
-                <div className="mb-3">
-                  <label className="form-label fw-semibold text-muted small">Email Verification</label>
-                  <div>
-                    {userData.isEmailVerified ? (
-                      <span className="badge bg-success">Verified</span>
-                    ) : (
-                      <span className="badge bg-warning">Not Verified</span>
-                    )}
-                  </div>
-                </div>
-
-                <div className="mb-3">
-                  <label className="form-label fw-semibold text-muted small">MFA Status</label>
-                  <div>
-                    {userData.isMfaEnabled ? (
-                      <span className="badge bg-info">Enabled</span>
-                    ) : (
-                      <span className="badge bg-secondary">Disabled</span>
                     )}
                   </div>
                 </div>
