@@ -122,25 +122,30 @@ const JoinRequestTabContent = ({ request, userDetails, organizationId, onRefresh
       {/* Header */}
       <div className="petitions-header-section mb-4">
         <div className="d-flex align-items-center justify-content-between">
-          <h2 className="font-med mb-0">
+          <h2 className="font-med mb-0" style={{
+            display: "inline-block",
+            padding: "8px 16px",
+            backgroundColor: "rgba(2, 101, 163, 0.1)",
+            border: "1px solid rgba(2, 101, 163, 0.3)",
+            borderRadius: "8px",
+            color: "var(--theme-color, #0265a3)"
+          }}>
             Join Request Details
           </h2>
           <div className="d-flex gap-2">
             {request?.status !== 1 && (
               <button
-                className="dashboard-btn-create"
+                className="dashboard-btn-refresh text-success"
                 onClick={() => handleAction("approve")}
               >
-                <i className="fa-solid fa-check me-2"></i>
                 Approve
               </button>
             )}
             {request?.status !== 2 && (
               <button
-                className="dashboard-btn-delete"
+                className="dashboard-btn-refresh text-danger"
                 onClick={() => handleAction("deny")}
               >
-                <i className="fa-solid fa-times me-2"></i>
                 Deny
               </button>
             )}
@@ -150,7 +155,7 @@ const JoinRequestTabContent = ({ request, userDetails, organizationId, onRefresh
 
       {/* User Details Section */}
       <div className="mb-4">
-        <h4 className="mb-3">User Information</h4>
+        <h2 className="font-med mb-3">User Information</h2>
         <div className="row g-3">
           {/* Row 1: First Name and Last Name */}
           <div className="col-md-6">
@@ -204,7 +209,7 @@ const JoinRequestTabContent = ({ request, userDetails, organizationId, onRefresh
 
       {/* Request Details Section */}
       <div className="mb-4">
-        <h4 className="mb-3">Request Details</h4>
+        <h2 className="font-med mb-3">Request Details</h2>
         <div className="row g-3">
           <div className="col-md-6">
             <div className="mb-3">
@@ -309,7 +314,7 @@ const JoinRequestTabContent = ({ request, userDetails, organizationId, onRefresh
                 </button>
                 <button
                   type="button"
-                  className={actionType === "approve" ? "dashboard-btn-create" : "dashboard-btn-delete"}
+                  className={`dashboard-btn-refresh ${actionType === "approve" ? "text-success" : "text-danger"}`}
                   onClick={handleSubmitAction}
                   disabled={isSubmitting}
                 >

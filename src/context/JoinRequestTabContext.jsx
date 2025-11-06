@@ -29,7 +29,9 @@ export const JoinRequestTabProvider = ({ children }) => {
         const restoredTabs = parsedTabs.map(tab => ({
           ...tab,
           data: null,
-          isLoading: false
+          isLoading: false,
+          // Preserve organizationId if it was saved
+          organizationId: tab.organizationId || null
         }));
         setTabs(restoredTabs);
         
@@ -76,7 +78,8 @@ export const JoinRequestTabProvider = ({ children }) => {
           title: tab.title,
           type: tab.type,
           isClosable: tab.isClosable,
-          requestId: tab.type === 'join-request' ? tab.id.replace('join-request-', '') : null
+          requestId: tab.type === 'join-request' ? tab.id.replace('join-request-', '') : null,
+          organizationId: tab.organizationId || null // Save organizationId for join request tabs
         }));
         localStorage.setItem('joinRequestTabs', JSON.stringify(tabsToSave));
       } catch (error) {

@@ -6,6 +6,8 @@ import { getUserById } from "../../services/authService";
 import { useJoinRequestTabs } from "../../context/JoinRequestTabContext";
 import JoinRequestTabBar from "./JoinRequestTabBar";
 import JoinRequestTabContent from "./JoinRequestTabContent";
+import CustomDropdown from "../shared/CustomDropdown";
+import "../shared/CustomDropdown.css";
 import "../../components/Petitions/TabbedWorkspace.css";
 
 const ViewAllJoinRequests = ({ organizationId, onRefresh }) => {
@@ -297,34 +299,41 @@ const ViewAllJoinRequests = ({ organizationId, onRefresh }) => {
                   </div>
                 </div>
 
-                {/* Filters */}
-                <div className="row g-3 mb-4">
-                  <div className="col-md-6">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Search by email or name..."
-                      value={searchQuery}
-                      onChange={(e) => {
-                        setSearchQuery(e.target.value);
-                        setPagination(prev => ({ ...prev, currentPage: 1 }));
-                      }}
-                    />
+                {/* Search and Filter Controls */}
+                <div className="row mb-4 g-3">
+                  <div className="col-12 col-md-4">
+                    <div className="input-group">
+                      <span className="input-group-text bg-white border-end-0">
+                        <i className="fas fa-search"></i>
+                      </span>
+                      <input
+                        type="text"
+                        className="form-control border-start-0 shadow-none"
+                        placeholder="Search by email or name..."
+                        value={searchQuery}
+                        onChange={(e) => {
+                          setSearchQuery(e.target.value);
+                          setPagination(prev => ({ ...prev, currentPage: 1 }));
+                        }}
+                      />
+                    </div>
                   </div>
-                  <div className="col-md-3">
-                    <select
-                      className="form-select"
+                  <div className="col-6 col-md-2">
+                    <CustomDropdown
+                      name="statusFilter"
                       value={statusFilter}
                       onChange={(e) => {
                         setStatusFilter(e.target.value);
                         setPagination(prev => ({ ...prev, currentPage: 1 }));
                       }}
-                    >
-                      <option value="all">All Status</option>
-                      <option value="0">Pending</option>
-                      <option value="1">Approved</option>
-                      <option value="2">Denied</option>
-                    </select>
+                      placeholder="All Statuses"
+                      options={[
+                        { value: "all", label: "All Statuses" },
+                        { value: "0", label: "Pending" },
+                        { value: "1", label: "Approved" },
+                        { value: "2", label: "Denied" },
+                      ]}
+                    />
                   </div>
                 </div>
 
