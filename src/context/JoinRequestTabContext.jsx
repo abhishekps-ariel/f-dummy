@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { getAllOrganizationJoinRequests } from '../services/organizationService';
 import { getUserById } from '../services/authService';
 
 const JoinRequestTabContext = createContext();
@@ -12,50 +11,30 @@ export const useJoinRequestTabs = () => {
   return context;
 };
 
-export const JoinRequestTabProvider = ({ children }) => {
-  const [tabs, setTabs] = useState([]);
-  const [activeTabId, setActiveTabId] = useState(null);
-  const [loadingTabs, setLoadingTabs] = useState(new Set());
-
-  // Load tabs from localStorage on mount
-  useEffect(() => {
-    try {
-      const savedTabs = localStorage.getItem('joinRequestTabs');
-      const savedActiveTab = localStorage.getItem('activeJoinRequestTab');
+// Helper function to load initial state from localStorage
+const loadInitialState = () => {
+  try {
+    const savedTabs = localStorage.getItem('joinRequestTabs');
+    const savedActiveTab = localStorage.getItem('activeJoinRequestTab');
+    
+    if (savedTabs) {
+      const parsedTabs = JSON.parse(savedTabs);
+      // Restore tabs with their stored data
+      const restoredTabs = parsedTabs.map(tab => ({
+        ...tab,
+        isLoading: false
+      }));
       
-      if (savedTabs) {
-        const parsedTabs = JSON.parse(savedTabs);
-        // Restore tabs without data - data will be fetched when tab is activated
-        const restoredTabs = parsedTabs.map(tab => ({
-          ...tab,
-          data: null,
-          isLoading: false,
-          // Preserve organizationId if it was saved
-          organizationId: tab.organizationId || null
-        }));
-        setTabs(restoredTabs);
-        
-        if (savedActiveTab && parsedTabs.some(tab => tab.id === savedActiveTab)) {
-          setActiveTabId(savedActiveTab);
-        } else if (parsedTabs.length > 0) {
-          setActiveTabId(parsedTabs[0].id);
-        }
-      } else {
-        // Initialize with default "All Join Requests" tab
-        const defaultTabs = [{
-          id: 'all-join-requests',
-          title: 'All Join Requests',
-          type: 'all-join-requests',
-          data: null,
-          isClosable: false
-        }];
-        setTabs(defaultTabs);
-        setActiveTabId('all-join-requests');
-        localStorage.setItem('joinRequestTabs', JSON.stringify(defaultTabs));
-        localStorage.setItem('activeJoinRequestTab', 'all-join-requests');
+      let activeId = null;
+      if (savedActiveTab && parsedTabs.some(tab => tab.id === savedActiveTab)) {
+        activeId = savedActiveTab;
+      } else if (parsedTabs.length > 0) {
+        activeId = parsedTabs[0].id;
       }
-    } catch (error) {
-      // Fallback to default tab
+      
+      return { tabs: restoredTabs, activeTabId: activeId };
+    } else {
+      // Initialize with default "All Join Requests" tab
       const defaultTabs = [{
         id: 'all-join-requests',
         title: 'All Join Requests',
@@ -63,25 +42,35 @@ export const JoinRequestTabProvider = ({ children }) => {
         data: null,
         isClosable: false
       }];
-      setTabs(defaultTabs);
-      setActiveTabId('all-join-requests');
+      localStorage.setItem('joinRequestTabs', JSON.stringify(defaultTabs));
+      localStorage.setItem('activeJoinRequestTab', 'all-join-requests');
+      return { tabs: defaultTabs, activeTabId: 'all-join-requests' };
     }
-  }, []);
+  } catch (error) {
+    // Fallback to default tab
+    const defaultTabs = [{
+      id: 'all-join-requests',
+      title: 'All Join Requests',
+      type: 'all-join-requests',
+      data: null,
+      isClosable: false
+    }];
+    return { tabs: defaultTabs, activeTabId: 'all-join-requests' };
+  }
+};
 
-  // Save tabs to localStorage whenever tabs change (without data to avoid stale data)
+export const JoinRequestTabProvider = ({ children }) => {
+  const initialState = loadInitialState();
+  const [tabs, setTabs] = useState(initialState.tabs);
+  const [activeTabId, setActiveTabId] = useState(initialState.activeTabId);
+  const [loadingTabs, setLoadingTabs] = useState(new Set());
+
+  // Save tabs to localStorage whenever tabs change (including data)
   useEffect(() => {
     if (tabs.length > 0) {
       try {
-        // Only save tab metadata, not the data to avoid stale data issues
-        const tabsToSave = tabs.map(tab => ({
-          id: tab.id,
-          title: tab.title,
-          type: tab.type,
-          isClosable: tab.isClosable,
-          requestId: tab.type === 'join-request' ? tab.id.replace('join-request-', '') : null,
-          organizationId: tab.organizationId || null // Save organizationId for join request tabs
-        }));
-        localStorage.setItem('joinRequestTabs', JSON.stringify(tabsToSave));
+        // Save tabs with their data to localStorage
+        localStorage.setItem('joinRequestTabs', JSON.stringify(tabs));
       } catch (error) {
         // Ignore localStorage errors
       }
@@ -99,102 +88,14 @@ export const JoinRequestTabProvider = ({ children }) => {
     }
   }, [activeTabId]);
 
-  // Fetch data for active tab when it changes
-  useEffect(() => {
-    const fetchActiveTabData = async () => {
-      if (!activeTabId) return;
-      
-      const tab = tabs.find(t => t.id === activeTabId);
-      
-      // If it's a join request tab and data is missing, fetch fresh data
-      if (tab && tab.type === 'join-request' && !tab.data && !tab.isLoading) {
-        const requestId = tab.id.replace('join-request-', '');
-        const organizationId = tab.organizationId;
-        
-        if (!organizationId) return;
-        
-        // Set loading state
-        setTabs(prevTabs => 
-          prevTabs.map(t => 
-            t.id === activeTabId ? { ...t, isLoading: true } : t
-          )
-        );
-        setLoadingTabs(prev => new Set([...prev, activeTabId]));
-        
-        try {
-          // Fetch all join requests for the organization
-          const response = await getAllOrganizationJoinRequests(organizationId);
-          
-          if (response.isSuccess && Array.isArray(response.data)) {
-            // Find the specific request
-            const request = response.data.find(r => r.id === requestId);
-            
-            if (request) {
-              // Fetch user details
-              let userDetails = null;
-              if (request.userId) {
-                try {
-                  const userResponse = await getUserById(request.userId);
-                  if (userResponse.isSuccess && userResponse.data) {
-                    userDetails = userResponse.data;
-                  }
-                } catch (error) {
-                  console.error('Error fetching user details:', error);
-                }
-              }
-              
-              // Update tab with detailed data
-              setTabs(prevTabs => 
-                prevTabs.map(t => 
-                  t.id === activeTabId 
-                    ? {
-                        ...t,
-                        title: userDetails?.fullName || userDetails?.email || request.email || 'Join Request',
-                        data: {
-                          request,
-                          userDetails
-                        },
-                        isLoading: false
-                      }
-                    : t
-                )
-              );
-            }
-          }
-        } catch (error) {
-          // Update tab to show error state
-          setTabs(prevTabs => 
-            prevTabs.map(t => 
-              t.id === activeTabId 
-                ? {
-                    ...t,
-                    isLoading: false,
-                    hasError: true
-                  }
-                : t
-            )
-          );
-        } finally {
-          setLoadingTabs(prev => {
-            const newSet = new Set(prev);
-            newSet.delete(activeTabId);
-            return newSet;
-          });
-        }
-      }
-    };
-    
-    fetchActiveTabData();
-  }, [activeTabId, tabs]);
-
   const openTab = async (request, organizationId) => {
     const tabId = `join-request-${request.id}`;
     
     // Check if tab already exists
     const existingTab = tabs.find(tab => tab.id === tabId);
     if (existingTab) {
-      // Switch to existing tab and refresh data
-      await switchToTab(tabId);
+      // Switch to existing tab
+      setActiveTabId(tabId);
       return;
     }
 
@@ -206,7 +107,8 @@ export const JoinRequestTabProvider = ({ children }) => {
       data: null,
       isClosable: true,
       isLoading: true,
-      organizationId: organizationId
+      organizationId: organizationId,
+      userId: request.userId // Store userId for future use
     };
 
     setTabs(prevTabs => [...prevTabs, newTab]);
@@ -214,7 +116,7 @@ export const JoinRequestTabProvider = ({ children }) => {
     setLoadingTabs(prev => new Set([...prev, tabId]));
 
     try {
-      // Fetch user details
+      // Fetch user details using getUserById
       let userDetails = null;
       if (request.userId) {
         try {
@@ -227,7 +129,7 @@ export const JoinRequestTabProvider = ({ children }) => {
         }
       }
       
-      // Update tab with data
+      // Update tab with data (this will be saved to localStorage via useEffect)
       setTabs(prevTabs => 
         prevTabs.map(tab => 
           tab.id === tabId 
@@ -300,88 +202,8 @@ export const JoinRequestTabProvider = ({ children }) => {
     });
   };
 
-  const switchToTab = async (tabId) => {
-    const tab = tabs.find(t => t.id === tabId);
-    
-    // If it's a join request tab and data is missing, fetch fresh data
-    if (tab && tab.type === 'join-request' && !tab.data && !tab.isLoading) {
-      const requestId = tab.id.replace('join-request-', '');
-      const organizationId = tab.organizationId;
-      
-      if (!organizationId) {
-        setActiveTabId(tabId);
-        return;
-      }
-      
-      // Set loading state
-      setTabs(prevTabs => 
-        prevTabs.map(t => 
-          t.id === tabId ? { ...t, isLoading: true } : t
-        )
-      );
-      setLoadingTabs(prev => new Set([...prev, tabId]));
-      
-      try {
-        // Fetch all join requests
-        const response = await getAllOrganizationJoinRequests(organizationId);
-        
-        if (response.isSuccess && Array.isArray(response.data)) {
-          const request = response.data.find(r => r.id === requestId);
-          
-          if (request) {
-            // Fetch user details
-            let userDetails = null;
-            if (request.userId) {
-              try {
-                const userResponse = await getUserById(request.userId);
-                if (userResponse.isSuccess && userResponse.data) {
-                  userDetails = userResponse.data;
-                }
-              } catch (error) {
-                console.error('Error fetching user details:', error);
-              }
-            }
-            
-            // Update tab with fresh data
-            setTabs(prevTabs => 
-              prevTabs.map(t => 
-                t.id === tabId 
-                  ? {
-                      ...t,
-                      title: userDetails?.fullName || userDetails?.email || request.email || 'Join Request',
-                      data: {
-                        request,
-                        userDetails
-                      },
-                      isLoading: false
-                    }
-                  : t
-              )
-            );
-          }
-        }
-      } catch (error) {
-        // Update tab to show error state
-        setTabs(prevTabs => 
-          prevTabs.map(t => 
-            t.id === tabId 
-              ? {
-                  ...t,
-                  isLoading: false,
-                  hasError: true
-                }
-              : t
-          )
-        );
-      } finally {
-        setLoadingTabs(prev => {
-          const newSet = new Set(prev);
-          newSet.delete(tabId);
-          return newSet;
-        });
-      }
-    }
-    
+  const switchToTab = (tabId) => {
+    // Simply switch to the tab - data is already stored in localStorage
     setActiveTabId(tabId);
   };
 
@@ -389,71 +211,65 @@ export const JoinRequestTabProvider = ({ children }) => {
     return tabs.find(tab => tab.id === activeTabId);
   };
 
-  // Refresh a specific tab's data
+  // Refresh a specific tab's data using userId from stored data
   const refreshTab = async (tabId) => {
     const tab = tabs.find(t => t.id === tabId);
     if (!tab || tab.type !== 'join-request') return;
     
-    const requestId = tab.id.replace('join-request-', '');
-    const organizationId = tab.organizationId;
-    
-    if (!organizationId) return;
+    // Get userId from stored data or tab metadata
+    const userId = tab.data?.request?.userId || tab.userId;
+    if (!userId) {
+      console.error('No userId found for tab:', tabId);
+      return;
+    }
     
     // Set loading state
     setTabs(prevTabs => 
       prevTabs.map(t => 
-        t.id === tabId ? { ...t, isLoading: true, data: null } : t
+        t.id === tabId ? { ...t, isLoading: true } : t
       )
     );
     setLoadingTabs(prev => new Set([...prev, tabId]));
     
     try {
-      // Fetch all join requests
-      const response = await getAllOrganizationJoinRequests(organizationId);
-      
-      if (response.isSuccess && Array.isArray(response.data)) {
-        const request = response.data.find(r => r.id === requestId);
-        
-        if (request) {
-          // Fetch user details
-          let userDetails = null;
-          if (request.userId) {
-            try {
-              const userResponse = await getUserById(request.userId);
-              if (userResponse.isSuccess && userResponse.data) {
-                userDetails = userResponse.data;
-              }
-            } catch (error) {
-              console.error('Error fetching user details:', error);
-            }
-          }
-          
-          // Update tab with fresh data
-          setTabs(prevTabs => 
-            prevTabs.map(t => 
-              t.id === tabId 
-                ? {
-                    ...t,
-                    title: userDetails?.fullName || userDetails?.email || request.email || 'Join Request',
-                    data: {
-                      request,
-                      userDetails
-                    },
-                    isLoading: false
-                  }
-                : t
-            )
-          );
+      // Fetch fresh user details using getUserById
+      let userDetails = null;
+      try {
+        const userResponse = await getUserById(userId);
+        if (userResponse.isSuccess && userResponse.data) {
+          userDetails = userResponse.data;
         }
+      } catch (error) {
+        console.error('Error fetching user details:', error);
       }
+      
+      // Update tab with fresh data (preserve request data, update user details)
+      setTabs(prevTabs => 
+        prevTabs.map(t => 
+          t.id === tabId 
+            ? {
+                ...t,
+                title: userDetails?.fullName || userDetails?.email || tab.data?.request?.email || 'Join Request',
+                data: {
+                  ...tab.data,
+                  userDetails: userDetails || tab.data?.userDetails
+                },
+                isLoading: false,
+                hasError: false
+              }
+            : t
+        )
+      );
     } catch (error) {
+      console.error('Error refreshing join request tab:', error);
       // Keep existing data on error
       setTabs(prevTabs => 
         prevTabs.map(t => 
           t.id === tabId 
             ? {
                 ...t,
-                isLoading: false
+                isLoading: false,
+                hasError: true
               }
             : t
         )
@@ -488,4 +304,3 @@ export const JoinRequestTabProvider = ({ children }) => {
 };
 
 export default JoinRequestTabContext;
-

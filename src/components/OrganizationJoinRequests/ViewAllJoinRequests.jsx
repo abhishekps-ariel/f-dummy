@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { toast } from "react-toastify";
 import { getAllOrganizationJoinRequests } from "../../services/organizationService";
 import { getJoinRequestStatusEnum, getFilingEntityTypes } from "../../services/commonService";
 import { getUserById } from "../../services/authService";
 import { useJoinRequestTabs } from "../../context/JoinRequestTabContext";
+import { useDebounce } from "../../hooks/useDebounce";
 import JoinRequestTabBar from "./JoinRequestTabBar";
 import JoinRequestTabContent from "./JoinRequestTabContent";
 import CustomDropdown from "../shared/CustomDropdown";
@@ -12,9 +13,12 @@ import "../../components/Petitions/TabbedWorkspace.css";
 
 const ViewAllJoinRequests = ({ organizationId, onRefresh }) => {
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
   const [statusFilter, setStatusFilter] = useState("all");
-  const [sortBy, setSortBy] = useState("respondedOn");
-  const [sortOrder, setSortOrder] = useState("desc");
+  const [dateFilter, setDateFilter] = useState("all");
+  const [customDateFrom, setCustomDateFrom] = useState("");
+  const [customDateTo, setCustomDateTo] = useState("");
+  const [showCustomDateRange, setShowCustomDateRange] = useState(false);
   const [openDropdownId, setOpenDropdownId] = useState(null);
   const [requests, setRequests] = useState([]);
   const [requestsWithUserDetails, setRequestsWithUserDetails] = useState([]);
@@ -25,9 +29,12 @@ const ViewAllJoinRequests = ({ organizationId, onRefresh }) => {
   const [pagination, setPagination] = useState({
     currentPage: 1,
     pageSize: 10,
+    totalCount: 0,
+    totalPages: 0,
   });
 
   const { openTab, getActiveTab } = useJoinRequestTabs();
+  const prevDateFilterRef = useRef(dateFilter);
 
   // Fetch user details for each request
   const fetchUserDetailsForRequests = async (requestsList) => {
@@ -78,17 +85,88 @@ const ViewAllJoinRequests = ({ organizationId, onRefresh }) => {
     }
   };
 
+  // Helper function to get from date
+  const getFromDate = () => {
+    if (dateFilter === "custom" && customDateFrom) {
+      return new Date(customDateFrom).toISOString();
+    }
+    if (dateFilter === "today") {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return today.toISOString();
+    }
+    if (dateFilter === "week") {
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      return weekAgo.toISOString();
+    }
+    if (dateFilter === "month") {
+      const monthAgo = new Date();
+      monthAgo.setMonth(monthAgo.getMonth() - 1);
+      return monthAgo.toISOString();
+    }
+    if (dateFilter === "quarter") {
+      const quarterAgo = new Date();
+      quarterAgo.setMonth(quarterAgo.getMonth() - 3);
+      return quarterAgo.toISOString();
+    }
+    if (dateFilter === "year") {
+      const yearAgo = new Date();
+      yearAgo.setFullYear(yearAgo.getFullYear() - 1);
+      return yearAgo.toISOString();
+    }
+    return null; // "all" - no date filter
+  };
+
+  // Helper function to get to date
+  const getToDate = () => {
+    if (dateFilter === "custom" && customDateTo) {
+      const toDate = new Date(customDateTo);
+      toDate.setHours(23, 59, 59, 999);
+      return toDate.toISOString();
+    }
+    if (dateFilter !== "all") {
+      return new Date().toISOString();
+    }
+    return null; // "all" - no date filter
+  };
+
   const loadRequests = async () => {
-    if (!organizationId) return;
+    if (!organizationId) {
+      console.warn("No organizationId provided to loadRequests");
+      return;
+    }
     
     setLoading(true);
     setRequestsWithUserDetails([]);
     try {
-      const response = await getAllOrganizationJoinRequests(organizationId);
+      // Prepare filters for server-side filtering, searching, and pagination
+      // Note: API uses 1-based pageNumber, so we pass currentPage (which is already 1-based)
+      const filters = {
+        status: statusFilter,
+        searchTerm: debouncedSearchQuery,
+        pageNumber: pagination.currentPage - 1, // Convert to 0-based for service, which will convert back to 1-based
+        pageSize: pagination.pageSize,
+        startDate: getFromDate(),
+        endDate: getToDate(),
+      };
+
+      console.log("Loading join requests with filters:", { organizationId, filters });
+      const response = await getAllOrganizationJoinRequests(organizationId, filters);
+      console.log("Join requests response:", response);
       
       if (response.isSuccess) {
         const requestsData = Array.isArray(response.data) ? response.data : [];
         setRequests(requestsData);
+        
+        // Update pagination from server response
+        if (response.pagination) {
+          setPagination(prev => ({
+            ...prev,
+            totalCount: response.pagination.totalCount || 0,
+            totalPages: response.pagination.totalPages || 0,
+          }));
+        }
         
         // If filing entity types are already loaded, fetch user details immediately
         if (filingEntityTypes.length > 0 && requestsData.length > 0) {
@@ -104,7 +182,14 @@ const ViewAllJoinRequests = ({ organizationId, onRefresh }) => {
       }
     } catch (error) {
       console.error("Error loading join requests:", error);
-      toast.error("Failed to load join requests");
+      console.error("Error details:", error.response?.data || error.message);
+      
+      // Show more detailed error message
+      const errorMessage = error.response?.data?.message || 
+                          error.response?.data?.exceptionMessage ||
+                          error.message || 
+                          "Failed to load join requests";
+      toast.error(errorMessage);
       setRequests([]);
       setRequestsWithUserDetails([]);
     } finally {
@@ -124,6 +209,40 @@ const ViewAllJoinRequests = ({ organizationId, onRefresh }) => {
     }
   };
 
+
+  // Handle date filter change
+  const handleDateFilterChange = (value) => {
+    setDateFilter(value);
+    setShowCustomDateRange(value === "custom");
+    
+    if (value !== "custom") {
+      setCustomDateFrom("");
+      setCustomDateTo("");
+      setPagination((prev) => ({ ...prev, currentPage: 1 }));
+      // loadRequests will be triggered by useEffect when dateFilter changes
+      // (but useEffect will skip reload if switching TO "custom")
+    }
+    // For "custom", don't trigger fetch - wait for Apply button click
+  };
+
+  // Update organizationId in tabs when it becomes available
+  // This will trigger the context's useEffect to fetch data for tabs that need it
+  const { setTabs: setContextTabs } = useJoinRequestTabs();
+  useEffect(() => {
+    if (organizationId) {
+      // Update all tabs that don't have organizationId set
+      // The context's useEffect will automatically fetch data when tabs are updated
+      setContextTabs(prevTabs => {
+        const hasUpdates = prevTabs.some(tab => !tab.organizationId);
+        if (!hasUpdates) return prevTabs; // No need to update if all tabs already have organizationId
+        
+        return prevTabs.map(tab => 
+          tab.organizationId ? tab : { ...tab, organizationId }
+        );
+      });
+    }
+  }, [organizationId, setContextTabs]);
+
   const loadFilingEntityTypes = async () => {
     try {
       const response = await getFilingEntityTypes();
@@ -138,20 +257,35 @@ const ViewAllJoinRequests = ({ organizationId, onRefresh }) => {
   // Load initial data
   useEffect(() => {
     if (organizationId) {
-      loadRequests();
       loadStatusEnum();
       loadFilingEntityTypes();
     }
   }, [organizationId]);
 
+  // Reload requests when filters, search, or pagination changes
+  // Note: customDateFrom and customDateTo are excluded - they only trigger reload on "Apply Filter" button click
+  // Also skip reload when dateFilter changes to "custom" (only reload when switching from custom to another option)
+  useEffect(() => {
+    if (organizationId) {
+      // Don't reload if we're switching TO "custom" - wait for Apply button
+      if (dateFilter === "custom" && prevDateFilterRef.current !== "custom") {
+        prevDateFilterRef.current = dateFilter;
+        return; // Skip reload when switching to custom
+      }
+      prevDateFilterRef.current = dateFilter;
+      loadRequests();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [organizationId, debouncedSearchQuery, statusFilter, dateFilter, pagination.currentPage, pagination.pageSize]);
+
   // Reload user details when filing entity types are loaded
   useEffect(() => {
-    if (filingEntityTypes.length > 0 && requests.length > 0 && requestsWithUserDetails.length === 0 && !isLoadingUserDetails) {
+    if (filingEntityTypes.length > 0 && requests.length > 0 && requestsWithUserDetails.length === 0 && !isLoadingUserDetails && !loading) {
       fetchUserDetailsForRequests(requests).then(requestsWithDetails => {
         setRequestsWithUserDetails(requestsWithDetails);
       });
     }
-  }, [filingEntityTypes, requests.length]);
+  }, [filingEntityTypes, requests.length, loading]);
 
   const getStatusInfo = (status) => {
     const statusItem = statusEnum.find(item => item.value === status);
@@ -171,46 +305,14 @@ const ViewAllJoinRequests = ({ organizationId, onRefresh }) => {
     return { text: "Pending", class: "status-badge status-pending" };
   };
 
-  // Filter and sort requests
-  const filteredRequests = requestsWithUserDetails.filter(request => {
-    // Status filter
-    if (statusFilter !== "all" && request.status !== parseInt(statusFilter)) {
-      return false;
-    }
-    
-    // Search filter
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      const email = (request.userEmail || "").toLowerCase();
-      const name = (request.userFullName || "").toLowerCase();
-      if (!email.includes(query) && !name.includes(query)) {
-        return false;
-      }
-    }
-    
-    return true;
-  });
-
-  // Sort requests by most recent respondedOn or requestedOn (latest first)
-  const sortedRequests = [...filteredRequests].sort((a, b) => {
-    const dateA = a.respondedOn ? new Date(a.respondedOn) : new Date(a.requestedOn || 0);
-    const dateB = b.respondedOn ? new Date(b.respondedOn) : new Date(b.requestedOn || 0);
-    
-    if (sortBy === "respondedOn") {
-      return sortOrder === "desc" ? dateB - dateA : dateA - dateB;
-    }
-    
-    return sortOrder === "desc" ? dateB - dateA : dateA - dateB;
-  });
-
-  const paginatedRequests = sortedRequests.slice(
-    (pagination.currentPage - 1) * pagination.pageSize,
-    pagination.currentPage * pagination.pageSize
-  );
-  const totalPages = Math.ceil(sortedRequests.length / pagination.pageSize);
+  // Server-side filtering and sorting is now handled by the API
+  // requestsWithUserDetails already contains the filtered and paginated results
+  const paginatedRequests = requestsWithUserDetails;
+  const totalPages = pagination.totalPages || 0;
 
   const handlePageChange = (page) => {
     setPagination(prev => ({ ...prev, currentPage: page }));
+    // loadRequests will be triggered by useEffect when currentPage changes
   };
 
   const handleRequestClick = (request) => {
@@ -220,8 +322,12 @@ const ViewAllJoinRequests = ({ organizationId, onRefresh }) => {
   const handleRefresh = () => {
     setSearchQuery("");
     setStatusFilter("all");
+    setDateFilter("all");
+    setCustomDateFrom("");
+    setCustomDateTo("");
+    setShowCustomDateRange(false);
     setPagination(prev => ({ ...prev, currentPage: 1 }));
-    loadRequests();
+    // loadRequests will be triggered by useEffect when state changes
     if (onRefresh) {
       onRefresh();
     }
@@ -335,19 +441,92 @@ const ViewAllJoinRequests = ({ organizationId, onRefresh }) => {
                       ]}
                     />
                   </div>
+                  <div className="col-6 col-md-2">
+                    <CustomDropdown
+                      name="dateFilter"
+                      value={dateFilter}
+                      onChange={(e) => handleDateFilterChange(e.target.value)}
+                      placeholder="All Dates"
+                      options={[
+                        { value: "all", label: "All Dates" },
+                        { value: "today", label: "Today" },
+                        { value: "week", label: "Last 7 Days" },
+                        { value: "month", label: "Last Month" },
+                        { value: "quarter", label: "Last 3 Months" },
+                        { value: "year", label: "Last Year" },
+                        { value: "custom", label: "Custom Range" },
+                      ]}
+                    />
+                  </div>
                 </div>
+
+                {/* Custom Date Range */}
+                {showCustomDateRange && (
+                  <div className="row mb-4">
+                    <div className="col-md-3">
+                      <label className="form-label">From Date</label>
+                      <input
+                        type="date"
+                        className="form-control"
+                        value={customDateFrom}
+                        onChange={(e) => setCustomDateFrom(e.target.value)}
+                      />
+                    </div>
+                    <div className="col-md-3">
+                      <label className="form-label">To Date</label>
+                      <input
+                        type="date"
+                        className="form-control"
+                        value={customDateTo}
+                        onChange={(e) => setCustomDateTo(e.target.value)}
+                        min={customDateFrom}
+                      />
+                    </div>
+                    <div className="col-md-3 d-flex align-items-end gap-2 mb-1">
+                      <button
+                        className="dashboard-btn-create"
+                        onClick={() => {
+                          if (customDateFrom && customDateTo) {
+                            setPagination((prev) => ({ ...prev, currentPage: 1 }));
+                            // Manually trigger loadRequests since custom dates are not in useEffect dependencies
+                            loadRequests();
+                          } else {
+                            toast.error("Please select both from and to dates");
+                          }
+                        }}
+                        disabled={!customDateFrom || !customDateTo}
+                      >
+                        Apply Filter
+                      </button>
+                      <button
+                        className="dashboard-btn-refresh"
+                        onClick={() => {
+                          setDateFilter("all");
+                          setShowCustomDateRange(false);
+                          setCustomDateFrom("");
+                          setCustomDateTo("");
+                          setPagination((prev) => ({ ...prev, currentPage: 1 }));
+                          // Manually trigger loadRequests to clear the date filter
+                          loadRequests();
+                        }}
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 {/* Results Summary */}
                 <div className="d-flex justify-content-between align-items-center mb-3">
                   <div>
                     <span className="text-muted">
                       {(() => {
-                        const startIndex = (pagination.currentPage - 1) * pagination.pageSize + 1;
+                        const startIndex = pagination.totalCount > 0 ? (pagination.currentPage - 1) * pagination.pageSize + 1 : 0;
                         const endIndex = Math.min(
                           pagination.currentPage * pagination.pageSize,
-                          sortedRequests.length
+                          pagination.totalCount
                         );
-                        return `Showing ${startIndex}-${endIndex} of ${sortedRequests.length} requests`;
+                        return `Showing ${startIndex}-${endIndex} of ${pagination.totalCount} requests`;
                       })()}
                     </span>
                   </div>
@@ -543,14 +722,52 @@ const ViewAllJoinRequests = ({ organizationId, onRefresh }) => {
           }
 
           // Join Request Detail Tab
-          if (activeTab.type === "join-request" && activeTab.data) {
+          if (activeTab.type === "join-request") {
+            // Show loading state if data is being fetched
+            if (activeTab.isLoading) {
+              return (
+                <div className="shadow-custom bg-white org-search-box">
+                  <div className="text-center py-5">
+                    <div className="spinner-border text-primary" role="status">
+                      <span className="visually-hidden">Loading...</span>
+                    </div>
+                    <p className="mt-3 text-muted">Loading join request details...</p>
+                  </div>
+                </div>
+              );
+            }
+            
+            // Show error state if there was an error
+            if (activeTab.hasError) {
+              return (
+                <div className="shadow-custom bg-white org-search-box">
+                  <div className="text-center py-5">
+                    <i className="fa-solid fa-exclamation-triangle text-warning mb-3" style={{ fontSize: "2rem" }}></i>
+                    <p className="text-muted mb-0">Failed to load join request details. Please try again.</p>
+                  </div>
+                </div>
+              );
+            }
+            
+            // Show content if data is available
+            if (activeTab.data) {
+              return (
+                <JoinRequestTabContent
+                  request={activeTab.data.request}
+                  userDetails={activeTab.data.userDetails}
+                  organizationId={organizationId}
+                  onRefresh={handleRefresh}
+                />
+              );
+            }
+            
+            // If no data and not loading, show a message
             return (
-              <JoinRequestTabContent
-                request={activeTab.data.request}
-                userDetails={activeTab.data.userDetails}
-                organizationId={organizationId}
-                onRefresh={handleRefresh}
-              />
+              <div className="shadow-custom bg-white org-search-box">
+                <div className="text-center py-5">
+                  <p className="text-muted mb-0">No data available for this join request.</p>
+                </div>
+              </div>
             );
           }
 
