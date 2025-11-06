@@ -1,14 +1,35 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { getUserRole } from "../../utils/storage";
+import { getUserRole, getImpersonationState } from "../../utils/storage";
 import { ROUTES } from "../../constants/routerConstants";
 import loginImg from "../../assets/logo-sample.png";
 
 // Helper function to check if user is org admin (matches Login.jsx logic)
-const isOrgAdminUser = (userData) => {
+// When impersonating, we strictly check the impersonated user's role only
+const isOrgAdminUser = (userData, isImpersonating = false) => {
   if (!userData) return false;
   
+  // When impersonating, we need to be extra strict about role checking
+  // Only check actual role fields, not isManager (which might be inherited from admin session)
+  if (isImpersonating) {
+    // When impersonating, only check roles array or role field
+    // Do NOT check isManager during impersonation as it might be from the admin's session
+    if (userData.roles && Array.isArray(userData.roles)) {
+      return userData.roles.some(
+        (role) =>
+          role === "Organisation Admin" ||
+          role === "Organization Admin" ||
+          role === "orgAdmin"
+      );
+    }
+    
+    // Check single role field
+    const userRole = getUserRole(userData);
+    return userRole === "orgAdmin" || userRole === "Organisation Admin" || userRole === "Organization Admin";
+  }
+  
+  // Normal check (not impersonating)
   // Check if isManager is true
   if (userData.isManager === true) {
     return true;
@@ -36,9 +57,10 @@ const isOrgAdminUser = (userData) => {
 const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isImpersonating } = getImpersonationState();
   
-  // Check if user is org admin
-  const isOrgAdmin = isOrgAdminUser(user);
+  // Check if user is org admin (pass impersonation state for stricter checking)
+  const isOrgAdmin = isOrgAdminUser(user, isImpersonating);
   
   // Debug: Log user and role check (remove after debugging)
   // console.log('Sidebar - User:', user);

@@ -7,15 +7,36 @@ import { getUserById } from "../../services/authService";
 import { toast } from "react-toastify";
 import { ROUTES } from "../../constants/routerConstants";
 import { logout as logoutApi } from "../../services/authService";
-import { clearAuthData, getAuthData, getUserRole } from "../../utils/storage";
+import { clearAuthData, getAuthData, getUserRole, getImpersonationState } from "../../utils/storage";
 import Sidebar from "../../components/shared/Sidebar";
 import Header from "../../components/shared/Header";
 import "../../styles/custom.css";
 
 // Helper function to check if user is org admin (matches Login.jsx logic)
-const isOrgAdminUser = (userData) => {
+// When impersonating, we strictly check the impersonated user's role only
+const isOrgAdminUser = (userData, isImpersonating = false) => {
   if (!userData) return false;
   
+  // When impersonating, we need to be extra strict about role checking
+  // Only check actual role fields, not isManager (which might be inherited from admin session)
+  if (isImpersonating) {
+    // When impersonating, only check roles array or role field
+    // Do NOT check isManager during impersonation as it might be from the admin's session
+    if (userData.roles && Array.isArray(userData.roles)) {
+      return userData.roles.some(
+        (role) =>
+          role === "Organisation Admin" ||
+          role === "Organization Admin" ||
+          role === "orgAdmin"
+      );
+    }
+    
+    // Check single role field
+    const userRole = getUserRole(userData);
+    return userRole === "orgAdmin" || userRole === "Organisation Admin" || userRole === "Organization Admin";
+  }
+  
+  // Normal check (not impersonating)
   // Check if isManager is true
   if (userData.isManager === true) {
     return true;
@@ -44,9 +65,10 @@ const OrganizationJoinRequests = () => {
   const navigate = useNavigate();
   const { user, organization, logout: authLogout } = useAuth();
   const [activeSection, setActiveSection] = useState("organization-join-requests");
+  const { isImpersonating } = getImpersonationState();
   
-  // Check if user is org admin
-  const isOrgAdmin = isOrgAdminUser(user);
+  // Check if user is org admin (pass impersonation state for stricter checking)
+  const isOrgAdmin = isOrgAdminUser(user, isImpersonating);
   const [requests, setRequests] = useState([]);
   const [requestsWithUserDetails, setRequestsWithUserDetails] = useState([]);
   const [statusEnum, setStatusEnum] = useState([]);
