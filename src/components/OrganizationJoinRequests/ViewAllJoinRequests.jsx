@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { toast } from "react-toastify";
 import { getAllOrganizationJoinRequests } from "../../services/organizationService";
-import { getJoinRequestStatusEnum } from "../../services/commonService";
+import { getJoinRequestStatusEnum, getFilingEntityTypes } from "../../services/commonService";
 import { useJoinRequestTabs } from "../../context/JoinRequestTabContext";
 import { useDebounce } from "../../hooks/useDebounce";
 import JoinRequestTabBar from "./JoinRequestTabBar";
@@ -21,6 +21,7 @@ const ViewAllJoinRequests = ({ organizationId, onRefresh }) => {
   const [openDropdownId, setOpenDropdownId] = useState(null);
   const [requests, setRequests] = useState([]);
   const [statusEnum, setStatusEnum] = useState([]);
+  const [filingEntityTypes, setFilingEntityTypes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [pagination, setPagination] = useState({
     currentPage: 1,
@@ -233,6 +234,16 @@ const ViewAllJoinRequests = ({ organizationId, onRefresh }) => {
     if (status === 1) return { text: "Approved", class: "status-badge status-approved" };
     if (status === 2) return { text: "Denied", class: "status-badge status-denied status-rejected" };
     return { text: "Pending", class: "status-badge status-pending" };
+  };
+
+  const getFilingEntityTypeName = (filingEntityTypeId) => {
+    if (!filingEntityTypeId || filingEntityTypes.length === 0) {
+      return "Not Set";
+    }
+    const entityType = filingEntityTypes.find(
+      (type) => type.id === filingEntityTypeId
+    );
+    return entityType ? entityType.name : "Not Set";
   };
 
   // Server-side filtering and sorting is now handled by the API
@@ -526,7 +537,7 @@ const ViewAllJoinRequests = ({ organizationId, onRefresh }) => {
                                   : "N/A"}
                               </td>
                               <td className="text-center">
-                                {request.userDetail?.filingEntityTypeName || "Not Set"}
+                                {request.userDetail?.filingEntityTypeName || getFilingEntityTypeName(request.userDetail?.filingEntityTypeId) || "Not Set"}
                               </td>
                               <td className="text-center">
                                 <span className={statusInfo.class}>
@@ -597,7 +608,7 @@ const ViewAllJoinRequests = ({ organizationId, onRefresh }) => {
                                         : "N/A"}
                                     </span>
                                     <span className="small text-muted">
-                                      {request.userDetail?.filingEntityTypeName || "Not Set"}
+                                      {request.userDetail?.filingEntityTypeName || getFilingEntityTypeName(request.userDetail?.filingEntityTypeId) || "Not Set"}
                                     </span>
                                   </div>
                                 </div>

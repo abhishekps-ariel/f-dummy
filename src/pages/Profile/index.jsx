@@ -542,9 +542,9 @@ function Profile() {
                             )}
                           </button>
                           <button 
-                            className="btn btn-sm btn-outline-secondary" 
+                            className="dashboard-btn-refresh" 
                             onClick={handleCancel}
-                            style={{ minHeight: '40px', padding: '8px 16px' }}
+                            style={{ minWidth: '80px' }}
                           >
                             Cancel
                           </button>

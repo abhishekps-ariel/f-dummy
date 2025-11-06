@@ -45,7 +45,11 @@ function ImpersonationBanner() {
       <div>
         <strong>Impersonating</strong>: {impersonatedUserName || 'User'}
       </div>
-      <button className="btn btn-sm btn-outline-dark" onClick={exit}>
+      <button 
+        className="dashboard-btn-refresh" 
+        onClick={exit}
+        style={{ fontSize: '14px', padding: '6px 12px' }}
+      >
         Exit impersonation
       </button>
     </div>
