@@ -1004,19 +1004,16 @@ const ViewAllPetitions = ({ onBack }) => {
                         </tr>
                       ) : petitions.length > 0 ? (
                         petitions.map((petition) => (
-                          <tr key={petition.id} className="petition-row">
+                          <tr 
+                            key={petition.id} 
+                            className="petition-row"
+                            onClick={() => handlePetitionClick(petition)}
+                            style={{ cursor: "pointer" }}
+                          >
                             <td>
-                              <a
-                                href={`#details-${petition.id}`}
-                                className="text-decoration-none fw-medium"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  handlePetitionClick(petition);
-                                }}
-                                style={{ cursor: "pointer" }}
-                              >
+                              <span className="fw-medium">
                                 {petition.petitionNumber}
-                              </a>
+                              </span>
                             </td>
                             <td>{petition.propertyAddress}</td>
                             <td>{petition.borrower}</td>
@@ -1034,7 +1031,7 @@ const ViewAllPetitions = ({ onBack }) => {
                             <td className="text-muted">
                               {petition.lastUpdated}
                             </td>
-                            <td>
+                            <td onClick={(e) => e.stopPropagation()}>
                               <div className="petition-action-expansion">
                                 <button
                                   className="btn btn-sm border-0"
@@ -1130,21 +1127,17 @@ const ViewAllPetitions = ({ onBack }) => {
                     <div className="row g-3">
                       {petitions.map((petition) => (
                         <div key={petition.id} className="col-12">
-                          <div className="petition-mobile-row">
+                          <div 
+                            className="petition-mobile-row"
+                            onClick={() => handlePetitionClick(petition)}
+                            style={{ cursor: "pointer" }}
+                          >
                             <div className="d-flex justify-content-between align-items-center">
                               <div className="petition-main-info">
                                 <div className="d-flex align-items-center gap-2 mb-1">
-                                  <a
-                                    href={`#details-${petition.id}`}
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      handlePetitionClick(petition);
-                                    }}
-                                    className="text-decoration-none fw-medium petition-number"
-                                    style={{ cursor: "pointer" }}
-                                  >
+                                  <span className="fw-medium petition-number">
                                     {petition.petitionNumber}
-                                  </a>
+                                  </span>
                                   <span
                                     className={getStatusBadgeClass(
                                       petition.status,
@@ -1166,7 +1159,10 @@ const ViewAllPetitions = ({ onBack }) => {
                                   </span>
                                 </div>
                               </div>
-                              <div className="petition-action-expansion">
+                              <div 
+                                className="petition-action-expansion"
+                                onClick={(e) => e.stopPropagation()}
+                              >
                                 <button
                                   className="btn btn-sm border-0"
                                   type="button"

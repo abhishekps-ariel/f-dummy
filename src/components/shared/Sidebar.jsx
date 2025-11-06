@@ -147,7 +147,7 @@ const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
                     }}
                   >
                     <i className="fa-solid fa-users me-2"></i>
-                    <span>Organisations Join Requests</span>
+                    <span>Join Requests</span>
                   </a>
                 </li>
                 <li className="dashboard-nav-item">
@@ -316,7 +316,7 @@ const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
                     }}
                   >
                     <i className="fa-solid fa-users me-2"></i>
-                    <span>Organisations Join Requests</span>
+                    <span>Join Requests</span>
                   </a>
                 </li>
                 <li className="dashboard-nav-item">
