@@ -64,11 +64,6 @@ function Register() {
     const isAdminInvite = searchParams.get("isAdminInvite") === "true";
     const role = searchParams.get("role");
 
-    // Set role if provided
-    if (role) {
-      setSelectedRole(role === "orgAdmin" ? "orgAdmin" : "filer");
-    }
-
     if (joinRequestId) {
       setIsInviteFlow(true);
       setIsLoadingInvite(true);
@@ -76,6 +71,15 @@ function Register() {
 
       // Fetch invite data
       fetchInviteData(joinRequestId, isAdminInvite);
+    } else {
+      // Not an invite flow
+      // Set role if provided in URL, otherwise default to "filer"
+      if (role) {
+        setSelectedRole(role === "orgAdmin" ? "orgAdmin" : "filer");
+      } else {
+        // Default to "filer" when coming from login page or direct navigation
+        setSelectedRole("filer");
+      }
     }
   }, [searchParams]);
 

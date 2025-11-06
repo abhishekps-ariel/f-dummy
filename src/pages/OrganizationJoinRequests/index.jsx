@@ -282,11 +282,21 @@ const OrganizationJoinRequests = () => {
     }
   };
 
-  const paginatedRequests = requestsWithUserDetails.slice(
+  // Sort requests by most recent respondedOn or requestedOn (latest first)
+  const sortedRequests = [...requestsWithUserDetails].sort((a, b) => {
+    // Get the date to sort by (respondedOn if exists, otherwise requestedOn)
+    const dateA = a.respondedOn ? new Date(a.respondedOn) : new Date(a.requestedOn || 0);
+    const dateB = b.respondedOn ? new Date(b.respondedOn) : new Date(b.requestedOn || 0);
+    
+    // Sort descending (most recent first)
+    return dateB - dateA;
+  });
+
+  const paginatedRequests = sortedRequests.slice(
     (pagination.currentPage - 1) * pagination.pageSize,
     pagination.currentPage * pagination.pageSize
   );
-  const totalPages = Math.ceil(requestsWithUserDetails.length / pagination.pageSize);
+  const totalPages = Math.ceil(sortedRequests.length / pagination.pageSize);
 
   const handlePageChange = (page) => {
     setPagination(prev => ({ ...prev, currentPage: page }));
@@ -367,9 +377,9 @@ const OrganizationJoinRequests = () => {
                     const startIndex = (pagination.currentPage - 1) * pagination.pageSize + 1;
                     const endIndex = Math.min(
                       pagination.currentPage * pagination.pageSize,
-                      requestsWithUserDetails.length
+                      sortedRequests.length
                     );
-                    return `Showing ${startIndex}-${endIndex} of ${requestsWithUserDetails.length} requests`;
+                    return `Showing ${startIndex}-${endIndex} of ${sortedRequests.length} requests`;
                   })()}
                   {isLoading && <span className="ms-2">(Loading...)</span>}
                 </span>
@@ -384,7 +394,7 @@ const OrganizationJoinRequests = () => {
                     <th style={{ width: "22%", minWidth: "200px" }}>Email</th>
                     <th style={{ width: "22%", minWidth: "200px" }}>Full Name</th>
                     <th style={{ width: "12%", minWidth: "110px" }} className="text-center">Requested On</th>
-                    <th style={{ width: "13%", minWidth: "110px" }} className="text-center">Admin Invite</th>
+                    <th style={{ width: "13%", minWidth: "110px" }} className="text-center">Responded On</th>
                     <th style={{ width: "16%", minWidth: "150px" }} className="text-center">Filing Entity Type</th>
                     <th style={{ width: "12%", minWidth: "120px" }} className="text-center">Status</th>
                     <th style={{ width: "20px", minWidth: "20px", maxWidth: "20px", padding: "0.25rem 0.1rem", textAlign: "center" }}></th>
@@ -425,13 +435,13 @@ const OrganizationJoinRequests = () => {
                               : "N/A"}
                           </td>
                           <td className="text-center">
-                            <span
-                              className={`badge ${
-                                request.isAdminInvite ? "bg-success" : "bg-danger"
-                              }`}
-                            >
-                              {request.isAdminInvite ? "YES" : "NO"}
-                            </span>
+                            {request.respondedOn
+                              ? new Date(request.respondedOn).toLocaleDateString("en-US", {
+                                  year: "numeric",
+                                  month: "2-digit",
+                                  day: "2-digit",
+                                })
+                              : "N/A"}
                           </td>
                           <td className="text-center">
                             {request.filingEntityTypeName || "Not Set"}
@@ -540,7 +550,7 @@ const OrganizationJoinRequests = () => {
                                   {request.userFullName || "N/A"}
                                 </span>
                                 <span className="small text-muted">
-                                  {request.requestedOn
+                                  Requested: {request.requestedOn
                                     ? new Date(request.requestedOn).toLocaleDateString("en-US", {
                                         year: "numeric",
                                         month: "2-digit",
@@ -548,15 +558,14 @@ const OrganizationJoinRequests = () => {
                                       })
                                     : "N/A"}
                                 </span>
-                                <span className="small">
-                                  <span
-                                    className={`badge ${
-                                      request.isAdminInvite ? "bg-success" : "bg-danger"
-                                    }`}
-                                    style={{ fontSize: "0.65rem" }}
-                                  >
-                                    {request.isAdminInvite ? "YES" : "NO"}
-                                  </span>
+                                <span className="small text-muted">
+                                  Responded: {request.respondedOn
+                                    ? new Date(request.respondedOn).toLocaleDateString("en-US", {
+                                        year: "numeric",
+                                        month: "2-digit",
+                                        day: "2-digit",
+                                      })
+                                    : "N/A"}
                                 </span>
                                 <span className="small text-muted">
                                   {request.filingEntityTypeName || "Not Set"}

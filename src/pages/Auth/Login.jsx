@@ -305,7 +305,7 @@ function Login() {
                           to="/register"
                           className="text-dark-black fw-semibold"
                         >
-                          Sign up{" "}
+                          Register{" "}
                         </Link>
                       </p>
                     </>
