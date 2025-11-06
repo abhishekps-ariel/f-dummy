@@ -1065,16 +1065,6 @@ const ViewAllPetitions = ({ onBack }) => {
                                       View
                                     </button>
                                     <button
-                                      className="btn btn-resume"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setOpenDropdownId(null);
-                                        // TODO: Implement resume functionality
-                                      }}
-                                    >
-                                      Resume
-                                    </button>
-                                    <button
                                       className="btn btn-delete"
                                       onClick={(e) => {
                                         e.stopPropagation();
@@ -1193,16 +1183,6 @@ const ViewAllPetitions = ({ onBack }) => {
                                       }}
                                     >
                                       View
-                                    </button>
-                                    <button
-                                      className="btn btn-resume"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setOpenDropdownId(null);
-                                        // TODO: Implement resume functionality
-                                      }}
-                                    >
-                                      Resume
                                     </button>
                                     <button
                                       className="btn btn-delete"
