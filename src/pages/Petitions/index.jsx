@@ -12,10 +12,18 @@ import { usePetitions } from '../../hooks/usePetitions';
 import { TabProvider } from '../../context/TabContext';
 
 const Petitions = () => {
-  const { user, logout, hasOrganizationAccess, organizationCheckComplete } = useAuth();
+  const { user, logout, hasOrganizationAccess, organizationCheckComplete, checkOrganizationAccess } = useAuth();
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState('petitions');
   const { petitions, loading, error, fetchPetitions, submitPetition } = usePetitions();
+
+  // Re-check organization access when Petitions page mounts or user changes
+  // This ensures access is always validated when navigating to Petitions
+  useEffect(() => {
+    if (user) {
+      checkOrganizationAccess();
+    }
+  }, [user]); // Only depend on user, not checkOrganizationAccess function reference
 
   const handleLogout = async () => {
     try {
