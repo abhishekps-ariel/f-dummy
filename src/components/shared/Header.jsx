@@ -23,7 +23,7 @@ const Header = ({ user, pageTitle, showMobileMenu = true, onLogout }) => {
         )}
         <div>
           <h1 className="h4 mb-0 fw-bold theme-color">FILIR</h1>
-          <p className="small text-muted mb-0">Foreclosure Intake & Loan Information Resource</p>
+          <p className="small text-muted mb-0 d-none d-md-block">Foreclosure Intake & Loan Information Resource</p>
         </div>
       </div>
 
