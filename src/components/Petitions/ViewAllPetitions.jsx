@@ -771,7 +771,7 @@ const ViewAllPetitions = ({ onBack }) => {
                 </div>
                 {/* Search and Filter Controls */}
                 <div className="row mb-4 g-3">
-                  <div className="col-12 col-md-4">
+                  <div className="col-12 col-md petitions-search-column">
                     <div className="input-group">
                       <span className="input-group-text bg-white border-end-0">
                         <i className="fas fa-search"></i>

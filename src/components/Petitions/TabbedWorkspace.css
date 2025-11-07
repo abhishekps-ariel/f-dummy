@@ -1,12 +1,10 @@
 /* Tabbed Workspace Styles */
 .petitions-workspace {
-  /* Removed fixed height to allow natural page scrolling */
   display: flex;
   flex-direction: column;
 }
 
 .tab-content-area {
-  /* Removed flex: 1 and overflow-y to allow content to flow naturally with page scroll */
   background-color: #ffffff;
 }
 
@@ -111,8 +109,11 @@
 
 /* Petition Tab Content Styles */
 .petition-tab-content {
-  height: 100%;
-  overflow-y: auto;
+  padding: 20px;
+}
+
+.petition-content-scrollable {
+  padding-right: 4px;
 }
 
 /* Petition Header Card Styles */
@@ -120,27 +121,71 @@
   background: #ffffff;
   border: 1px solid #dee2e6;
   border-radius: 8px;
-  padding: 20px;
+  padding: 12px 16px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.petition-number-badge {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #2c3e50;
+/* Sticky Header Section */
+.petition-header-sticky {
+  position: sticky;
+  top: calc(var(--app-header-height, 72px) + 8px);
+  z-index: 100;
+  background: transparent;
+  padding-top: 0;
+  margin-top: 0;
+  margin-bottom: 12px !important;
+}
+
+.petitions-search-column {
+  display: flex;
+}
+
+.petitions-search-column .input-group {
+  width: 100%;
+}
+
+.petition-header-layout {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.petition-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-width: 200px;
+}
+
+.petition-header-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.petition-header-meta .petition-meta-line {
+  display: flex;
+  align-items: center;
+  font-size: 0.85rem;
   margin: 0;
 }
 
-.petition-meta-info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.petition-meta-line {
+.petition-header-actions {
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
-  font-size: 0.9rem;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.petition-number-badge {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0;
 }
 
 .petition-meta-line i {
@@ -184,38 +229,33 @@
   }
   
   .petition-tab-content {
-    padding: 0px;
+    padding: 12px;
   }
   
   /* Mobile petition header adjustments */
   .petition-header-card {
-    padding: 15px;
+    padding: 10px 12px;
   }
   
-  .petition-header-card .d-flex {
+  .petition-header-sticky {
+    padding-top: 10px;
+    margin-top: -10px;
+  }
+  
+  .petition-header-layout {
     flex-direction: column;
-    align-items: flex-start !important;
-    gap: 15px;
+    align-items: flex-start;
   }
   
-  .petition-number-badge {
-    font-size: 1.25rem;
+  .petition-header-meta {
+    gap: 10px;
   }
   
-  .petition-meta-info {
-    width: 100%;
+  .petition-header-meta .petition-meta-line {
+    font-size: 0.8rem;
   }
   
-  .petition-meta-line {
-    font-size: 0.85rem;
-    margin-bottom: 6px;
-  }
-  
-  .petition-meta-line:last-child {
-    margin-bottom: 0;
-  }
-  
-  .petition-header-card .d-flex.align-items-center.gap-2 {
+  .petition-header-actions {
     width: 100%;
     justify-content: flex-start;
   }
@@ -252,20 +292,24 @@
   }
 
   .petition-header-card {
-    padding: 12px;
+    padding: 8px 10px;
+  }
+  
+  .petition-header-sticky {
+    padding-top: 8px;
+    margin-top: -8px;
   }
   
   .petition-number-badge {
-    font-size: 1.1rem;
+    font-size: 1rem;
   }
   
-  .petition-meta-line {
-    font-size: 0.8rem;
-    flex-wrap: wrap;
+  .petition-header-meta .petition-meta-line {
+    font-size: 0.75rem;
   }
   
-  .petition-meta-line i {
-    margin-right: 6px;
+  .petition-header-meta .petition-meta-line i {
+    margin-right: 4px;
   }
   
   .dashboard-btn-refresh {

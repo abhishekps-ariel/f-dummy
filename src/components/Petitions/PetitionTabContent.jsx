@@ -1682,47 +1682,44 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
 
   return (
     <div className="petition-tab-content">
-      <div className="container-fluid" id="petition-detail-content">
-        {/* Header Section */}
-        <div className="row mb-4">
+      <div className="container-fluid petition-content-scrollable" id="petition-detail-content">
+        {/* Header Section - Sticky */}
+        <div className="row mb-3 petition-header-sticky">
           <div className="col-12">
             <div className="petition-header-card">
-              <div className="d-flex justify-content-between align-items-start w-100">
-                {/* Left side - Petition Info */}
-                <div className="flex-grow-1">
-                  <div className="mb-2">
+              <div className="petition-header-layout">
+                <div className="petition-header-left">
+                  <div className="d-flex align-items-center gap-3 flex-wrap">
                     <h4 className="petition-number-badge mb-0">
                       {petition.petitionNumber}
                     </h4>
+                    <span
+                      className={getStatusBadgeClass(
+                        petition.status,
+                        petition.statusClass
+                      )}
+                    >
+                      {petition.status}
+                    </span>
                   </div>
-                  <div className="petition-meta-info">
-                    <div className="petition-meta-line mb-1">
+                  <div className="petition-header-meta">
+                    <div className="petition-meta-line">
                       <i className="fas fa-calendar-alt me-2 text-muted"></i>
                       <span className="text-muted">
                         Created: {formatDate(petition.createdDate)}
                       </span>
                     </div>
-                    <div className="petition-meta-line mb-1">
+                    <div className="petition-meta-line">
                       <i className="fas fa-clock me-2 text-muted"></i>
                       <span className="text-muted">
                         Last Updated: {formatDateTime(petition.modifiedDate)}
-                      </span>
-                    </div>
-                    <div className="petition-meta-line">
-                      <span
-                        className={getStatusBadgeClass(
-                          petition.status,
-                          petition.statusClass
-                        )}
-                      >
-                        {petition.status}
                       </span>
                     </div>
                   </div>
                 </div>
 
                 {/* Right side - Action Buttons */}
-                <div className="d-flex align-items-center gap-2">
+                <div className="d-flex align-items-center gap-2 petition-header-actions">
                   {!isEditing ? (
                     <>
                       <button
