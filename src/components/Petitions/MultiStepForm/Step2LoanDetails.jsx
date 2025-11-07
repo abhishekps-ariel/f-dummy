@@ -1,5 +1,17 @@
 import React from "react";
-import CustomDropdown from "../../shared/CustomDropdown"; 
+import CustomDropdown from "../../shared/CustomDropdown";
+
+// Helper function to format currency with commas
+const formatCurrencyDisplay = (value) => {
+  if (!value && value !== 0) return "";
+  const str = String(value);
+  // Split by decimal point if it exists
+  const parts = str.split(".");
+  // Format the integer part with commas
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  // Join back with decimal if it exists
+  return parts.length > 1 ? parts.join(".") : parts[0];
+}; 
 
 const Step2LoanDetails = ({
   commonDataError,
@@ -184,14 +196,13 @@ const Step2LoanDetails = ({
                 </label>
 
                 <input
-                  type="number"
-                  step="0.01"
+                  type="text"
                   id="originalPrincipalAmount"
                   name="originalPrincipalAmount"
                   className={`form-control ${
                     fieldErrors.originalPrincipalAmount ? "is-invalid" : ""
                   }`}
-                  value={formData.originalPrincipalAmount}
+                  value={formatCurrencyDisplay(formData.originalPrincipalAmount)}
                   onChange={handleInputChange}
                 />
 
@@ -208,14 +219,13 @@ const Step2LoanDetails = ({
                 </label>
 
                 <input
-                  type="number"
-                  step="0.01"
+                  type="text"
                   id="currentPrincipalBalance"
                   name="currentPrincipalBalance"
                   className={`form-control ${
                     fieldErrors.currentPrincipalBalance ? "is-invalid" : ""
                   }`}
-                  value={formData.currentPrincipalBalance}
+                  value={formatCurrencyDisplay(formData.currentPrincipalBalance)}
                   onChange={handleInputChange}
                 />
 
@@ -256,14 +266,13 @@ const Step2LoanDetails = ({
                 </label>
 
                 <input
-                  type="number"
-                  step="0.01"
+                  type="text"
                   id="monthlyPaymentAmount"
                   name="monthlyPaymentAmount"
                   className={`form-control ${
                     fieldErrors.monthlyPaymentAmount ? "is-invalid" : ""
                   }`}
-                  value={formData.monthlyPaymentAmount}
+                  value={formatCurrencyDisplay(formData.monthlyPaymentAmount)}
                   onChange={handleInputChange}
                 />
 

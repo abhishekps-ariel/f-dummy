@@ -920,8 +920,24 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
     // Define integer fields that should not show decimal values
     const integerFields = ["delinquencyDaysAtFiling", "daysDelinquentAtNotice"];
 
+    // Define currency fields that should be formatted with commas
+    const currencyFields = [
+      "originalPrincipalAmount",
+      "currentPrincipalBalance",
+      "monthlyPaymentAmount",
+      "amountInDefault",
+    ];
+
     // Handle numeric inputs for integer fields
     let processedValue = value;
+    
+    // Handle currency fields - parse to remove commas for storage, but format for display
+    if (currencyFields.includes(name)) {
+      // Parse the input to get numeric value (remove commas)
+      const parsedValue = value.replace(/[^\d.]/g, "");
+      processedValue = parsedValue;
+    }
+    
     if (type === "number" && integerFields.includes(name) && value !== "") {
       const intValue = parseInt(value, 10);
       processedValue = isNaN(intValue) ? "" : intValue.toString();

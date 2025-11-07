@@ -303,18 +303,18 @@ const ViewAllJoinRequests = ({ organizationId, onRefresh }) => {
   }, [openDropdownId]);
 
   // Show loading state
-  if (loading) {
-    return (
-      <div className="shadow-custom bg-white org-search-box">
-        <div className="text-center py-5">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </div>
-          <p className="mt-3 text-muted">Loading join requests...</p>
-        </div>
-      </div>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <div className="shadow-custom bg-white org-search-box">
+  //       <div className="text-center py-5">
+  //         <div className="spinner-border text-primary" role="status">
+  //           <span className="visually-hidden">Loading...</span>
+  //         </div>
+  //         <p className="mt-3 text-muted">Loading join requests...</p>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="petitions-workspace">
@@ -498,7 +498,16 @@ const ViewAllJoinRequests = ({ organizationId, onRefresh }) => {
                       </tr>
                     </thead>
                     <tbody>
-                      {paginatedRequests.length > 0 ? (
+                      {loading ? (
+    <tr>
+      <td colSpan="6" className="text-center py-4">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+        <p className="mt-2 text-muted">Loading join requests...</p>
+      </td>
+    </tr>
+  ) : paginatedRequests.length > 0 ? (
                         paginatedRequests.map((request) => {
                           const statusInfo = getStatusInfo(request.status);
                           return (
@@ -564,7 +573,17 @@ const ViewAllJoinRequests = ({ organizationId, onRefresh }) => {
 
                 {/* Mobile Card View */}
                 <div className="d-lg-none">
-                  {paginatedRequests.length > 0 ? (
+                  {loading ? (
+                    <div className="text-center py-4">
+                      <div
+                        className="spinner-border text-primary"
+                        role="status"
+                      >
+                        <span className="visually-hidden">Loading...</span>
+                      </div>
+                      <p className="mt-2 text-muted">Loading join requests...</p>
+                    </div>
+                  ) : paginatedRequests.length > 0 ? (
                     <div className="row g-3">
                       {paginatedRequests.map((request) => {
                         const statusInfo = getStatusInfo(request.status);

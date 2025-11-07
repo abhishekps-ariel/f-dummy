@@ -1,5 +1,17 @@
 import React from "react";
 
+// Helper function to format currency with commas
+const formatCurrencyDisplay = (value) => {
+  if (!value && value !== 0) return "";
+  const str = String(value);
+  // Split by decimal point if it exists
+  const parts = str.split(".");
+  // Format the integer part with commas
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  // Join back with decimal if it exists
+  return parts.length > 1 ? parts.join(".") : parts[0];
+};
+
 const Step5RightToCure = ({
   formData,
   fieldErrors,
@@ -151,14 +163,13 @@ const Step5RightToCure = ({
                     </label>
 
                     <input
-                      type="number"
-                      step="0.01"
+                      type="text"
                       id="amountInDefault"
                       name="amountInDefault"
                       className={`form-control ${
                         fieldErrors.amountInDefault ? "is-invalid" : ""
                       }`}
-                      value={formData.amountInDefault}
+                      value={formatCurrencyDisplay(formData.amountInDefault)}
                       onChange={handleInputChange}
                     />
 

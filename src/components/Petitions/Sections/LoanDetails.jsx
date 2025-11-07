@@ -1,6 +1,18 @@
 import React from "react";
 import CustomDropdown from "../../shared/CustomDropdown";
 
+// Helper function to format currency with commas
+const formatCurrencyDisplay = (value) => {
+  if (!value && value !== 0) return "";
+  const str = String(value);
+  // Split by decimal point if it exists
+  const parts = str.split(".");
+  // Format the integer part with commas
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  // Join back with decimal if it exists
+  return parts.length > 1 ? parts.join(".") : parts[0];
+};
+
 const LoanDetails = ({
     SectionHeader,
   isEditing,
@@ -134,13 +146,12 @@ const LoanDetails = ({
                       Original Principal Amount ($) *
                     </label>
                     <input
-                      type="number"
-                      step="0.01"
+                      type="text"
                       name="originalPrincipalAmount"
                       className={`form-control ${
                         fieldErrors.originalPrincipalAmount ? "is-invalid" : ""
                       }`}
-                      value={formData.originalPrincipalAmount || ""}
+                      value={formatCurrencyDisplay(formData.originalPrincipalAmount)}
                       readOnly={!isEditing}
                       onChange={handleInputChange}
                     />
@@ -157,13 +168,12 @@ const LoanDetails = ({
                       Current Principal Balance ($) *
                     </label>
                     <input
-                      type="number"
-                      step="0.01"
+                      type="text"
                       name="currentPrincipalBalance"
                       className={`form-control ${
                         fieldErrors.currentPrincipalBalance ? "is-invalid" : ""
                       }`}
-                      value={formData.currentPrincipalBalance || ""}
+                      value={formatCurrencyDisplay(formData.currentPrincipalBalance)}
                       readOnly={!isEditing}
                       onChange={handleInputChange}
                     />
@@ -201,13 +211,12 @@ const LoanDetails = ({
                       Monthly Payment Amount ($) *
                     </label>
                     <input
-                      type="number"
-                      step="0.01"
+                      type="text"
                       name="monthlyPaymentAmount"
                       className={`form-control ${
                         fieldErrors.monthlyPaymentAmount ? "is-invalid" : ""
                       }`}
-                      value={formData.monthlyPaymentAmount || ""}
+                      value={formatCurrencyDisplay(formData.monthlyPaymentAmount)}
                       readOnly={!isEditing}
                       onChange={handleInputChange}
                     />

@@ -41,6 +41,29 @@ import Step9ReviewSubmit from "./MultiStepForm/Step9ReviewSubmit";
 
 const LIBRARIES = ["places"];
 
+// Currency formatting utility functions
+const formatCurrencyInput = (value) => {
+  if (!value && value !== 0) return "";
+  // Remove all non-digit characters except decimal point
+  const numericValue = String(value).replace(/[^\d.]/g, "");
+  // Split by decimal point
+  const parts = numericValue.split(".");
+  // Format the integer part with commas
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  // Join back with decimal if it exists
+  return parts.length > 1 ? parts.join(".") : parts[0];
+};
+
+const parseCurrencyInput = (value) => {
+  if (!value) return "";
+  // Remove all non-digit characters except decimal point
+  const numericValue = String(value).replace(/[^\d.]/g, "");
+  // Return empty string if nothing remains
+  if (!numericValue) return "";
+  // Return the numeric value (without commas)
+  return numericValue;
+};
+
 const PetitionSteps = ({
   isOpen,
   onClose,
@@ -1900,6 +1923,14 @@ const PetitionSteps = ({
 
     const integerFields = ["delinquencyDaysAtFiling", "daysDelinquentAtNotice"];
 
+    // Define currency fields that should be formatted with commas
+    const currencyFields = [
+      "originalPrincipalAmount",
+      "currentPrincipalBalance",
+      "monthlyPaymentAmount",
+      "amountInDefault",
+    ];
+
     // NOTE: Removed precision handling for decimal fields (interestRatePercent, etc.)
 
     // Previously had complex logic that was converting 70 to 69.999
@@ -1909,6 +1940,13 @@ const PetitionSteps = ({
     // Handle numeric inputs for integer fields
 
     let processedValue = value;
+
+    // Handle currency fields - parse to remove commas for storage, but format for display
+    if (currencyFields.includes(name)) {
+      // Parse the input to get numeric value (remove commas)
+      const parsedValue = parseCurrencyInput(value);
+      processedValue = parsedValue;
+    }
 
     // Enforce digits-only for MIN and Loan Number fields
     if (name === "minNumber" || name === "loanNumber") {

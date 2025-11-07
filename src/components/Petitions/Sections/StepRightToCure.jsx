@@ -1,6 +1,18 @@
 import React from "react";
 import CustomDropdown from "../../shared/CustomDropdown";
 
+// Helper function to format currency with commas
+const formatCurrencyDisplay = (value) => {
+  if (!value && value !== 0) return "";
+  const str = String(value);
+  // Split by decimal point if it exists
+  const parts = str.split(".");
+  // Format the integer part with commas
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  // Join back with decimal if it exists
+  return parts.length > 1 ? parts.join(".") : parts[0];
+};
+
 const StepRightToCure = ({
     SectionHeader,
   isEditing,
@@ -129,13 +141,12 @@ const StepRightToCure = ({
                       Amount in Default ($) *
                     </label>
                     <input
-                      type="number"
-                      step="0.01"
+                      type="text"
                       name="amountInDefault"
                       className={`form-control ${
                         fieldErrors.amountInDefault ? "is-invalid" : ""
                       }`}
-                      value={formData.amountInDefault || ""}
+                      value={formatCurrencyDisplay(formData.amountInDefault)}
                       readOnly={!isEditing}
                       onChange={handleInputChange}
                     />

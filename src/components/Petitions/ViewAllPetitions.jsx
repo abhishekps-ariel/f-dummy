@@ -585,7 +585,7 @@ const ViewAllPetitions = ({ onBack }) => {
   };
 
   // Show loading state while checking organization access or fetching data
-  if (loading || !organizationCheckComplete) {
+  if (!organizationCheckComplete) {
     return (
       <div className="shadow-custom bg-white org-search-box">
         <div className="text-center py-5">
