@@ -33,6 +33,11 @@ body {
 	 font-size: var(--text-base);
     }
 
+/* Base font size for accessibility - can be overridden by TextSizeController */
+html {
+    font-size: 16px;
+}
+
 /* Global fix to prevent mobile zoom on form inputs */
 input, textarea, select {
     font-size: 16px !important;

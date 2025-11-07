@@ -2527,3 +2527,183 @@ input, textarea, select {
         padding: 16px;
     }
 }
+
+/* High Contrast Mode Styles - Border Emphasis Only */
+/* High contrast mode adds solid black borders to major layout sections for visual emphasis */
+/* Only applies to major layout components, not small inner elements */
+
+/* Cards and major containers */
+body.high-contrast .card,
+body.high-contrast .shadow-custom,
+body.high-contrast .org-search-box,
+body.high-contrast .stat-card {
+    border: 2px solid #000000 !important;
+}
+
+/* Dashboard and content sections */
+body.high-contrast .dashboard-content-section > .shadow-custom,
+body.high-contrast .review-section,
+body.high-contrast .petition-review-summary,
+body.high-contrast .join-requests-section {
+    border: 2px solid #000000 !important;
+}
+
+/* Remove border from Petitions header section and heading */
+body.high-contrast .petitions-header-section {
+    border: none !important;
+}
+
+body.high-contrast .petitions-header-section h2 {
+    border: none !important;
+    outline: none !important;
+}
+
+/* Tabs - individual border for each tab */
+body.high-contrast .tab {
+    border: 2px solid #000000 !important;
+}
+
+/* Buttons - individual border for each button */
+body.high-contrast .dashboard-btn-create,
+body.high-contrast .dashboard-btn-refresh,
+body.high-contrast .btn,
+body.high-contrast button:not(.tab-close),
+body.high-contrast .tab-close {
+    border: 2px solid #000000 !important;
+}
+
+/* Filter dropdowns - individual border */
+body.high-contrast .custom-dropdown {
+    border: 2px solid #000000 !important;
+}
+
+/* Search box - individual border */
+body.high-contrast .form-control,
+body.high-contrast input[type="text"],
+body.high-contrast input[type="search"] {
+    border: 2px solid #000000 !important;
+}
+
+/* Input group text (search icon container) */
+body.high-contrast .input-group-text {
+    border: 2px solid #000000 !important;
+}
+
+/* Ensure search input box has border even when using border-start-0 or border-end-0 classes */
+body.high-contrast .input-group .form-control.border-start-0 {
+    border-left: 2px solid #000000 !important;
+}
+
+body.high-contrast .input-group-text.border-end-0 {
+    border-right: 2px solid #000000 !important;
+}
+
+/* Date input fields in custom date range */
+body.high-contrast input[type="date"],
+body.high-contrast input[type="number"] {
+    border: 2px solid #000000 !important;
+}
+
+/* Tables - complete black outline on each row */
+/* Apply borders to table rows for visual outline */
+body.high-contrast .table tbody tr,
+body.high-contrast .table tbody tr.petition-row,
+body.high-contrast .petition-table-container .table tbody tr {
+    outline: 2px solid #000000 !important;
+    outline-offset: -2px !important;
+}
+
+/* Ensure table cells have borders to create complete row outline */
+body.high-contrast .table tbody tr td {
+    border-top: 2px solid #000000 !important;
+    border-bottom: 2px solid #000000 !important;
+    border-left: 1px solid #000000 !important;
+    border-right: 1px solid #000000 !important;
+}
+
+/* First cell in each row - ensure left border is prominent */
+body.high-contrast .table tbody tr td:first-child {
+    border-left: 2px solid #000000 !important;
+}
+
+/* Last cell in each row - ensure right border is prominent */
+body.high-contrast .table tbody tr td:last-child {
+    border-right: 2px solid #000000 !important;
+}
+
+body.high-contrast .table thead tr {
+    border-bottom: 2px solid #000000 !important;
+}
+
+/* Table header cells should also have borders */
+body.high-contrast .table thead tr th {
+    border: 2px solid #000000 !important;
+}
+
+/* Tables and table containers */
+body.high-contrast .table {
+    border: 2px solid #000000 !important;
+    border-collapse: separate !important;
+    border-spacing: 0 2px !important;
+}
+
+body.high-contrast .petition-table-container,
+body.high-contrast .table-responsive {
+    border: 2px solid #000000 !important;
+}
+
+/* Modals */
+body.high-contrast .modal-content {
+    border: 2px solid #000000 !important;
+}
+
+/* Dropdown menus */
+body.high-contrast .dropdown-menu,
+body.high-contrast .custom-dropdown-menu {
+    border: 2px solid #000000 !important;
+}
+
+/* Form sections and panels */
+body.high-contrast .form-section,
+body.high-contrast .petition-steps-body,
+body.high-contrast .review-content,
+body.high-contrast .petition-header-card {
+    border: 2px solid #000000 !important;
+}
+
+/* Alert boxes */
+body.high-contrast .alert {
+    border: 2px solid #000000 !important;
+}
+
+/* Sidebar and navigation panels */
+body.high-contrast .sidebar,
+body.high-contrast .offcanvas {
+    border: 2px solid #000000 !important;
+}
+
+/* Organization selection containers */
+body.high-contrast .selected-org-container {
+    border: 2px solid #000000 !important;
+}
+
+/* Accessibility Controls Styles */
+.accessibility-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Responsive adjustments for accessibility controls */
+@media (max-width: 767.98px) {
+    .accessibility-controls {
+        gap: 0.25rem;
+    }
+    
+    .accessibility-controls button {
+        min-width: 32px !important;
+        height: 32px !important;
+        padding: 4px 8px !important;
+        font-size: 12px !important;
+    }
+}

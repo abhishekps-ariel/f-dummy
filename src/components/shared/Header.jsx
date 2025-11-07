@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import NotificationDropdown from "./NotificationDropdown";
 import ImpersonationBanner from "./ImpersonationBanner";
+import AccessibilityControls from "./AccessibilityControls";
 import { getUserRole } from "../../utils/storage";
 
 const Header = ({ user, pageTitle, showMobileMenu = true, onLogout }) => {
@@ -27,6 +28,9 @@ const Header = ({ user, pageTitle, showMobileMenu = true, onLogout }) => {
       </div>
 
       <div className="d-flex align-items-center gap-3">
+        {/* Accessibility Controls */}
+        <AccessibilityControls />
+
         {/* Language Dropdown (Hidden on small screens) */}
         <div className="dropdown d-none d-lg-block">
           <button

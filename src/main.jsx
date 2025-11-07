@@ -3,6 +3,25 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 
+// Initialize accessibility features on page load
+// This ensures preferences are applied before React renders
+(function initializeAccessibility() {
+  // Load high contrast mode
+  const savedHighContrast = localStorage.getItem('highContrastMode');
+  if (savedHighContrast === 'true') {
+    document.body.classList.add('high-contrast');
+  }
+
+  // Load font size
+  const savedFontSize = localStorage.getItem('accessibilityFontSize');
+  if (savedFontSize) {
+    const size = parseInt(savedFontSize, 10);
+    if (size >= 12 && size <= 24) {
+      document.documentElement.style.fontSize = `${size}px`;
+    }
+  }
+})();
+
 // Handle chunk load errors globally (for dynamic imports that fail after deployment)
 window.addEventListener('error', (event) => {
   if (
