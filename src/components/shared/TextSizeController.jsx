@@ -42,15 +42,35 @@ const TextSizeController = () => {
     }
   };
 
+  // Update CSS variables based on selected text size
+  const updateCSSVariables = (baseSize) => {
+    const root = document.documentElement;
+    const multiplier = baseSize / 16; // 16px is the default base size
+    
+    // Update all CSS custom properties for text sizes
+    root.style.setProperty('--text-xl', `${36 * multiplier}px`);
+    root.style.setProperty('--text-xl-med', `${32 * multiplier}px`);
+    root.style.setProperty('--text-lg', `${28 * multiplier}px`);
+    root.style.setProperty('--text-lg-med', `${24 * multiplier}px`);
+    root.style.setProperty('--text-med', `${20 * multiplier}px`);
+    root.style.setProperty('--text-base-med', `${18 * multiplier}px`);
+    root.style.setProperty('--text-base', `${16 * multiplier}px`);
+    root.style.setProperty('--text-sm', `${14 * multiplier}px`);
+    root.style.setProperty('--text-xs', `${12 * multiplier}px`);
+  };
+
   useEffect(() => {
     // Apply saved text size on mount
     const savedTextSize = localStorage.getItem('accessibilityTextSize');
     if (savedTextSize && ['small', 'normal', 'large'].includes(savedTextSize)) {
       const size = fontSizeMap[savedTextSize];
       document.documentElement.style.fontSize = `${size}px`;
+      updateCSSVariables(size);
     } else {
       // Set default to normal if nothing is saved
-      document.documentElement.style.fontSize = `${fontSizeMap.normal}px`;
+      const defaultSize = fontSizeMap.normal;
+      document.documentElement.style.fontSize = `${defaultSize}px`;
+      updateCSSVariables(defaultSize);
     }
   }, []);
 
@@ -94,6 +114,7 @@ const TextSizeController = () => {
     // Apply the selected font size
     const size = fontSizeMap[option.value];
     document.documentElement.style.fontSize = `${size}px`;
+    updateCSSVariables(size);
     
     // Save to localStorage
     localStorage.setItem('accessibilityTextSize', option.value);

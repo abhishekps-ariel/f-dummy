@@ -38,9 +38,9 @@ html {
     font-size: 16px;
 }
 
-/* Global fix to prevent mobile zoom on form inputs */
+/* Global fix to prevent mobile zoom on form inputs - but allow accessibility scaling */
 input, textarea, select {
-    font-size: 16px !important;
+    font-size: 1rem !important;
 }
 
 /* Mobile fix for main content width and Bootstrap containers */

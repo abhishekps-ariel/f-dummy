@@ -12,7 +12,7 @@
   align-items: center;
   justify-content: space-between;
   transition: all 0.2s;
-  font-size: 14px;
+  font-size: var(--text-sm);
   line-height: 1.5;
 }
 
@@ -57,7 +57,7 @@
 .custom-dropdown-arrow {
   margin-left: 8px;
   color: #666;
-  font-size: 12px;
+  font-size: var(--text-xs);
   transition: transform 0.2s ease;
   flex-shrink: 0;
 }
@@ -75,8 +75,9 @@
   max-height: 300px;
   overflow-y: auto;
   margin-top: 4px;
-  padding: 4px 0;
+  padding: 6px 0;
   z-index: 10000;
+  min-height: fit-content;
 }
 
 .custom-dropdown-item {
@@ -84,11 +85,12 @@
   cursor: pointer;
   transition: background-color 0.2s;
   color: #272727;
-  font-size: 14px;
+  font-size: var(--text-sm);
   line-height: 1.5;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow: visible;
+  text-overflow: clip;
+  box-sizing: border-box;
 }
 
 .custom-dropdown-item:hover:not(.disabled) {

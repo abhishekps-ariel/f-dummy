@@ -19,10 +19,29 @@ import App from './App.jsx'
     large: 22,
   };
   
+  // Update CSS variables based on selected text size
+  const updateCSSVariables = (baseSize) => {
+    const root = document.documentElement;
+    const multiplier = baseSize / 16; // 16px is the default base size
+    
+    // Update all CSS custom properties for text sizes
+    root.style.setProperty('--text-xl', `${36 * multiplier}px`);
+    root.style.setProperty('--text-xl-med', `${32 * multiplier}px`);
+    root.style.setProperty('--text-lg', `${28 * multiplier}px`);
+    root.style.setProperty('--text-lg-med', `${24 * multiplier}px`);
+    root.style.setProperty('--text-med', `${20 * multiplier}px`);
+    root.style.setProperty('--text-base-med', `${18 * multiplier}px`);
+    root.style.setProperty('--text-base', `${16 * multiplier}px`);
+    root.style.setProperty('--text-sm', `${14 * multiplier}px`);
+    root.style.setProperty('--text-xs', `${12 * multiplier}px`);
+  };
+  
   const savedTextSize = localStorage.getItem('accessibilityTextSize');
   if (savedTextSize && ['small', 'normal', 'large'].includes(savedTextSize)) {
     // Use new text size preference
-    document.documentElement.style.fontSize = `${fontSizeMap[savedTextSize]}px`;
+    const size = fontSizeMap[savedTextSize];
+    document.documentElement.style.fontSize = `${size}px`;
+    updateCSSVariables(size);
   } else {
     // Fall back to old numeric font size for backward compatibility
     const savedFontSize = localStorage.getItem('accessibilityFontSize');
@@ -30,21 +49,30 @@ import App from './App.jsx'
       const size = parseInt(savedFontSize, 10);
       if (size >= 12 && size <= 24) {
         document.documentElement.style.fontSize = `${size}px`;
+        updateCSSVariables(size);
         // Migrate old value to new format - map to closest option
         if (size <= 13) {
           localStorage.setItem('accessibilityTextSize', 'small');
-          document.documentElement.style.fontSize = `${fontSizeMap.small}px`;
+          const newSize = fontSizeMap.small;
+          document.documentElement.style.fontSize = `${newSize}px`;
+          updateCSSVariables(newSize);
         } else if (size <= 19) {
           localStorage.setItem('accessibilityTextSize', 'normal');
-          document.documentElement.style.fontSize = `${fontSizeMap.normal}px`;
+          const newSize = fontSizeMap.normal;
+          document.documentElement.style.fontSize = `${newSize}px`;
+          updateCSSVariables(newSize);
         } else {
           localStorage.setItem('accessibilityTextSize', 'large');
-          document.documentElement.style.fontSize = `${fontSizeMap.large}px`;
+          const newSize = fontSizeMap.large;
+          document.documentElement.style.fontSize = `${newSize}px`;
+          updateCSSVariables(newSize);
         }
       }
     } else {
       // Default to normal
-      document.documentElement.style.fontSize = `${fontSizeMap.normal}px`;
+      const defaultSize = fontSizeMap.normal;
+      document.documentElement.style.fontSize = `${defaultSize}px`;
+      updateCSSVariables(defaultSize);
     }
   }
 })();
