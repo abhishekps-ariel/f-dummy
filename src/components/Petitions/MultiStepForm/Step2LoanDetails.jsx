@@ -27,11 +27,7 @@ const Step2LoanDetails = ({
             <h2 className="theme-color font-med mb-1">2. Loan Details</h2>
 
             <p className="text-muted small mb-3">
-              Provide the key financial information for the loan.{" "}
-              <span className="fw-semibold text-success">
-                MERS Integration:
-              </span>{" "}
-              System validates Loan Account Number.
+              Provide the key financial information for the loan.
             </p>
 
             {commonDataError && (
@@ -45,7 +41,7 @@ const Step2LoanDetails = ({
             <div className="row g-3">
               <div className="col-md-6">
                 <label htmlFor="minNumber" className="form-label">
-                  MIN Number *
+                  MIN Number (Optional)
                 </label>
 
                 <input

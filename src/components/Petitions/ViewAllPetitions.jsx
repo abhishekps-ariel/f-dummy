@@ -558,15 +558,13 @@ const ViewAllPetitions = ({ onBack }) => {
   };
 
   const handlePetitionSubmitted = () => {
-    // Refresh the table after petition is submitted/saved
-    // Use a short delay to allow backend to process the new petition
-    if (organizationId && fetchPetitionsRef.current) {
-      setTimeout(() => {
-        // Reset to first page and refresh
-        setPagination((prev) => ({ ...prev, currentPage: 1 }));
-        fetchPetitionsRef.current(1);
-      }, 500);
-    }
+    if (!organizationId || !fetchPetitionsRef.current) return;
+
+    // Give the backend a short moment to finish processing, then refresh once
+    setTimeout(() => {
+      setPagination((prev) => ({ ...prev, currentPage: 1 }));
+      fetchPetitionsRef.current(1);
+    }, 800);
   };
 
 

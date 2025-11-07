@@ -32,7 +32,7 @@ const LoanDetails = ({
               <div className="row">
                 <div className="col-md-6">
                   <div className="form-group mb-3">
-                    <label className="form-label">MIN Number</label>
+                    <label className="form-label">MIN Number (Optional)</label>
                     <input
                       type="text"
                       name="minNumber"

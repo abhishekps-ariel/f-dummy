@@ -2243,18 +2243,10 @@ const PetitionSteps = ({
 
     let hasErrors = false;
 
-    // MIN Number is required if Loan Number is not provided
+    // Loan Number is required
 
-    if (!formData.minNumber.trim() && !formData.loanNumber.trim()) {
-      errors.minNumber = "Either MIN Number or Loan Number is required";
-
-      hasErrors = true;
-    }
-
-    // Loan Number is required if MIN Number is not provided
-
-    if (!formData.loanNumber.trim() && !formData.minNumber.trim()) {
-      errors.loanNumber = "Either Loan Number or MIN Number is required";
+    if (!formData.loanNumber.trim()) {
+      errors.loanNumber = "Loan Number is required";
 
       hasErrors = true;
     }
