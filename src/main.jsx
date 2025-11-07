@@ -16,7 +16,7 @@ import App from './App.jsx'
   const fontSizeMap = {
     small: 12,
     normal: 16,
-    large: 22,
+    large: 20,
   };
   
   // Update CSS variables based on selected text size

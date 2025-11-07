@@ -1894,6 +1894,10 @@ input, textarea, select {
     position: relative;
     overflow: hidden;
 }
+.stat-card-metric {
+    min-height: 16px;
+    justify-content: center;
+}
 .stat-card .stat-count {
     font-size: var(--text-xl-med);
     color: var(--theme-color);

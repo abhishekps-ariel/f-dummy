@@ -263,19 +263,19 @@ function Dashboard() {
               <h2 className="font-med mb-4">Dashboard</h2>
               <div className="row mb-5">
                 <div className="col-md-4 mb-3">
-                  <div className="stat-card">
+                  <div className="stat-card stat-card-metric h-100">
                     <h4 className="stat-count">{petitionCounts.totalRecords}</h4>
                     <p className="stat-title">Total Petitions</p>
                   </div>
                 </div>
                 <div className="col-md-4 mb-3">
-                  <div className="stat-card">
+                  <div className="stat-card stat-card-metric h-100">
                     <h4 className="stat-count">{petitionCounts.totalSubmittedCount}</h4>
                     <p className="stat-title">Total Submitted Petitions</p>
                   </div>
                 </div>
                 <div className="col-md-4 mb-3">
-                  <div className="stat-card">
+                  <div className="stat-card stat-card-metric h-100">
                     <h4 className="stat-count">{petitionCounts.totalClosedCount}</h4>
                     <p className="stat-title">Total Closed Petitions</p>
                   </div>

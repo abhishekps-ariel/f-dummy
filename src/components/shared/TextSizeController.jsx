@@ -13,7 +13,7 @@ const TextSizeController = () => {
   const fontSizeMap = {
     small: 12,
     normal: 16,
-    large: 22,
+    large: 20,
   };
 
   // Initialize with saved text size preference or default to 'normal'
