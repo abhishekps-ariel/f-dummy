@@ -1,13 +1,13 @@
 import React from "react";
 
 const BorrowerDetails = ({
-    SectionHeader,
+  SectionHeader,
   isEditing,
   formData,
   fieldErrors,
   removeBorrower,
   updateBorrower,
-  setFormData,
+  setPrimaryBorrower,
   handleBorrowerAddressInput,
   handleBorrowerAddressSelect,
   borrowerPredictions,
@@ -187,16 +187,10 @@ const BorrowerDetails = ({
                                 type="checkbox"
                                 className="form-check-input"
                                 checked={borrower.borrowerIsPrimary || false}
-                                onChange={(e) => {
-                                  // Make this borrower primary and uncheck others
-                                  setFormData((prev) => ({
-                                    ...prev,
-                                    borrowers: prev.borrowers.map((b) =>
-                                      b.id === borrower.id
-                                        ? { ...b, borrowerIsPrimary: true }
-                                        : { ...b, borrowerIsPrimary: false }
-                                    ),
-                                  }));
+                                onChange={() => {
+                                  if (isEditing) {
+                                    setPrimaryBorrower(borrower.id);
+                                  }
                                 }}
                                 disabled={!isEditing}
                               />

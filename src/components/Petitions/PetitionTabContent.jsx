@@ -482,6 +482,35 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
     if (!petition?.details) return null;
 
     const details = petition.details;
+    const mappedBorrowers = [];
+    let hasPrimaryBorrower = false;
+
+    (details.borrowers || []).forEach((b, idx) => {
+      const isPrimary = b.borrowerIsPrimary === true;
+      if (isPrimary) hasPrimaryBorrower = true;
+      mappedBorrowers.push({
+        id: b.id || idx + 1,
+        firstName: b.firstName || "",
+        middleName: b.middleName || "",
+        lastName: b.lastName || "",
+        suffix: b.suffix || "",
+        borrowerIsPrimary: isPrimary,
+        mailingStreet1: b.mailingStreet1 || "",
+        mailingCity: b.mailingCity || "",
+        mailingState: b.mailingState || "",
+        mailingZip: b.mailingZip || "",
+        phone: b.phone || "",
+        email: b.email || "",
+      });
+    });
+
+    if (!hasPrimaryBorrower && mappedBorrowers.length > 0) {
+      mappedBorrowers[0] = {
+        ...mappedBorrowers[0],
+        borrowerIsPrimary: true,
+      };
+    }
+
     return {
       // Property Details
       propertyStreet1: details.property?.propertyStreet1 || "",
@@ -511,21 +540,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
       delinquencyDaysAtFiling: details.loan?.delinquencyDaysAtFiling || 0,
 
       // Borrowers
-      borrowers:
-        details.borrowers?.map((b, idx) => ({
-          id: b.id || idx + 1,
-          firstName: b.firstName || "",
-          middleName: b.middleName || "",
-          lastName: b.lastName || "",
-          suffix: b.suffix || "",
-          borrowerIsPrimary: b.borrowerIsPrimary || idx === 0,
-          mailingStreet1: b.mailingStreet1 || "",
-          mailingCity: b.mailingCity || "",
-          mailingState: b.mailingState || "",
-          mailingZip: b.mailingZip || "",
-          phone: b.phone || "",
-          email: b.email || "",
-        })) || [],
+      borrowers: mappedBorrowers,
 
       // Filing Entity
       filingEntityLegalName: details.filingEntity?.filingEntityLegalName || "",
@@ -1057,26 +1072,31 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
 
   // Add borrower
   const addBorrower = () => {
-    setFormData((prev) => ({
-      ...prev,
-      borrowers: [
-        ...prev.borrowers,
-        {
-          id: Date.now(),
-          firstName: "",
-          middleName: "",
-          lastName: "",
-          suffix: "",
-          borrowerIsPrimary: false,
-          mailingStreet1: "",
-          mailingCity: "",
-          mailingState: "",
-          mailingZip: "",
-          phone: "",
-          email: "",
-        },
-      ],
-    }));
+    setFormData((prev) => {
+      const hasPrimary = (prev.borrowers || []).some(
+        (b) => b.borrowerIsPrimary
+      );
+
+      const newBorrower = {
+        id: Date.now(),
+        firstName: "",
+        middleName: "",
+        lastName: "",
+        suffix: "",
+        borrowerIsPrimary: hasPrimary ? false : true,
+        mailingStreet1: "",
+        mailingCity: "",
+        mailingState: "",
+        mailingZip: "",
+        phone: "",
+        email: "",
+      };
+
+      return {
+        ...prev,
+        borrowers: [...prev.borrowers, newBorrower],
+      };
+    });
   };
 
   // Remove borrower
@@ -1087,12 +1107,23 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
       )?.borrowerIsPrimary;
 
       setFormData((prev) => {
-        const newBorrowers = prev.borrowers.filter(
-          (borrower) => borrower.id !== borrowerId
-        );
+        const newBorrowers = prev.borrowers
+          .filter((borrower) => borrower.id !== borrowerId)
+          .map((borrower) => ({ ...borrower }));
 
-        if (isRemovingPrimary && newBorrowers.length > 0) {
-          newBorrowers[0].borrowerIsPrimary = true;
+        const hasPrimary = newBorrowers.some((b) => b.borrowerIsPrimary);
+
+        if ((!hasPrimary || isRemovingPrimary) && newBorrowers.length > 0) {
+          newBorrowers[0] = {
+            ...newBorrowers[0],
+            borrowerIsPrimary: true,
+          };
+          for (let i = 1; i < newBorrowers.length; i++) {
+            newBorrowers[i] = {
+              ...newBorrowers[i],
+              borrowerIsPrimary: false,
+            };
+          }
         }
 
         return {
@@ -1101,6 +1132,16 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
         };
       });
     }
+  };
+
+  const setPrimaryBorrower = (borrowerId) => {
+    setFormData((prev) => ({
+      ...prev,
+      borrowers: prev.borrowers.map((borrower) => ({
+        ...borrower,
+        borrowerIsPrimary: borrower.id === borrowerId,
+      })),
+    }));
   };
 
   // Add loan assignee
@@ -1863,7 +1904,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
             fieldErrors={fieldErrors}
             removeBorrower={removeBorrower}
             updateBorrower={updateBorrower}
-            setFormData={setFormData}
+            setPrimaryBorrower={setPrimaryBorrower}
             handleBorrowerAddressInput={handleBorrowerAddressInput}
             handleBorrowerAddressSelect={handleBorrowerAddressSelect}
             borrowerPredictions={borrowerPredictions}
