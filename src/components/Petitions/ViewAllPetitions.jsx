@@ -448,11 +448,13 @@ const ViewAllPetitions = ({ onBack }) => {
 
   // Handle filter changes with debouncing (excluding custom date fields)
   useEffect(() => {
+    // Skip if filters are being reset to defaults (empty search and "all" status)
+    // This prevents unnecessary fetches when handleRefresh is called
+    if (!organizationId) return;
+    
     const timeoutId = setTimeout(() => {
-      if (organizationId) {
-        setPagination((prev) => ({ ...prev, currentPage: 1 }));
-        fetchPetitions(1);
-      }
+      setPagination((prev) => ({ ...prev, currentPage: 1 }));
+      fetchPetitions(1);
     }, 500); // 500ms debounce
 
     return () => clearTimeout(timeoutId);
@@ -556,20 +558,15 @@ const ViewAllPetitions = ({ onBack }) => {
   };
 
   const handlePetitionSubmitted = () => {
-    // Clear all filters and search, then refresh the table
-    // The backend needs time to process and index the new petition
-    // So we'll refresh multiple times with delays to ensure the new petition appears
-    
-    // First refresh - clear filters and refresh after a short delay
-    setTimeout(() => {
-      handleRefresh();
-      // Second refresh - in case backend took longer to process the new petition
+    // Refresh the table after petition is submitted/saved
+    // Use a short delay to allow backend to process the new petition
+    if (organizationId && fetchPetitionsRef.current) {
       setTimeout(() => {
-        if (organizationId && fetchPetitionsRef.current) {
-          fetchPetitionsRef.current(1);
-        }
-      }, 1000);
-    }, 500);
+        // Reset to first page and refresh
+        setPagination((prev) => ({ ...prev, currentPage: 1 }));
+        fetchPetitionsRef.current(1);
+      }, 500);
+    }
   };
 
 
@@ -679,6 +676,16 @@ const ViewAllPetitions = ({ onBack }) => {
                           </li>
                         </ul>
                       </div>
+
+                      {/* Refresh Button */}
+                      <button
+                        className="dashboard-btn-refresh"
+                        onClick={handleRefresh}
+                        title="Refresh petitions"
+                      >
+                        <i className="fa-solid fa-sync-alt me-2"></i>
+                        Refresh
+                      </button>
                     </div>
                   </div>
 
@@ -686,6 +693,13 @@ const ViewAllPetitions = ({ onBack }) => {
                   <div className="d-md-none">
                     <div className="d-flex align-items-center justify-content-between mb-3">
                       <h2 className="font-med mb-0">Petitions</h2>
+                      <button
+                        className="dashboard-btn-refresh"
+                        onClick={handleRefresh}
+                        title="Refresh petitions"
+                      >
+                        <i className="fa-solid fa-sync-alt"></i>
+                      </button>
                     </div>
 
                     <div className="row g-2">
@@ -805,7 +819,7 @@ const ViewAllPetitions = ({ onBack }) => {
                       ]}
                     />
                   </div>
-                  <div className="col-8 col-md-3">
+                  <div className="col-12 col-md-3">
                     <CustomDropdown
                       name="sortBy"
                       value={`${sortBy}-${sortOrder}`}
@@ -824,20 +838,6 @@ const ViewAllPetitions = ({ onBack }) => {
                         { value: "petitionNumber-desc", label: "Petition Number (Z-A)" },
                       ]}
                     />
-                  </div>
-                  <div className="col-4 col-md-1">
-                    <button
-                      className="dashboard-btn-refresh w-100"
-                      onClick={handleRefresh}
-                      disabled={loading}
-                      title="Reset all filters and refresh"
-                    >
-                      <i
-                        className={`fa-solid fa-refresh ${
-                          loading ? "fa-spin" : ""
-                        }`}
-                      ></i>
-                    </button>
                   </div>
                 </div>
 
