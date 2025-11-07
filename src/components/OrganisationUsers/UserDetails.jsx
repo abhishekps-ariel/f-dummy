@@ -240,3 +240,4 @@ const UserDetails = ({ userId, onClose }) => {
 };
 
 export default UserDetails;
+

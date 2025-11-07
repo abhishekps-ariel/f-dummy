@@ -1022,7 +1022,7 @@ const ViewAllPetitions = ({ onBack }) => {
                             style={{ cursor: "pointer" }}
                           >
                             <td>
-                              <span className="fw-medium">
+                              <span className="fw-medium" style={{ color: "#015080" }}>
                                 {petition.petitionNumber}
                               </span>
                             </td>
@@ -1136,7 +1136,7 @@ const ViewAllPetitions = ({ onBack }) => {
                             <div className="d-flex justify-content-between align-items-center">
                               <div className="petition-main-info">
                                 <div className="d-flex align-items-center gap-2 mb-1">
-                                  <span className="fw-medium petition-number">
+                                  <span className="fw-medium petition-number" style={{ color: "#015080" }}>
                                     {petition.petitionNumber}
                                   </span>
                                   <span

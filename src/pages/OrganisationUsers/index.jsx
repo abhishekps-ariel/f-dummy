@@ -7,7 +7,7 @@ import { ROUTES } from '../../constants/routerConstants';
 import Sidebar from '../../components/shared/Sidebar';
 import Header from '../../components/shared/Header';
 import { getorganisationUsersList } from "../../services/authService";
-import UserDetails from "./UserDetails";
+import UserDetails from "../../components/OrganisationUsers/UserDetails";
 
 // Helper function to check if user is org admin (matches Login.jsx logic)
 // When impersonating, we strictly check the impersonated user's role only
@@ -58,7 +58,7 @@ const isOrgAdminUser = (userData, isImpersonating = false) => {
   return false;
 };
 
-const Users = () => {
+const OrganisationUsers = () => {
   const [users, setUsers] = useState([]);
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize] = useState(10);
@@ -563,4 +563,5 @@ const Users = () => {
   );
 };
 
-export default Users;
+export default OrganisationUsers;
+

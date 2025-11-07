@@ -3,7 +3,6 @@ import { createBrowserRouter } from 'react-router-dom';
 import Layout from '../layout/Layout';
 import RouteGuard from './RouteGuard';
 import { ROUTES } from '../constants/routerConstants';
-import Users from '../pages/Organisation/Users';
 
 const Home = lazy(() => import('../pages/Home'));
 const Dashboard = lazy(() => import('../pages/Dashboard'));
@@ -13,6 +12,7 @@ const Messages = lazy(() => import('../pages/Messages'));
 const FAQ = lazy(() => import('../pages/FAQ'));
 const Training = lazy(() => import('../pages/Training'));
 const OrganizationJoinRequests = lazy(() => import('../pages/OrganizationJoinRequests'));
+const OrganisationUsers = lazy(() => import('../pages/OrganisationUsers'));
 const Login = lazy(() => import('../pages/Auth/Login'));
 const Register = lazy(() => import('../pages/Auth/Register'));
 const ForgotPassword = lazy(() => import('../pages/Auth/ForgotPassword'));
@@ -126,7 +126,7 @@ export const router = createBrowserRouter([
     path: ROUTES.ORGANISATION_USERS,
     element: (
       <Layout>
-        <Users/>
+        <OrganisationUsers/>
       </Layout>
     ),
   },
