@@ -50,6 +50,8 @@ const ViewAllPetitions = ({ onBack }) => {
   
   // Use ref to store fetchPetitions so event listener always has latest version
   const fetchPetitionsRef = useRef();
+  // Track if this is the initial mount to avoid running dateFilter useEffect on mount
+  const isInitialMount = useRef(true);
 
   // Get user info from auth context
   const { user } = useAuth();
@@ -169,13 +171,8 @@ const ViewAllPetitions = ({ onBack }) => {
     if (value !== "custom") {
       setCustomDateFrom("");
       setCustomDateTo("");
-      // Only trigger fetch for non-custom options
-      if (organizationId) {
-        setPagination((prev) => ({ ...prev, currentPage: 1 }));
-        fetchPetitions(1);
-      }
     }
-    // For "custom", don't trigger fetch - wait for Apply button click
+    // Don't trigger fetch here - let useEffect handle it after state update
   };
 
   // Fetch petitions using paged API
@@ -460,10 +457,24 @@ const ViewAllPetitions = ({ onBack }) => {
 
     return () => clearTimeout(timeoutId);
   }, [searchQuery, statusFilter]);
-  // Note: dateFilter removed from dependencies - custom range handled separately via Apply button
 
-  // Custom date range changes are handled manually via Apply Filter button
-  // No automatic triggering to prevent page reloads while user is selecting dates
+  // Handle date filter changes (excluding custom range which requires Apply button)
+  useEffect(() => {
+    // Skip on initial mount - let the mount useEffect handle initial data load
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+    
+    // Only trigger fetch for non-custom date filters and after organization check is complete
+    // Custom range is handled separately via Apply Filter button
+    if (dateFilter !== "custom" && organizationId && organizationCheckComplete) {
+      setPagination((prev) => ({ ...prev, currentPage: 1 }));
+      fetchPetitions(1);
+    }
+  }, [dateFilter]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Note: fetchPetitions uses ref pattern and reads latest state values from closure
+  // We only want to trigger when dateFilter changes, not on mount
 
   // Handle sorting changes
   useEffect(() => {
