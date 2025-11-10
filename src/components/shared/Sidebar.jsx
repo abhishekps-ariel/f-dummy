@@ -146,7 +146,7 @@ const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
                       handleNavigation("organization-join-requests");
                     }}
                   >
-                    <i className="fa-solid fa-users me-2"></i>
+                    <i className="fa-solid fa-user-plus me-2"></i>
                     <span>Join Requests</span>
                   </a>
                 </li>
@@ -315,7 +315,7 @@ const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
                       }
                     }}
                   >
-                    <i className="fa-solid fa-users me-2"></i>
+                    <i className="fa-solid fa-user-plus me-2"></i>
                     <span>Join Requests</span>
                   </a>
                 </li>
