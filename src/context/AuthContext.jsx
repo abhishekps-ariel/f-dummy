@@ -31,28 +31,21 @@ export const AuthProvider = ({ children }) => {
   // Helper function to check if user is org admin
   const isOrgAdminUser = (userData) => {
     if (!userData) return false;
-    
-    // Check if isManager is true
     if (userData.isManager === true) {
       return true;
     }
-    
-    // Check roles array for "Organisation Admin"
     if (userData.roles && Array.isArray(userData.roles)) {
       return userData.roles.some(
         (role) =>
-          role === "Organisation Admin" ||
-          role === "Organization Admin" ||
-          role === "orgAdmin"
+          role === 'Organisation Admin' ||
+          role === 'Organization Admin' ||
+          role === 'orgAdmin'
       );
     }
-    
-    // Check single role field
     const userRole = getUserRole(userData);
-    if (userRole === "orgAdmin" || userRole === "Organisation Admin" || userRole === "Organization Admin") {
+    if (userRole === 'orgAdmin' || userRole === 'Organisation Admin' || userRole === 'Organization Admin') {
       return true;
     }
-    
     return false;
   };
 
@@ -64,9 +57,7 @@ export const AuthProvider = ({ children }) => {
     for (const candidate of preferredIds) {
       if (
         candidate &&
-        organizationList.some(
-          (org) => org?.organizationId && org.organizationId === candidate
-        )
+        organizationList.some((org) => org?.organizationId && org.organizationId === candidate)
       ) {
         return candidate;
       }
@@ -81,32 +72,50 @@ export const AuthProvider = ({ children }) => {
   };
 
   const persistActiveOrganizationSelection = (organizationId) => {
+    console.log('[AuthContext] Persisting active organization id:', organizationId);
     setActiveOrganizationIdState(organizationId ?? null);
     persistActiveOrganizationId(organizationId ?? null);
   };
 
+  const buildFallbackOrganization = (organizationId, name = 'Organization') => ({
+    organizationId,
+    name,
+    isPrimary: true,
+    organizationEmail: '',
+    organizationPhone: '',
+  });
+
   const initializeOrganizationsState = (userData, { preferStoredSelection = true } = {}) => {
-    const baseList = Array.isArray(userData?.organizations)
+    const storedActiveId = preferStoredSelection ? getStoredActiveOrganizationId() : null;
+    console.log('[AuthContext] initializeOrganizationsState', {
+      userOrganizations: userData?.organizations,
+      storedActiveId,
+      userOrganizationId: userData?.organizationId,
+    });
+
+    let baseList = Array.isArray(userData?.organizations)
       ? userData.organizations.filter((org) => Boolean(org?.organizationId))
       : [];
+
+    if (baseList.length === 0 && storedActiveId) {
+      console.log('[AuthContext] Rebuilding org list from stored active id');
+      baseList = [buildFallbackOrganization(storedActiveId)];
+    }
 
     const fallbackList =
       baseList.length === 0 && userData?.organizationId
         ? [
-            {
-              organizationId: userData.organizationId,
-              name: userData.organizationName || '',
-              isPrimary: true,
-              organizationEmail: userData.organizationEmail || '',
-              organizationPhone: userData.organizationPhone || '',
-            },
+            buildFallbackOrganization(
+              userData.organizationId,
+              userData.organizationName || 'Organization'
+            ),
           ]
         : [];
 
     const organizationList = [...baseList, ...fallbackList];
+    console.log('[AuthContext] Final organization list after initialization', organizationList);
     setOrganizations(organizationList);
 
-    const storedActiveId = preferStoredSelection ? getStoredActiveOrganizationId() : null;
     const fallbackId = userData?.organizationId ?? null;
     const resolvedActiveId = resolveActiveOrganizationId(
       organizationList,
@@ -114,7 +123,10 @@ export const AuthProvider = ({ children }) => {
       fallbackId
     );
 
-    persistActiveOrganizationSelection(resolvedActiveId);
+    console.log('[AuthContext] Resolved active organization id:', resolvedActiveId);
+    if (resolvedActiveId) {
+      persistActiveOrganizationSelection(resolvedActiveId);
+    }
 
     return {
       organizationList,
@@ -126,6 +138,14 @@ export const AuthProvider = ({ children }) => {
     const fetchActiveOrganizationDetails = async () => {
       if (!activeOrganizationId) {
         setOrganization(null);
+        return;
+      }
+
+      const fromList = organizations.find(
+        (org) => org.organizationId === activeOrganizationId
+      );
+      if (fromList) {
+        setOrganization(fromList);
         return;
       }
 
@@ -142,22 +162,80 @@ export const AuthProvider = ({ children }) => {
     };
 
     fetchActiveOrganizationDetails();
-  }, [activeOrganizationId]);
+  }, [activeOrganizationId, organizations]);
+
+  const applyJoinRequestFallback = async (userToCheck) => {
+    try {
+      const requestsResponse = await getUserJoinRequests();
+      if (requestsResponse.isSuccess && Array.isArray(requestsResponse.data)) {
+        const approvedRequest = requestsResponse.data.find(
+          (request) => request.status === 1 && request.organizationId
+        );
+
+        const userOrgId = userToCheck?.organizationId;
+        const approvedOrgId = approvedRequest?.organizationId;
+
+        console.log('[AuthContext] Join request fallback result', {
+          approvedRequest,
+          approvedOrgId,
+          userOrgId,
+        });
+
+        if (approvedRequest && approvedOrgId) {
+          const orgDetail = approvedRequest.organizationDetail || {};
+          const fallbackOrganization = {
+            organizationId: approvedOrgId,
+            name: orgDetail.name || 'Organization',
+            type: orgDetail.type || '',
+            addressStreet1: orgDetail.addressStreet1 || '',
+            addressStreet2: orgDetail.addressStreet2 || '',
+            addressCity: orgDetail.addressCity || '',
+            addressState: orgDetail.addressState || '',
+            addressZip: orgDetail.addressZip || '',
+            primaryContactName: orgDetail.primaryContactName || '',
+            primaryContactEmail: orgDetail.primaryContactEmail || '',
+            primaryContactPhone: orgDetail.primaryContactPhone || '',
+            isPrimary: true,
+          };
+
+          setOrganizations([fallbackOrganization]);
+          setOrganization(fallbackOrganization);
+
+          const orgIdMatches =
+            !userOrgId ||
+            (typeof userOrgId === 'string' &&
+              userOrgId.trim() !== '' &&
+              userOrgId === approvedOrgId);
+
+          if (orgIdMatches) {
+            console.log('[AuthContext] Join request fallback succeeded');
+            setHasOrganizationAccess(true);
+            persistActiveOrganizationSelection(approvedOrgId);
+            return true;
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error checking join requests:', error);
+    }
+
+    console.log('[AuthContext] Join request fallback failed');
+    return false;
+  };
 
   // Check organization access based on organizationId in user object
   const checkOrganizationAccess = async (userDataOverride = null) => {
-    // Use provided userData or fall back to state user
     const userToCheck = userDataOverride || user;
-    
-    // If userDataOverride is provided, we're checking during login, so skip isAuthenticated check
+
     if (!userToCheck) {
+      console.log('[AuthContext] No user data available for organization access check');
       setHasOrganizationAccess(false);
       setOrganizationCheckComplete(true);
       return;
     }
-    
-    // If using state user, check isAuthenticated
+
     if (!userDataOverride && !isAuthenticated) {
+      console.log('[AuthContext] User not authenticated during access check');
       setHasOrganizationAccess(false);
       setOrganizationCheckComplete(true);
       return;
@@ -170,17 +248,12 @@ export const AuthProvider = ({ children }) => {
       });
       const hasOrganizations = organizationList.length > 0 && Boolean(resolvedActiveId);
 
-      if (isOrgAdmin) {
-        if (hasOrganizations) {
-          setHasOrganizationAccess(true);
-        } else {
-          setHasOrganizationAccess(false);
-          setOrganization(null);
-          persistActiveOrganizationSelection(null);
-        }
-        setOrganizationCheckComplete(true);
-        return;
-      }
+      console.log('[AuthContext] access check summary', {
+        isOrgAdmin,
+        hasOrganizations,
+        resolvedActiveId,
+        organizationList,
+      });
 
       if (hasOrganizations) {
         setHasOrganizationAccess(true);
@@ -188,48 +261,14 @@ export const AuthProvider = ({ children }) => {
         return;
       }
 
-      try {
-        const requestsResponse = await getUserJoinRequests();
-        if (requestsResponse.isSuccess && Array.isArray(requestsResponse.data)) {
-          const approvedRequest = requestsResponse.data.find(
-            (request) => request.status === 1 && request.organizationId
-          );
-
-          const userOrgId = userToCheck.organizationId;
-          const approvedOrgId = approvedRequest?.organizationId;
-
-          if (approvedRequest && approvedOrgId) {
-            const orgIdMatches =
-              !userOrgId ||
-              (typeof userOrgId === 'string' &&
-                userOrgId.trim() !== '' &&
-                userOrgId === approvedOrgId);
-
-            if (orgIdMatches) {
-              setHasOrganizationAccess(true);
-              persistActiveOrganizationSelection(approvedOrgId);
-            } else {
-              setHasOrganizationAccess(false);
-              setOrganization(null);
-              persistActiveOrganizationSelection(null);
-            }
-          } else {
-            setHasOrganizationAccess(false);
-            setOrganization(null);
-            persistActiveOrganizationSelection(null);
-          }
-        } else {
-          setHasOrganizationAccess(false);
-          setOrganization(null);
-          persistActiveOrganizationSelection(null);
-        }
-      } catch (error) {
-        console.error('Error checking join requests:', error);
+      const fallbackApplied = await applyJoinRequestFallback(userToCheck);
+      if (!fallbackApplied) {
         setHasOrganizationAccess(false);
         setOrganization(null);
         persistActiveOrganizationSelection(null);
       }
     } catch (error) {
+      console.error('[AuthContext] Error during organization access check', error);
       setHasOrganizationAccess(false);
       setOrganization(null);
       persistActiveOrganizationSelection(null);
@@ -242,6 +281,11 @@ export const AuthProvider = ({ children }) => {
     const checkAuthStatus = async () => {
       try {
         const { token, user: userData, activeOrganizationId: storedActiveOrgId } = getAuthData();
+
+        console.log('[AuthContext] checkAuthStatus', {
+          tokenPresent: Boolean(token),
+          storedActiveOrgId,
+        });
 
         if (token && userData) {
           setIsAuthenticated(true);
@@ -261,6 +305,7 @@ export const AuthProvider = ({ children }) => {
           setOrganizationCheckComplete(false);
         }
       } catch (error) {
+        console.error('[AuthContext] Error during auth status check', error);
         setIsAuthenticated(false);
         setUser(null);
         setOrganization(null);
@@ -280,20 +325,18 @@ export const AuthProvider = ({ children }) => {
   // Function to validate token expiry
   const isTokenExpired = (token) => {
     if (!token) return true;
-    
+
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
       const currentTime = Math.floor(Date.now() / 1000);
       const expirationTime = payload.exp;
-      
+
       // Consider token expired if it expires within 5 minutes (300 seconds)
-      return currentTime >= (expirationTime - 300);
+      return currentTime >= expirationTime - 300;
     } catch (error) {
       return true;
     }
   };
-
-
 
   const login = async (userData) => {
     setIsAuthenticated(true);
@@ -312,7 +355,7 @@ export const AuthProvider = ({ children }) => {
     setActiveOrganizationIdState(null);
     setHasOrganizationAccess(false);
     setOrganizationCheckComplete(false);
-    
+
     // Clear petition form data from localStorage on logout
     try {
       localStorage.removeItem('petitionFormData');
@@ -334,13 +377,33 @@ export const AuthProvider = ({ children }) => {
 
   const setActiveOrganization = (organizationId) => {
     persistActiveOrganizationSelection(organizationId);
+    setHasOrganizationAccess(Boolean(organizationId));
+    if (organizationId) {
+      const match = organizations.find((org) => org.organizationId === organizationId);
+      setOrganization(match || { organizationId });
+    } else {
+      setOrganization(null);
+    }
   };
 
   const syncUserData = (updatedUser) => {
     if (!updatedUser) return;
-    setUser(updatedUser);
-    updateStoredUser(updatedUser);
-    initializeOrganizationsState(updatedUser, { preferStoredSelection: true });
+
+    setUser((prevUser) => {
+      const mergedUser = {
+        ...(prevUser || {}),
+        ...updatedUser,
+        organizations:
+          updatedUser.organizations !== undefined
+            ? updatedUser.organizations
+            : prevUser?.organizations || [],
+      };
+
+      console.log('[AuthContext] syncUserData merged result', mergedUser);
+      updateStoredUser(mergedUser);
+      initializeOrganizationsState(mergedUser, { preferStoredSelection: true });
+      return mergedUser;
+    });
   };
 
   const updateUserSignature = (signatureData) => {
@@ -383,4 +446,6 @@ export const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   );
 };
+
+export default AuthContext;
 
