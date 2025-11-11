@@ -52,7 +52,7 @@ const Petitions = () => {
           if (section === 'dashboard') {
             navigate(ROUTES.DASHBOARD);
           } else if (section === 'organizations') {
-            navigate(ROUTES.DASHBOARD, { state: { activeSection: 'organizations' } });
+            navigate(ROUTES.ORGANIZATIONS);
           } else if (section === 'messages') {
             navigate(ROUTES.MESSAGES);
           } else if (section === 'faq') {

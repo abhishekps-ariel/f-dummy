@@ -11,6 +11,16 @@ export const getAllOrganizations = async () => {
   };
 };
 
+export const getOrganizationsByUser = async (userId) => {
+  const response = await client.post(ORGANIZATION_ENDPOINTS.GET_BY_USER(userId));
+
+  return {
+    isSuccess: response.data.success || true,
+    msg: response.data.message || "Organizations fetched successfully",
+    data: response.data.data || response.data,
+  };
+};
+
 export const searchOrganizations = async (query) => {
   const response = await client.get(ORGANIZATION_ENDPOINTS.SEARCH, {
     params: { query },

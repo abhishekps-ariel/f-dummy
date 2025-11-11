@@ -7,7 +7,18 @@ import { getUserJoinRequests } from '../services/organizationService';
 import { getUserRole } from '../utils/storage';
 
 const Layout = ({ children }) => {
-  const { isAuthenticated, isLoading, user, hasOrganizationAccess, organizationCheckComplete, setHasOrganizationAccess, setOrganizationCheckComplete, setOrganization } = useAuth();
+  const {
+    isAuthenticated,
+    isLoading,
+    user,
+    hasOrganizationAccess,
+    organizationCheckComplete,
+    setHasOrganizationAccess,
+    setOrganizationCheckComplete,
+    setOrganization,
+    activeOrganizationId,
+    setActiveOrganization,
+  } = useAuth();
   const location = useLocation();
 
   // Helper to check if user is org admin
@@ -43,7 +54,7 @@ const Layout = ({ children }) => {
             (request) => request.status === 1
           );
           
-          const userOrgId = user.organizationId;
+          const userOrgId = user.organizationId || activeOrganizationId;
           const approvedOrgId = approvedRequest?.organizationId;
           
           // If user has an approved request, grant access
@@ -71,6 +82,9 @@ const Layout = ({ children }) => {
                   }
                 } catch (error) {
                   setOrganization({ id: approvedOrgId });
+                }
+                if (typeof setActiveOrganization === 'function') {
+                  setActiveOrganization(approvedOrgId);
                 }
               }
             } else {
@@ -104,7 +118,7 @@ const Layout = ({ children }) => {
 
     recheckAccess();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.pathname, isAuthenticated, user, organizationCheckComplete]);
+  }, [location.pathname, isAuthenticated, user, organizationCheckComplete, activeOrganizationId]);
 
   if (isLoading) {
     return <LoadingFallback />;

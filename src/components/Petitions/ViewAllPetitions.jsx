@@ -15,6 +15,7 @@ import "./TabbedWorkspace.css";
 import { getUserById, getSignatureById } from "../../services/authService";
 import { useAuth } from "../../context/AuthContext";
 import { ROUTES } from "../../constants/routerConstants";
+import { getActiveOrganizationId } from "../../utils/storage";
 
 const ViewAllPetitions = ({ onBack }) => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -54,7 +55,10 @@ const ViewAllPetitions = ({ onBack }) => {
   const isInitialMount = useRef(true);
 
   // Get user info from auth context
-  const { user } = useAuth();
+  const {
+    user,
+    organization: organizationFromAuth,
+  } = useAuth();
   const navigate = useNavigate();
 
   // Validate user profile before opening petition creation modal
@@ -162,7 +166,13 @@ const ViewAllPetitions = ({ onBack }) => {
 
   // Get organization ID from user object (stored in browser storage) or organization context
   // Priority: user.organizationId > organization.id
-  const organizationId = user?.organizationId || organization?.id || null;
+  const storedActiveOrganizationId = getActiveOrganizationId();
+  const organizationId =
+    storedActiveOrganizationId ||
+    user?.organizationId ||
+    organization?.id ||
+    organizationFromAuth?.id ||
+    null;
 
   // Handle date filter change
   const handleDateFilterChange = (value) => {

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { ROUTES } from "../../constants/routerConstants";
 import { logout as logoutApi } from "../../services/authService";
-import { clearAuthData, getAuthData, getUserRole, getImpersonationState } from "../../utils/storage";
+import { clearAuthData, getAuthData, getUserRole, getImpersonationState, getActiveOrganizationId } from "../../utils/storage";
 import Sidebar from "../../components/shared/Sidebar";
 import Header from "../../components/shared/Header";
 import { JoinRequestTabProvider } from "../../context/JoinRequestTabContext";
@@ -67,7 +67,9 @@ const OrganizationJoinRequests = () => {
   
   // Check if user is org admin (pass impersonation state for stricter checking)
   const isOrgAdmin = isOrgAdminUser(user, isImpersonating);
-  const organizationId = user?.organizationId || organization?.id;
+  const storedActiveOrganizationId = getActiveOrganizationId();
+  const organizationId =
+    storedActiveOrganizationId || user?.organizationId || organization?.id;
 
   const handleLogout = async () => {
     try {

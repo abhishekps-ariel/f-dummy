@@ -11,6 +11,7 @@ import { usePetitionCommonData } from "../../hooks/usePetitionCommonData";
 import { usePetitions } from "../../hooks/usePetitions";
 
 import { useAuth } from "../../context/AuthContext";
+import { getActiveOrganizationId } from "../../utils/storage";
 
 import { usePetitionWizard } from "../../context/PetitionWizardContext";
 
@@ -164,11 +165,21 @@ const PetitionSteps = ({
 
   // Get user info from auth context
 
-  const { user } = useAuth();
+  const {
+    user,
+    organization: organizationFromAuth,
+  } = useAuth();
 
   // Get organization ID from user object (stored in browser storage) or organization prop/context
   // Priority: user.organizationId > organization.id (from prop) > organizationFromContext.id
-  const organizationId = user?.organizationId || organization?.id || organizationFromContext?.id || null;
+  const storedActiveOrganizationId = getActiveOrganizationId();
+  const organizationId =
+    storedActiveOrganizationId ||
+    user?.organizationId ||
+    organization?.id ||
+    organizationFromContext?.id ||
+    organizationFromAuth?.id ||
+    null;
 
   // Google Places API state
 

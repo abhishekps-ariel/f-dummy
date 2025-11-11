@@ -3,9 +3,16 @@ import { useAuth } from '../context/AuthContext';
 import petitionApiService from '../services/petitionApiService';
 import { getOrganizationById } from '../services/organizationService';
 import { toast } from 'react-toastify';
+import { getActiveOrganizationId } from '../utils/storage';
 
 export const usePetitions = () => {
-  const { organization, user, isAuthenticated, hasOrganizationAccess, organizationCheckComplete } = useAuth();
+  const {
+    organization,
+    user,
+    isAuthenticated,
+    hasOrganizationAccess,
+    organizationCheckComplete,
+  } = useAuth();
   const [petitions, setPetitions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -16,9 +23,11 @@ export const usePetitions = () => {
     totalClosedCount: 0
   });
 
-  // Get organization ID from user object (stored in browser storage) or organization context
-  // Priority: user.organizationId > organization.id
-  const userOrganizationId = user?.organizationId || organization?.id || null;
+  // Get organization ID from user object or active organization context
+  // Priority: activeOrganizationId > user.organizationId > organization.id
+  const storedActiveOrganizationId = getActiveOrganizationId();
+  const userOrganizationId =
+    storedActiveOrganizationId || user?.organizationId || organization?.id || null;
 
 
   // Fetch recent petitions for the user's organization (last 5 updated)

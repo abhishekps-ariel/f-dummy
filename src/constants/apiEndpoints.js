@@ -27,6 +27,7 @@ export const AUTH_ENDPOINTS = {
 export const ORGANIZATION_ENDPOINTS = {
   GET_ALL: "/Organization",
   GET_BY_ID: (id) => `/Organization/${id}`,
+  GET_BY_USER: (userId) => `/Organization/get-organizations-by-user/${userId}`,
   SEARCH: "/Organization/search",
   CREATE: "/Organization/create-and-request-to-join",
   UPDATE: (id) => `/Organization/${id}`,

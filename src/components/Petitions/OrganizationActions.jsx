@@ -13,8 +13,10 @@ import { formatDate } from "../../utils/dateUtils";
 import { getAuthData } from "../../utils/storage";
 import { useJsApiLoader } from "@react-google-maps/api";
 import Config from "../../config/index";
+import { useAuth } from "../../context/AuthContext";
 
 const OrganizationActions = () => {
+  const { syncUserData, setActiveOrganization } = useAuth();
   // Google Maps API configuration
   const { isLoaded, loadError } = useJsApiLoader({
     id: "google-map-script",
@@ -746,6 +748,16 @@ const OrganizationActions = () => {
         toast.success(response.msg || "Join request submitted successfully!");
         loadJoinRequests();
         setSelectedOrganization(null);
+        const updatedUserDetail = response.data?.userDetail;
+        if (updatedUserDetail) {
+          syncUserData(updatedUserDetail);
+        if (updatedUserDetail.organizations) {
+          const primaryOrg = updatedUserDetail.organizations.find((org) => org.isPrimary);
+          if (primaryOrg?.organizationId) {
+            setActiveOrganization(primaryOrg.organizationId);
+          }
+          }
+        }
       } else {
         toast.error(response.msg || "Failed to submit join request");
       }

@@ -7,10 +7,10 @@ import { ROUTES } from "../../constants/routerConstants";
 import { logout as logoutApi } from "../../services/authService";
 import { getUserJoinRequests, getOrganizationById } from "../../services/organizationService";
 import { getFilingEntityTypes } from "../../services/commonService";
-import OrganizationActions from "../../components/Petitions/OrganizationActions";
 import Sidebar from "../../components/shared/Sidebar";
 import Header from "../../components/shared/Header";
 import { usePetitions } from "../../hooks/usePetitions";
+import NoOrganizationAccess from "../../components/Petitions/NoOrganizationAccess";
 import "../../styles/custom.css";
 
 
@@ -51,7 +51,11 @@ function Dashboard() {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const { logout: authLogout, organization: organizationFromContext, checkOrganizationAccess } = useAuth();
+  const {
+    logout: authLogout,
+    organization: organizationFromContext,
+    checkOrganizationAccess,
+  } = useAuth();
 
   // Use organization from context (for org admins) or from join requests (for regular users)
   // Priority: organizationFromContext > userOrganization
@@ -461,7 +465,7 @@ function Dashboard() {
               </div>
             </div>
             ) : (
-              <OrganizationActions />
+              <NoOrganizationAccess />
             )
           )}
 

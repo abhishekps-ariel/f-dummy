@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { getUserRole, getImpersonationState } from "../../utils/storage";
 import { ROUTES } from "../../constants/routerConstants";
@@ -56,34 +55,94 @@ const isOrgAdminUser = (userData, isImpersonating = false) => {
 
 const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { isImpersonating } = getImpersonationState();
   
   // Check if user is org admin (pass impersonation state for stricter checking)
   const isOrgAdmin = isOrgAdminUser(user, isImpersonating);
   
+  const primaryNavItems = [
+    {
+      key: "organizations",
+      label: "Organizations",
+      icon: "fa-building",
+      route: ROUTES.ORGANIZATIONS,
+    },
+    {
+      key: "dashboard",
+      label: "Dashboard",
+      icon: "fa-box",
+      route: ROUTES.DASHBOARD,
+    },
+    {
+      key: "petitions",
+      label: "Petitions",
+      icon: "fa-file-contract",
+      route: ROUTES.PETITIONS,
+    },
+    {
+      key: "messages",
+      label: "Messages",
+      icon: "fa-envelope",
+      route: ROUTES.MESSAGES,
+    },
+    {
+      key: "faq",
+      label: "FAQ",
+      icon: "fa-question-circle",
+      route: ROUTES.FAQ,
+    },
+    {
+      key: "training",
+      label: "Training",
+      icon: "fa-graduation-cap",
+      route: ROUTES.TRAINING,
+    },
+  ];
+
+  const adminNavItems = [
+    {
+      key: "organization-join-requests",
+      label: "Join Requests",
+      icon: "fa-user-plus",
+      route: ROUTES.ORGANIZATION_JOIN_REQUESTS,
+    },
+    {
+      key: "organisationUsers",
+      label: "Organisation Users",
+      icon: "fa-users",
+      route: ROUTES.ORGANISATION_USERS,
+    },
+  ];
+  
   // Debug: Log user and role check (remove after debugging)
   // console.log('Sidebar - User:', user);
   // console.log('Sidebar - Is Org Admin:', isOrgAdmin);
   // console.log('Sidebar - User Role:', getUserRole(user));
 
-  const handleNavigation = (section) => {
-    if (section === 'dashboard') {
-      navigate(ROUTES.DASHBOARD);
-    } else if (section === 'petitions') {
-      navigate(ROUTES.PETITIONS);
-    } else if (section === 'messages') {
-      navigate(ROUTES.MESSAGES);
-    } else if (section === 'faq') {
-      navigate(ROUTES.FAQ);
-    } else if (section === 'training') {
-      navigate(ROUTES.TRAINING);
-    } else if (section === 'organization-join-requests') {
-      navigate(ROUTES.ORGANIZATION_JOIN_REQUESTS);
-    }else if (section === 'organisationUsers') {  
-      navigate(ROUTES.ORGANISATION_USERS);
+  const visiblePrimaryNavItems = isOrgAdmin
+    ? primaryNavItems.filter((item) => item.key !== "organizations")
+    : primaryNavItems;
+  const combinedNavItems = [...visiblePrimaryNavItems, ...(isOrgAdmin ? adminNavItems : [])];
+
+  const handleNavigation = (item) => {
+    if (item.route) {
+      navigate(item.route);
     }
-    onSectionChange(section);
+    if (onSectionChange) {
+      onSectionChange(item.key);
+    }
+  };
+
+  const isItemActive = (item) => {
+    if (activeSection) {
+      return activeSection === item.key;
+    }
+    if (item.route) {
+      return location.pathname.startsWith(item.route);
+    }
+    return false;
   };
 
   return (
@@ -108,106 +167,25 @@ const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
             className="dashboard-nav list-unstyled"
             style={{ display: "flex", flexDirection: "column", gap: "12px" }}
           >
-            <li className="dashboard-nav-item">
-              <a
-                href="#"
-                className={`dashboard-nav-link ${activeSection === "dashboard" ? "dashboard-active-link" : ""
-                  }`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleNavigation("dashboard");
-                }}
-              >
-                <i className="fa-solid fa-box me-2"></i>
-                <span>Dashboard</span>
-              </a>
-            </li>
-            <li className="dashboard-nav-item">
-              <a
-                href="#"
-                className={`dashboard-nav-link ${activeSection === "petitions" ? "dashboard-active-link" : ""}`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleNavigation("petitions");
-                }}
-              >
-                <i className="fa-solid fa-file-contract me-2"></i>
-                <span>Petitions</span>
-              </a>
-            </li>
-            {isOrgAdmin && (
-              <>
-                <li className="dashboard-nav-item">
-                  <a
-                    href="#"
-                    className={`dashboard-nav-link ${activeSection === "organization-join-requests" ? "dashboard-active-link" : ""}`}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleNavigation("organization-join-requests");
-                    }}
-                  >
-                    <i className="fa-solid fa-user-plus me-2"></i>
-                    <span>Join Requests</span>
-                  </a>
-                </li>
-                <li className="dashboard-nav-item">
+            {combinedNavItems.map(
+              (item) => (
+                <li className="dashboard-nav-item" key={item.key}>
                   <a
                     href="#"
                     className={`dashboard-nav-link ${
-                      activeSection === "organisationUsers"
-                        ? "dashboard-active-link"
-                        : ""
+                      isItemActive(item) ? "dashboard-active-link" : ""
                     }`}
                     onClick={(e) => {
                       e.preventDefault();
-                      handleNavigation("organisationUsers");
+                      handleNavigation(item);
                     }}
                   >
-                    <i className="fa-solid fa-users me-2"></i>
-                    <span>Organisation Users</span>
+                    <i className={`fa-solid ${item.icon} me-2`}></i>
+                    <span>{item.label}</span>
                   </a>
                 </li>
-              </>
+              )
             )}
-            <li className="dashboard-nav-item">
-              <a
-                href="#"
-                className={`dashboard-nav-link ${activeSection === "messages" ? "dashboard-active-link" : ""}`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleNavigation("messages");
-                }}
-              >
-                <i className="fa-solid fa-envelope me-2"></i>
-                <span>Messages</span>
-              </a>
-            </li>
-            <li className="dashboard-nav-item">
-              <a
-                href="#"
-                className={`dashboard-nav-link ${activeSection === "faq" ? "dashboard-active-link" : ""}`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleNavigation("faq");
-                }}
-              >
-                <i className="fa-solid fa-question-circle me-2"></i>
-                <span>FAQ</span>
-              </a>
-            </li>
-            <li className="dashboard-nav-item">
-              <a
-                href="#"
-                className={`dashboard-nav-link ${activeSection === "training" ? "dashboard-active-link" : ""}`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleNavigation("training");
-                }}
-              >
-                <i className="fa-solid fa-graduation-cap me-2"></i>
-                <span>Training</span>
-              </a>
-            </li>
           </ul>
         </nav>
 
@@ -253,15 +231,17 @@ const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
             className="dashboard-nav list-unstyled"
             style={{ display: "flex", flexDirection: "column", gap: "12px" }}
           >
-            <li className="dashboard-nav-item">
+            {combinedNavItems.map(
+              (item) => (
+                <li className="dashboard-nav-item" key={item.key}>
               <a
                 href="#"
-                className={`dashboard-nav-link ${activeSection === "dashboard" ? "dashboard-active-link" : ""
+                    className={`dashboard-nav-link ${
+                      isItemActive(item) ? "dashboard-active-link" : ""
                   }`}
                 onClick={(e) => {
                   e.preventDefault();
-                  handleNavigation("dashboard");
-                  // Close mobile sidebar if open
+                      handleNavigation(item);
                   const mobileSidebar = document.getElementById("mobileSidebar");
                   if (mobileSidebar) {
                     const bsOffcanvas = window.bootstrap.Offcanvas.getInstance(mobileSidebar);
@@ -271,140 +251,12 @@ const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
                   }
                 }}
               >
-                <i className="fa-solid fa-box me-2"></i>
-                <span>Dashboard</span>
+                    <i className={`fa-solid ${item.icon} me-2`}></i>
+                    <span>{item.label}</span>
               </a>
             </li>
-            <li className="dashboard-nav-item">
-              <a
-                href="#"
-                className={`dashboard-nav-link ${activeSection === "petitions" ? "dashboard-active-link" : ""}`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleNavigation("petitions");
-                  // Close mobile sidebar if open
-                  const mobileSidebar = document.getElementById("mobileSidebar");
-                  if (mobileSidebar) {
-                    const bsOffcanvas = window.bootstrap.Offcanvas.getInstance(mobileSidebar);
-                    if (bsOffcanvas) {
-                      bsOffcanvas.hide();
-                    }
-                  }
-                }}
-              >
-                <i className="fa-solid fa-file-contract me-2"></i>
-                <span>Petitions</span>
-              </a>
-            </li>
-            {isOrgAdmin && (
-              <>
-                <li className="dashboard-nav-item">
-                  <a
-                    href="#"
-                    className={`dashboard-nav-link ${activeSection === "organization-join-requests" ? "dashboard-active-link" : ""}`}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleNavigation("organization-join-requests");
-                      // Close mobile sidebar if open
-                      const mobileSidebar = document.getElementById("mobileSidebar");
-                      if (mobileSidebar) {
-                        const bsOffcanvas = window.bootstrap.Offcanvas.getInstance(mobileSidebar);
-                        if (bsOffcanvas) {
-                          bsOffcanvas.hide();
-                        }
-                      }
-                    }}
-                  >
-                    <i className="fa-solid fa-user-plus me-2"></i>
-                    <span>Join Requests</span>
-                  </a>
-                </li>
-                <li className="dashboard-nav-item">
-                  <a
-                    href="#"
-                    className={`dashboard-nav-link ${activeSection === "organisationUsers" ? "dashboard-active-link" : ""}`}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleNavigation("organisationUsers");
-                      // Close mobile sidebar if open
-                      const mobileSidebar = document.getElementById("mobileSidebar");
-                      if (mobileSidebar) {
-                        const bsOffcanvas = window.bootstrap.Offcanvas.getInstance(mobileSidebar);
-                        if (bsOffcanvas) {
-                          bsOffcanvas.hide();
-                        }
-                      }
-                    }}
-                  >
-                    <i className="fa-solid fa-users me-2"></i>
-                    <span>Organisation Users</span>
-                  </a>
-                </li>
-              </>
+              )
             )}
-            <li className="dashboard-nav-item">
-              <a
-                href="#"
-                className={`dashboard-nav-link ${activeSection === "messages" ? "dashboard-active-link" : ""}`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleNavigation("messages");
-                  // Close mobile sidebar if open
-                  const mobileSidebar = document.getElementById("mobileSidebar");
-                  if (mobileSidebar) {
-                    const bsOffcanvas = window.bootstrap.Offcanvas.getInstance(mobileSidebar);
-                    if (bsOffcanvas) {
-                      bsOffcanvas.hide();
-                    }
-                  }
-                }}
-              >
-                <i className="fa-solid fa-envelope me-2"></i>
-                <span>Messages</span>
-              </a>
-            </li>
-            <li className="dashboard-nav-item">
-              <a
-                href="#"
-                className={`dashboard-nav-link ${activeSection === "faq" ? "dashboard-active-link" : ""}`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleNavigation("faq");
-                  // Close mobile sidebar if open
-                  const mobileSidebar = document.getElementById("mobileSidebar");
-                  if (mobileSidebar) {
-                    const bsOffcanvas = window.bootstrap.Offcanvas.getInstance(mobileSidebar);
-                    if (bsOffcanvas) {
-                      bsOffcanvas.hide();
-                    }
-                  }
-                }}
-              >
-                <i className="fa-solid fa-question-circle me-2"></i>
-                <span>FAQ</span>
-              </a>
-            </li>
-            <li className="dashboard-nav-item">
-              <a
-                href="#"
-                className={`dashboard-nav-link ${activeSection === "training" ? "dashboard-active-link" : ""}`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleNavigation("training");
-                  // Close mobile sidebar if open
-                  const mobileSidebar = document.getElementById("mobileSidebar");
-                  if (mobileSidebar) {
-                    const bsOffcanvas = window.bootstrap.Offcanvas.getInstance(mobileSidebar);
-                    if (bsOffcanvas) {
-                      bsOffcanvas.hide();
-                    }
-                  }
-                }}
-              >
-                <i className="fa-solid fa-graduation-cap me-2"></i>
-                <span>Training</span>
-              </a>
-            </li>
           </ul>
 
           <div className="mt-auto pt-4 border-top">

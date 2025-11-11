@@ -1,5 +1,11 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { getAuthData, getUserRole } from '../utils/storage';
+import {
+  getAuthData,
+  getUserRole,
+  getActiveOrganizationId as getStoredActiveOrganizationId,
+  setActiveOrganizationId as persistActiveOrganizationId,
+  updateStoredUser,
+} from '../utils/storage';
 import { getOrganizationById, getUserJoinRequests } from '../services/organizationService';
 
 const AuthContext = createContext();
@@ -19,6 +25,8 @@ export const AuthProvider = ({ children }) => {
   const [organization, setOrganization] = useState(null);
   const [hasOrganizationAccess, setHasOrganizationAccess] = useState(false);
   const [organizationCheckComplete, setOrganizationCheckComplete] = useState(false);
+  const [organizations, setOrganizations] = useState([]);
+  const [activeOrganizationId, setActiveOrganizationIdState] = useState(null);
 
   // Helper function to check if user is org admin
   const isOrgAdminUser = (userData) => {
@@ -48,6 +56,94 @@ export const AuthProvider = ({ children }) => {
     return false;
   };
 
+  const resolveActiveOrganizationId = (organizationList, ...preferredIds) => {
+    if (!Array.isArray(organizationList) || organizationList.length === 0) {
+      return null;
+    }
+
+    for (const candidate of preferredIds) {
+      if (
+        candidate &&
+        organizationList.some(
+          (org) => org?.organizationId && org.organizationId === candidate
+        )
+      ) {
+        return candidate;
+      }
+    }
+
+    const primaryOrganization = organizationList.find((org) => org?.isPrimary);
+    if (primaryOrganization?.organizationId) {
+      return primaryOrganization.organizationId;
+    }
+
+    return organizationList[0]?.organizationId ?? null;
+  };
+
+  const persistActiveOrganizationSelection = (organizationId) => {
+    setActiveOrganizationIdState(organizationId ?? null);
+    persistActiveOrganizationId(organizationId ?? null);
+  };
+
+  const initializeOrganizationsState = (userData, { preferStoredSelection = true } = {}) => {
+    const baseList = Array.isArray(userData?.organizations)
+      ? userData.organizations.filter((org) => Boolean(org?.organizationId))
+      : [];
+
+    const fallbackList =
+      baseList.length === 0 && userData?.organizationId
+        ? [
+            {
+              organizationId: userData.organizationId,
+              name: userData.organizationName || '',
+              isPrimary: true,
+              organizationEmail: userData.organizationEmail || '',
+              organizationPhone: userData.organizationPhone || '',
+            },
+          ]
+        : [];
+
+    const organizationList = [...baseList, ...fallbackList];
+    setOrganizations(organizationList);
+
+    const storedActiveId = preferStoredSelection ? getStoredActiveOrganizationId() : null;
+    const fallbackId = userData?.organizationId ?? null;
+    const resolvedActiveId = resolveActiveOrganizationId(
+      organizationList,
+      storedActiveId,
+      fallbackId
+    );
+
+    persistActiveOrganizationSelection(resolvedActiveId);
+
+    return {
+      organizationList,
+      resolvedActiveId,
+    };
+  };
+
+  useEffect(() => {
+    const fetchActiveOrganizationDetails = async () => {
+      if (!activeOrganizationId) {
+        setOrganization(null);
+        return;
+      }
+
+      try {
+        const response = await getOrganizationById(activeOrganizationId);
+        if (response.isSuccess && response.data) {
+          setOrganization(response.data);
+        } else {
+          setOrganization({ id: activeOrganizationId });
+        }
+      } catch (error) {
+        setOrganization({ id: activeOrganizationId });
+      }
+    };
+
+    fetchActiveOrganizationDetails();
+  }, [activeOrganizationId]);
+
   // Check organization access based on organizationId in user object
   const checkOrganizationAccess = async (userDataOverride = null) => {
     // Use provided userData or fall back to state user
@@ -69,95 +165,74 @@ export const AuthProvider = ({ children }) => {
 
     try {
       const isOrgAdmin = isOrgAdminUser(userToCheck);
-      
-      // For org admins: check organizationId directly
+      const { organizationList, resolvedActiveId } = initializeOrganizationsState(userToCheck, {
+        preferStoredSelection: true,
+      });
+      const hasOrganizations = organizationList.length > 0 && Boolean(resolvedActiveId);
+
       if (isOrgAdmin) {
-        const orgId = userToCheck.organizationId;
-        if (orgId && typeof orgId === 'string' && orgId.trim() !== '') {
+        if (hasOrganizations) {
           setHasOrganizationAccess(true);
-          // Fetch full organization details
-          try {
-            const orgResponse = await getOrganizationById(orgId);
-            if (orgResponse.isSuccess && orgResponse.data) {
-              setOrganization(orgResponse.data);
+        } else {
+          setHasOrganizationAccess(false);
+          setOrganization(null);
+          persistActiveOrganizationSelection(null);
+        }
+        setOrganizationCheckComplete(true);
+        return;
+      }
+
+      if (hasOrganizations) {
+        setHasOrganizationAccess(true);
+        setOrganizationCheckComplete(true);
+        return;
+      }
+
+      try {
+        const requestsResponse = await getUserJoinRequests();
+        if (requestsResponse.isSuccess && Array.isArray(requestsResponse.data)) {
+          const approvedRequest = requestsResponse.data.find(
+            (request) => request.status === 1 && request.organizationId
+          );
+
+          const userOrgId = userToCheck.organizationId;
+          const approvedOrgId = approvedRequest?.organizationId;
+
+          if (approvedRequest && approvedOrgId) {
+            const orgIdMatches =
+              !userOrgId ||
+              (typeof userOrgId === 'string' &&
+                userOrgId.trim() !== '' &&
+                userOrgId === approvedOrgId);
+
+            if (orgIdMatches) {
+              setHasOrganizationAccess(true);
+              persistActiveOrganizationSelection(approvedOrgId);
             } else {
-              setOrganization({ id: orgId });
+              setHasOrganizationAccess(false);
+              setOrganization(null);
+              persistActiveOrganizationSelection(null);
             }
-          } catch (error) {
-            setOrganization({ id: orgId });
+          } else {
+            setHasOrganizationAccess(false);
+            setOrganization(null);
+            persistActiveOrganizationSelection(null);
           }
         } else {
           setHasOrganizationAccess(false);
           setOrganization(null);
+          persistActiveOrganizationSelection(null);
         }
-      } else {
-        // For non-org admins: check my-requests to verify active access
-        // This ensures that if org admin removes them, they'll be blocked immediately
-        try {
-          const requestsResponse = await getUserJoinRequests();
-          if (requestsResponse.isSuccess && Array.isArray(requestsResponse.data)) {
-            // Find approved request (status === 1 means Approved)
-            const approvedRequest = requestsResponse.data.find(
-              (request) => request.status === 1
-            );
-            
-            // Get user's current organizationId from user object
-            const userOrgId = userToCheck.organizationId;
-            const approvedOrgId = approvedRequest?.organizationId;
-            
-            // If user has an approved request, grant access
-            // Also verify that if user has organizationId, it matches the approved request
-            // This ensures that if org admin removes them, their organizationId will be null/empty
-            // and they'll be blocked on next check
-            if (approvedRequest && approvedOrgId) {
-              // Check if user's organizationId matches (if it exists)
-              // If userOrgId is null/empty but approved request exists, still grant access
-              // (user might not have orgId synced yet but request is approved)
-              const orgIdMatches = !userOrgId || 
-                (typeof userOrgId === 'string' && userOrgId.trim() !== '' && userOrgId === approvedOrgId);
-              
-              if (orgIdMatches) {
-                // User has approved access
-                setHasOrganizationAccess(true);
-                
-                // Use the approved request's organizationId (more reliable than user's orgId)
-                const orgIdToUse = approvedOrgId;
-                
-                // Fetch full organization details
-                try {
-                  const orgResponse = await getOrganizationById(orgIdToUse);
-                  if (orgResponse.isSuccess && orgResponse.data) {
-                    setOrganization(orgResponse.data);
-                  } else {
-                    setOrganization({ id: orgIdToUse });
-                  }
-                } catch (error) {
-                  setOrganization({ id: orgIdToUse });
-                }
-              } else {
-                // User's organizationId doesn't match approved request - they were removed
-                setHasOrganizationAccess(false);
-                setOrganization(null);
-              }
-            } else {
-              // No approved request found - user doesn't have access
-              setHasOrganizationAccess(false);
-              setOrganization(null);
-            }
-          } else {
-            // API call failed or no requests
-            setHasOrganizationAccess(false);
-            setOrganization(null);
-          }
-        } catch (error) {
-          console.error('Error checking join requests:', error);
-          setHasOrganizationAccess(false);
-          setOrganization(null);
-        }
+      } catch (error) {
+        console.error('Error checking join requests:', error);
+        setHasOrganizationAccess(false);
+        setOrganization(null);
+        persistActiveOrganizationSelection(null);
       }
     } catch (error) {
       setHasOrganizationAccess(false);
       setOrganization(null);
+      persistActiveOrganizationSelection(null);
     } finally {
       setOrganizationCheckComplete(true);
     }
@@ -166,19 +241,22 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
-        const { token, user: userData } = getAuthData();
-        
+        const { token, user: userData, activeOrganizationId: storedActiveOrgId } = getAuthData();
+
         if (token && userData) {
           setIsAuthenticated(true);
           setUser(userData);
-          
-          // Check organization access immediately
-          // This will handle org admins vs regular users correctly
-          await checkOrganizationAccess();
+          if (storedActiveOrgId) {
+            persistActiveOrganizationSelection(storedActiveOrgId);
+          }
+
+          await checkOrganizationAccess(userData);
         } else {
           setIsAuthenticated(false);
           setUser(null);
           setOrganization(null);
+          setOrganizations([]);
+          setActiveOrganizationIdState(null);
           setHasOrganizationAccess(false);
           setOrganizationCheckComplete(false);
         }
@@ -186,6 +264,8 @@ export const AuthProvider = ({ children }) => {
         setIsAuthenticated(false);
         setUser(null);
         setOrganization(null);
+        setOrganizations([]);
+        setActiveOrganizationIdState(null);
         setHasOrganizationAccess(false);
         setOrganizationCheckComplete(false);
       } finally {
@@ -218,17 +298,9 @@ export const AuthProvider = ({ children }) => {
   const login = async (userData) => {
     setIsAuthenticated(true);
     setUser(userData);
-    
-    // Store organizationId in localStorage for backward compatibility
-    const orgId = userData.organizationId;
-    if (orgId && typeof orgId === 'string' && orgId.trim() !== '') {
-      localStorage.setItem("organizationId", orgId);
-    }
-    
-    // Check organization access using the proper check function
-    // Pass userData directly to avoid race condition with state update
-    // This will handle org admins vs regular users correctly
-    // IMPORTANT: Wait for this to complete so org admins get immediate access
+    initializeOrganizationsState(userData, { preferStoredSelection: false });
+    updateStoredUser(userData);
+
     await checkOrganizationAccess(userData);
   };
 
@@ -236,6 +308,8 @@ export const AuthProvider = ({ children }) => {
     setIsAuthenticated(false);
     setUser(null);
     setOrganization(null);
+    setOrganizations([]);
+    setActiveOrganizationIdState(null);
     setHasOrganizationAccess(false);
     setOrganizationCheckComplete(false);
     
@@ -252,8 +326,21 @@ export const AuthProvider = ({ children }) => {
     setHasOrganizationAccess(true);
     // Also update user data to include organization
     if (user) {
-      setUser({ ...user, organization: orgData });
+      const updatedUser = { ...user, organization: orgData };
+      setUser(updatedUser);
+      updateStoredUser(updatedUser);
     }
+  };
+
+  const setActiveOrganization = (organizationId) => {
+    persistActiveOrganizationSelection(organizationId);
+  };
+
+  const syncUserData = (updatedUser) => {
+    if (!updatedUser) return;
+    setUser(updatedUser);
+    updateStoredUser(updatedUser);
+    initializeOrganizationsState(updatedUser, { preferStoredSelection: true });
   };
 
   const updateUserSignature = (signatureData) => {
@@ -264,6 +351,7 @@ export const AuthProvider = ({ children }) => {
         signatureUrl: signatureData.signatureUrl,
       };
       setUser(updatedUser);
+      updateStoredUser(updatedUser);
     }
   };
 
@@ -274,10 +362,14 @@ export const AuthProvider = ({ children }) => {
     organization,
     hasOrganizationAccess,
     organizationCheckComplete,
+    organizations,
+    activeOrganizationId,
     login,
     logout,
     updateOrganization,
     updateUserSignature,
+    setActiveOrganization,
+    syncUserData,
     isTokenExpired,
     setHasOrganizationAccess,
     setOrganizationCheckComplete,

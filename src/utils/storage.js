@@ -1,36 +1,59 @@
+const resolveOrganizationId = (organization) =>
+  organization?.organizationId || organization?.id || null;
+
 export const storeAuthData = (authData) => {
   // Clear all existing data before storing new user data
-
   localStorage.clear();
-  
+
   const { token, refreshToken, user } = authData;
-  localStorage.setItem('token', token);
-  localStorage.setItem('refreshToken', refreshToken);
-  localStorage.setItem('user', JSON.stringify(user));
+  localStorage.setItem("token", token);
+  localStorage.setItem("refreshToken", refreshToken);
+  localStorage.setItem("user", JSON.stringify(user));
+
+  const organizations = Array.isArray(user?.organizations) ? user.organizations : [];
+  if (organizations.length > 0) {
+    const primaryOrganization =
+      organizations.find((org) => org?.isPrimary) ??
+      organizations.find(
+        (org) => resolveOrganizationId(org) && resolveOrganizationId(org) === user?.organizationId
+      ) ??
+      organizations[0];
+
+    const resolvedPrimaryId = resolveOrganizationId(primaryOrganization);
+    if (resolvedPrimaryId) {
+      setActiveOrganizationId(resolvedPrimaryId);
+    }
+  } else if (user?.organizationId) {
+    setActiveOrganizationId(user.organizationId);
+  } else {
+    setActiveOrganizationId(null);
+  }
 };
 
 export const getAuthData = () => {
-  const token = localStorage.getItem('token');
-  const refreshToken = localStorage.getItem('refreshToken');
-  const user = JSON.parse(localStorage.getItem('user') || 'null');
-  
-  return { token, refreshToken, user };
+  const token = localStorage.getItem("token");
+  const refreshToken = localStorage.getItem("refreshToken");
+  const user = JSON.parse(localStorage.getItem("user") || "null");
+  const activeOrganizationId = getActiveOrganizationId();
+
+  return { token, refreshToken, user, activeOrganizationId };
 };
 
 export const clearAuthData = () => {
   // Clear authentication data
-  localStorage.removeItem('token');
-  localStorage.removeItem('refreshToken');
-  localStorage.removeItem('user');
-  
+  localStorage.removeItem("token");
+  localStorage.removeItem("refreshToken");
+  localStorage.removeItem("user");
+  localStorage.removeItem("activeOrganizationId");
+
   // Clear petition-related data
-  localStorage.removeItem('petitionTabs');
-  localStorage.removeItem('activePetitionTab');
-  localStorage.removeItem('petitionDrafts');
-  
+  localStorage.removeItem("petitionTabs");
+  localStorage.removeItem("activePetitionTab");
+  localStorage.removeItem("petitionDrafts");
+
   // Clear any other user-specific data
-  localStorage.removeItem('resetEmail');
-  
+  localStorage.removeItem("resetEmail");
+
   localStorage.clear();
 };
 
@@ -45,8 +68,8 @@ export const setImpersonationState = (isImpersonating, impersonatedUserName = ''
 };
 
 export const getImpersonationState = () => {
-  const isImpersonating = localStorage.getItem('isImpersonating') === 'true';
-  const impersonatedUserName = localStorage.getItem('impersonatedUserName') || '';
+  const isImpersonating = localStorage.getItem("isImpersonating") === "true";
+  const impersonatedUserName = localStorage.getItem("impersonatedUserName") || "";
   return { isImpersonating, impersonatedUserName };
 };
 
@@ -70,5 +93,25 @@ export const getUserRole = (user) => {
   }
   
   return null;
+};
+
+export const getActiveOrganizationId = () => {
+  return localStorage.getItem("activeOrganizationId") || null;
+};
+
+export const setActiveOrganizationId = (organizationId) => {
+  if (organizationId) {
+    localStorage.setItem("activeOrganizationId", organizationId);
+  } else {
+    localStorage.removeItem("activeOrganizationId");
+  }
+};
+
+export const updateStoredUser = (user) => {
+  if (!user) {
+    localStorage.removeItem("user");
+    return;
+  }
+  localStorage.setItem("user", JSON.stringify(user));
 };
 

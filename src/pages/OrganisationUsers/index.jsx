@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { logout as logoutApi } from '../../services/authService';
-import { clearAuthData, getAuthData, getUserRole, getImpersonationState } from '../../utils/storage';
+import { clearAuthData, getAuthData, getUserRole, getImpersonationState, getActiveOrganizationId } from '../../utils/storage';
 import { ROUTES } from '../../constants/routerConstants';
 import Sidebar from '../../components/shared/Sidebar';
 import Header from '../../components/shared/Header';
@@ -75,7 +75,9 @@ const OrganisationUsers = () => {
   
   // Check if user is org admin (pass impersonation state for stricter checking)
   const isOrgAdmin = isOrgAdminUser(user, isImpersonating);
-  const organizationId = user?.organizationId || organization?.id;
+  const storedActiveOrganizationId = getActiveOrganizationId();
+  const organizationId =
+    storedActiveOrganizationId || user?.organizationId || organization?.id;
 
   const handleLogout = async () => {
     try {
@@ -104,14 +106,18 @@ const OrganisationUsers = () => {
     const fetchUsers = async () => {
       setLoading(true);
       try {
-        const orgId = localStorage.getItem("organizationId");
+        if (!organizationId) {
+          setUsers([]);
+          setTotalUsers(0);
+          return;
+        }
 
         // Request more users per page to account for client-side filtering of org admins
         // We request 15 users per page but only display 10, to ensure we have enough after filtering
         const payload = {
           pageNumber,
           pageSize: 15, // Request more to account for filtered org admins
-          organizationId: orgId,
+          organizationId,
           searchTerm,
           sortBy: "",
           sortDescending: true,
@@ -136,7 +142,7 @@ const OrganisationUsers = () => {
     };
 
     fetchUsers();
-  }, [pageNumber, pageSize, searchTerm]);
+  }, [pageNumber, pageSize, searchTerm, organizationId]);
 
   if (!organizationId || !isOrgAdmin) {
     return (
@@ -147,7 +153,7 @@ const OrganisationUsers = () => {
             if (section === 'dashboard') {
               navigate(ROUTES.DASHBOARD);
             } else if (section === 'organizations') {
-              navigate(ROUTES.DASHBOARD, { state: { activeSection: 'organizations' } });
+              navigate(ROUTES.ORGANIZATIONS);
             } else if (section === 'petitions') {
               navigate(ROUTES.PETITIONS);
             } else if (section === 'messages') {
@@ -183,7 +189,7 @@ const OrganisationUsers = () => {
           if (section === 'dashboard') {
             navigate(ROUTES.DASHBOARD);
           } else if (section === 'organizations') {
-            navigate(ROUTES.DASHBOARD, { state: { activeSection: 'organizations' } });
+            navigate(ROUTES.ORGANIZATIONS);
           } else if (section === 'petitions') {
             navigate(ROUTES.PETITIONS);
           } else if (section === 'messages') {

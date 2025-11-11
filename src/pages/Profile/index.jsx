@@ -40,7 +40,13 @@ function Profile() {
   const [isUploadingSignature, setIsUploadingSignature] = useState(false);
   const [isImageLoading, setIsImageLoading] = useState(false);
   const navigate = useNavigate();
-  const { logout: authLogout, login, updateUserSignature, organization: organizationFromContext, checkOrganizationAccess } = useAuth();
+  const {
+    logout: authLogout,
+    login,
+    updateUserSignature,
+    organization: organizationFromContext,
+    checkOrganizationAccess,
+  } = useAuth();
   
   // Get resetWizard function from PetitionWizard context
   const { resetWizard } = usePetitionWizard();
@@ -474,7 +480,7 @@ function Profile() {
           if (section === 'dashboard') {
             navigate(ROUTES.DASHBOARD);
           } else if (section === 'organizations') {
-            navigate(ROUTES.DASHBOARD, { state: { activeSection: 'organizations' } });
+            navigate(ROUTES.ORGANIZATIONS);
           }
         }}
         onLogout={handleLogout}
@@ -891,7 +897,7 @@ function Profile() {
                           <div className="col-12 mt-2">
                             <button 
                               className="dashboard-btn-create w-100"
-                              onClick={() => navigate(ROUTES.DASHBOARD, { state: { activeSection: 'organizations' } })}
+                              onClick={() => navigate(ROUTES.ORGANIZATIONS)}
                             >
                               <i className="fa-solid fa-building me-1"></i>
                               View All Requests
@@ -910,7 +916,7 @@ function Profile() {
                           </p>
                           <button 
                             className="dashboard-btn-create w-100"
-                            onClick={() => navigate(ROUTES.DASHBOARD, { state: { activeSection: 'organizations' } })}
+                            onClick={() => navigate(ROUTES.ORGANIZATIONS)}
                           >
                             <i className="fa-solid fa-building me-1"></i>
                             Join Organization
