@@ -34,8 +34,7 @@ function Dashboard() {
   const { resetWizard } = usePetitionWizard();
   
   const [userOrganization, setUserOrganization] = useState(null);
-  const [isLoadingOrgData, setIsLoadingOrgData] = useState(false);
-  const [hasLoadedOrgData, setHasLoadedOrgData] = useState(false);
+  const [isLoadingOrgData, setIsLoadingOrgData] = useState(true);
   const [filingEntityTypes, setFilingEntityTypes] = useState([]);
   const [isLoadingFilingEntityTypes, setIsLoadingFilingEntityTypes] = useState(false);
   const [dashboardPetitions, setDashboardPetitions] = useState([]);
@@ -107,7 +106,6 @@ function Dashboard() {
       } else {
         // If we have organization from context, mark as loaded
         setIsLoadingOrgData(false);
-        setHasLoadedOrgData(true);
       }
       loadFilingEntityTypes();
     }
@@ -119,7 +117,6 @@ function Dashboard() {
       // If user has organizationId from context (org admins), use that instead of join requests
       if (organizationFromContext) {
         // Organization already loaded from AuthContext, just mark as complete
-        setHasLoadedOrgData(true);
         setIsLoadingOrgData(false);
         return;
       }
@@ -166,7 +163,6 @@ function Dashboard() {
     } catch (error) {
     } finally {
       setIsLoadingOrgData(false);
-      setHasLoadedOrgData(true);
     }
   };
 
