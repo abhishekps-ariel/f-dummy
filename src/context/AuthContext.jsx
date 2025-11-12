@@ -28,6 +28,21 @@ export const AuthProvider = ({ children }) => {
   const [organizations, setOrganizations] = useState([]);
   const [activeOrganizationId, setActiveOrganizationIdState] = useState(null);
 
+  const resetPetitionTabsAfterOrgSwitch = () => {
+    try {
+      localStorage.removeItem('petitionTabs');
+      localStorage.removeItem('activePetitionTab');
+    } catch (error) {
+      console.error('Failed to clear petition tabs from storage on organization switch:', error);
+    }
+
+    try {
+      window.dispatchEvent(new Event('filir:petition-tabs-reset'));
+    } catch (error) {
+      console.error('Failed to dispatch petition tabs reset event:', error);
+    }
+  };
+
   // Helper function to check if user is org admin
   const isOrgAdminUser = (userData) => {
     if (!userData) return false;
@@ -376,13 +391,21 @@ export const AuthProvider = ({ children }) => {
   };
 
   const setActiveOrganization = (organizationId) => {
-    persistActiveOrganizationSelection(organizationId);
-    setHasOrganizationAccess(Boolean(organizationId));
-    if (organizationId) {
-      const match = organizations.find((org) => org.organizationId === organizationId);
-      setOrganization(match || { organizationId });
+    const normalizedId = organizationId ?? null;
+    const isChangingOrganization = normalizedId !== activeOrganizationId;
+
+    persistActiveOrganizationSelection(normalizedId);
+    setHasOrganizationAccess(Boolean(normalizedId));
+
+    if (normalizedId) {
+      const match = organizations.find((org) => org.organizationId === normalizedId);
+      setOrganization(match || { organizationId: normalizedId });
     } else {
       setOrganization(null);
+    }
+
+    if (isChangingOrganization) {
+      resetPetitionTabsAfterOrgSwitch();
     }
   };
 

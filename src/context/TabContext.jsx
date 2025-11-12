@@ -1,7 +1,17 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import petitionApiService from '../services/petitionApiService';
 
 const TabContext = createContext();
+
+const DEFAULT_TAB_ID = 'all-petitions';
+
+const createDefaultTabs = () => [{
+  id: DEFAULT_TAB_ID,
+  title: 'All Petitions',
+  type: 'all-petitions',
+  data: null,
+  isClosable: false
+}];
 
 export const useTabs = () => {
   const context = useContext(TabContext);
@@ -15,6 +25,20 @@ export const TabProvider = ({ children }) => {
   const [tabs, setTabs] = useState([]);
   const [activeTabId, setActiveTabId] = useState(null);
   const [loadingTabs, setLoadingTabs] = useState(new Set());
+
+  const resetTabsState = useCallback(() => {
+    const defaultTabs = createDefaultTabs();
+    setTabs(defaultTabs);
+    setActiveTabId(DEFAULT_TAB_ID);
+    setLoadingTabs(new Set());
+    try {
+      localStorage.setItem('petitionTabs', JSON.stringify(defaultTabs));
+      localStorage.setItem('activePetitionTab', DEFAULT_TAB_ID);
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Failed to reset petition tabs in storage:', error);
+    }
+  }, []);
 
   // Load tabs from localStorage on mount
   useEffect(() => {
@@ -39,31 +63,24 @@ export const TabProvider = ({ children }) => {
         }
       } else {
         // Initialize with default "All Petitions" tab
-        const defaultTabs = [{
-          id: 'all-petitions',
-          title: 'All Petitions',
-          type: 'all-petitions',
-          data: null,
-          isClosable: false
-        }];
-        setTabs(defaultTabs);
-        setActiveTabId('all-petitions');
-        localStorage.setItem('petitionTabs', JSON.stringify(defaultTabs));
-        localStorage.setItem('activePetitionTab', 'all-petitions');
+        resetTabsState();
       }
     } catch (error) {
       // Fallback to default tab
-      const defaultTabs = [{
-        id: 'all-petitions',
-        title: 'All Petitions',
-        type: 'all-petitions',
-        data: null,
-        isClosable: false
-      }];
-      setTabs(defaultTabs);
-      setActiveTabId('all-petitions');
+      resetTabsState();
     }
-  }, []);
+  }, [resetTabsState]);
+
+  useEffect(() => {
+    const handleTabsReset = () => {
+      resetTabsState();
+    };
+
+    window.addEventListener('filir:petition-tabs-reset', handleTabsReset);
+    return () => {
+      window.removeEventListener('filir:petition-tabs-reset', handleTabsReset);
+    };
+  }, [resetTabsState]);
 
   // Save tabs to localStorage whenever tabs change (without data to avoid stale data)
   useEffect(() => {
@@ -390,7 +407,8 @@ export const TabProvider = ({ children }) => {
     switchToTab,
     getActiveTab,
     loadingTabs,
-    refreshTab
+    refreshTab,
+    resetTabs: resetTabsState
   };
 
   return (
