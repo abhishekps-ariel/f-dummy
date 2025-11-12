@@ -1253,7 +1253,9 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
         await refreshTab(activeTabId);
       }
     } catch (error) {
-      toast.error("Failed to submit petition. Please try again.");
+      // Error toast is already shown by submitPetition function, so we don't show another one here
+      // Only log the error for debugging
+      console.error("Error submitting petition:", error);
     } finally {
       setIsSubmitting(false);
     }
