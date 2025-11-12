@@ -712,8 +712,13 @@ const Organizations = () => {
                       return (
                         <div
                           key={orgId || index}
-                          className={`border rounded-3 p-3 ${isActive ? "border-primary" : "border-light"}`}
-                          style={{ cursor: "default", backgroundColor: isActive ? "rgba(2,101,163,0.05)" : "#fff" }}
+                          className={`border rounded-3 p-3 ${isActive ? "border-primary" : ""}`}
+                          style={{ 
+                            cursor: "default", 
+                            backgroundColor: isActive ? "rgba(2,101,163,0.05)" : "#fff",
+                            borderColor: isActive ? undefined : "#dee2e6",
+                            boxShadow: "0 2px 4px rgba(0, 0, 0, 0.08)"
+                          }}
                         >
                           <div className="d-flex justify-content-between align-items-start gap-2">
                             <div>
