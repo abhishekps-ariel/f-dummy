@@ -62,18 +62,18 @@ const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
   // Check if user is org admin (pass impersonation state for stricter checking)
   const isOrgAdmin = isOrgAdminUser(user, isImpersonating);
   
-  const primaryNavItems = [
-    {
-      key: "organizations",
-      label: "Organizations",
-      icon: "fa-building",
-      route: ROUTES.ORGANIZATIONS,
-    },
+  const filerNavItems = [
     {
       key: "dashboard",
       label: "Dashboard",
       icon: "fa-box",
       route: ROUTES.DASHBOARD,
+    },
+    {
+      key: "organizations",
+      label: "Organizations",
+      icon: "fa-building",
+      route: ROUTES.ORGANIZATIONS,
     },
     {
       key: "petitions",
@@ -116,15 +116,23 @@ const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
     },
   ];
   
-  // Debug: Log user and role check (remove after debugging)
-  // console.log('Sidebar - User:', user);
-  // console.log('Sidebar - Is Org Admin:', isOrgAdmin);
-  // console.log('Sidebar - User Role:', getUserRole(user));
+  let combinedNavItems;
+  if (isOrgAdmin) {
+    const dashboardItem = filerNavItems.find((item) => item.key === "dashboard");
+    const petitionsItem = filerNavItems.find((item) => item.key === "petitions");
+    const remainingItems = filerNavItems.filter(
+      (item) => item.key !== "dashboard" && item.key !== "petitions" && item.key !== "organizations"
+    );
 
-  const visiblePrimaryNavItems = isOrgAdmin
-    ? primaryNavItems.filter((item) => item.key !== "organizations")
-    : primaryNavItems;
-  const combinedNavItems = [...visiblePrimaryNavItems, ...(isOrgAdmin ? adminNavItems : [])];
+    combinedNavItems = [
+      dashboardItem,
+      petitionsItem,
+      ...adminNavItems,
+      ...remainingItems,
+    ].filter(Boolean);
+  } else {
+    combinedNavItems = filerNavItems;
+  }
 
   const handleNavigation = (item) => {
     if (item.route) {
@@ -234,27 +242,27 @@ const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
             {combinedNavItems.map(
               (item) => (
                 <li className="dashboard-nav-item" key={item.key}>
-              <a
-                href="#"
+                  <a
+                    href="#"
                     className={`dashboard-nav-link ${
                       isItemActive(item) ? "dashboard-active-link" : ""
-                  }`}
-                onClick={(e) => {
-                  e.preventDefault();
+                    }`}
+                    onClick={(e) => {
+                      e.preventDefault();
                       handleNavigation(item);
-                  const mobileSidebar = document.getElementById("mobileSidebar");
-                  if (mobileSidebar) {
-                    const bsOffcanvas = window.bootstrap.Offcanvas.getInstance(mobileSidebar);
-                    if (bsOffcanvas) {
-                      bsOffcanvas.hide();
-                    }
-                  }
-                }}
-              >
+                      const mobileSidebar = document.getElementById("mobileSidebar");
+                      if (mobileSidebar) {
+                        const bsOffcanvas = window.bootstrap.Offcanvas.getInstance(mobileSidebar);
+                        if (bsOffcanvas) {
+                          bsOffcanvas.hide();
+                        }
+                      }
+                    }}
+                  >
                     <i className={`fa-solid ${item.icon} me-2`}></i>
                     <span>{item.label}</span>
-              </a>
-            </li>
+                  </a>
+                </li>
               )
             )}
           </ul>

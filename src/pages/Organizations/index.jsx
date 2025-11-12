@@ -38,8 +38,9 @@ const Organizations = () => {
   const [activeSection, setActiveSection] = useState("organizations");
   const [searchTerm, setSearchTerm] = useState("");
   const [switchSearchTerm, setSwitchSearchTerm] = useState("");
-  const [selectedTab, setSelectedTab] = useState("pending");
+  const [selectedTab, setSelectedTab] = useState("all");
   const [isSwitchModalOpen, setIsSwitchModalOpen] = useState(false);
+  const [selectedSwitchOrgId, setSelectedSwitchOrgId] = useState(null);
   const searchRef = useRef(null);
   const [searchResults, setSearchResults] = useState([]);
   const [selectedOrganization, setSelectedOrganization] = useState(null);
@@ -374,6 +375,7 @@ const Organizations = () => {
           return request.status === 1;
         case "denied":
           return request.status === 2;
+        case "all":
         default:
           return true;
       }
@@ -413,14 +415,14 @@ const Organizations = () => {
         <Header user={user} pageTitle="Organizations" onLogout={handleLogout} />
 
         <div className="dashboard-content-section">
-          <section className="shadow-custom bg-white p-4 mb-4 rounded-3">
+          <section className="shadow-custom bg-white p-4 mb-4 rounded-3 border border-light-subtle">
             <div className="d-flex flex-wrap justify-content-between align-items-start gap-3">
               <div>
-                <p className="text-uppercase text-muted small mb-1">Active Organization</p>
-                <h2 className="h4 mb-1">
+                <h3 className="h6 mb-2">Active Organization</h3>
+                <h2 className="h5 mb-2 text-dark">
                   {hasActiveOrganization ? activeOrganizationSummary.name : "No Active Organization"}
                 </h2>
-                <div className="text-muted small d-flex flex-column gap-1">
+                <div className="text-muted small d-flex flex-wrap gap-3">
                   <span>
                     <i className="fa-solid fa-tag me-1"></i>
                     {hasActiveOrganization ? activeOrganizationSummary.type : "Select from your organization list"}
@@ -428,28 +430,28 @@ const Organizations = () => {
                   {hasActiveOrganization && (
                     <>
                       {activeOrganizationSummary.address && (
-                        <span>
-                          <i className="fa-solid fa-location-dot me-1"></i>
+                  <span>
+                  <i className="fa-solid fa-location-dot me-1"></i>
                           {activeOrganizationSummary.address}
-                        </span>
+                  </span>
                       )}
-                      {activeOrganizationContact.name && (
-                        <span>
-                          <i className="fa-solid fa-user me-1"></i>
-                          {activeOrganizationContact.name}
-                        </span>
-                      )}
-                      {activeOrganizationContact.email && (
-                        <span>
-                          <i className="fa-solid fa-envelope me-1"></i>
-                          {activeOrganizationContact.email}
-                        </span>
-                      )}
-                      {activeOrganizationContact.phone && (
-                        <span>
-                          <i className="fa-solid fa-phone me-1"></i>
-                          {activeOrganizationContact.phone}
-                        </span>
+                  {activeOrganizationContact.name && (
+                    <span>
+                      <i className="fa-solid fa-user me-1"></i>
+                      {activeOrganizationContact.name}
+                    </span>
+                  )}
+                  {activeOrganizationContact.email && (
+                    <span>
+                    <i className="fa-solid fa-envelope me-1"></i>
+                      {activeOrganizationContact.email}
+                    </span>
+                  )}
+                  {activeOrganizationContact.phone && (
+                    <span>
+                      <i className="fa-solid fa-phone me-1"></i>
+                      {activeOrganizationContact.phone}
+                  </span>
                       )}
                     </>
                   )}
@@ -457,254 +459,19 @@ const Organizations = () => {
               </div>
               <button
                 type="button"
-                className="btn btn-primary"
-                onClick={() => setIsSwitchModalOpen(true)}
+                className="btn btn-sm d-inline-flex align-items-center gap-2 bg-warning-subtle text-warning fw-semibold border-0 rounded-pill"
+                onClick={() => {
+                  setSelectedSwitchOrgId(activeOrganizationId);
+                  setIsSwitchModalOpen(true);
+                }}
               >
-                <i className="fa-solid fa-building-columns me-2"></i>
+                <i className="fa-solid fa-retweet"></i>
                 Switch Organization
               </button>
             </div>
           </section>
 
-          <section className="row g-4">
-            <div className="col-12 col-xl-6">
-              <div className="shadow-custom bg-white p-4 h-100 rounded-3">
-                <div className="d-flex justify-content-between align-items-center mb-3">
-                  <h3 className="h6 mb-0">My Organizations</h3>
-                  <div className="d-flex align-items-center gap-2">
-                    {isLoadingUserOrganizations && (
-                      <span
-                        className="spinner-border spinner-border-sm text-primary"
-                        role="status"
-                        aria-hidden="true"
-                      ></span>
-                    )}
-                    <button
-                      type="button"
-                      className="btn btn-outline-secondary btn-sm"
-                      onClick={refreshUserOrganizations}
-                      disabled={isLoadingUserOrganizations}
-                    >
-                      <i
-                        className={`fa-solid fa-arrows-rotate me-2 ${
-                          isLoadingUserOrganizations ? "fa-spin" : ""
-                        }`}
-                      ></i>
-                      Refresh
-                    </button>
-                    <span className="badge bg-light text-dark">
-                      {(linkedOrganizations || []).length} linked
-                    </span>
-                  </div>
-                </div>
-                <p className="text-muted small mb-4">
-                  Organizations currently associated with your account. Select one to make it your active organization.
-                </p>
-
-                {(!linkedOrganizations || linkedOrganizations.length === 0) ? (
-                  <div className="text-center text-muted py-4">
-                    <i className="fa-solid fa-circle-nodes mb-2" style={{ fontSize: "2rem" }}></i>
-                    <p className="mb-0">You are not linked to any organizations yet.</p>
-                  </div>
-                ) : (
-                  <div className="d-flex flex-column gap-3">
-                    {linkedOrganizations.map((org, index) => {
-                      const orgId = resolveOrganizationId(org);
-                      const isActive = orgId === activeOrganizationId;
-                      const orgSummary = getOrganizationSummary(org);
-                      return (
-                        <div
-                          key={orgId || index}
-                          className={`border rounded-3 p-3 ${isActive ? "border-primary" : "border-light"}`}
-                          role="presentation"
-                          onClick={() => orgId && setActiveOrganization(orgId)}
-                          style={{ cursor: orgId ? "pointer" : "default" }}
-                        >
-                          <div className="d-flex justify-content-between align-items-start gap-2">
-                            <div>
-                              <h4 className="h6 mb-1">{orgSummary.name}</h4>
-                              <div className="text-muted small d-flex flex-column gap-1">
-                                <span>
-                                  <i className="fa-solid fa-tag me-1"></i>
-                                  {orgSummary.type}
-                                </span>
-                                {orgSummary.address && (
-                                  <span>
-                                    <i className="fa-solid fa-location-dot me-1"></i>
-                                    {orgSummary.address}
-                                  </span>
-                                )}
-                                {(orgSummary.contactName ||
-                                  orgSummary.contactEmail ||
-                                  orgSummary.contactPhone) && (
-                                  <span>
-                                    <i className="fa-solid fa-user me-1"></i>
-                                    {[orgSummary.contactName, orgSummary.contactEmail, orgSummary.contactPhone]
-                                      .filter(Boolean)
-                                      .join(" • ")}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                            {isActive ? (
-                              <span className="badge bg-success-subtle text-success">
-                                <i className="fa-solid fa-circle-check me-1"></i>
-                                Active
-                              </span>
-                            ) : (
-                              <span className="badge bg-light text-muted">
-                                {org.isPrimary ? "Primary" : "Available"}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-
-              </div>
-            </div>
-
-            <div className="col-12 col-xl-6">
-              <div className="shadow-custom bg-white p-4 h-100 rounded-3">
-                <div className="d-flex justify-content-between align-items-center mb-3">
-                  <h3 className="h6 mb-0">Join Request Activity</h3>
-                  <button
-                    className="btn btn-outline-secondary btn-sm"
-                    type="button"
-                    onClick={loadJoinRequests}
-                    disabled={isLoadingJoinRequests}
-                  >
-                    <i
-                      className={`fa-solid fa-arrows-rotate me-2 ${
-                        isLoadingJoinRequests ? "fa-spin" : ""
-                      }`}
-                    ></i>
-                    {isLoadingJoinRequests ? "Refreshing..." : "Refresh"}
-                  </button>
-                </div>
-                <p className="text-muted small mb-4">
-                  Keep track of pending and historical join requests. Status updates reflect the latest responses from organization admins.
-                </p>
-
-                <ul className="nav nav-pills mb-3">
-                  <li className="nav-item">
-                    <button
-                      className={`nav-link ${selectedTab === "pending" ? "active" : ""}`}
-                      type="button"
-                      onClick={() => setSelectedTab("pending")}
-                    >
-                      Pending
-                    </button>
-                  </li>
-                  <li className="nav-item">
-                    <button
-                      className={`nav-link ${selectedTab === "approved" ? "active" : ""}`}
-                      type="button"
-                      onClick={() => setSelectedTab("approved")}
-                    >
-                      Approved
-                    </button>
-                  </li>
-                  <li className="nav-item">
-                    <button
-                      className={`nav-link ${selectedTab === "denied" ? "active" : ""}`}
-                      type="button"
-                      onClick={() => setSelectedTab("denied")}
-                    >
-                      Denied
-                    </button>
-                  </li>
-                </ul>
-
-                {isLoadingJoinRequests && !hasLoadedJoinRequests ? (
-                  <div className="text-center text-muted py-4">
-                    <div className="spinner-border text-primary mb-3" role="status">
-                      <span className="visually-hidden">Loading join requests...</span>
-                    </div>
-                    <p className="mb-0">Loading join requests...</p>
-                  </div>
-                ) : filteredJoinRequests.length === 0 ? (
-                  <div className="text-center text-muted py-4">
-                    <i className="fa-solid fa-inbox mb-2" style={{ fontSize: "2.2rem" }}></i>
-                    <p className="mb-0">No join requests submitted yet.</p>
-                    <small>Submit a request to see it appear here.</small>
-                  </div>
-                ) : (
-                  <div className="d-flex flex-column">
-                    {filteredJoinRequests.map((request) => {
-                      const statusMeta =
-                        REQUEST_STATUS_META[request.status] || {
-                          label: "Unknown",
-                          badgeClass: "bg-secondary",
-                        };
-                      const orgDetail = request.organizationDetail || request.organization || null;
-                      const orgSummary = getOrganizationSummary(orgDetail);
-                      return (
-                      <div key={request.id} className="border rounded-3 p-3 mb-3">
-                        <div className="d-flex justify-content-between align-items-start gap-3">
-                          <div>
-                              <h4 className="h6 mb-1">
-                                {orgSummary.name}
-                              </h4>
-                            <div className="text-muted small d-flex flex-column gap-1">
-                              <span>
-                                <i className="fa-solid fa-tag me-1"></i>
-                                {orgSummary.type}
-                              </span>
-                              {orgSummary.address && (
-                                <span>
-                                  <i className="fa-solid fa-location-dot me-1"></i>
-                                  {orgSummary.address}
-                                </span>
-                              )}
-                              {(orgSummary.contactName ||
-                                orgSummary.contactEmail ||
-                                orgSummary.contactPhone) && (
-                                <span>
-                                  <i className="fa-solid fa-user me-1"></i>
-                                  {[orgSummary.contactName, orgSummary.contactEmail, orgSummary.contactPhone]
-                                    .filter(Boolean)
-                                    .join(" • ")}
-                                </span>
-                              )}
-                            </div>
-                            <div className="text-muted small">
-                                {request.requestedOn && (
-                                  <>
-                              <i className="fa-solid fa-calendar me-1"></i>
-                                    Requested {formatDate(request.requestedOn)}
-                                  </>
-                                )}
-                                {request.respondedOn && (
-                                <span className="ms-3">
-                                  <i className="fa-solid fa-clock-rotate-left me-1"></i>
-                                    Responded {formatDate(request.respondedOn)}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                            <span className={`badge ${statusMeta.badgeClass}`}>
-                              {statusMeta.label}
-                          </span>
-                        </div>
-                          {request.adminComment && (
-                          <p className="text-muted small mt-3 mb-0">
-                            <i className="fa-solid fa-comment-dots me-1 text-primary"></i>
-                              {request.adminComment}
-                          </p>
-                        )}
-                      </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="col-12">
-              <div className="shadow-custom bg-white p-4 rounded-3">
+          <section className="shadow-custom bg-white p-4 mb-4 rounded-3 border border-light-subtle">
                 <h3 className="h6 mb-3">Join Organization</h3>
                 <p className="text-muted small mb-4">
                   Search for an organization and send a join request.
@@ -732,15 +499,15 @@ const Organizations = () => {
                                 selectedOrganization.addressState ||
                                 selectedOrganization.addressZip) && (
                                 <span className="selected-org-address">
-                                  {" "}
-                                  •{" "}
-                                  {`${selectedOrganization.addressStreet1 || ""}${
+                              {`
+                                ${selectedOrganization.addressStreet1 || ""}${
                                     selectedOrganization.addressStreet2
                                       ? ", " + selectedOrganization.addressStreet2
                                       : ""
                                   }, ${selectedOrganization.addressCity || ""}, ${
                                     selectedOrganization.addressState || ""
-                                  } ${selectedOrganization.addressZip || ""}`
+                                } ${selectedOrganization.addressZip || ""}
+                              `
                                     .replace(/^,\s*/, "")
                                     .replace(/,\s*$/, "")}
                                 </span>
@@ -852,6 +619,233 @@ const Organizations = () => {
                     </div>
                   </form>
                 </div>
+          </section>
+
+          <section className="row g-4">
+            <div className="col-12 col-xl-6">
+              <div className="shadow-custom bg-white p-4 h-100 rounded-3 border border-light-subtle">
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <h3 className="h6 mb-0">My Organizations</h3>
+                  <div className="d-flex align-items-center gap-2">
+                    {isLoadingUserOrganizations && (
+                      <span
+                        className="spinner-border spinner-border-sm text-primary"
+                        role="status"
+                        aria-hidden="true"
+                      ></span>
+                    )}
+                    <button
+                      type="button"
+                      className="dashboard-btn-refresh d-inline-flex align-items-center gap-2"
+                      onClick={refreshUserOrganizations}
+                      disabled={isLoadingUserOrganizations}
+                    >
+                      {isLoadingUserOrganizations ? (
+                        <span
+                          className="spinner-border spinner-border-sm"
+                          role="status"
+                          aria-hidden="true"
+                        ></span>
+                      ) : (
+                        <i className="fa-solid fa-sync-alt"></i>
+                      )}
+                    </button>
+                    <span className="badge bg-light text-dark">
+                      {(linkedOrganizations || []).length} linked
+                    </span>
+                  </div>
+                </div>
+                <p className="text-muted small mb-4">
+                  Organizations currently associated with your account. Select one to make it your active organization.
+                </p>
+
+                {(!linkedOrganizations || linkedOrganizations.length === 0) ? (
+                  <div className="text-center text-muted py-4">
+                    <i className="fa-solid fa-circle-nodes mb-2" style={{ fontSize: "2rem" }}></i>
+                    <p className="mb-0">You are not linked to any organizations yet.</p>
+                  </div>
+                ) : (
+                  <div className="d-flex flex-column gap-3">
+                    {linkedOrganizations.map((org, index) => {
+                      const orgId = resolveOrganizationId(org);
+                      const isActive = orgId === activeOrganizationId;
+                      const orgSummary = getOrganizationSummary(org);
+                      return (
+                        <div
+                          key={orgId || index}
+                          className={`border rounded-3 p-3 ${isActive ? "border-primary" : "border-light"}`}
+                          style={{ cursor: "default", backgroundColor: isActive ? "rgba(2,101,163,0.05)" : "#fff" }}
+                        >
+                          <div className="d-flex justify-content-between align-items-start gap-2">
+                            <div>
+                              <div className="d-flex align-items-center gap-2 mb-1">
+                                <h4 className="h6 mb-0">{orgSummary.name}</h4>
+                                {isActive && (
+                                  <span className="badge bg-success-subtle text-success">
+                                    <i className="fa-solid fa-circle-check me-1"></i>
+                                    Active
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-muted small d-flex flex-column gap-1">
+                                <span>
+                                  <i className="fa-solid fa-tag me-1"></i>
+                                  {orgSummary.type}
+                                </span>
+                                {orgSummary.address && (
+                                  <span>
+                                    <i className="fa-solid fa-location-dot me-1"></i>
+                                    {orgSummary.address}
+                                  </span>
+                                )}
+                                {(orgSummary.contactName ||
+                                  orgSummary.contactEmail ||
+                                  orgSummary.contactPhone) && (
+                                  <span>
+                                    <i className="fa-solid fa-user me-1"></i>
+                                    {[orgSummary.contactName, orgSummary.contactEmail, orgSummary.contactPhone]
+                                      .filter(Boolean)
+                                      .join(" • ")}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            {!isActive && (
+                              <span className="badge bg-light text-muted">
+                                {org.isPrimary ? "Primary" : "Linked"}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+              </div>
+            </div>
+
+            <div className="col-12 col-xl-6">
+              <div className="shadow-custom bg-white p-4 h-100 rounded-3 border border-light-subtle">
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <h3 className="h6 mb-0">Join Request Activity</h3>
+                  <button
+                    className="dashboard-btn-refresh d-inline-flex align-items-center gap-2"
+                    type="button"
+                    onClick={loadJoinRequests}
+                    disabled={isLoadingJoinRequests}
+                  >
+                    {isLoadingJoinRequests ? (
+                      <span
+                        className="spinner-border spinner-border-sm"
+                        role="status"
+                        aria-hidden="true"
+                      ></span>
+                    ) : (
+                      <i className="fa-solid fa-sync-alt"></i>
+                    )}
+                  </button>
+                </div>
+                <p className="text-muted small mb-4">
+                  Keep track of pending and historical join requests. Status updates reflect the latest responses from organization admins.
+                </p>
+
+                <ul className="nav nav-pills mb-3 flex-wrap gap-2">
+                  {["all", "pending", "approved", "denied"].map((tab) => (
+                    <li className="nav-item" key={tab}>
+                      <button
+                        className={`nav-btn-pill ${selectedTab === tab ? "active" : ""}`}
+                        type="button"
+                        onClick={() => setSelectedTab(tab)}
+                      >
+                        {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+
+                {isLoadingJoinRequests && !hasLoadedJoinRequests ? (
+                  <div className="text-center text-muted py-4">
+                    <div className="spinner-border text-primary mb-3" role="status">
+                      <span className="visually-hidden">Loading join requests...</span>
+                    </div>
+                    <p className="mb-0">Loading join requests...</p>
+                  </div>
+                ) : filteredJoinRequests.length === 0 ? (
+                  <div className="text-center text-muted py-4">
+                    <i className="fa-solid fa-inbox mb-2" style={{ fontSize: "2.2rem" }}></i>
+                    <p className="mb-0">No join requests submitted yet.</p>
+                    <small>Submit a request to see it appear here.</small>
+                  </div>
+                ) : (
+                  <div className="d-flex flex-column">
+                    {filteredJoinRequests.map((request) => {
+                      const statusMeta =
+                        REQUEST_STATUS_META[request.status] || {
+                          label: "Unknown",
+                          badgeClass: "bg-secondary",
+                        };
+                      const orgDetail = request.organizationDetail || request.organization || null;
+                      const orgSummary = getOrganizationSummary(orgDetail);
+                      return (
+                        <div key={request.id} className="border rounded-3 p-3 mb-3">
+                          <div className="d-flex justify-content-between align-items-start gap-3">
+                            <div>
+                              <h4 className="h6 mb-1">
+                                {orgSummary.name}
+                              </h4>
+                              <div className="text-muted small d-flex flex-column gap-1">
+                                <span>
+                                  <i className="fa-solid fa-tag me-1"></i>
+                                  {orgSummary.type}
+                                </span>
+                                {orgSummary.address && (
+                                  <span>
+                                    <i className="fa-solid fa-location-dot me-1"></i>
+                                    {orgSummary.address}
+                                  </span>
+                                )}
+                                {(orgSummary.contactName ||
+                                  orgSummary.contactEmail ||
+                                  orgSummary.contactPhone) && (
+                                  <span>
+                                    <i className="fa-solid fa-user me-1"></i>
+                                    {[orgSummary.contactName, orgSummary.contactEmail, orgSummary.contactPhone]
+                                      .filter(Boolean)
+                                      .join(" • ")}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-muted small">
+                                {request.requestedOn && (
+                                  <>
+                                    <i className="fa-solid fa-calendar me-1"></i>
+                                    Requested {formatDate(request.requestedOn)}
+                                  </>
+                                )}
+                                {request.respondedOn && (
+                                  <span className="ms-3">
+                                    <i className="fa-solid fa-clock-rotate-left me-1"></i>
+                                    Responded {formatDate(request.respondedOn)}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <span className={`badge ${statusMeta.badgeClass}`}>
+                              {statusMeta.label}
+                            </span>
+                          </div>
+                          {request.adminComment && (
+                            <p className="text-muted small mt-3 mb-0">
+                              <i className="fa-solid fa-comment-dots me-1 text-primary"></i>
+                              {request.adminComment}
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
           </section>
@@ -896,19 +890,19 @@ const Organizations = () => {
                     filteredSwitchOrganizations.map((org, index) => {
                       const orgId = resolveOrganizationId(org);
                       const orgSummary = getOrganizationSummary(org);
-                      const isActive = orgId === activeOrganizationId;
+                      const isSelected = orgId === selectedSwitchOrgId;
                       return (
-                      <button
-                        type="button"
+                        <div
                           key={orgId || index}
-                        className={`list-group-item list-group-item-action d-flex justify-content-between align-items-center ${
-                            isActive ? "active" : ""
-                        }`}
-                          onClick={() => setActiveOrganization(orgId)}
-                      >
-                        <div className="text-start">
-                            <div className="fw-semibold">{orgSummary.name}</div>
-                          <div className="text-muted small d-flex flex-column gap-1">
+                          className={`switch-org-item ${isSelected ? "active" : ""}`}
+                          onClick={() => setSelectedSwitchOrgId(orgId)}
+                        >
+                          <div>
+                            <div className="d-flex align-items-center gap-2 mb-1">
+                              <span className="fw-semibold">{orgSummary.name}</span>
+                              {isSelected && <i className="fa-solid fa-circle-check text-primary"></i>}
+                            </div>
+                            <div className="text-muted small d-flex flex-column gap-1">
                               <span>
                                 <i className="fa-solid fa-tag me-1"></i>
                                 {orgSummary.type}
@@ -931,10 +925,7 @@ const Organizations = () => {
                               )}
                             </div>
                           </div>
-                          {isActive && (
-                          <i className="fa-solid fa-circle-check"></i>
-                        )}
-                      </button>
+                        </div>
                       );
                     })
                   )}
@@ -943,15 +934,23 @@ const Organizations = () => {
               <div className="modal-footer">
                 <button
                   type="button"
-                  className="btn btn-outline-secondary"
+                  className="dashboard-btn-refresh"
+                  style={{ minWidth: "80px" }}
                   onClick={() => setIsSwitchModalOpen(false)}
                 >
                   Close
                 </button>
                 <button
                   type="button"
-                  className="btn btn-primary"
-                  onClick={() => setIsSwitchModalOpen(false)}
+                  className="dashboard-btn-create"
+                  style={{ minWidth: "120px" }}
+                  disabled={!selectedSwitchOrgId}
+                  onClick={() => {
+                    if (selectedSwitchOrgId) {
+                      setActiveOrganization(selectedSwitchOrgId);
+                    }
+                    setIsSwitchModalOpen(false);
+                  }}
                 >
                   <i className="fa-solid fa-check me-2"></i>
                   Confirm Selection

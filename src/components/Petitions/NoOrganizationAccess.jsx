@@ -26,7 +26,7 @@ const NoOrganizationAccess = () => {
             <p className="text-muted mb-4">
               You need to be part of an organization to access this section. You
               can either join an existing organization or create a new
-              organization on the dashboard.
+              organization on the organization section.
             </p>
           </div>
         </div>

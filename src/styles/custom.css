@@ -2869,3 +2869,44 @@ body.high-contrast .text-size-dropdown-item.selected {
         font-size: 13px;
     }
 }
+
+.nav-btn-pill {
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    color: var(--theme-color);
+    font-size: var(--text-sm);
+    padding: 6px 16px;
+    transition: all 0.2s;
+}
+
+.nav-btn-pill.active {
+    background: var(--theme-color);
+    color: #fff;
+    border-color: var(--theme-color);
+}
+
+.nav-btn-pill:not(.active):hover {
+    border-color: rgba(2, 101, 163, 0.4);
+    background: rgba(2, 101, 163, 0.05);
+}
+
+.switch-org-item {
+    border: 1px solid #e7e9ed;
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #fff;
+}
+
+.switch-org-item:hover {
+    border-color: rgba(2, 101, 163, 0.4);
+    background: rgba(2, 101, 163, 0.05);
+}
+
+.switch-org-item.active {
+    border-color: var(--theme-color);
+    background: rgba(2, 101, 163, 0.12);
+}
