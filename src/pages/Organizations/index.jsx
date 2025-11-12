@@ -41,6 +41,7 @@ const Organizations = () => {
   const [selectedTab, setSelectedTab] = useState("all");
   const [isSwitchModalOpen, setIsSwitchModalOpen] = useState(false);
   const [selectedSwitchOrgId, setSelectedSwitchOrgId] = useState(null);
+  const [isSwitchingOrganization, setIsSwitchingOrganization] = useState(false);
   const searchRef = useRef(null);
   const [searchResults, setSearchResults] = useState([]);
   const [selectedOrganization, setSelectedOrganization] = useState(null);
@@ -1077,7 +1078,12 @@ const Organizations = () => {
                   type="button"
                   className="btn-close"
                   aria-label="Close"
-                  onClick={() => setIsSwitchModalOpen(false)}
+                  disabled={isSwitchingOrganization}
+                  onClick={() => {
+                    if (!isSwitchingOrganization) {
+                      setIsSwitchModalOpen(false);
+                    }
+                  }}
                 ></button>
               </div>
               <div className="modal-body">
@@ -1147,7 +1153,12 @@ const Organizations = () => {
                   type="button"
                   className="dashboard-btn-refresh"
                   style={{ minWidth: "80px" }}
-                  onClick={() => setIsSwitchModalOpen(false)}
+                  disabled={isSwitchingOrganization}
+                  onClick={() => {
+                    if (!isSwitchingOrganization) {
+                      setIsSwitchModalOpen(false);
+                    }
+                  }}
                 >
                   Close
                 </button>
@@ -1155,17 +1166,59 @@ const Organizations = () => {
                   type="button"
                   className="dashboard-btn-create"
                   style={{ minWidth: "120px" }}
-                  disabled={!selectedSwitchOrgId}
-                  onClick={() => {
+                  disabled={!selectedSwitchOrgId || isSwitchingOrganization}
+                  onClick={async () => {
                     if (selectedSwitchOrgId) {
+                      setIsSwitchingOrganization(true);
+                      // Wait 1 second to show the loading dialog
+                      await new Promise(resolve => setTimeout(resolve, 1000));
                       setActiveOrganization(selectedSwitchOrgId);
+                      setIsSwitchModalOpen(false);
+                      setIsSwitchingOrganization(false);
                     }
-                    setIsSwitchModalOpen(false);
                   }}
                 >
-                  <i className="fa-solid fa-check me-2"></i>
-                  Confirm Selection
+                  {isSwitchingOrganization ? (
+                    <>
+                      <span
+                        className="spinner-border spinner-border-sm me-2"
+                        role="status"
+                        aria-hidden="true"
+                      ></span>
+                      Switching...
+                    </>
+                  ) : (
+                    <>
+                      <i className="fa-solid fa-check me-2"></i>
+                      Confirm Selection
+                    </>
+                  )}
                 </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Loading Dialog for Switching Organization */}
+      {isSwitchingOrganization && (
+        <div
+          className="modal fade show d-block"
+          tabIndex="-1"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)", zIndex: 1060 }}
+        >
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-body text-center py-4">
+                <div
+                  className="spinner-border text-primary mb-3"
+                  role="status"
+                  style={{ width: "3rem", height: "3rem" }}
+                >
+                  <span className="visually-hidden">Loading...</span>
+                </div>
+                <h5 className="mb-0">Switching organizations...</h5>
+                <p className="text-muted small mt-2 mb-0">Please wait</p>
               </div>
             </div>
           </div>

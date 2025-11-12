@@ -1600,7 +1600,7 @@ input, textarea, select {
     border: 1px solid #e0e0e0;
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    max-height: 400px;
+    max-height: 260px; /* Limit to show exactly 3 items with scrolling for more */
     overflow-y: auto;
     z-index: 1000;
 }
@@ -2465,6 +2465,56 @@ input, textarea, select {
     height: 100%;
     padding: 24px;
     background: white;
+}
+
+/* Custom scrollbar for petition steps sidebar */
+.petition-steps-sidebar::-webkit-scrollbar {
+    width: 8px;
+}
+
+.petition-steps-sidebar::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.petition-steps-sidebar::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 10px;
+}
+
+.petition-steps-sidebar::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Firefox scrollbar for petition steps sidebar */
+.petition-steps-sidebar {
+    scrollbar-width: thin;
+    scrollbar-color: #c1c1c1 #f1f1f1;
+}
+
+/* Custom scrollbar for petition steps form */
+.petition-steps-form::-webkit-scrollbar {
+    width: 8px;
+}
+
+.petition-steps-form::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.petition-steps-form::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 10px;
+}
+
+.petition-steps-form::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Firefox scrollbar for petition steps form */
+.petition-steps-form {
+    scrollbar-width: thin;
+    scrollbar-color: #c1c1c1 #f1f1f1;
 }
 
 /* Adjust stepper container to work within the new layout */
