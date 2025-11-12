@@ -54,6 +54,14 @@ const Organizations = () => {
   const debouncedSearchQuery = useDebounce(searchTerm, 300);
   const redirectGuardRef = useRef(false);
   const hasFetchedUserOrganizationsRef = useRef(false);
+  
+  // Pagination state for organizations
+  const [orgsCurrentPage, setOrgsCurrentPage] = useState(1);
+  const orgsPerPage = 3;
+  
+  // Pagination state for join requests
+  const [requestsCurrentPage, setRequestsCurrentPage] = useState(1);
+  const requestsPerPage = 3;
 
   const isOrgAdminUser = useMemo(() => {
     if (!user) return false;
@@ -382,6 +390,35 @@ const Organizations = () => {
     });
   }, [joinRequests, selectedTab]);
 
+  // Paginated organizations
+  const paginatedOrganizations = useMemo(() => {
+    const orgs = Array.isArray(linkedOrganizations) ? linkedOrganizations : [];
+    const startIndex = (orgsCurrentPage - 1) * orgsPerPage;
+    const endIndex = startIndex + orgsPerPage;
+    return orgs.slice(startIndex, endIndex);
+  }, [linkedOrganizations, orgsCurrentPage, orgsPerPage]);
+
+  const orgsTotalPages = useMemo(() => {
+    const orgs = Array.isArray(linkedOrganizations) ? linkedOrganizations : [];
+    return Math.ceil(orgs.length / orgsPerPage);
+  }, [linkedOrganizations, orgsPerPage]);
+
+  // Paginated join requests
+  const paginatedJoinRequests = useMemo(() => {
+    const startIndex = (requestsCurrentPage - 1) * requestsPerPage;
+    const endIndex = startIndex + requestsPerPage;
+    return filteredJoinRequests.slice(startIndex, endIndex);
+  }, [filteredJoinRequests, requestsCurrentPage, requestsPerPage]);
+
+  const requestsTotalPages = useMemo(() => {
+    return Math.ceil(filteredJoinRequests.length / requestsPerPage);
+  }, [filteredJoinRequests, requestsPerPage]);
+
+  // Reset to page 1 when filter changes
+  useEffect(() => {
+    setRequestsCurrentPage(1);
+  }, [selectedTab]);
+
   const activeOrganizationContact = useMemo(() => {
     if (!activeOrganizationEntity) {
       return {
@@ -622,8 +659,8 @@ const Organizations = () => {
           </section>
 
           <section className="row g-4">
-            <div className="col-12 col-xl-6">
-              <div className="shadow-custom bg-white p-4 h-100 rounded-3 border border-light-subtle">
+            <div className="col-12">
+              <div className="shadow-custom bg-white p-4 rounded-3 border border-light-subtle">
                 <div className="d-flex justify-content-between align-items-center mb-3">
                   <h3 className="h6 mb-0">My Organizations</h3>
                   <div className="d-flex align-items-center gap-2">
@@ -665,8 +702,9 @@ const Organizations = () => {
                     <p className="mb-0">You are not linked to any organizations yet.</p>
                   </div>
                 ) : (
-                  <div className="d-flex flex-column gap-3">
-                    {linkedOrganizations.map((org, index) => {
+                  <>
+                    <div className="d-flex flex-column gap-3">
+                      {paginatedOrganizations.map((org, index) => {
                       const orgId = resolveOrganizationId(org);
                       const isActive = orgId === activeOrganizationId;
                       const orgSummary = getOrganizationSummary(org);
@@ -719,14 +757,100 @@ const Organizations = () => {
                         </div>
                       );
                     })}
-                  </div>
+                    </div>
+
+                    {/* Organizations Pagination */}
+                    {(linkedOrganizations || []).length > orgsPerPage && (
+                      <div className="d-flex justify-content-center mt-4">
+                        <div className="pagination-minimal">
+                          <button
+                            className={`pagination-btn ${
+                              orgsCurrentPage === 1 ? "disabled" : ""
+                            }`}
+                            onClick={() => {
+                              if (orgsCurrentPage > 1) {
+                                setOrgsCurrentPage(orgsCurrentPage - 1);
+                              }
+                            }}
+                            disabled={orgsCurrentPage === 1}
+                          >
+                            <svg
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                d="M15 18L9 12L15 6"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                            Previous
+                          </button>
+
+                          <div className="pagination-pages">
+                            {Array.from(
+                              { length: Math.min(orgsTotalPages, 5) },
+                              (_, i) => {
+                                const page = i + 1;
+                                return (
+                                  <button
+                                    key={page}
+                                    className={`pagination-page ${
+                                      page === orgsCurrentPage ? "active" : ""
+                                    }`}
+                                    onClick={() => setOrgsCurrentPage(page)}
+                                  >
+                                    {page}
+                                  </button>
+                                );
+                              }
+                            )}
+                          </div>
+
+                          <button
+                            className={`pagination-btn ${
+                              orgsCurrentPage >= orgsTotalPages ? "disabled" : ""
+                            }`}
+                            onClick={() => {
+                              if (orgsCurrentPage < orgsTotalPages) {
+                                setOrgsCurrentPage(orgsCurrentPage + 1);
+                              }
+                            }}
+                            disabled={orgsCurrentPage >= orgsTotalPages}
+                          >
+                            Next
+                            <svg
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                d="M9 18L15 12L9 6"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
 
               </div>
             </div>
 
-            <div className="col-12 col-xl-6">
-              <div className="shadow-custom bg-white p-4 h-100 rounded-3 border border-light-subtle">
+            <div className="col-12">
+              <div className="shadow-custom bg-white p-4 rounded-3 border border-light-subtle">
                 <div className="d-flex justify-content-between align-items-center mb-3">
                   <h3 className="h6 mb-0">Join Request Activity</h3>
                   <button
@@ -778,8 +902,9 @@ const Organizations = () => {
                     <small>Submit a request to see it appear here.</small>
                   </div>
                 ) : (
-                  <div className="d-flex flex-column">
-                    {filteredJoinRequests.map((request) => {
+                  <>
+                    <div className="d-flex flex-column">
+                      {paginatedJoinRequests.map((request) => {
                       const statusMeta =
                         REQUEST_STATUS_META[request.status] || {
                           label: "Unknown",
@@ -844,7 +969,93 @@ const Organizations = () => {
                         </div>
                       );
                     })}
-                  </div>
+                    </div>
+
+                    {/* Join Requests Pagination */}
+                    {filteredJoinRequests.length > requestsPerPage && (
+                      <div className="d-flex justify-content-center mt-4">
+                        <div className="pagination-minimal">
+                          <button
+                            className={`pagination-btn ${
+                              requestsCurrentPage === 1 ? "disabled" : ""
+                            }`}
+                            onClick={() => {
+                              if (requestsCurrentPage > 1) {
+                                setRequestsCurrentPage(requestsCurrentPage - 1);
+                              }
+                            }}
+                            disabled={requestsCurrentPage === 1}
+                          >
+                            <svg
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                d="M15 18L9 12L15 6"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                            Previous
+                          </button>
+
+                          <div className="pagination-pages">
+                            {Array.from(
+                              { length: Math.min(requestsTotalPages, 5) },
+                              (_, i) => {
+                                const page = i + 1;
+                                return (
+                                  <button
+                                    key={page}
+                                    className={`pagination-page ${
+                                      page === requestsCurrentPage ? "active" : ""
+                                    }`}
+                                    onClick={() => setRequestsCurrentPage(page)}
+                                  >
+                                    {page}
+                                  </button>
+                                );
+                              }
+                            )}
+                          </div>
+
+                          <button
+                            className={`pagination-btn ${
+                              requestsCurrentPage >= requestsTotalPages ? "disabled" : ""
+                            }`}
+                            onClick={() => {
+                              if (requestsCurrentPage < requestsTotalPages) {
+                                setRequestsCurrentPage(requestsCurrentPage + 1);
+                              }
+                            }}
+                            disabled={requestsCurrentPage >= requestsTotalPages}
+                          >
+                            Next
+                            <svg
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                d="M9 18L15 12L9 6"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             </div>

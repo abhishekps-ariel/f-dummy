@@ -102,6 +102,7 @@ export const usePetitions = () => {
 
     setLoading(true);
     setError(null);
+    let errorAlreadyShown = false; // Track if we've already shown the error toast
 
     try {
       // Get the organization ID from the user's organization details
@@ -128,12 +129,17 @@ export const usePetitions = () => {
         const errorMessage = response.message || 'Failed to submit petition';
         setError(errorMessage);
         toast.error(errorMessage);
+        errorAlreadyShown = true; // Mark that we've already shown the toast
         throw new Error(errorMessage);
       }
     } catch (err) {
       const errorMessage = err.response?.data?.message || err.message || 'Failed to submit petition';
       setError(errorMessage);
-      toast.error(errorMessage);
+      
+      // Only show toast if we haven't already shown it in the else block above
+      if (!errorAlreadyShown) {
+        toast.error(errorMessage);
+      }
       throw err;
     } finally {
       setLoading(false);
