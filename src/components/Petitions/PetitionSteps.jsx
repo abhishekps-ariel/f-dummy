@@ -98,6 +98,12 @@ const PetitionSteps = ({
   const [addressValidationType, setAddressValidationType] = useState("");
   const [addressValidationContext, setAddressValidationContext] = useState(null);
   const [pendingStepChange, setPendingStepChange] = useState(null);
+  
+  // Address verification state for other steps
+  const [isFilingEntityAddressVerified, setIsFilingEntityAddressVerified] = useState(false);
+  const [isNoticeAddressVerified, setIsNoticeAddressVerified] = useState(false);
+  const [borrowerAddressesVerified, setBorrowerAddressesVerified] = useState({}); // { borrowerId: true/false }
+  const [loanAssigneeAddressesVerified, setLoanAssigneeAddressesVerified] = useState({}); // { assigneeIndex: true/false }
 
   // Sync wizard state with component state
   useEffect(() => {
@@ -927,7 +933,7 @@ const PetitionSteps = ({
     }
     
     // When navigating away from Property Address step (step 1), trigger address validation
-    if (prev === 1 && next !== 1 && formData?.propertyStreet1?.trim() && !isAddressVerified) {
+    if (prev === 1 && next !== 1 && next > prev && formData?.propertyStreet1?.trim() && !isAddressVerified) {
       // Store the intended step change
       setPendingStepChange(next);
       // Revert to step 1 until validation completes
@@ -939,8 +945,72 @@ const PetitionSteps = ({
       return;
     }
     
+    // When navigating away from Filing Entity step (step 4), trigger address validation
+    if (prev === 4 && next !== 4 && next > prev && formData?.filingEntityStreet1?.trim() && !isFilingEntityAddressVerified) {
+      setPendingStepChange(next);
+      wizardGoToStep(4);
+      setCurrentStep(4);
+      previousStepRef.current = 4;
+      setShouldValidateAddress(true);
+      setAddressValidationType("filingEntity");
+      return;
+    }
+    
+    // When navigating away from Right-to-Cure step (step 5), trigger notice address validation
+    if (prev === 5 && next !== 5 && next > prev && formData?.noticeAddressStreet1?.trim() && !isNoticeAddressVerified) {
+      setPendingStepChange(next);
+      wizardGoToStep(5);
+      setCurrentStep(5);
+      previousStepRef.current = 5;
+      setShouldValidateAddress(true);
+      setAddressValidationType("notice");
+      return;
+    }
+    
+    // When navigating away from Borrower Details step (step 3), trigger borrower address validation
+    if (prev === 3 && next !== 3 && next > prev) {
+      const hasBorrowerAddresses = formData?.borrowers?.some(borrower => borrower.mailingStreet1?.trim());
+      if (hasBorrowerAddresses) {
+        // Check if all borrower addresses are verified
+        const allVerified = formData.borrowers
+          .filter(borrower => borrower.mailingStreet1?.trim())
+          .every(borrower => borrowerAddressesVerified[borrower.id] === true);
+        
+        if (!allVerified) {
+          setPendingStepChange(next);
+          wizardGoToStep(3);
+          setCurrentStep(3);
+          previousStepRef.current = 3;
+          setShouldValidateAddress(true);
+          setAddressValidationType("borrower");
+          return;
+        }
+      }
+    }
+    
+    // When navigating away from Loan Assignees step (step 7), trigger assignee address validation
+    if (prev === 7 && next !== 7 && next > prev) {
+      const hasAssigneeAddresses = formData?.loanAssignees?.some(assignee => assignee.street1?.trim());
+      if (hasAssigneeAddresses) {
+        // Check if all assignee addresses are verified
+        const allVerified = formData.loanAssignees
+          .filter(assignee => assignee.street1?.trim())
+          .every((assignee, index) => loanAssigneeAddressesVerified[index] === true);
+        
+        if (!allVerified) {
+          setPendingStepChange(next);
+          wizardGoToStep(7);
+          setCurrentStep(7);
+          previousStepRef.current = 7;
+          setShouldValidateAddress(true);
+          setAddressValidationType("loanAssignee");
+          return;
+        }
+      }
+    }
+    
     previousStepRef.current = wizardCurrentStep;
-  }, [wizardCurrentStep, isAddressVerified, formData?.propertyStreet1, completedSteps, stepsWithErrors, totalSteps, markStepCompleted, markStepIncomplete, checkStepHasRequiredFields, clearStepError]);
+  }, [wizardCurrentStep, isAddressVerified, isFilingEntityAddressVerified, isNoticeAddressVerified, borrowerAddressesVerified, loanAssigneeAddressesVerified, formData, completedSteps, stepsWithErrors, totalSteps, markStepCompleted, markStepIncomplete, checkStepHasRequiredFields, clearStepError, wizardGoToStep, setCurrentStep]);
 
   // When address is verified, mark step 1 as completed if all fields are filled
   useEffect(() => {
@@ -1092,6 +1162,10 @@ const PetitionSteps = ({
       
       // Clear address verification state
       setIsAddressVerified(false);
+      setIsFilingEntityAddressVerified(false);
+      setIsNoticeAddressVerified(false);
+      setBorrowerAddressesVerified({});
+      setLoanAssigneeAddressesVerified({});
       setAddressValidationError("");
       setShowAddressValidationDialog(false);
       setAddressValidationMessage("");
@@ -1869,10 +1943,16 @@ const PetitionSteps = ({
 
             let countyMatch = false;
 
-            // Check city match (more flexible matching)
+            let geocodedCity = "";
+
+            // Check city match (stricter matching - require meaningful match)
 
             addressComponents.forEach((component) => {
               const types = component.types;
+
+              if (types.includes("locality")) {
+                geocodedCity = component.long_name.toLowerCase();
+              }
 
               if (
                 types.includes("locality") ||
@@ -1880,13 +1960,26 @@ const PetitionSteps = ({
               ) {
                 const componentCity = component.long_name.toLowerCase();
 
-                const inputCity = formData.propertyCity.toLowerCase();
+                const inputCity = formData.propertyCity.toLowerCase().trim();
 
-                if (
-                  componentCity.includes(inputCity) ||
-                  inputCity.includes(componentCity)
-                ) {
-                  cityMatch = true;
+                // Stricter city matching: require at least 3 characters and meaningful match
+                if (inputCity.length >= 3) {
+                  // Check if input city matches the beginning of geocoded city (for autocomplete)
+                  // OR if geocoded city matches the beginning of input city
+                  // OR exact match
+                  if (
+                    componentCity === inputCity ||
+                    componentCity.startsWith(inputCity) ||
+                    inputCity.startsWith(componentCity) ||
+                    (componentCity.includes(inputCity) && inputCity.length >= 4)
+                  ) {
+                    cityMatch = true;
+                  }
+                } else if (inputCity.length > 0) {
+                  // For very short inputs (1-2 chars), require exact match only
+                  if (componentCity === inputCity) {
+                    cityMatch = true;
+                  }
                 }
               }
 
@@ -1899,13 +1992,22 @@ const PetitionSteps = ({
               if (types.includes("administrative_area_level_2")) {
                 const componentCounty = component.long_name.toLowerCase();
 
-                const inputCounty = formData.propertyCounty.toLowerCase();
+                const inputCounty = formData.propertyCounty.toLowerCase().trim();
 
-                if (
-                  componentCounty.includes(inputCounty) ||
-                  inputCounty.includes(componentCounty)
-                ) {
-                  countyMatch = true;
+                // Stricter county matching: require meaningful match
+                if (inputCounty.length >= 3) {
+                  if (
+                    componentCounty === inputCounty ||
+                    componentCounty.startsWith(inputCounty) ||
+                    inputCounty.startsWith(componentCounty) ||
+                    (componentCounty.includes(inputCounty) && inputCounty.length >= 4)
+                  ) {
+                    countyMatch = true;
+                  }
+                } else if (inputCounty.length > 0) {
+                  if (componentCounty === inputCounty) {
+                    countyMatch = true;
+                  }
                 }
               }
             });
@@ -2037,40 +2139,295 @@ const PetitionSteps = ({
     return { isValid: true, errors: {} };
   };
 
+  // Generic address validation function for any address type
+  const validateAddressWithGeocodingGeneric = (addressData) => {
+    return new Promise((resolve) => {
+      const { street1, street2, city, state, zip } = addressData;
+      
+      if (!geocoderRef.current || !street1?.trim()) {
+        resolve({ isValid: false, error: "Street address is required" });
+        return;
+      }
+
+      // Require city and zip for validation
+      if (!city || !city.trim()) {
+        resolve({ isValid: false, error: "City is required for address validation" });
+        return;
+      }
+
+      if (city.trim().length < 3) {
+        resolve({ isValid: false, error: "City name must be at least 3 characters long" });
+        return;
+      }
+
+      if (!zip || !zip.trim()) {
+        resolve({ isValid: false, error: "ZIP code is required for address validation" });
+        return;
+      }
+
+      setIsValidatingAddress(true);
+      setAddressValidationError("");
+
+      const addressLine2 = street2 ? ` ${street2}` : "";
+      const fullAddress = `${street1}${addressLine2}, ${city || ""}, ${state || "MA"} ${zip || ""}`.trim();
+
+      geocoderRef.current.geocode(
+        { address: fullAddress },
+        (results, status) => {
+          setIsValidatingAddress(false);
+
+          if (status === "OK" && results && results.length > 0) {
+            const result = results[0];
+            const addressComponents = result.address_components;
+
+            let foundCity = false;
+            let foundState = false;
+            let foundZip = false;
+            let actualState = "";
+
+            addressComponents.forEach((component) => {
+              const types = component.types;
+
+              if (types.includes("locality") || types.includes("administrative_area_level_2")) {
+                if (city && component.long_name.toLowerCase().includes(city.toLowerCase())) {
+                  foundCity = true;
+                }
+              }
+
+              if (types.includes("administrative_area_level_1")) {
+                actualState = component.short_name;
+                if (component.short_name === "MA") {
+                  foundState = true;
+                }
+              }
+
+              if (types.includes("postal_code")) {
+                if (zip && component.long_name === zip) {
+                  foundZip = true;
+                }
+              }
+            });
+
+            // Check if the address is actually in Massachusetts
+            if (actualState && actualState !== "MA") {
+              setAddressValidationError(
+                `This address is in ${actualState}, but this system only accepts Massachusetts addresses. Please select a Massachusetts address.`
+              );
+              resolve({
+                isValid: false,
+                error: "Address is not in Massachusetts",
+              });
+              return;
+            }
+
+            // More strict validation - check if all components match
+            let cityMatch = false;
+            let zipMatch = false;
+
+            addressComponents.forEach((component) => {
+              const types = component.types;
+
+              if (types.includes("locality") || types.includes("administrative_area_level_2")) {
+                if (city && city.trim().length > 0) {
+                  const componentCity = component.long_name.toLowerCase();
+                  const inputCity = city.toLowerCase().trim();
+                  
+                  // Stricter city matching: require meaningful match
+                  if (inputCity.length >= 3) {
+                    // Check if input city matches the beginning of geocoded city (for autocomplete)
+                    // OR if geocoded city matches the beginning of input city
+                    // OR exact match
+                    // OR if input is 4+ chars and is contained in geocoded city
+                    if (
+                      componentCity === inputCity ||
+                      componentCity.startsWith(inputCity) ||
+                      inputCity.startsWith(componentCity) ||
+                      (componentCity.includes(inputCity) && inputCity.length >= 4)
+                    ) {
+                      cityMatch = true;
+                    }
+                  } else if (inputCity.length > 0) {
+                    // For very short inputs (1-2 chars), require exact match only
+                    if (componentCity === inputCity) {
+                      cityMatch = true;
+                    }
+                  }
+                }
+              }
+
+              if (types.includes("postal_code")) {
+                if (zip && zip.trim() && component.long_name === zip.trim()) {
+                  zipMatch = true;
+                }
+              }
+            });
+
+            // Require state and both city AND zip to match (stricter validation)
+            if (foundState && cityMatch && zipMatch) {
+              resolve({ isValid: true, coordinates: result.geometry.location });
+            } else {
+              let errorMessage = "Address verification failed. Please check:";
+              if (!cityMatch && city && city.trim().length > 0) {
+                errorMessage += " City does not match the address";
+              }
+              if (!zipMatch && zip && zip.trim().length > 0) {
+                errorMessage += " ZIP code does not match the address";
+              }
+              if (!cityMatch && city && city.trim().length > 0 && city.trim().length < 3) {
+                errorMessage += " (City name is too short - please enter at least 3 characters)";
+              }
+
+              setAddressValidationError(errorMessage);
+              resolve({ isValid: false, error: "Address verification failed" });
+            }
+          } else {
+            setAddressValidationError(
+              "Invalid address. Please select from suggestions or enter a valid address."
+            );
+            resolve({ isValid: false, error: "Invalid address" });
+          }
+        }
+      );
+    });
+  };
+
+  // Validate Filing Entity address step
+  const validateFilingEntityAddressStep = async () => {
+    if (!formData.filingEntityStreet1?.trim()) {
+      return { isValid: true, errors: {} }; // No address to validate
+    }
+
+    const addressData = {
+      street1: formData.filingEntityStreet1,
+      street2: formData.filingEntityStreet2 || "",
+      city: formData.filingEntityCity || "",
+      state: formData.filingEntityState || "MA",
+      zip: formData.filingEntityZip || "",
+    };
+
+    const addressValidation = await validateAddressWithGeocodingGeneric(addressData);
+    return addressValidation;
+  };
+
+  // Validate Notice Address step
+  const validateNoticeAddressStep = async () => {
+    if (!formData.noticeAddressStreet1?.trim()) {
+      return { isValid: true, errors: {} }; // No address to validate
+    }
+
+    const addressData = {
+      street1: formData.noticeAddressStreet1,
+      street2: "",
+      city: formData.noticeAddressCity || "",
+      state: formData.noticeAddressState || "MA",
+      zip: formData.noticeAddressZip || "",
+    };
+
+    const addressValidation = await validateAddressWithGeocodingGeneric(addressData);
+    return addressValidation;
+  };
+
+  // Validate Borrower addresses step
+  const validateBorrowerAddressesStep = async () => {
+    if (!formData.borrowers || formData.borrowers.length === 0) {
+      return { isValid: true, errors: {} };
+    }
+
+    const borrowersWithAddresses = formData.borrowers.filter(
+      (borrower) => borrower.mailingStreet1?.trim()
+    );
+
+    if (borrowersWithAddresses.length === 0) {
+      return { isValid: true, errors: {} }; // No addresses to validate
+    }
+
+    // Validate each borrower address
+    for (const borrower of borrowersWithAddresses) {
+      const addressData = {
+        street1: borrower.mailingStreet1,
+        street2: borrower.mailingStreet2 || "",
+        city: borrower.mailingCity || "",
+        state: borrower.mailingState || "MA",
+        zip: borrower.mailingZip || "",
+      };
+
+      const addressValidation = await validateAddressWithGeocodingGeneric(addressData);
+      if (!addressValidation.isValid) {
+        return { isValid: false, error: addressValidation.error, borrowerId: borrower.id };
+      }
+    }
+
+    return { isValid: true, errors: {} };
+  };
+
+  // Validate Loan Assignee addresses step
+  const validateLoanAssigneeAddressesStep = async () => {
+    if (!formData.loanAssignees || formData.loanAssignees.length === 0) {
+      return { isValid: true, errors: {} };
+    }
+
+    const assigneesWithAddresses = formData.loanAssignees.filter(
+      (assignee) => assignee.street1?.trim()
+    );
+
+    if (assigneesWithAddresses.length === 0) {
+      return { isValid: true, errors: {} }; // No addresses to validate
+    }
+
+    // Validate each assignee address
+    for (let i = 0; i < formData.loanAssignees.length; i++) {
+      const assignee = formData.loanAssignees[i];
+      if (!assignee.street1?.trim()) continue;
+
+      const addressData = {
+        street1: assignee.street1,
+        street2: assignee.street2 || "",
+        city: assignee.city || "",
+        state: assignee.addressState || "MA",
+        zip: assignee.zip || "",
+      };
+
+      const addressValidation = await validateAddressWithGeocodingGeneric(addressData);
+      if (!addressValidation.isValid) {
+        return { isValid: false, error: addressValidation.error, assigneeIndex: i };
+      }
+    }
+
+    return { isValid: true, errors: {} };
+  };
+
   // Handle automatic address validation when triggered (for stepper clicks)
   useEffect(() => {
-    if (shouldValidateAddress && currentStep === 1 && formData?.propertyStreet1?.trim() && !isAddressVerified) {
+    if (!shouldValidateAddress || !pendingStepChange) return;
+
+    // Property Details (Step 1)
+    if (currentStep === 1 && addressValidationType !== "filingEntity" && addressValidationType !== "notice" && addressValidationType !== "borrower" && addressValidationType !== "loanAssignee" && formData?.propertyStreet1?.trim() && !isAddressVerified) {
       setShouldValidateAddress(false);
       validatePropertyDetailsStep().then((validation) => {
         if (validation.isValid) {
-          // Address validated successfully, proceed with navigation
           setIsAddressVerified(true);
           clearStepError(1);
-          if (pendingStepChange) {
-            const targetStep = pendingStepChange;
-            setPendingStepChange(null);
-            // Mark step 1 as completed since validation passed and all required fields are filled
-            // Check if all address fields are filled (validation already confirmed this)
-            const hasAllAddressFields = !!(formData?.propertyStreet1?.trim() && 
-                                          formData?.propertyCity?.trim() && 
-                                          formData?.propertyState?.trim() && 
-                                          formData?.propertyZip?.trim() && 
-                                          formData?.propertyCounty?.trim());
-            if (hasAllAddressFields) {
-              if (!completedSteps.has(1)) {
-                markStepCompleted(1);
-              }
-              if (stepsWithErrors.has(1)) {
-                clearStepError(1);
-              }
+          const targetStep = pendingStepChange;
+          setPendingStepChange(null);
+          setAddressValidationType("");
+          const hasAllAddressFields = !!(formData?.propertyStreet1?.trim() && 
+                                        formData?.propertyCity?.trim() && 
+                                        formData?.propertyState?.trim() && 
+                                        formData?.propertyZip?.trim() && 
+                                        formData?.propertyCounty?.trim());
+          if (hasAllAddressFields) {
+            if (!completedSteps.has(1)) {
+              markStepCompleted(1);
             }
-            wizardGoToStep(targetStep);
-            setCurrentStep(targetStep);
-            previousStepRef.current = targetStep;
-            window.scrollTo(0, 0);
+            if (stepsWithErrors.has(1)) {
+              clearStepError(1);
+            }
           }
+          wizardGoToStep(targetStep);
+          setCurrentStep(targetStep);
+          previousStepRef.current = targetStep;
+          window.scrollTo(0, 0);
         } else {
-          // Address validation failed, show dialog
           setAddressValidationMessage(
             addressValidationError || "Address validation failed. Please check the address and try again."
           );
@@ -2078,8 +2435,119 @@ const PetitionSteps = ({
           setShowAddressValidationDialog(true);
         }
       });
+      return;
     }
-  }, [shouldValidateAddress, currentStep, formData?.propertyStreet1, isAddressVerified, pendingStepChange, checkStepHasRequiredFields, stepsWithErrors, markStepCompleted, wizardGoToStep, setCurrentStep, clearStepError]);
+
+    // Filing Entity (Step 4)
+    if (currentStep === 4 && addressValidationType === "filingEntity" && formData?.filingEntityStreet1?.trim() && !isFilingEntityAddressVerified) {
+      setShouldValidateAddress(false);
+      validateFilingEntityAddressStep().then((validation) => {
+        if (validation.isValid) {
+          setIsFilingEntityAddressVerified(true);
+          clearStepError(4);
+          const targetStep = pendingStepChange;
+          setPendingStepChange(null);
+          setAddressValidationType("");
+          wizardGoToStep(targetStep);
+          setCurrentStep(targetStep);
+          previousStepRef.current = targetStep;
+          window.scrollTo(0, 0);
+        } else {
+          setAddressValidationMessage(
+            addressValidationError || "Filing Entity address validation failed. Please check the address and try again."
+          );
+          setShowAddressValidationDialog(true);
+        }
+      });
+      return;
+    }
+
+    // Notice Address (Step 5)
+    if (currentStep === 5 && addressValidationType === "notice" && formData?.noticeAddressStreet1?.trim() && !isNoticeAddressVerified) {
+      setShouldValidateAddress(false);
+      validateNoticeAddressStep().then((validation) => {
+        if (validation.isValid) {
+          setIsNoticeAddressVerified(true);
+          clearStepError(5);
+          const targetStep = pendingStepChange;
+          setPendingStepChange(null);
+          setAddressValidationType("");
+          wizardGoToStep(targetStep);
+          setCurrentStep(targetStep);
+          previousStepRef.current = targetStep;
+          window.scrollTo(0, 0);
+        } else {
+          setAddressValidationMessage(
+            addressValidationError || "Notice address validation failed. Please check the address and try again."
+          );
+          setShowAddressValidationDialog(true);
+        }
+      });
+      return;
+    }
+
+    // Borrower Addresses (Step 3)
+    if (currentStep === 3 && addressValidationType === "borrower") {
+      setShouldValidateAddress(false);
+      validateBorrowerAddressesStep().then((validation) => {
+        if (validation.isValid) {
+          const verified = {};
+          formData.borrowers
+            .filter(borrower => borrower.mailingStreet1?.trim())
+            .forEach(borrower => {
+              verified[borrower.id] = true;
+            });
+          setBorrowerAddressesVerified(prev => ({ ...prev, ...verified }));
+          clearStepError(3);
+          const targetStep = pendingStepChange;
+          setPendingStepChange(null);
+          setAddressValidationType("");
+          wizardGoToStep(targetStep);
+          setCurrentStep(targetStep);
+          previousStepRef.current = targetStep;
+          window.scrollTo(0, 0);
+        } else {
+          setAddressValidationMessage(
+            addressValidationError || "Borrower address validation failed. Please check the addresses and try again."
+          );
+          setAddressValidationContext({ borrowerId: validation.borrowerId });
+          setShowAddressValidationDialog(true);
+        }
+      });
+      return;
+    }
+
+    // Loan Assignee Addresses (Step 7)
+    if (currentStep === 7 && addressValidationType === "loanAssignee") {
+      setShouldValidateAddress(false);
+      validateLoanAssigneeAddressesStep().then((validation) => {
+        if (validation.isValid) {
+          const verified = {};
+          formData.loanAssignees
+            .filter(assignee => assignee.street1?.trim())
+            .forEach((assignee, index) => {
+              verified[index] = true;
+            });
+          setLoanAssigneeAddressesVerified(prev => ({ ...prev, ...verified }));
+          clearStepError(7);
+          const targetStep = pendingStepChange;
+          setPendingStepChange(null);
+          setAddressValidationType("");
+          wizardGoToStep(targetStep);
+          setCurrentStep(targetStep);
+          previousStepRef.current = targetStep;
+          window.scrollTo(0, 0);
+        } else {
+          setAddressValidationMessage(
+            addressValidationError || "Loan assignee address validation failed. Please check the addresses and try again."
+          );
+          setAddressValidationContext({ assigneeIndex: validation.assigneeIndex });
+          setShowAddressValidationDialog(true);
+        }
+      });
+      return;
+    }
+  }, [shouldValidateAddress, currentStep, addressValidationType, formData, isAddressVerified, isFilingEntityAddressVerified, isNoticeAddressVerified, borrowerAddressesVerified, loanAssigneeAddressesVerified, pendingStepChange, stepsWithErrors, completedSteps, markStepCompleted, wizardGoToStep, setCurrentStep, clearStepError]);
 
   // Auto-detect city and county when street address and ZIP are entered
 
@@ -2271,8 +2739,32 @@ const PetitionSteps = ({
       ].includes(name)
     ) {
       setIsAddressVerified(false);
-
       setAddressValidationError("");
+    }
+
+    // Reset Filing Entity address verification when editing
+    if (
+      [
+        "filingEntityStreet1",
+        "filingEntityStreet2",
+        "filingEntityCity",
+        "filingEntityState",
+        "filingEntityZip",
+      ].includes(name)
+    ) {
+      setIsFilingEntityAddressVerified(false);
+    }
+
+    // Reset Notice Address verification when editing
+    if (
+      [
+        "noticeAddressStreet1",
+        "noticeAddressCity",
+        "noticeAddressState",
+        "noticeAddressZip",
+      ].includes(name)
+    ) {
+      setIsNoticeAddressVerified(false);
     }
 
     // Auto-detect city and county when street address and ZIP are both entered
@@ -2390,6 +2882,15 @@ const PetitionSteps = ({
         borrower.id === borrowerId ? { ...borrower, [field]: value } : borrower
       ),
     }));
+
+    // Reset borrower address verification when address fields are edited
+    if (["mailingStreet1", "mailingStreet2", "mailingCity", "mailingState", "mailingZip"].includes(field)) {
+      setBorrowerAddressesVerified((prev) => {
+        const newState = { ...prev };
+        delete newState[borrowerId];
+        return newState;
+      });
+    }
   };
 
   // Loan assignee management functions
@@ -2444,6 +2945,15 @@ const PetitionSteps = ({
         i === index ? { ...assignee, [field]: value } : assignee
       ),
     }));
+
+    // Reset loan assignee address verification when address fields are edited
+    if (["street1", "street2", "city", "addressState", "zip"].includes(field)) {
+      setLoanAssigneeAddressesVerified((prev) => {
+        const newState = { ...prev };
+        delete newState[index];
+        return newState;
+      });
+    }
 
     // Clear field error when user starts typing
 
@@ -3510,7 +4020,139 @@ const PetitionSteps = ({
         setAddressValidationType("property");
         setShowAddressValidationDialog(true);
       }
+        return;
+    }
+
+    // When navigating away from Filing Entity step (step 4), automatically validate address
+    if (currentStep === 4 && direction === 1 && formData?.filingEntityStreet1?.trim() && !isFilingEntityAddressVerified) {
+      setPendingStepChange(newStep);
+      const validation = await validateFilingEntityAddressStep();
+      if (validation.isValid) {
+        setIsFilingEntityAddressVerified(true);
+        clearStepError(4);
+        if (newStep >= 1 && newStep <= totalSteps) {
+          await autoSaveCurrentStep();
+          setCurrentStep(newStep);
+          wizardGoToStep(newStep);
+          previousStepRef.current = newStep;
+          setPendingStepChange(null);
+          window.scrollTo(0, 0);
+        }
+      } else {
+        setAddressValidationMessage(
+          addressValidationError || "Filing Entity address validation failed. Please check the address and try again."
+        );
+        setAddressValidationType("filingEntity");
+        setShowAddressValidationDialog(true);
+      }
       return;
+    }
+
+    // When navigating away from Right-to-Cure step (step 5), automatically validate notice address
+    if (currentStep === 5 && direction === 1 && formData?.noticeAddressStreet1?.trim() && !isNoticeAddressVerified) {
+      setPendingStepChange(newStep);
+      const validation = await validateNoticeAddressStep();
+      if (validation.isValid) {
+        setIsNoticeAddressVerified(true);
+        clearStepError(5);
+        if (newStep >= 1 && newStep <= totalSteps) {
+          await autoSaveCurrentStep();
+          setCurrentStep(newStep);
+          wizardGoToStep(newStep);
+          previousStepRef.current = newStep;
+          setPendingStepChange(null);
+          window.scrollTo(0, 0);
+        }
+      } else {
+        setAddressValidationMessage(
+          addressValidationError || "Notice address validation failed. Please check the address and try again."
+        );
+        setAddressValidationType("notice");
+        setShowAddressValidationDialog(true);
+      }
+      return;
+    }
+
+    // When navigating away from Borrower Details step (step 3), automatically validate borrower addresses
+    if (currentStep === 3 && direction === 1) {
+      const hasBorrowerAddresses = formData?.borrowers?.some(borrower => borrower.mailingStreet1?.trim());
+      if (hasBorrowerAddresses) {
+        const allVerified = formData.borrowers
+          .filter(borrower => borrower.mailingStreet1?.trim())
+          .every(borrower => borrowerAddressesVerified[borrower.id] === true);
+        
+        if (!allVerified) {
+          setPendingStepChange(newStep);
+          const validation = await validateBorrowerAddressesStep();
+          if (validation.isValid) {
+            const verified = {};
+            formData.borrowers
+              .filter(borrower => borrower.mailingStreet1?.trim())
+              .forEach(borrower => {
+                verified[borrower.id] = true;
+              });
+            setBorrowerAddressesVerified(prev => ({ ...prev, ...verified }));
+            clearStepError(3);
+            if (newStep >= 1 && newStep <= totalSteps) {
+              await autoSaveCurrentStep();
+              setCurrentStep(newStep);
+              wizardGoToStep(newStep);
+              previousStepRef.current = newStep;
+              setPendingStepChange(null);
+              window.scrollTo(0, 0);
+            }
+          } else {
+            setAddressValidationMessage(
+              addressValidationError || "Borrower address validation failed. Please check the addresses and try again."
+            );
+            setAddressValidationType("borrower");
+            setAddressValidationContext({ borrowerId: validation.borrowerId });
+            setShowAddressValidationDialog(true);
+          }
+          return;
+        }
+      }
+    }
+
+    // When navigating away from Loan Assignees step (step 7), automatically validate assignee addresses
+    if (currentStep === 7 && direction === 1) {
+      const hasAssigneeAddresses = formData?.loanAssignees?.some(assignee => assignee.street1?.trim());
+      if (hasAssigneeAddresses) {
+        const allVerified = formData.loanAssignees
+          .filter(assignee => assignee.street1?.trim())
+          .every((assignee, index) => loanAssigneeAddressesVerified[index] === true);
+        
+        if (!allVerified) {
+          setPendingStepChange(newStep);
+          const validation = await validateLoanAssigneeAddressesStep();
+          if (validation.isValid) {
+            const verified = {};
+            formData.loanAssignees
+              .filter(assignee => assignee.street1?.trim())
+              .forEach((assignee, index) => {
+                verified[index] = true;
+              });
+            setLoanAssigneeAddressesVerified(prev => ({ ...prev, ...verified }));
+            clearStepError(7);
+            if (newStep >= 1 && newStep <= totalSteps) {
+              await autoSaveCurrentStep();
+              setCurrentStep(newStep);
+              wizardGoToStep(newStep);
+              previousStepRef.current = newStep;
+              setPendingStepChange(null);
+              window.scrollTo(0, 0);
+            }
+          } else {
+            setAddressValidationMessage(
+              addressValidationError || "Loan assignee address validation failed. Please check the addresses and try again."
+            );
+            setAddressValidationType("loanAssignee");
+            setAddressValidationContext({ assigneeIndex: validation.assigneeIndex });
+            setShowAddressValidationDialog(true);
+          }
+          return;
+        }
+      }
     }
 
     if (newStep >= 1 && newStep <= totalSteps) {
@@ -3601,7 +4243,7 @@ const PetitionSteps = ({
         if (isStepComplete) {
           // Step is complete - mark as completed and clear any errors
           if (!completedSteps.has(currentStep)) {
-            markStepCompleted(currentStep);
+        markStepCompleted(currentStep);
           }
           if (stepsWithErrors.has(currentStep)) {
             clearStepError(currentStep);
@@ -4018,6 +4660,9 @@ const PetitionSteps = ({
                 <h5 className="modal-title">
                   {addressValidationType === "property" &&
                     "Property Address Validation"}
+
+                  {addressValidationType === "filingEntity" &&
+                    "Filing Entity Address Validation"}
 
                   {addressValidationType === "borrower" &&
                     "Borrower Address Validation"}
