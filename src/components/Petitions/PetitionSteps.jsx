@@ -85,6 +85,7 @@ const PetitionSteps = ({
   } = usePetitionWizard();
 
   const [currentStep, setCurrentStep] = useState(1);
+  const [visitedSteps, setVisitedSteps] = useState(new Set([1])); // Track visited steps, start with step 1
 
   const totalSteps = 9;
 
@@ -102,6 +103,17 @@ const PetitionSteps = ({
   useEffect(() => {
     setCurrentStep(wizardCurrentStep);
   }, [wizardCurrentStep]);
+
+  // Track visited steps
+  useEffect(() => {
+    if (currentStep >= 1 && currentStep <= totalSteps) {
+      setVisitedSteps(prev => {
+        const newSet = new Set(prev);
+        newSet.add(currentStep);
+        return newSet;
+      });
+    }
+  }, [currentStep, totalSteps]);
 
   // Track previous step for address validation prompt
   const previousStepRef = useRef(1);
@@ -590,7 +602,7 @@ const PetitionSteps = ({
 
     currentPrincipalBalance: 0,
 
-    interestRatePercent: 0,
+    interestRatePercent: null,
 
     variableRate: false,
 
@@ -600,7 +612,7 @@ const PetitionSteps = ({
 
     monthlyPaymentAmount: 0,
 
-    delinquencyDaysAtFiling: 0,
+    delinquencyDaysAtFiling: null,
 
     // Step 3: Borrower Details
 
@@ -684,7 +696,7 @@ const PetitionSteps = ({
 
     // Step 6: Form 35B Compliance
 
-    certainMortgageLoan: false,
+    certainMortgageLoan: null,
 
     form35bComplianceAffidavitPdf: "",
 
@@ -828,7 +840,7 @@ const PetitionSteps = ({
                   formData.currentPrincipalBalance > 0 &&
                   formData.interestRatePercent != null &&
                   formData.interestRatePercent !== "" &&
-                  formData.interestRatePercent >= 0 &&
+                  formData.interestRatePercent > 0 &&
                   formData.interestRatePercent <= 100 &&
                   formData.monthlyPaymentAmount &&
                   formData.monthlyPaymentAmount > 0 &&
@@ -854,12 +866,24 @@ const PetitionSteps = ({
         if (formData.noticeSent === true) {
           return !!(formData.noticeDate?.trim() &&
                     formData.amountInDefault &&
-                    formData.amountInDefault > 0);
+                    formData.amountInDefault > 0 &&
+                    formData.daysDelinquentAtNotice != null &&
+                    formData.daysDelinquentAtNotice !== "" &&
+                    formData.daysDelinquentAtNotice >= 0 &&
+                    formData.cureExpirationDate?.trim() &&
+                    formData.noticeAddressStreet1?.trim() &&
+                    formData.noticeAddressCity?.trim() &&
+                    formData.noticeAddressState?.trim() &&
+                    formData.noticeAddressZip?.trim());
         }
-        return true; // If notice was not sent, step is complete
+        // If notice was not sent, check for acceleration date (manualOverrideReason)
+        if (formData.noticeSent === false) {
+          return !!(formData.manualOverrideReason?.trim());
+        }
+        return false;
       
-      case 6: // Form 35B Compliance - this step may not have strict required fields
-        return true;
+      case 6: // Form 35B Compliance - check if certainMortgageLoan is selected
+        return formData.certainMortgageLoan !== null && formData.certainMortgageLoan !== undefined;
       
       case 7: // Loan Assignees - check if at least one assignee exists with required fields
         if (!formData.loanAssignees || !Array.isArray(formData.loanAssignees) || formData.loanAssignees.length === 0) {
@@ -883,12 +907,22 @@ const PetitionSteps = ({
     
     // When navigating away from a step, mark it as completed only if all required fields are filled
     if (prev !== next && prev >= 1 && prev <= totalSteps) {
-      // Only mark as completed if step has required fields filled and no errors
-      if (!completedSteps.has(prev) && checkStepHasRequiredFields(prev) && !stepsWithErrors.has(prev)) {
-        markStepCompleted(prev);
-      } else if (completedSteps.has(prev) && (!checkStepHasRequiredFields(prev) || stepsWithErrors.has(prev))) {
-        // If step was marked as completed but is no longer complete or has errors, unmark it
-        markStepIncomplete(prev);
+      // Check if step has all required fields filled
+      const isStepComplete = checkStepHasRequiredFields(prev);
+      
+      if (isStepComplete) {
+        // Step is complete - mark as completed and clear any errors
+        if (!completedSteps.has(prev)) {
+          markStepCompleted(prev);
+        }
+        if (stepsWithErrors.has(prev)) {
+          clearStepError(prev);
+        }
+      } else {
+        // Step is not complete - unmark if it was previously completed
+        if (completedSteps.has(prev)) {
+          markStepIncomplete(prev);
+        }
       }
     }
     
@@ -906,7 +940,7 @@ const PetitionSteps = ({
     }
     
     previousStepRef.current = wizardCurrentStep;
-  }, [wizardCurrentStep, isAddressVerified, formData?.propertyStreet1, completedSteps, stepsWithErrors, totalSteps, markStepCompleted, markStepIncomplete, checkStepHasRequiredFields]);
+  }, [wizardCurrentStep, isAddressVerified, formData?.propertyStreet1, completedSteps, stepsWithErrors, totalSteps, markStepCompleted, markStepIncomplete, checkStepHasRequiredFields, clearStepError]);
 
   // When address is verified, mark step 1 as completed if all fields are filled
   useEffect(() => {
@@ -918,8 +952,13 @@ const PetitionSteps = ({
                                     formData?.propertyState?.trim() && 
                                     formData?.propertyZip?.trim() && 
                                     formData?.propertyCounty?.trim());
-      if (hasAllAddressFields && !stepsWithErrors.has(1) && !completedSteps.has(1)) {
-        markStepCompleted(1);
+      if (hasAllAddressFields) {
+        if (!completedSteps.has(1)) {
+          markStepCompleted(1);
+        }
+        if (stepsWithErrors.has(1)) {
+          clearStepError(1);
+        }
       }
     }
   }, [isAddressVerified, formData, stepsWithErrors, completedSteps, markStepCompleted, clearStepError]);
@@ -1063,6 +1102,9 @@ const PetitionSteps = ({
       
       // Clear all step errors
       clearAllStepErrors();
+
+      // Reset visited steps (start with step 1)
+      setVisitedSteps(new Set([1]));
 
       if (typeof resetWizard === "function") {
         resetWizard();
@@ -2014,8 +2056,13 @@ const PetitionSteps = ({
                                           formData?.propertyState?.trim() && 
                                           formData?.propertyZip?.trim() && 
                                           formData?.propertyCounty?.trim());
-            if (hasAllAddressFields && !stepsWithErrors.has(1)) {
-              markStepCompleted(1);
+            if (hasAllAddressFields) {
+              if (!completedSteps.has(1)) {
+                markStepCompleted(1);
+              }
+              if (stepsWithErrors.has(1)) {
+                clearStepError(1);
+              }
             }
             wizardGoToStep(targetStep);
             setCurrentStep(targetStep);
@@ -2526,6 +2573,11 @@ const PetitionSteps = ({
       errors.interestRatePercent = "Interest Rate must be between 0% and 100%";
 
       hasErrors = true;
+    } else if (formData.interestRatePercent === 0) {
+      // 0% interest rate is not valid for a loan
+      errors.interestRatePercent = "Interest Rate must be greater than 0%";
+
+      hasErrors = true;
     }
 
     // Monthly Payment Amount is required and must be positive
@@ -2538,10 +2590,12 @@ const PetitionSteps = ({
     }
 
     // Delinquency Days at Filing is required and must be non-negative
-
     if (
       formData.delinquencyDaysAtFiling === "" ||
-      formData.delinquencyDaysAtFiling < 0
+      formData.delinquencyDaysAtFiling === null ||
+      formData.delinquencyDaysAtFiling === undefined ||
+      (typeof formData.delinquencyDaysAtFiling === 'number' && formData.delinquencyDaysAtFiling < 0) ||
+      (typeof formData.delinquencyDaysAtFiling === 'string' && (formData.delinquencyDaysAtFiling.trim() === "" || parseFloat(formData.delinquencyDaysAtFiling) < 0))
     ) {
       errors.delinquencyDaysAtFiling =
         "Delinquency Days at Filing is required and must be 0 or greater";
@@ -3433,8 +3487,13 @@ const PetitionSteps = ({
                                         formData.propertyState?.trim() && 
                                         formData.propertyZip?.trim() && 
                                         formData.propertyCounty?.trim());
-          if (hasAllAddressFields && !stepsWithErrors.has(1)) {
-            markStepCompleted(1);
+          if (hasAllAddressFields) {
+            if (!completedSteps.has(1)) {
+              markStepCompleted(1);
+            }
+            if (stepsWithErrors.has(1)) {
+              clearStepError(1);
+            }
           }
           await autoSaveCurrentStep();
           setCurrentStep(newStep);
@@ -3457,12 +3516,20 @@ const PetitionSteps = ({
     if (newStep >= 1 && newStep <= totalSteps) {
       // Mark current step as completed when moving forward only if all required fields are filled
       if (direction === 1) {
-        if (checkStepHasRequiredFields(currentStep) && !stepsWithErrors.has(currentStep)) {
-          markStepCompleted(currentStep);
-          clearStepError(currentStep); // Clear any errors when step is completed
-        } else if (completedSteps.has(currentStep) && (!checkStepHasRequiredFields(currentStep) || stepsWithErrors.has(currentStep))) {
-          // If step was marked as completed but is no longer complete or has errors, unmark it
-          markStepIncomplete(currentStep);
+        const isStepComplete = checkStepHasRequiredFields(currentStep);
+        if (isStepComplete) {
+          // Step is complete - mark as completed and clear any errors
+          if (!completedSteps.has(currentStep)) {
+            markStepCompleted(currentStep);
+          }
+          if (stepsWithErrors.has(currentStep)) {
+            clearStepError(currentStep);
+          }
+        } else {
+          // Step is not complete - unmark if it was previously completed
+          if (completedSteps.has(currentStep)) {
+            markStepIncomplete(currentStep);
+          }
         }
       }
 
@@ -3530,8 +3597,15 @@ const PetitionSteps = ({
 
       // Mark current step as completed only if all required fields are filled
       try {
-        if (checkStepHasRequiredFields(currentStep) && !stepsWithErrors.has(currentStep)) {
-          markStepCompleted(currentStep);
+        const isStepComplete = checkStepHasRequiredFields(currentStep);
+        if (isStepComplete) {
+          // Step is complete - mark as completed and clear any errors
+          if (!completedSteps.has(currentStep)) {
+            markStepCompleted(currentStep);
+          }
+          if (stepsWithErrors.has(currentStep)) {
+            clearStepError(currentStep);
+          }
         }
         wizardGoToStep(newStep);
       } catch (e) {}
@@ -3589,16 +3663,21 @@ const PetitionSteps = ({
   const validateAllSteps = async () => {
     clearAllStepErrors();
     const stepsWithValidationErrors = new Set();
+    const allFieldErrors = {}; // Accumulate all field errors from all steps
 
     // Step 1: Property Details
     const addressValidation = validateAddressFields();
     if (addressValidation.hasErrors) {
       stepsWithValidationErrors.add(1);
+      Object.assign(allFieldErrors, addressValidation.errors);
     } else if (formData.propertyStreet1?.trim() && !isAddressVerified) {
       // Address validation required if address is entered
       const addressGeocodingValidation = await validatePropertyDetailsStep();
       if (!addressGeocodingValidation.isValid) {
         stepsWithValidationErrors.add(1);
+        if (addressGeocodingValidation.errors) {
+          Object.assign(allFieldErrors, addressGeocodingValidation.errors);
+        }
       }
     }
 
@@ -3606,21 +3685,29 @@ const PetitionSteps = ({
     const loanValidation = validateLoanDetails();
     if (loanValidation.hasErrors) {
       stepsWithValidationErrors.add(2);
+      Object.assign(allFieldErrors, loanValidation.errors);
     }
 
     // Step 3: Borrower Details
     const borrowerValidation = validateBorrowerDetails();
     if (borrowerValidation.hasErrors) {
       stepsWithValidationErrors.add(3);
+      Object.assign(allFieldErrors, borrowerValidation.errors);
     }
 
     // Step 4: Filing Entity
-    if (!userFilingEntityType) {
+    // Check if user has visited this step at least once
+    if (!visitedSteps.has(4)) {
       stepsWithValidationErrors.add(4);
+      allFieldErrors.filingEntityStep = "Please visit the Filing Entity step at least once";
+    } else if (!userFilingEntityType) {
+      stepsWithValidationErrors.add(4);
+      allFieldErrors.filingEntityType = "Filing Entity Type is required";
     } else {
       const filingEntityValidation = validateFilingEntity();
       if (filingEntityValidation.hasErrors) {
         stepsWithValidationErrors.add(4);
+        Object.assign(allFieldErrors, filingEntityValidation.errors);
       }
     }
 
@@ -3628,27 +3715,35 @@ const PetitionSteps = ({
     const rightToCureValidation = validateRightToCureDetails();
     if (rightToCureValidation.hasErrors) {
       stepsWithValidationErrors.add(5);
+      Object.assign(allFieldErrors, rightToCureValidation.errors);
     }
 
     // Step 6: Form 35B Compliance
     const form35BValidation = validateForm35BCompliance();
     if (form35BValidation.hasErrors) {
       stepsWithValidationErrors.add(6);
+      Object.assign(allFieldErrors, form35BValidation.errors);
     }
 
     // Step 7: Loan Assignees
     const loanAssigneesValidation = validateLoanAssignees();
     if (loanAssigneesValidation.hasErrors) {
       stepsWithValidationErrors.add(7);
+      Object.assign(allFieldErrors, loanAssigneesValidation.errors);
     }
 
     // Step 8: Attestation & Signatures
     if (!userProfile?.signatureUrl) {
       stepsWithValidationErrors.add(8);
+      allFieldErrors.signature = "Signature is required";
     }
     if (!formData.certification_check) {
       stepsWithValidationErrors.add(8);
+      allFieldErrors.certification_check = "Certification checkbox must be checked";
     }
+
+    // Set all accumulated field errors at once (this will show inline errors in all steps)
+    setFieldErrors(allFieldErrors);
 
     // Mark steps with errors
     stepsWithValidationErrors.forEach(step => {
