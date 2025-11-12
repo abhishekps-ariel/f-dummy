@@ -101,12 +101,52 @@
   color: #666;
 }
 
+/* Error State - show error icon even if step is completed */
+.stepper-number .fa-exclamation {
+  font-size: 1rem;
+  width: 1rem;
+  height: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+/* Ensure checkmark and error icon are same size */
+.stepper-number .fa-check,
+.stepper-number .fa-exclamation {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+/* Error state background - show red background when step has error (takes precedence) */
+.stepper-item.has-error .stepper-number {
+  background-color: #dc3545 !important;
+  color: white !important;
+}
+
+/* Ensure exclamation icon is white with red background */
+.stepper-item.has-error .stepper-number .fa-exclamation {
+  color: white !important;
+}
+
 /* Current State */
 .stepper-item.current .stepper-number {
   background-color: #0d6efd;
   color: white;
   box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
   transform: scale(1.05);
+}
+
+/* Current state with error - error takes precedence */
+.stepper-item.current.has-error .stepper-number {
+  background-color: #dc3545 !important;
+  color: white !important;
+}
+
+/* Ensure exclamation icon is white in current state with error */
+.stepper-item.current.has-error .stepper-number .fa-exclamation {
+  color: white !important;
 }
 
 .stepper-item.current .stepper-label {

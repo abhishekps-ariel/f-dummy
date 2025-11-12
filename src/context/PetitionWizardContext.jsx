@@ -14,6 +14,7 @@ export const usePetitionWizard = () => {
 export const PetitionWizardProvider = ({ children }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [completedSteps, setCompletedSteps] = useState(new Set());
+  const [stepsWithErrors, setStepsWithErrors] = useState(new Set());
   const { user } = useAuth();
 
   // Reset wizard when user logs out
@@ -43,27 +44,42 @@ export const PetitionWizardProvider = ({ children }) => {
   };
 
   const canAccessStep = (step) => {
-    if (step === 1) return true; // First step is always accessible
-    // All previous steps must be completed
-    for (let i = 1; i < step; i++) {
-      if (!completedSteps.has(i)) {
-        return false;
-      }
-    }
+    // Allow free navigation between all steps
     return true;
+  };
+
+  const markStepWithError = (step) => {
+    setStepsWithErrors(prev => new Set([...prev, step]));
+  };
+
+  const clearStepError = (step) => {
+    setStepsWithErrors(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(step);
+      return newSet;
+    });
+  };
+
+  const clearAllStepErrors = () => {
+    setStepsWithErrors(new Set());
   };
 
   const resetWizard = () => {
     setCurrentStep(1);
     setCompletedSteps(new Set());
+    setStepsWithErrors(new Set());
   };
 
   const value = {
     currentStep,
     completedSteps,
+    stepsWithErrors,
     goToStep,
     markStepCompleted,
     markStepIncomplete,
+    markStepWithError,
+    clearStepError,
+    clearAllStepErrors,
     canAccessStep,
     resetWizard,
     isLoading: false

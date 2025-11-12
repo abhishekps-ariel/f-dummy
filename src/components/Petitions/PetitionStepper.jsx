@@ -15,7 +15,7 @@ const stepLabels = [
 ];
 
 const PetitionStepper = () => {
-  const { currentStep, completedSteps, goToStep, canAccessStep } =
+  const { currentStep, completedSteps, stepsWithErrors, goToStep, canAccessStep } =
     usePetitionWizard();
   const stepperNavRef = useRef(null);
 
@@ -48,6 +48,10 @@ const PetitionStepper = () => {
     }
   };
 
+  const hasStepError = (stepNumber) => {
+    return stepsWithErrors.has(stepNumber);
+  };
+
   const handleStepClick = (stepNumber) => {
     if (canAccessStep(stepNumber)) {
       goToStep(stepNumber);
@@ -69,12 +73,14 @@ const PetitionStepper = () => {
               data-step={stepNumber}
               className={`stepper-item ${status} ${
                 isClickable ? "clickable" : ""
-              }`}
+              } ${hasStepError(stepNumber) ? "has-error" : ""}`}
               onClick={() => handleStepClick(stepNumber)}
-              title={!isClickable ? "Complete previous steps first" : label}
+              title={label}
             >
               <div className="stepper-number">
-                {status === "completed" ? (
+                {hasStepError(stepNumber) ? (
+                  <i className="fas fa-exclamation"></i>
+                ) : status === "completed" ? (
                   <i className="fas fa-check"></i>
                 ) : (
                   stepNumber
