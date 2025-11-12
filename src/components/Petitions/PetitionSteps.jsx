@@ -4601,7 +4601,7 @@ const PetitionSteps = ({
     
     if (validationResult.hasErrors) {
       toast.error(
-        `Please complete all required fields. ${validationResult.stepsWithErrors.length} step(s) have errors. Please check the steps marked with red exclamation icons.`
+        "Please complete all required fields before submitting your petition."
       );
       // Navigate to first step with error
       if (validationResult.stepsWithErrors.length > 0) {
