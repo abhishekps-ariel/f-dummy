@@ -39,7 +39,7 @@ export const submitJoinRequest = async (organizationId) => {
   });
 
   return {
-    isSuccess: response.data.success || true,
+    isSuccess: response.data.success === true,
     msg: response.data.message || "Join request submitted successfully",
     data: response.data.data || response.data,
   };
