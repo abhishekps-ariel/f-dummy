@@ -913,8 +913,78 @@ const PetitionSteps = ({
     
     // When navigating away from a step, mark it as completed only if all required fields are filled
     if (prev !== next && prev >= 1 && prev <= totalSteps) {
-      // Check if step has all required fields filled
-      const isStepComplete = checkStepHasRequiredFields(prev);
+      // Use validation functions to check if step is complete
+      let isStepComplete = false;
+      
+      switch (prev) {
+        case 1:
+          const addressValidation = validateAddressFields();
+          isStepComplete = !addressValidation.hasErrors && isAddressVerified;
+          break;
+        case 2:
+          const loanValidation = validateLoanDetails();
+          isStepComplete = !loanValidation.hasErrors;
+          break;
+        case 3:
+          const borrowerValidation = validateBorrowerDetails();
+          if (!borrowerValidation.hasErrors) {
+            const hasBorrowerAddresses = formData?.borrowers?.some(borrower => borrower.mailingStreet1?.trim());
+            if (hasBorrowerAddresses) {
+              const allBorrowerAddressesVerified = formData.borrowers
+                .filter(borrower => borrower.mailingStreet1?.trim())
+                .every(borrower => borrowerAddressesVerified[borrower.id] === true);
+              isStepComplete = allBorrowerAddressesVerified;
+            } else {
+              isStepComplete = true;
+            }
+          }
+          break;
+        case 4:
+          if (userFilingEntityType) {
+            const filingEntityValidation = validateFilingEntity();
+            if (!filingEntityValidation.hasErrors) {
+              if (formData?.filingEntityStreet1?.trim()) {
+                isStepComplete = isFilingEntityAddressVerified;
+              } else {
+                isStepComplete = true;
+              }
+            }
+          }
+          break;
+        case 5:
+          const rightToCureValidation = validateRightToCureDetails();
+          if (!rightToCureValidation.hasErrors) {
+            if (formData?.noticeAddressStreet1?.trim()) {
+              isStepComplete = isNoticeAddressVerified;
+            } else {
+              isStepComplete = true;
+            }
+          }
+          break;
+        case 6:
+          const form35BValidation = validateForm35BCompliance();
+          isStepComplete = !form35BValidation.hasErrors;
+          break;
+        case 7:
+          const loanAssigneesValidation = validateLoanAssignees();
+          if (!loanAssigneesValidation.hasErrors) {
+            const hasLoanAssigneeAddresses = formData?.loanAssignees?.some(assignee => assignee.street1?.trim());
+            if (hasLoanAssigneeAddresses) {
+              const allLoanAssigneeAddressesVerified = formData.loanAssignees
+                .filter(assignee => assignee.street1?.trim())
+                .every((assignee, index) => loanAssigneeAddressesVerified[index] === true);
+              isStepComplete = allLoanAssigneeAddressesVerified;
+            } else {
+              isStepComplete = true;
+            }
+          }
+          break;
+        case 8:
+          isStepComplete = !!(userProfile?.signatureUrl && formData?.certification_check);
+          break;
+        default:
+          isStepComplete = checkStepHasRequiredFields(prev);
+      }
       
       if (isStepComplete) {
         // Step is complete - mark as completed and clear any errors
@@ -1010,7 +1080,7 @@ const PetitionSteps = ({
     }
     
     previousStepRef.current = wizardCurrentStep;
-  }, [wizardCurrentStep, isAddressVerified, isFilingEntityAddressVerified, isNoticeAddressVerified, borrowerAddressesVerified, loanAssigneeAddressesVerified, formData, completedSteps, stepsWithErrors, totalSteps, markStepCompleted, markStepIncomplete, checkStepHasRequiredFields, clearStepError, wizardGoToStep, setCurrentStep]);
+  }, [wizardCurrentStep, isAddressVerified, isFilingEntityAddressVerified, isNoticeAddressVerified, borrowerAddressesVerified, loanAssigneeAddressesVerified, formData, completedSteps, stepsWithErrors, totalSteps, markStepCompleted, markStepIncomplete, checkStepHasRequiredFields, clearStepError, wizardGoToStep, setCurrentStep, userFilingEntityType, userProfile]);
 
   // When address is verified, mark step 1 as completed if all fields are filled
   useEffect(() => {
@@ -2204,8 +2274,6 @@ const PetitionSteps = ({
       hasErrors = true;
     }
 
-    setFieldErrors(errors);
-
     return { hasErrors, errors };
   };
 
@@ -3241,8 +3309,6 @@ const PetitionSteps = ({
       hasErrors = true;
     }
 
-    setFieldErrors(errors);
-
     return { hasErrors, errors };
   };
 
@@ -3311,8 +3377,6 @@ const PetitionSteps = ({
         }
       });
     }
-
-    setFieldErrors(errors);
 
     return { hasErrors, errors };
   };
@@ -3427,8 +3491,6 @@ const PetitionSteps = ({
       }
     }
 
-    setFieldErrors(errors);
-
     return { hasErrors, errors };
   };
 
@@ -3454,8 +3516,6 @@ const PetitionSteps = ({
     // No file validation needed - just yes/no question
 
     // API will receive empty strings for file fields
-
-    setFieldErrors(errors);
 
     return { hasErrors, errors };
   };
@@ -3546,8 +3606,6 @@ const PetitionSteps = ({
 
       hasErrors = true;
     }
-
-    setFieldErrors(errors);
 
     return { hasErrors, errors };
   };
@@ -4312,7 +4370,79 @@ const PetitionSteps = ({
     if (newStep >= 1 && newStep <= totalSteps) {
       // Mark current step as completed when moving forward only if all required fields are filled
       if (direction === 1) {
-        const isStepComplete = checkStepHasRequiredFields(currentStep);
+        let isStepComplete = false;
+        
+        // Use validation functions to check if step is complete
+        switch (currentStep) {
+          case 1:
+            const addressValidation = validateAddressFields();
+            isStepComplete = !addressValidation.hasErrors && isAddressVerified;
+            break;
+          case 2:
+            const loanValidation = validateLoanDetails();
+            isStepComplete = !loanValidation.hasErrors;
+            break;
+          case 3:
+            const borrowerValidation = validateBorrowerDetails();
+            if (!borrowerValidation.hasErrors) {
+              const hasBorrowerAddresses = formData?.borrowers?.some(borrower => borrower.mailingStreet1?.trim());
+              if (hasBorrowerAddresses) {
+                const allBorrowerAddressesVerified = formData.borrowers
+                  .filter(borrower => borrower.mailingStreet1?.trim())
+                  .every(borrower => borrowerAddressesVerified[borrower.id] === true);
+                isStepComplete = allBorrowerAddressesVerified;
+              } else {
+                isStepComplete = true;
+              }
+            }
+            break;
+          case 4:
+            if (userFilingEntityType) {
+              const filingEntityValidation = validateFilingEntity();
+              if (!filingEntityValidation.hasErrors) {
+                if (formData?.filingEntityStreet1?.trim()) {
+                  isStepComplete = isFilingEntityAddressVerified;
+                } else {
+                  isStepComplete = true;
+                }
+              }
+            }
+            break;
+          case 5:
+            const rightToCureValidation = validateRightToCureDetails();
+            if (!rightToCureValidation.hasErrors) {
+              if (formData?.noticeAddressStreet1?.trim()) {
+                isStepComplete = isNoticeAddressVerified;
+              } else {
+                isStepComplete = true;
+              }
+            }
+            break;
+          case 6:
+            const form35BValidation = validateForm35BCompliance();
+            isStepComplete = !form35BValidation.hasErrors;
+            break;
+          case 7:
+            const loanAssigneesValidation = validateLoanAssignees();
+            if (!loanAssigneesValidation.hasErrors) {
+              const hasLoanAssigneeAddresses = formData?.loanAssignees?.some(assignee => assignee.street1?.trim());
+              if (hasLoanAssigneeAddresses) {
+                const allLoanAssigneeAddressesVerified = formData.loanAssignees
+                  .filter(assignee => assignee.street1?.trim())
+                  .every((assignee, index) => loanAssigneeAddressesVerified[index] === true);
+                isStepComplete = allLoanAssigneeAddressesVerified;
+              } else {
+                isStepComplete = true;
+              }
+            }
+            break;
+          case 8:
+            isStepComplete = !!(userProfile?.signatureUrl && formData?.certification_check);
+            break;
+          default:
+            isStepComplete = checkStepHasRequiredFields(currentStep);
+        }
+        
         if (isStepComplete) {
           // Step is complete - mark as completed and clear any errors
           if (!completedSteps.has(currentStep)) {
@@ -4374,6 +4504,9 @@ const PetitionSteps = ({
   };
 
   const handleAddressValidationProceed = async () => {
+    // Capture the validation type before clearing it
+    const validationType = addressValidationType;
+    
     setShowAddressValidationDialog(false);
 
     setAddressValidationMessage("");
@@ -4388,29 +4521,76 @@ const PetitionSteps = ({
 
     if (newStep >= 1 && newStep <= totalSteps) {
       // Auto-save current step before proceeding
-
       await autoSaveCurrentStep();
 
-      // Mark current step as completed only if all required fields are filled
-      try {
-        const isStepComplete = checkStepHasRequiredFields(currentStep);
-        if (isStepComplete) {
-          // Step is complete - mark as completed and clear any errors
-          if (!completedSteps.has(currentStep)) {
-        markStepCompleted(currentStep);
-          }
-          if (stepsWithErrors.has(currentStep)) {
-            clearStepError(currentStep);
+      // Handle step completion based on validation type
+      let isStepComplete = false;
+      
+      // For property address validation, mark as verified when proceeding anyway
+      if (validationType === "property" && currentStep === 1) {
+        setIsAddressVerified(true);
+        clearStepError(1);
+        // Check if all address fields are filled
+        const addressValidation = validateAddressFields();
+        isStepComplete = !addressValidation.hasErrors;
+      } else if (validationType === "filingEntity" && currentStep === 4) {
+        setIsFilingEntityAddressVerified(true);
+        clearStepError(4);
+        if (userFilingEntityType) {
+          const filingEntityValidation = validateFilingEntity();
+          if (!filingEntityValidation.hasErrors) {
+            isStepComplete = true;
           }
         }
-        wizardGoToStep(newStep);
-      } catch (e) {}
+      } else if (validationType === "notice" && currentStep === 5) {
+        setIsNoticeAddressVerified(true);
+        clearStepError(5);
+        const rightToCureValidation = validateRightToCureDetails();
+        isStepComplete = !rightToCureValidation.hasErrors;
+      } else if (validationType === "borrower" && currentStep === 3) {
+        // Mark all borrower addresses as verified when proceeding anyway
+        const verified = {};
+        formData.borrowers.forEach((borrower) => {
+          if (borrower.mailingStreet1?.trim()) {
+            verified[borrower.id] = true;
+          }
+        });
+        setBorrowerAddressesVerified(prev => ({ ...prev, ...verified }));
+        clearStepError(3);
+        const borrowerValidation = validateBorrowerDetails();
+        isStepComplete = !borrowerValidation.hasErrors;
+      } else if (validationType === "loanAssignee" && currentStep === 7) {
+        // Mark all loan assignee addresses as verified when proceeding anyway
+        const verified = {};
+        formData.loanAssignees.forEach((assignee, index) => {
+          if (assignee.street1?.trim()) {
+            verified[index] = true;
+          }
+        });
+        setLoanAssigneeAddressesVerified(prev => ({ ...prev, ...verified }));
+        clearStepError(7);
+        const loanAssigneesValidation = validateLoanAssignees();
+        isStepComplete = !loanAssigneesValidation.hasErrors;
+      } else {
+        // For other cases, use the standard check
+        isStepComplete = checkStepHasRequiredFields(currentStep);
+      }
 
+      // Mark step as completed and clear errors if step is complete
+      if (isStepComplete) {
+        if (!completedSteps.has(currentStep)) {
+          markStepCompleted(currentStep);
+        }
+        if (stepsWithErrors.has(currentStep)) {
+          clearStepError(currentStep);
+        }
+      }
+
+      wizardGoToStep(newStep);
       setCurrentStep(newStep);
       previousStepRef.current = newStep;
 
       // Scroll to top on step change for better mobile UX
-
       window.scrollTo(0, 0);
     }
   };
