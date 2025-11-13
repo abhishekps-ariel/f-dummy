@@ -366,24 +366,43 @@
   cursor: pointer;
   transition: all 0.3s ease;
   flex-shrink: 0;
+  padding: 0;
+}
+
+.send-icon-img {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  filter: brightness(0) saturate(100%) invert(28%) sepia(95%) saturate(2000%) hue-rotate(190deg) brightness(0.9) contrast(1.1);
+  transition: filter 0.3s ease;
+  margin-left: 2px;
 }
 
 .message-send-btn.active {
   background: var(--theme-color, #0265A3);
-  color: white;
+}
+
+.message-send-btn.active .send-icon-img {
+  filter: brightness(0) invert(1);
 }
 
 .message-send-btn:hover:not(:disabled) {
   background: var(--theme-color, #0265A3);
-  color: white;
+}
+
+.message-send-btn:hover:not(:disabled) .send-icon-img {
+  filter: brightness(0) invert(1);
 }
 
 .message-send-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
   border-color: #adb5bd;
-  color: #6c757d;
   background: #f8f9fa;
+}
+
+.message-send-btn:disabled .send-icon-img {
+  filter: brightness(0) saturate(100%) invert(45%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(0.7) contrast(1);
 }
 
 .chat-placeholder {

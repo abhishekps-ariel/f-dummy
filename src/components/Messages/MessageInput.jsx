@@ -1,5 +1,6 @@
 import React from 'react';
 import CustomInput from '../shared/CustomInput';
+import sendIcon from '../../assets/sendIcon.png';
 
 const MessageInput = ({ messageText, setMessageText, onSendMessage }) => {
   const handleSubmit = (e) => {
@@ -23,7 +24,7 @@ const MessageInput = ({ messageText, setMessageText, onSendMessage }) => {
           className={`message-send-btn ${messageText.trim() ? 'active' : ''}`}
           disabled={!messageText.trim()}
         >
-          <i className="fas fa-paper-plane"></i>
+          <img src={sendIcon} alt="Send" className="send-icon-img" />
         </button>
       </form>
     </div>
