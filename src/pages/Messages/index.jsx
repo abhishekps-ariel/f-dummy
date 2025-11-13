@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { logout as logoutApi } from '../../services/authService';
@@ -7,7 +7,7 @@ import { ROUTES } from '../../constants/routerConstants';
 import Sidebar from '../../components/shared/Sidebar';
 import Header from '../../components/shared/Header';
 import NoOrganizationAccess from '../../components/Petitions/NoOrganizationAccess';
-import './Messages.css';
+import MessagesLayout from '../../components/Messages/MessagesLayout';
 
 const Messages = () => {
   const { user, logout, hasOrganizationAccess, organizationCheckComplete } = useAuth();
@@ -15,7 +15,6 @@ const Messages = () => {
   const [activeSection, setActiveSection] = useState('messages');
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [messageText, setMessageText] = useState('');
-  const messagesEndRef = useRef(null);
 
   // Static conversation data
   const [conversations] = useState([
@@ -152,13 +151,6 @@ const Messages = () => {
     setSelectedConversation(conversation);
   };
 
-  // Auto-scroll to bottom when messages change
-  useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [selectedConversation, messageText]);
-
   // Select first conversation by default
   useEffect(() => {
     if (conversations.length > 0 && !selectedConversation) {
@@ -206,111 +198,15 @@ const Messages = () => {
           ) : !hasOrganizationAccess ? (
             <NoOrganizationAccess />
           ) : (
-            <div className="messages-container">
-              <div className="messages-layout">
-                {/* Conversations Sidebar */}
-                <div className="conversations-sidebar">
-                  <div className="conversations-header">
-                    <h3 className="conversations-title">Conversations</h3>
-                  </div>
-                  <div className="conversations-list">
-                    {conversations.map((conversation) => (
-                      <div
-                        key={conversation.id}
-                        className={`conversation-item ${
-                          selectedConversation?.id === conversation.id ? 'active' : ''
-                        }`}
-                        onClick={() => handleConversationClick(conversation)}
-                      >
-                        <div className="conversation-avatar">
-                          {conversation.avatar}
-                        </div>
-                        <div className="conversation-content">
-                          <div className="conversation-header-row">
-                            <span className="conversation-name">{conversation.name}</span>
-                            <span className="conversation-time">{conversation.timestamp}</span>
-                          </div>
-                          <div className="conversation-preview-row">
-                            <span className="conversation-preview">{conversation.lastMessage}</span>
-                            {conversation.unread > 0 && (
-                              <span className="conversation-unread">{conversation.unread}</span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Chat Area */}
-                <div className="chat-area">
-                  {selectedConversation ? (
-                    <>
-                      {/* Chat Header */}
-                      <div className="chat-header">
-                        <div className="chat-header-info">
-                          <div className="chat-avatar">{selectedConversation.avatar}</div>
-                          <div>
-                            <h4 className="chat-name">{selectedConversation.name}</h4>
-                            <span className="chat-status">Active</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Messages List */}
-                      <div className="messages-list">
-                        {currentMessages.map((message) => (
-                          <div
-                            key={message.id}
-                            className={`message-item ${message.isOwn ? 'own-message' : 'other-message'}`}
-                          >
-                            {!message.isOwn && (
-                              <div className="message-avatar">{selectedConversation.avatar}</div>
-                            )}
-                            <div className="message-content">
-                              {!message.isOwn && (
-                                <div className="message-sender">{message.sender}</div>
-                              )}
-                              <div className="message-bubble">
-                                <p className="message-text">{message.text}</p>
-                                <span className="message-time">{message.timestamp}</span>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                        <div ref={messagesEndRef} />
-                      </div>
-
-                      {/* Message Input */}
-                      <div className="message-input-container">
-                        <form onSubmit={handleSendMessage} className="message-input-form">
-                          <input
-                            type="text"
-                            className="message-input"
-                            placeholder="Type a message..."
-                            value={messageText}
-                            onChange={(e) => setMessageText(e.target.value)}
-                          />
-                          <button
-                            type="submit"
-                            className={`message-send-btn ${messageText.trim() ? 'active' : ''}`}
-                            disabled={!messageText.trim()}
-                          >
-                            <i className="fas fa-paper-plane"></i>
-                          </button>
-                        </form>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="chat-placeholder">
-                      <i className="fas fa-comments fa-3x text-muted mb-3"></i>
-                      <h5>Select a conversation</h5>
-                      <p className="text-muted">Choose a conversation from the list to start messaging</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
+            <MessagesLayout
+              conversations={conversations}
+              selectedConversation={selectedConversation}
+              onConversationClick={handleConversationClick}
+              messages={currentMessages}
+              messageText={messageText}
+              setMessageText={setMessageText}
+              onSendMessage={handleSendMessage}
+            />
           )}
         </div>
       </main>
