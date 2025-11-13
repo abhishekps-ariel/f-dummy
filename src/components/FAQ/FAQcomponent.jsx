@@ -7,9 +7,6 @@ const FAQcomponent = () => {
     "Organization Users",
     "Adding Petitions",
     "Join Requests",
-    "1st category",
-    "2nd category",
-    "3rd category",
   ];
 
   // Static FAQ data (category-wise)
