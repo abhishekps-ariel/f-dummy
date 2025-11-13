@@ -3608,8 +3608,6 @@ const PetitionSteps = ({
       }
     });
 
-    setFieldErrors(errors);
-
     return { hasErrors, errors };
   };
 
