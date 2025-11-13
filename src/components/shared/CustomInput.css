@@ -1,0 +1,87 @@
+.custom-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.custom-input {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 0.2s;
+  box-shadow: none;
+  
+  /* Explicit colors to prevent browser defaults */
+  background-color: #ffffff !important;
+  color: #212529 !important;
+  
+  
+  /* Prevent browser default styling */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+.custom-input:focus {
+  border-color: var(--theme-color, #0265A3);
+  background-color: #ffffff !important;
+  color: #212529 !important;
+}
+
+.custom-input:disabled {
+  background-color: #f8f9fa !important;
+  color: #6c757d !important;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.custom-input::placeholder {
+  color: #adb5bd;
+  opacity: 1;
+  font-size: 0.8125rem;
+}
+
+/* Prevent browser autofill styling */
+.custom-input:-webkit-autofill,
+.custom-input:-webkit-autofill:hover,
+.custom-input:-webkit-autofill:focus,
+.custom-input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #ffffff inset !important;
+  -webkit-text-fill-color: #212529 !important;
+  background-color: #ffffff !important;
+  color: #212529 !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+.custom-input:-webkit-autofill::first-line {
+  font-size: 0.875rem;
+  color: #212529 !important;
+}
+
+/* Ensure consistent styling across browsers */
+.custom-input::-webkit-input-placeholder {
+  color: #adb5bd;
+  opacity: 1;
+  font-size: 0.8125rem;
+}
+
+.custom-input::-moz-placeholder {
+  color: #adb5bd;
+  opacity: 1;
+  font-size: 0.8125rem;
+}
+
+.custom-input:-ms-input-placeholder {
+  color: #adb5bd;
+  opacity: 1;
+  font-size: 0.8125rem;
+}
+
+.custom-input:-moz-placeholder {
+  color: #adb5bd;
+  opacity: 1;
+  font-size: 0.8125rem;
+}
+

@@ -7,6 +7,7 @@ import { ROUTES } from '../../constants/routerConstants';
 import Sidebar from '../../components/shared/Sidebar';
 import Header from '../../components/shared/Header';
 import NoOrganizationAccess from '../../components/Petitions/NoOrganizationAccess';
+import FAQcomponent from '../../components/FAQ/FAQcomponent';
 
 const FAQ = () => {
   const { user, logout, hasOrganizationAccess, organizationCheckComplete } = useAuth();
@@ -78,7 +79,7 @@ const FAQ = () => {
                 <p className="text-muted mb-4">Find answers to common questions about the FILIR system.</p>
                 
                 {/* Placeholder content */}
-                <div className="row">
+                {/* <div className="row">
                   <div className="col-12">
                     <div className="card">
                       <div className="card-body text-center py-5">
@@ -90,7 +91,8 @@ const FAQ = () => {
                       </div>
                     </div>
                   </div>
-                </div>
+                </div> */}
+                <FAQcomponent/>
               </div>
             </div>
           )}

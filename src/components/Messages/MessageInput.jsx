@@ -1,4 +1,5 @@
 import React from 'react';
+import CustomInput from '../shared/CustomInput';
 
 const MessageInput = ({ messageText, setMessageText, onSendMessage }) => {
   const handleSubmit = (e) => {
@@ -9,12 +10,13 @@ const MessageInput = ({ messageText, setMessageText, onSendMessage }) => {
   return (
     <div className="message-input-container">
       <form onSubmit={handleSubmit} className="message-input-form">
-        <input
+        <CustomInput
           type="text"
-          className="message-input"
+          className="message-input-custom"
           placeholder="Type a message..."
           value={messageText}
           onChange={(e) => setMessageText(e.target.value)}
+          autoComplete="off"
         />
         <button
           type="submit"

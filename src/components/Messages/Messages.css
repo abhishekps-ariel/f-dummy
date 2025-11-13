@@ -290,7 +290,7 @@
 
 /* Message Input */
 .message-input-container {
-  padding: 1rem 1.5rem;
+  padding: 0.875rem 1.25rem;
   border-top: 1px solid #e9ecef;
   background: white;
 }
@@ -301,18 +301,9 @@
   align-items: center;
 }
 
-.message-input {
+.message-input-custom {
   flex: 1;
-  padding: 0.75rem 1rem;
-  border: 1px solid #dee2e6;
-  border-radius: 24px;
-  font-size: 0.875rem;
-  outline: none;
-  transition: border-color 0.2s;
-}
-
-.message-input:focus {
-  border-color: var(--theme-color, #0265A3);
+  min-width: 0;
 }
 
 .message-send-btn {
