@@ -53,7 +53,8 @@ export const COMMON_ENDPOINTS = {
 
 export const PETITION_ENDPOINTS = {
   SUBMIT_PETITION: "/api/Petition/submit",
-  GET_PETITIONS_PAGED: "/api/Petition/organization/paged",
+  GET_PETITIONS_PAGED: "/api/Petition/paged",
+  GET_PETITION_COUNT: "/api/Petition/count",
   GET_PETITION_BY_ID: (petitionId) => `/api/Petition/${petitionId}`,
     DELETE_PETITION_BY_ID: (petitionId) => `/api/Petition/${petitionId}`,
 };

@@ -70,12 +70,6 @@ const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
       route: ROUTES.DASHBOARD,
     },
     {
-      key: "organizations",
-      label: "Organizations",
-      icon: "fa-building",
-      route: ROUTES.ORGANIZATIONS,
-    },
-    {
       key: "petitions",
       label: "Petitions",
       icon: "fa-file-contract",

@@ -40,30 +40,75 @@ const Step2LoanDetails = ({
 
             <div className="row g-3">
               <div className="col-md-6">
-                <label htmlFor="minNumber" className="form-label">
-                  MIN Number (Optional)
+                <label htmlFor="isMinApplicable" className="form-label">
+                  Is MIN Applicable *
                 </label>
 
-                <input
-                  type="text"
-                  id="minNumber"
-                  name="minNumber"
-                  className={`form-control ${
-                    fieldErrors.minNumber ? "is-invalid" : ""
-                  }`}
-                  value={formData.minNumber}
-                  onChange={handleInputChange}
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  placeholder="Enter MIN number"
+                <CustomDropdown
+                  id="isMinApplicable"
+                  name="isMinApplicable"
+                  value={formData.isMinApplicable === null || formData.isMinApplicable === undefined ? "" : formData.isMinApplicable ? "yes" : "no"}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    handleInputChange({
+                      target: {
+                        name: "isMinApplicable",
+                        value: value === "yes" ? true : value === "no" ? false : null,
+                      },
+                    });
+                    // Clear MIN Number if MIN is not applicable
+                    if (value === "no" || value === "") {
+                      handleInputChange({
+                        target: {
+                          name: "minNumber",
+                          value: "",
+                        },
+                      });
+                    }
+                  }}
+                  placeholder="Select"
+                  error={!!fieldErrors.isMinApplicable}
+                  options={[
+                    { value: "", label: "Select" },
+                    { value: "yes", label: "Yes" },
+                    { value: "no", label: "No" },
+                  ]}
                 />
 
-                {fieldErrors.minNumber && (
+                {fieldErrors.isMinApplicable && (
                   <div className="text-danger small mt-1">
-                    {fieldErrors.minNumber}
+                    {fieldErrors.isMinApplicable}
                   </div>
                 )}
               </div>
+
+              {formData.isMinApplicable === true && (
+                <div className="col-md-6">
+                  <label htmlFor="minNumber" className="form-label">
+                    MIN Number *
+                  </label>
+
+                  <input
+                    type="text"
+                    id="minNumber"
+                    name="minNumber"
+                    className={`form-control ${
+                      fieldErrors.minNumber ? "is-invalid" : ""
+                    }`}
+                    value={formData.minNumber || ""}
+                    onChange={handleInputChange}
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    placeholder="Enter MIN number"
+                  />
+
+                  {fieldErrors.minNumber && (
+                    <div className="text-danger small mt-1">
+                      {fieldErrors.minNumber}
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="col-md-6">
                 <label htmlFor="loanNumber" className="form-label">

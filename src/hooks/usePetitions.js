@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import petitionApiService from '../services/petitionApiService';
 import { getOrganizationById } from '../services/organizationService';
 import { toast } from 'react-toastify';
-import { getActiveOrganizationId } from '../utils/storage';
+import { getActiveOrganizationId, getUserRole } from '../utils/storage';
 
 export const usePetitions = () => {
   const {
@@ -23,11 +23,35 @@ export const usePetitions = () => {
     totalClosedCount: 0
   });
 
+  // Helper function to check if user is org admin
+  const isOrgAdminUser = (userData) => {
+    if (!userData) return false;
+    if (userData.isManager === true) {
+      return true;
+    }
+    if (userData.roles && Array.isArray(userData.roles)) {
+      return userData.roles.some(
+        (role) =>
+          role === 'Organisation Admin' ||
+          role === 'Organization Admin' ||
+          role === 'orgAdmin'
+      );
+    }
+    const userRole = getUserRole(userData);
+    if (userRole === 'orgAdmin' || userRole === 'Organisation Admin' || userRole === 'Organization Admin') {
+      return true;
+    }
+    return false;
+  };
+
   // Get organization ID from user object or active organization context
   // Priority: activeOrganizationId > user.organizationId > organization.id
   const storedActiveOrganizationId = getActiveOrganizationId();
   const userOrganizationId =
     storedActiveOrganizationId || user?.organizationId || organization?.id || null;
+  
+  // Determine if user is org admin or filer
+  const isOrgAdmin = isOrgAdminUser(user);
 
 
   // Fetch recent petitions for the user's organization (last 5 updated)
@@ -41,9 +65,12 @@ export const usePetitions = () => {
     setError(null);
 
     try {
+      // For org admin: send organizationId and userId as null
+      // For filer: send userId and organizationId as null
       const paginationParams = {
-        organizationId: userOrganizationId,
-        pageNumber: 1,
+        organizationId: isOrgAdmin ? userOrganizationId : null,
+        userId: isOrgAdmin ? null : (user?.id || null),
+        pageNumber: 1, // API uses 1-based indexing
         pageSize: 5, // Get only last 5 petitions
         searchText: "",
         status: null, // Get all statuses
@@ -77,9 +104,15 @@ export const usePetitions = () => {
       return;
     }
 
-
     try {
-      const response = await petitionApiService.getPetitionCountByOrganization(userOrganizationId);
+      // For org admin: send organizationId and userId as null
+      // For filer: send userId and organizationId as null
+      const countParams = {
+        organizationId: isOrgAdmin ? userOrganizationId : null,
+        userId: isOrgAdmin ? null : (user?.id || null)
+      };
+      
+      const response = await petitionApiService.getPetitionCount(countParams);
       
       if (response.success && response.data) {
         setPetitionCounts(response.data);

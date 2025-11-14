@@ -15,7 +15,7 @@ import "./TabbedWorkspace.css";
 import { getUserById, getSignatureById } from "../../services/authService";
 import { useAuth } from "../../context/AuthContext";
 import { ROUTES } from "../../constants/routerConstants";
-import { getActiveOrganizationId } from "../../utils/storage";
+import { getActiveOrganizationId, getUserRole } from "../../utils/storage";
 
 const ViewAllPetitions = ({ onBack }) => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -164,6 +164,27 @@ const ViewAllPetitions = ({ onBack }) => {
   const { tabs, setTabs, activeTabId, setActiveTabId, getActiveTab, openTab } =
     useTabs();
 
+  // Helper function to check if user is org admin
+  const isOrgAdminUser = (userData) => {
+    if (!userData) return false;
+    if (userData.isManager === true) {
+      return true;
+    }
+    if (userData.roles && Array.isArray(userData.roles)) {
+      return userData.roles.some(
+        (role) =>
+          role === "Organisation Admin" ||
+          role === "Organization Admin" ||
+          role === "orgAdmin"
+      );
+    }
+    const userRole = getUserRole(userData);
+    if (userRole === "orgAdmin" || userRole === "Organisation Admin" || userRole === "Organization Admin") {
+      return true;
+    }
+    return false;
+  };
+
   // Get organization ID from user object (stored in browser storage) or organization context
   // Priority: user.organizationId > organization.id
   const storedActiveOrganizationId = getActiveOrganizationId();
@@ -173,6 +194,9 @@ const ViewAllPetitions = ({ onBack }) => {
     organization?.id ||
     organizationFromAuth?.id ||
     null;
+  
+  // Determine if user is org admin or filer
+  const isOrgAdmin = isOrgAdminUser(user);
 
   // Handle date filter change
   const handleDateFilterChange = (value) => {
@@ -187,15 +211,22 @@ const ViewAllPetitions = ({ onBack }) => {
 
   // Fetch petitions using paged API
   const fetchPetitions = async (page = 1) => {
-    if (!organizationId) {
+    // For org admin, we need organizationId; for filer, we need userId
+    if (isOrgAdmin && !organizationId) {
+      return;
+    }
+    if (!isOrgAdmin && !user?.id) {
       return;
     }
 
     setLoading(true);
     try {
+      // For org admin: send organizationId and userId as null
+      // For filer: send userId and organizationId as null
       const paginationParams = {
-        organizationId: organizationId,
-        pageNumber: page, // Use 1-based pagination as expected by API
+        organizationId: isOrgAdmin ? organizationId : null,
+        userId: isOrgAdmin ? null : (user?.id || null),
+        pageNumber: page, // API uses 1-based indexing
         pageSize: 10, // 10 petitions per page
         searchText: searchQuery.trim() || "",
         status: getStatusValue(statusFilter),
@@ -451,16 +482,24 @@ const ViewAllPetitions = ({ onBack }) => {
 
   // Load initial data when component mounts
   useEffect(() => {
-    if (organizationId && organizationCheckComplete) {
+    const canLoad = isOrgAdmin 
+      ? (organizationId && organizationCheckComplete)
+      : (user?.id && organizationCheckComplete);
+    
+    if (canLoad) {
       fetchPetitions(1);
     }
-  }, [organizationId, organizationCheckComplete]);
+  }, [organizationId, organizationCheckComplete, isOrgAdmin, user?.id]);
 
   // Handle filter changes with debouncing (excluding custom date fields)
   useEffect(() => {
     // Skip if filters are being reset to defaults (empty search and "all" status)
     // This prevents unnecessary fetches when handleRefresh is called
-    if (!organizationId) return;
+    const canLoad = isOrgAdmin 
+      ? organizationId
+      : user?.id;
+    
+    if (!canLoad) return;
     
     const timeoutId = setTimeout(() => {
       setPagination((prev) => ({ ...prev, currentPage: 1 }));
@@ -468,7 +507,7 @@ const ViewAllPetitions = ({ onBack }) => {
     }, 500); // 500ms debounce
 
     return () => clearTimeout(timeoutId);
-  }, [searchQuery, statusFilter]);
+  }, [searchQuery, statusFilter, isOrgAdmin, organizationId, user?.id]);
 
   // Handle date filter changes (excluding custom range which requires Apply button)
   useEffect(() => {
@@ -480,21 +519,29 @@ const ViewAllPetitions = ({ onBack }) => {
     
     // Only trigger fetch for non-custom date filters and after organization check is complete
     // Custom range is handled separately via Apply Filter button
-    if (dateFilter !== "custom" && organizationId && organizationCheckComplete) {
+    const canLoad = isOrgAdmin 
+      ? (organizationId && organizationCheckComplete)
+      : (user?.id && organizationCheckComplete);
+    
+    if (dateFilter !== "custom" && canLoad) {
       setPagination((prev) => ({ ...prev, currentPage: 1 }));
       fetchPetitions(1);
     }
-  }, [dateFilter]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [dateFilter, isOrgAdmin, organizationId, user?.id, organizationCheckComplete]); // eslint-disable-line react-hooks/exhaustive-deps
   // Note: fetchPetitions uses ref pattern and reads latest state values from closure
   // We only want to trigger when dateFilter changes, not on mount
 
   // Handle sorting changes
   useEffect(() => {
-    if (organizationId) {
+    const canLoad = isOrgAdmin 
+      ? organizationId
+      : user?.id;
+    
+    if (canLoad) {
       setPagination((prev) => ({ ...prev, currentPage: 1 }));
       fetchPetitions(1);
     }
-  }, [sortBy, sortOrder]);
+  }, [sortBy, sortOrder, isOrgAdmin, organizationId, user?.id]);
 
   // Handle click outside to close dropdown
   useEffect(() => {

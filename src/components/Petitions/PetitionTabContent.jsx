@@ -4,6 +4,7 @@ import autoTable from "jspdf-autotable";
 import { useTabs } from "../../context/TabContext";
 import { usePetitionCommonData } from "../../hooks/usePetitionCommonData";
 import { usePetitions } from "../../hooks/usePetitions";
+import { useAuth } from "../../context/AuthContext";
 import { toast } from "react-toastify";
 import CustomDropdown from "../shared/CustomDropdown";
 import "../shared/CustomDropdown.css";
@@ -22,6 +23,7 @@ import StepSignaturesSection from "./Sections/StepSignaturesSection";
 
 const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
   const { loadingTabs, activeTabId, refreshTab, tabs } = useTabs();
+  const { user } = useAuth();
   const {
     getLoanTypes,
     getAssigneeTypes,
@@ -39,6 +41,18 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
+  
+  // Modal states for Judgement and Foreclosure editing
+  const [showJudgementModal, setShowJudgementModal] = useState(false);
+  const [showForeclosureModal, setShowForeclosureModal] = useState(false);
+  const [isSavingJudgement, setIsSavingJudgement] = useState(false);
+  const [isSavingForeclosure, setIsSavingForeclosure] = useState(false);
+  const [judgementFieldErrors, setJudgementFieldErrors] = useState({});
+  const [foreclosureFieldErrors, setForeclosureFieldErrors] = useState({});
+  const [showEditDropdown, setShowEditDropdown] = useState(false);
+  const editDropdownRef = useRef(null);
+  const [showNotesModal, setShowNotesModal] = useState(false);
+  const [newNote, setNewNote] = useState("");
 
   // Google Places/Geocoder (property address)
   const LIBRARIES = ["places"];
@@ -573,6 +587,19 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
       noticeAddressZip: details.rightToCure?.noticeAddressZip || "",
       manualOverrideReason: details.rightToCure?.manualOverrideReason || "",
 
+      // Judgment
+      judgment: details.judgment
+        ? {
+            judgmentDate: details.judgment.judgmentDate
+              ? details.judgment.judgmentDate.split("T")[0]
+              : "",
+            judgmentAmount: details.judgment.judgmentAmount || 0,
+            judgmentType: details.judgment.judgmentType || "",
+            courtInformation: details.judgment.courtInformation || "",
+            docketNumbers: details.judgment.docketNumbers || "",
+          }
+        : null,
+
       // Foreclosure Sale
       foreclosureSale: details.foreclosureSale
         ? {
@@ -635,6 +662,9 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
       // Additional
       documents: details.documents || [],
       isAllStepsCompleted: true,
+
+      // Notes
+      notes: details.notes || [],
     };
   }, [petition]);
 
@@ -652,6 +682,23 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
     setIsEditing(false);
     setFieldErrors({});
   }, [petition?.id]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (editDropdownRef.current && !editDropdownRef.current.contains(event.target)) {
+        setShowEditDropdown(false);
+      }
+    };
+
+    if (showEditDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showEditDropdown]);
 
   // Removed status check - now all petitions (draft and submitted) can be edited
 
@@ -1038,6 +1085,35 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
     }));
   };
 
+  // Handle judgment field changes
+  const updateJudgment = (field, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      judgment: prev.judgment
+        ? {
+            ...prev.judgment,
+            [field]: value,
+          }
+        : {
+            judgmentDate: "",
+            judgmentAmount: 0,
+            judgmentType: "",
+            courtInformation: "",
+            docketNumbers: "",
+            [field]: value,
+          },
+    }));
+    
+    // Clear field error when user starts typing
+    if (judgementFieldErrors[field]) {
+      setJudgementFieldErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
+  };
+
   // Handle foreclosure sale field changes
   const updateForeclosureSale = (field, value) => {
     setFormData((prev) => ({
@@ -1068,6 +1144,150 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
             [field]: value,
           },
     }));
+    
+    // Clear field error when user starts typing
+    if (foreclosureFieldErrors[field]) {
+      setForeclosureFieldErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
+  };
+
+  // Validate and save judgment
+  const handleSaveJudgment = async () => {
+    const errors = {};
+    const judgment = formData.judgment || {};
+    
+    if (!judgment.judgmentDate || !judgment.judgmentDate.trim()) {
+      errors.judgmentDate = "Judgment date is required";
+    }
+    if (!judgment.judgmentAmount || judgment.judgmentAmount <= 0) {
+      errors.judgmentAmount = "Judgment amount is required and must be greater than 0";
+    }
+    if (!judgment.judgmentType || !judgment.judgmentType.trim()) {
+      errors.judgmentType = "Judgment type is required";
+    }
+    if (!judgment.courtInformation || !judgment.courtInformation.trim()) {
+      errors.courtInformation = "Court information is required";
+    }
+    if (!judgment.docketNumbers || !judgment.docketNumbers.trim()) {
+      errors.docketNumbers = "Docket numbers are required";
+    }
+    
+    if (Object.keys(errors).length > 0) {
+      setJudgementFieldErrors(errors);
+      return;
+    }
+    
+    setIsSavingJudgement(true);
+    try {
+      const petitionData = { ...formData };
+      await submitPetition(petitionData, false, petition.id);
+      toast.success("Judgment details saved successfully");
+      setShowJudgementModal(false);
+      setJudgementFieldErrors({});
+      
+      // Refresh the tab data
+      if (activeTabId && refreshTab) {
+        await refreshTab(activeTabId);
+      }
+      if (onPetitionUpdated) {
+        onPetitionUpdated();
+      }
+    } catch (error) {
+      toast.error("Failed to save judgment details. Please try again.");
+    } finally {
+      setIsSavingJudgement(false);
+    }
+  };
+
+  // Handle adding a new note (static implementation - no API call)
+  const handleAddNote = () => {
+    if (!newNote.trim()) return;
+
+    const noteData = {
+      id: Date.now().toString(),
+      content: newNote.trim(),
+      createdAt: new Date().toISOString(),
+      createdBy: user?.email || user?.name || 'User',
+      createdByName: user?.name || user?.email || 'User',
+    };
+
+    const updatedNotes = [noteData, ...(formData.notes || [])];
+    const updatedFormData = {
+      ...formData,
+      notes: updatedNotes,
+    };
+
+    setFormData(updatedFormData);
+    setNewNote("");
+  };
+
+  // Validate and save foreclosure sale
+  const handleSaveForeclosure = async () => {
+    const errors = {};
+    const foreclosureSale = formData.foreclosureSale || {};
+    
+    if (!foreclosureSale.saleDate || !foreclosureSale.saleDate.trim()) {
+      errors["foreclosureSale.saleDate"] = "Sale Date is required";
+    }
+    if (!foreclosureSale.soldToId || foreclosureSale.soldToId === "") {
+      errors["foreclosureSale.soldToId"] = "Buyer Type is required";
+    } else {
+      // If soldToId is selected, check if it's Mortgagee/Investor
+      const buyerTypes = getBuyerTypes();
+      const selectedBuyerType = findOptionByValue(buyerTypes, foreclosureSale.soldToId);
+      const isMortgageeInvestor = selectedBuyerType && (
+        selectedBuyerType.name?.toLowerCase().includes("mortgagee") ||
+        selectedBuyerType.name?.toLowerCase().includes("investor") ||
+        selectedBuyerType.value?.toLowerCase().includes("mortgagee") ||
+        selectedBuyerType.value?.toLowerCase().includes("investor")
+      );
+      
+      // If Mortgagee/Investor, validate required fields
+      if (isMortgageeInvestor) {
+        if (!foreclosureSale.vestingEntityName || foreclosureSale.vestingEntityName.trim() === "") {
+          errors["foreclosureSale.vestingEntityName"] = "Must be entered if buyer is Mortgagee/Investor";
+        }
+        if (!foreclosureSale.reoContactFirstName || foreclosureSale.reoContactFirstName.trim() === "") {
+          errors["foreclosureSale.reoContactFirstName"] = "Must be entered if buyer is Mortgagee/Investor";
+        }
+        if (!foreclosureSale.reoContactLastName || foreclosureSale.reoContactLastName.trim() === "") {
+          errors["foreclosureSale.reoContactLastName"] = "Must be entered if buyer is Mortgagee/Investor";
+        }
+        if (!foreclosureSale.reoBusinessPhone || foreclosureSale.reoBusinessPhone.trim() === "") {
+          errors["foreclosureSale.reoBusinessPhone"] = "Must be entered if buyer is Mortgagee/Investor";
+        }
+      }
+    }
+    
+    if (Object.keys(errors).length > 0) {
+      setForeclosureFieldErrors(errors);
+      return;
+    }
+    
+    setIsSavingForeclosure(true);
+    try {
+      const petitionData = { ...formData };
+      await submitPetition(petitionData, false, petition.id);
+      toast.success("Foreclosure sale details saved successfully");
+      setShowForeclosureModal(false);
+      setForeclosureFieldErrors({});
+      
+      // Refresh the tab data
+      if (activeTabId && refreshTab) {
+        await refreshTab(activeTabId);
+      }
+      if (onPetitionUpdated) {
+        onPetitionUpdated();
+      }
+    } catch (error) {
+      toast.error("Failed to save foreclosure sale details. Please try again.");
+    } finally {
+      setIsSavingForeclosure(false);
+    }
   };
 
   // Add borrower
@@ -1765,14 +1985,132 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
                 <div className="d-flex align-items-center gap-2 petition-header-actions">
                   {!isEditing ? (
                     <>
+                      <div className="dropdown" ref={editDropdownRef} style={{ position: 'relative' }}>
+                        <button
+                          type="button"
+                          className="dashboard-btn-create"
+                          onClick={() => setShowEditDropdown(!showEditDropdown)}
+                          title="Edit options"
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            padding: '10px 20px',
+                            borderRadius: '8px',
+                            border: 'none',
+                            cursor: 'pointer',
+                            position: 'relative',
+                          }}
+                        >
+                          <span>Edit</span>
+                          <i className={`fas fa-chevron-down`} style={{ fontSize: '0.7rem', transition: 'transform 0.2s', transform: showEditDropdown ? 'rotate(180deg)' : 'rotate(0deg)' }}></i>
+                        </button>
+                        {showEditDropdown && (
+                          <div 
+                            className="dropdown-menu show" 
+                            style={{ 
+                              display: 'block', 
+                              position: 'absolute',
+                              top: '100%',
+                              left: 0,
+                              marginTop: '4px',
+                              minWidth: '180px',
+                              backgroundColor: '#fff',
+                              border: '1px solid #ddd',
+                              borderRadius: '8px',
+                              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                              padding: '4px 0',
+                              zIndex: 1000,
+                            }}
+                          >
+                            <button
+                              className="dropdown-item"
+                              type="button"
+                              onClick={() => {
+                                setShowEditDropdown(false);
+                                handleEditToggle();
+                              }}
+                              style={{
+                                display: 'block',
+                                width: '100%',
+                                padding: '10px 16px',
+                                textAlign: 'left',
+                                border: 'none',
+                                backgroundColor: 'transparent',
+                                cursor: 'pointer',
+                                fontSize: '14px',
+                                color: '#333',
+                                transition: 'background-color 0.2s',
+                              }}
+                              onMouseEnter={(e) => e.target.style.backgroundColor = '#f8f9fa'}
+                              onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                            >
+                              Edit Filing
+                            </button>
+                            <button
+                              className="dropdown-item"
+                              type="button"
+                              onClick={() => {
+                                setShowEditDropdown(false);
+                                setShowJudgementModal(true);
+                              }}
+                              style={{
+                                display: 'block',
+                                width: '100%',
+                                padding: '10px 16px',
+                                textAlign: 'left',
+                                border: 'none',
+                                backgroundColor: 'transparent',
+                                cursor: 'pointer',
+                                fontSize: '14px',
+                                color: '#333',
+                                transition: 'background-color 0.2s',
+                              }}
+                              onMouseEnter={(e) => e.target.style.backgroundColor = '#f8f9fa'}
+                              onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                            >
+                              Edit Judgement
+                            </button>
+                            <button
+                              className="dropdown-item"
+                              type="button"
+                              onClick={() => {
+                                setShowEditDropdown(false);
+                                setShowForeclosureModal(true);
+                              }}
+                              style={{
+                                display: 'block',
+                                width: '100%',
+                                padding: '10px 16px',
+                                textAlign: 'left',
+                                border: 'none',
+                                backgroundColor: 'transparent',
+                                cursor: 'pointer',
+                                fontSize: '14px',
+                                color: '#333',
+                                transition: 'background-color 0.2s',
+                              }}
+                              onMouseEnter={(e) => e.target.style.backgroundColor = '#f8f9fa'}
+                              onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                            >
+                              Edit Foreclosure
+                            </button>
+                          </div>
+                        )}
+                      </div>
                       <button
                         type="button"
-                        className="dashboard-btn-create"
-                        onClick={handleEditToggle}
-                        title="Edit petition"
+                        className="dashboard-btn-refresh"
+                        onClick={() => setShowNotesModal(true)}
+                        title="View and add notes"
                       >
-                        <i className="fas fa-edit me-1"></i>
-                        Edit
+                        <i className="fas fa-sticky-note me-1"></i>
+                        Notes
+                        {formData.notes && formData.notes.length > 0 && (
+                          <span className="badge bg-primary ms-2" style={{ fontSize: '0.7rem' }}>
+                            {formData.notes.length}
+                          </span>
+                        )}
                       </button>
                       <button
                         type="button"
@@ -1937,18 +2275,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
             handleNoticeAddressSelect={handleNoticeAddressSelect}
           />
 
-          {/* Foreclosure Sale Section - Only show if Right to Cure is "Yes" AND petition is not Draft */}
-          <ForeclosureSaleSection
-            SectionHeader={SectionHeader}
-            formData={formData}
-            petition={petition}
-            isEditing={isEditing}
-            fieldErrors={fieldErrors}
-            foreclosureSaleSectionRef={foreclosureSaleSectionRef}
-            getBuyerTypes={getBuyerTypes}
-            findOptionByValue={findOptionByValue}
-            updateForeclosureSale={updateForeclosureSale}
-          />
+          {/* Foreclosure Sale Section - Removed from inline view, now only in modal */}
 
 
           {/* Form 35B Compliance Section */}
@@ -1993,6 +2320,573 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
           />
         </form>
       </div>
+
+      {/* Notes Modal */}
+      {showNotesModal && (
+        <div
+          className="modal fade show d-block"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)", zIndex: 1055 }}
+          tabIndex="-1"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowNotesModal(false);
+            }
+          }}
+        >
+          <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  <i className="fas fa-sticky-note me-2"></i>
+                  Notes
+                  {formData.notes && formData.notes.length > 0 && (
+                    <span className="badge bg-primary ms-2" style={{ fontSize: '0.85rem' }}>
+                      {formData.notes.length}
+                    </span>
+                  )}
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setShowNotesModal(false)}
+                  aria-label="Close"
+                ></button>
+              </div>
+              <div className="modal-body">
+                {/* Add Note Form */}
+                <div className="mb-4 pb-3 border-bottom">
+                  <label htmlFor="newNote" className="form-label">
+                    Add Note
+                  </label>
+                  <textarea
+                    id="newNote"
+                    className="form-control"
+                    rows="3"
+                    value={newNote}
+                    onChange={(e) => setNewNote(e.target.value)}
+                    placeholder="Enter your note here..."
+                    style={{ resize: 'vertical' }}
+                  />
+                  <div className="mt-2">
+                    <button
+                      type="button"
+                      className="dashboard-btn-create"
+                      onClick={handleAddNote}
+                      disabled={!newNote.trim()}
+                    >
+                      <i className="fas fa-plus me-1"></i>
+                      Add Note
+                    </button>
+                  </div>
+                </div>
+
+                {/* Notes List */}
+                {formData.notes && formData.notes.length > 0 ? (
+                  <div className="notes-list">
+                    {formData.notes
+                      .slice()
+                      .sort((a, b) => {
+                        // Sort by date, most recent first
+                        const dateA = new Date(a.createdAt || a.createdDate || 0);
+                        const dateB = new Date(b.createdAt || b.createdDate || 0);
+                        return dateB - dateA;
+                      })
+                      .map((note, index) => (
+                        <div
+                          key={note.id || index}
+                          className="note-item mb-3 p-3 border rounded"
+                          style={{
+                            backgroundColor: '#f8f9fa',
+                            borderLeft: '3px solid var(--theme-color)',
+                          }}
+                        >
+                          <div className="d-flex justify-content-between align-items-start mb-2">
+                            <div className="note-meta">
+                              <small className="text-muted">
+                                <i className="fas fa-user me-1"></i>
+                                {note.createdBy || note.createdByName || 'User'}
+                              </small>
+                              <small className="text-muted ms-3">
+                                <i className="fas fa-clock me-1"></i>
+                                {formatDateTime(note.createdAt || note.createdDate || new Date().toISOString())}
+                              </small>
+                            </div>
+                          </div>
+                          <div className="note-content" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                            {note.content || note.note || note.text}
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                ) : (
+                  <div className="text-muted text-center py-4">
+                    <i className="fas fa-sticky-note me-2"></i>
+                    No notes yet. Add your first note above.
+                  </div>
+                )}
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="dashboard-btn-refresh"
+                  onClick={() => setShowNotesModal(false)}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Judgment Modal */}
+      {showJudgementModal && (
+        <div
+          className="modal fade show d-block"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)", zIndex: 1055 }}
+          tabIndex="-1"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !isSavingJudgement) {
+              setShowJudgementModal(false);
+              setJudgementFieldErrors({});
+            }
+          }}
+        >
+          <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Edit Judgment</h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => {
+                    if (!isSavingJudgement) {
+                      setShowJudgementModal(false);
+                      setJudgementFieldErrors({});
+                    }
+                  }}
+                  disabled={isSavingJudgement}
+                  aria-label="Close"
+                ></button>
+              </div>
+              <div className="modal-body">
+                <div className="row g-3">
+                  <div className="col-md-6">
+                    <label htmlFor="judgmentDate" className="form-label">
+                      Judgment Date *
+                    </label>
+                    <input
+                      type="date"
+                      id="judgmentDate"
+                      className={`form-control ${
+                        judgementFieldErrors.judgmentDate ? "is-invalid" : ""
+                      }`}
+                      value={formData.judgment?.judgmentDate || ""}
+                      onChange={(e) => updateJudgment("judgmentDate", e.target.value)}
+                    />
+                    {judgementFieldErrors.judgmentDate && (
+                      <div className="text-danger small mt-1">
+                        {judgementFieldErrors.judgmentDate}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="col-md-6">
+                    <label htmlFor="judgmentAmount" className="form-label">
+                      Judgment Amount ($) *
+                    </label>
+                    <input
+                      type="number"
+                      id="judgmentAmount"
+                      step="0.01"
+                      className={`form-control ${
+                        judgementFieldErrors.judgmentAmount ? "is-invalid" : ""
+                      }`}
+                      value={formData.judgment?.judgmentAmount || ""}
+                      onChange={(e) => updateJudgment("judgmentAmount", parseFloat(e.target.value) || 0)}
+                    />
+                    {judgementFieldErrors.judgmentAmount && (
+                      <div className="text-danger small mt-1">
+                        {judgementFieldErrors.judgmentAmount}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="col-md-6">
+                    <label htmlFor="judgmentType" className="form-label">
+                      Judgment Type *
+                    </label>
+                    <CustomDropdown
+                      id="judgmentType"
+                      name="judgmentType"
+                      value={formData.judgment?.judgmentType || ""}
+                      onChange={(e) => updateJudgment("judgmentType", e.target.value)}
+                      placeholder="Select Judgment Type"
+                      error={!!judgementFieldErrors.judgmentType}
+                      options={[
+                        { value: "", label: "Select Judgment Type" },
+                        { value: "Foreclosure Judgment", label: "Foreclosure Judgment" },
+                        { value: "Default Judgment", label: "Default Judgment" },
+                        { value: "Summary Judgment", label: "Summary Judgment" },
+                        { value: "Judgment of Sale", label: "Judgment of Sale" },
+                        { value: "Judgment Dismissal", label: "Judgment Dismissal" },
+                        { value: "Judgment Vacated", label: "Judgment Vacated" },
+                        { value: "Other", label: "Other" },
+                      ]}
+                    />
+                    {judgementFieldErrors.judgmentType && (
+                      <div className="text-danger small mt-1">
+                        {judgementFieldErrors.judgmentType}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="col-md-6">
+                    <label htmlFor="docketNumbers" className="form-label">
+                      Docket Numbers *
+                    </label>
+                    <input
+                      type="text"
+                      id="docketNumbers"
+                      className={`form-control ${
+                        judgementFieldErrors.docketNumbers ? "is-invalid" : ""
+                      }`}
+                      value={formData.judgment?.docketNumbers || ""}
+                      onChange={(e) => updateJudgment("docketNumbers", e.target.value)}
+                      placeholder="Enter docket numbers"
+                    />
+                    {judgementFieldErrors.docketNumbers && (
+                      <div className="text-danger small mt-1">
+                        {judgementFieldErrors.docketNumbers}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="col-12">
+                    <label htmlFor="courtInformation" className="form-label">
+                      Court Information *
+                    </label>
+                    <textarea
+                      id="courtInformation"
+                      className={`form-control ${
+                        judgementFieldErrors.courtInformation ? "is-invalid" : ""
+                      }`}
+                      rows="4"
+                      value={formData.judgment?.courtInformation || ""}
+                      onChange={(e) => updateJudgment("courtInformation", e.target.value)}
+                      placeholder="Enter court information"
+                    />
+                    {judgementFieldErrors.courtInformation && (
+                      <div className="text-danger small mt-1">
+                        {judgementFieldErrors.courtInformation}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="dashboard-btn-refresh"
+                  onClick={() => {
+                    if (!isSavingJudgement) {
+                      setShowJudgementModal(false);
+                      setJudgementFieldErrors({});
+                    }
+                  }}
+                  disabled={isSavingJudgement}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="dashboard-btn-create"
+                  onClick={handleSaveJudgment}
+                  disabled={isSavingJudgement}
+                >
+                  {isSavingJudgement ? (
+                    <>
+                      <span
+                        className="spinner-border spinner-border-sm me-1"
+                        role="status"
+                        aria-hidden="true"
+                      ></span>
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <i className="fas fa-save me-1"></i>
+                      Save
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Foreclosure Modal */}
+      {showForeclosureModal && (
+        <div
+          className="modal fade show d-block"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)", zIndex: 1055 }}
+          tabIndex="-1"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !isSavingForeclosure) {
+              setShowForeclosureModal(false);
+              setForeclosureFieldErrors({});
+            }
+          }}
+        >
+          <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Edit Foreclosure Sale</h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => {
+                    if (!isSavingForeclosure) {
+                      setShowForeclosureModal(false);
+                      setForeclosureFieldErrors({});
+                    }
+                  }}
+                  disabled={isSavingForeclosure}
+                  aria-label="Close"
+                ></button>
+              </div>
+              <div className="modal-body">
+                <div className="row g-3">
+                  <div className="col-md-6">
+                    <label htmlFor="foreclosureSaleDate" className="form-label">
+                      Sale Date *
+                    </label>
+                    <input
+                      type="date"
+                      id="foreclosureSaleDate"
+                      className={`form-control ${
+                        foreclosureFieldErrors["foreclosureSale.saleDate"] ? "is-invalid" : ""
+                      }`}
+                      value={formData.foreclosureSale?.saleDate || ""}
+                      onChange={(e) => updateForeclosureSale("saleDate", e.target.value)}
+                    />
+                    {foreclosureFieldErrors["foreclosureSale.saleDate"] && (
+                      <div className="text-danger small mt-1">
+                        {foreclosureFieldErrors["foreclosureSale.saleDate"]}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="col-md-6">
+                    <label htmlFor="foreclosureSoldTo" className="form-label">
+                      Sold To? *
+                    </label>
+                    <CustomDropdown
+                      id="foreclosureSoldTo"
+                      name="soldToId"
+                      value={formData.foreclosureSale?.soldToId || ""}
+                      onChange={(e) => updateForeclosureSale("soldToId", e.target.value)}
+                      placeholder="Select..."
+                      error={!!foreclosureFieldErrors["foreclosureSale.soldToId"]}
+                      options={[
+                        { value: "", label: "Select..." },
+                        ...getBuyerTypes().map((buyerType) => ({
+                          value: buyerType.id || buyerType.value,
+                          label: buyerType.name || buyerType.value,
+                        })),
+                      ]}
+                    />
+                    {foreclosureFieldErrors["foreclosureSale.soldToId"] && (
+                      <div className="text-danger small mt-1">
+                        {foreclosureFieldErrors["foreclosureSale.soldToId"]}
+                      </div>
+                    )}
+                  </div>
+
+                  {(() => {
+                    const buyerTypes = getBuyerTypes();
+                    const selectedBuyerType = formData.foreclosureSale?.soldToId
+                      ? findOptionByValue(buyerTypes, formData.foreclosureSale.soldToId)
+                      : null;
+                    const isMortgageeInvestor = selectedBuyerType && (
+                      selectedBuyerType.name?.toLowerCase().includes("mortgagee") ||
+                      selectedBuyerType.name?.toLowerCase().includes("investor") ||
+                      selectedBuyerType.value?.toLowerCase().includes("mortgagee") ||
+                      selectedBuyerType.value?.toLowerCase().includes("investor")
+                    );
+
+                    return (
+                      <>
+                        <div className="col-md-6">
+                          <label htmlFor="foreclosureVestingEntity" className="form-label">
+                            Vesting Entity Name {isMortgageeInvestor ? "*" : ""}
+                            {isMortgageeInvestor && (
+                              <span className="text-muted small ms-1">(If Mortgagee/Investor)</span>
+                            )}
+                          </label>
+                          <input
+                            type="text"
+                            id="foreclosureVestingEntity"
+                            className={`form-control ${
+                              foreclosureFieldErrors["foreclosureSale.vestingEntityName"] ? "is-invalid" : ""
+                            }`}
+                            value={formData.foreclosureSale?.vestingEntityName || ""}
+                            onChange={(e) => updateForeclosureSale("vestingEntityName", e.target.value)}
+                            placeholder="Enter vesting entity name"
+                          />
+                          {foreclosureFieldErrors["foreclosureSale.vestingEntityName"] && (
+                            <div className="text-danger small mt-1">
+                              {foreclosureFieldErrors["foreclosureSale.vestingEntityName"]}
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="col-md-6">
+                          <label htmlFor="foreclosureReoEntity" className="form-label">
+                            REO Entity Name
+                          </label>
+                          <input
+                            type="text"
+                            id="foreclosureReoEntity"
+                            className="form-control"
+                            value={formData.foreclosureSale?.reoEntityName || ""}
+                            onChange={(e) => updateForeclosureSale("reoEntityName", e.target.value)}
+                            placeholder="Enter REO entity name"
+                          />
+                        </div>
+
+                        <div className="col-md-6">
+                          <label htmlFor="foreclosureReoContactFirstName" className="form-label">
+                            REO Contact First Name {isMortgageeInvestor ? "*" : ""}
+                            {isMortgageeInvestor && (
+                              <span className="text-muted small ms-1">(If Mortgagee/Investor)</span>
+                            )}
+                          </label>
+                          <input
+                            type="text"
+                            id="foreclosureReoContactFirstName"
+                            className={`form-control ${
+                              foreclosureFieldErrors["foreclosureSale.reoContactFirstName"] ? "is-invalid" : ""
+                            }`}
+                            value={formData.foreclosureSale?.reoContactFirstName || ""}
+                            onChange={(e) => updateForeclosureSale("reoContactFirstName", e.target.value)}
+                            placeholder="Enter first name"
+                          />
+                          {foreclosureFieldErrors["foreclosureSale.reoContactFirstName"] && (
+                            <div className="text-danger small mt-1">
+                              {foreclosureFieldErrors["foreclosureSale.reoContactFirstName"]}
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="col-md-6">
+                          <label htmlFor="foreclosureReoContactLastName" className="form-label">
+                            REO Contact Last Name {isMortgageeInvestor ? "*" : ""}
+                            {isMortgageeInvestor && (
+                              <span className="text-muted small ms-1">(If Mortgagee/Investor)</span>
+                            )}
+                          </label>
+                          <input
+                            type="text"
+                            id="foreclosureReoContactLastName"
+                            className={`form-control ${
+                              foreclosureFieldErrors["foreclosureSale.reoContactLastName"] ? "is-invalid" : ""
+                            }`}
+                            value={formData.foreclosureSale?.reoContactLastName || ""}
+                            onChange={(e) => updateForeclosureSale("reoContactLastName", e.target.value)}
+                            placeholder="Enter last name"
+                          />
+                          {foreclosureFieldErrors["foreclosureSale.reoContactLastName"] && (
+                            <div className="text-danger small mt-1">
+                              {foreclosureFieldErrors["foreclosureSale.reoContactLastName"]}
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="col-md-6">
+                          <label htmlFor="foreclosureReoBusinessPhone" className="form-label">
+                            REO Business Phone {isMortgageeInvestor ? "*" : ""}
+                            {isMortgageeInvestor && (
+                              <span className="text-muted small ms-1">(If Mortgagee/Investor)</span>
+                            )}
+                          </label>
+                          <input
+                            type="text"
+                            id="foreclosureReoBusinessPhone"
+                            className={`form-control ${
+                              foreclosureFieldErrors["foreclosureSale.reoBusinessPhone"] ? "is-invalid" : ""
+                            }`}
+                            value={formData.foreclosureSale?.reoBusinessPhone || ""}
+                            onChange={(e) => updateForeclosureSale("reoBusinessPhone", e.target.value)}
+                            placeholder="Enter business phone"
+                          />
+                          {foreclosureFieldErrors["foreclosureSale.reoBusinessPhone"] && (
+                            <div className="text-danger small mt-1">
+                              {foreclosureFieldErrors["foreclosureSale.reoBusinessPhone"]}
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="col-md-6">
+                          <label htmlFor="foreclosureReoEmergencyPhone" className="form-label">
+                            REO Emergency Phone
+                          </label>
+                          <input
+                            type="text"
+                            id="foreclosureReoEmergencyPhone"
+                            className="form-control"
+                            value={formData.foreclosureSale?.reoEmergencyPhone || ""}
+                            onChange={(e) => updateForeclosureSale("reoEmergencyPhone", e.target.value)}
+                            placeholder="Enter emergency phone"
+                          />
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="dashboard-btn-refresh"
+                  onClick={() => {
+                    if (!isSavingForeclosure) {
+                      setShowForeclosureModal(false);
+                      setForeclosureFieldErrors({});
+                    }
+                  }}
+                  disabled={isSavingForeclosure}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="dashboard-btn-create"
+                  onClick={handleSaveForeclosure}
+                  disabled={isSavingForeclosure}
+                >
+                  {isSavingForeclosure ? (
+                    <>
+                      <span
+                        className="spinner-border spinner-border-sm me-1"
+                        role="status"
+                        aria-hidden="true"
+                      ></span>
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <i className="fas fa-save me-1"></i>
+                      Save
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

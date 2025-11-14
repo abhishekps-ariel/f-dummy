@@ -7,23 +7,15 @@ import { ROUTES } from '../../constants/routerConstants';
 import Sidebar from '../../components/shared/Sidebar';
 import Header from '../../components/shared/Header';
 import ViewAllPetitions from '../../components/Petitions/ViewAllPetitions';
-import NoOrganizationAccess from '../../components/Petitions/NoOrganizationAccess';
 import { usePetitions } from '../../hooks/usePetitions';
 import { TabProvider } from '../../context/TabContext';
 
 const Petitions = () => {
-  const { user, logout, hasOrganizationAccess, organizationCheckComplete, checkOrganizationAccess } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState('petitions');
   const { petitions, loading, error, fetchPetitions, submitPetition } = usePetitions();
 
-  // Re-check organization access when Petitions page mounts or user changes
-  // This ensures access is always validated when navigating to Petitions
-  useEffect(() => {
-    if (user) {
-      checkOrganizationAccess();
-    }
-  }, [user]); // Only depend on user, not checkOrganizationAccess function reference
 
   const handleLogout = async () => {
     try {
@@ -74,20 +66,9 @@ const Petitions = () => {
 
         {/* Main Petitions Content */}
         <div className="dashboard-content-section">
-          {!organizationCheckComplete ? (
-            <div className="text-center py-5">
-              <div className="spinner-border text-primary" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </div>
-              <p className="mt-2 text-muted">Checking organization access...</p>
-            </div>
-          ) : !hasOrganizationAccess ? (
-            <NoOrganizationAccess />
-          ) : (
-            <TabProvider>
-              <ViewAllPetitions />
-            </TabProvider>
-          )}
+          <TabProvider>
+            <ViewAllPetitions />
+          </TabProvider>
         </div>
       </main>
     </div>

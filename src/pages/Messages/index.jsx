@@ -6,11 +6,10 @@ import { clearAuthData, getAuthData } from '../../utils/storage';
 import { ROUTES } from '../../constants/routerConstants';
 import Sidebar from '../../components/shared/Sidebar';
 import Header from '../../components/shared/Header';
-import NoOrganizationAccess from '../../components/Petitions/NoOrganizationAccess';
 import MessagesLayout from '../../components/Messages/MessagesLayout';
 
 const Messages = () => {
-  const { user, logout, hasOrganizationAccess, organizationCheckComplete } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState('messages');
   const [selectedConversation, setSelectedConversation] = useState(null);
@@ -188,26 +187,15 @@ const Messages = () => {
         />
 
         <div className="dashboard-content-section messages-page-content">
-          {!organizationCheckComplete ? (
-            <div className="text-center py-5">
-              <div className="spinner-border text-primary" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </div>
-              <p className="mt-2 text-muted">Checking organization access...</p>
-            </div>
-          ) : !hasOrganizationAccess ? (
-            <NoOrganizationAccess />
-          ) : (
-            <MessagesLayout
-              conversations={conversations}
-              selectedConversation={selectedConversation}
-              onConversationClick={handleConversationClick}
-              messages={currentMessages}
-              messageText={messageText}
-              setMessageText={setMessageText}
-              onSendMessage={handleSendMessage}
-            />
-          )}
+          <MessagesLayout
+            conversations={conversations}
+            selectedConversation={selectedConversation}
+            onConversationClick={handleConversationClick}
+            messages={currentMessages}
+            messageText={messageText}
+            setMessageText={setMessageText}
+            onSendMessage={handleSendMessage}
+          />
         </div>
       </main>
     </div>

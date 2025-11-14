@@ -9,11 +9,27 @@ class PetitionApiService {
   }
 
 
-  // Get petition count by organization ID
-  async getPetitionCountByOrganization(organizationId) {
-    const url = `/api/Petition/get-petition-count-by-organisationId/${organizationId}`;
+  /**
+   * Get petition count
+   * @param {Object} params - The count parameters
+   * @param {string} [params.organizationId] - Organization ID (required for org admin, null for filer)
+   * @param {string} [params.userId] - User ID (required for filer, null for org admin)
+   * @returns {Promise<Object>} API response with petition count data
+   */
+  async getPetitionCount(params) {
+    const { organizationId, userId } = params;
     
-    const response = await axiosInstance.post(url, {}, {
+    // Validate that either organizationId or userId is provided (but not both)
+    if (!organizationId && !userId) {
+      throw new Error('Either organizationId (for org admin) or userId (for filer) is required');
+    }
+    
+    const requestBody = {
+      organizationId: organizationId || null,
+      userId: userId || null
+    };
+    
+    const response = await axiosInstance.post(PETITION_ENDPOINTS.GET_PETITION_COUNT, requestBody, {
       headers: {
         'Accept': 'text/plain',
         'Content-Type': 'application/json'
@@ -21,6 +37,11 @@ class PetitionApiService {
     });
     
     return response.data;
+  }
+
+  // Legacy method name for backward compatibility
+  async getPetitionCountByOrganization(organizationId) {
+    return this.getPetitionCount({ organizationId, userId: null });
   }
 
   async deletePetitionById(petitionId) {
@@ -49,9 +70,10 @@ class PetitionApiService {
   }
 
   /**
-   * Get paginated petitions by organization ID with filters, search, and sorting
+   * Get paginated petitions with filters, search, and sorting
    * @param {Object} paginationParams - The pagination and filter parameters
-   * @param {string} paginationParams.organizationId - Required organization ID
+   * @param {string} [paginationParams.organizationId] - Organization ID (required for org admin, null for filer)
+   * @param {string} [paginationParams.userId] - User ID (required for filer, null for org admin)
    * @param {number} [paginationParams.pageNumber=1] - Page number (1-based)
    * @param {number} [paginationParams.pageSize=10] - Number of items per page
    * @param {string} [paginationParams.searchText=""] - Search text for filtering
@@ -78,6 +100,7 @@ class PetitionApiService {
   createPaginationParams(options = {}) {
     const {
       organizationId,
+      userId,
       pageNumber = 1,
       pageSize = 10,
       searchText = "",
@@ -88,9 +111,9 @@ class PetitionApiService {
       sortDirection = "desc"
     } = options;
 
-    // Validate required parameters
-    if (!organizationId) {
-      throw new Error('organizationId is required');
+    // Validate that either organizationId or userId is provided (but not both)
+    if (!organizationId && !userId) {
+      throw new Error('Either organizationId (for org admin) or userId (for filer) is required');
     }
 
     // Validate sort column
@@ -101,19 +124,31 @@ class PetitionApiService {
     const allowedSortDirections = ["asc", "desc"];
     const validSortDirection = allowedSortDirections.includes(sortDirection.toLowerCase()) ? sortDirection.toLowerCase() : "desc";
 
-    // Build parameters object
+    // Build parameters object - API expects 1-based pageNumber
+    // Only include organizationId or userId if they have values (don't send null)
     const params = {
-      organizationId,
-      pageNumber: Math.max(1, parseInt(pageNumber) || 1), // Ensure minimum page 1
+      pageNumber: Math.max(1, parseInt(pageNumber) || 1), // API uses 1-based indexing
       pageSize: Math.max(1, parseInt(pageSize) || 10),
-      status: status !== null ? parseInt(status) : null,
+      status: status !== null && status !== undefined ? parseInt(status) : 0, // 0 means all statuses in API
       sortColumn: validSortColumn,
       sortDirection: validSortDirection
     };
 
+    // Only include organizationId if it has a value
+    if (organizationId) {
+      params.organizationId = organizationId;
+    }
+
+    // Only include userId if it has a value
+    if (userId) {
+      params.userId = userId;
+    }
+
     // Add optional parameters only if they have values
     if (searchText && searchText.trim()) {
       params.searchText = searchText.trim();
+    } else {
+      params.searchText = ""; // Empty string if no search text
     }
 
     if (fromDate) {

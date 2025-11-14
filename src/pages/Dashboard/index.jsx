@@ -10,7 +10,6 @@ import { getFilingEntityTypes } from "../../services/commonService";
 import Sidebar from "../../components/shared/Sidebar";
 import Header from "../../components/shared/Header";
 import { usePetitions } from "../../hooks/usePetitions";
-import NoOrganizationAccess from "../../components/Petitions/NoOrganizationAccess";
 import "../../styles/custom.css";
 
 
@@ -23,9 +22,7 @@ function Dashboard() {
     petitions, 
     loading: petitionsLoading, 
     petitionCounts,
-    hasOrganizationAccess,
     organization,
-    organizationCheckComplete,
     fetchPetitions,
     fetchPetitionCounts
   } = usePetitions();
@@ -53,7 +50,6 @@ function Dashboard() {
   const {
     logout: authLogout,
     organization: organizationFromContext,
-    checkOrganizationAccess,
   } = useAuth();
 
   // Use organization from context (for org admins) or from join requests (for regular users)
@@ -86,15 +82,6 @@ function Dashboard() {
     }
   }, [navigate]);
 
-  // Re-check organization access when Dashboard mounts or user changes
-  // This ensures access is always validated when navigating to Dashboard
-  useEffect(() => {
-    if (user) {
-      // Re-check organization access to ensure it's current
-      checkOrganizationAccess();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]); // Only depend on user, not checkOrganizationAccess function reference
 
   // Load organization data when user is available
   useEffect(() => {
@@ -249,16 +236,16 @@ function Dashboard() {
         <div className="dashboard-content-section">
           {/* Petition Dashboard Section */}
           {activeSection === "dashboard" && (
-            (petitionsLoading || !organizationCheckComplete) ? (
+            petitionsLoading ? (
               <div className="shadow-custom bg-white org-search-box">
                 <div className="text-center py-5">
                   <div className="spinner-border text-primary" role="status">
                     <span className="visually-hidden">Loading...</span>
                   </div>
-                  <p className="mt-3 text-muted">Checking organization access...</p>
+                  <p className="mt-3 text-muted">Loading...</p>
                 </div>
               </div>
-            ) : hasOrganizationAccess ? (
+            ) : (
             <div className="shadow-custom bg-white org-search-box">
               <h2 className="font-med mb-4">Dashboard</h2>
               <div className="row mb-5">
@@ -285,50 +272,78 @@ function Dashboard() {
 
               {/* New Information Cards */}
               <div className="row mb-4">
-                {/* Organization Details Card */}
-                <div className="col-md-4 mb-3">
-                  <div className="stat-card h-100">
-                    <h5 className="stat-count mb-3" style={{ fontSize: '1.2rem' }}>Organization Details</h5>
-                    {isLoadingOrgData ? (
-                      <div className="text-center py-3">
-                        <div className="spinner-border spinner-border-sm text-primary" role="status">
-                          <span className="visually-hidden">Loading...</span>
+                {/* Organization Details Card - Only show for org admins */}
+                {(() => {
+                  // Check if user is org admin
+                  const isOrgAdmin = user?.isManager === true || 
+                    (user?.roles && Array.isArray(user?.roles) && user.roles.some(
+                      (role) =>
+                        role === "Organisation Admin" ||
+                        role === "Organization Admin" ||
+                        role === "orgAdmin"
+                    )) ||
+                    getUserRole(user) === "orgAdmin" ||
+                    getUserRole(user) === "Organisation Admin" ||
+                    getUserRole(user) === "Organization Admin";
+                  
+                  if (!isOrgAdmin) {
+                    // For filers, show empty space
+                    return (
+                      <div className="col-md-4 mb-3">
+                        <div className="stat-card h-100">
+                          {/* Empty space for filers */}
                         </div>
-                        <p className="mt-2 text-muted small">Loading organization details...</p>
                       </div>
-                    ) : displayOrganization ? (
-                      <div className="organization-info">
-                        <h6 className="mb-2 fw-bold">{displayOrganization.organizationName || displayOrganization.name}</h6>
-                        <p className="text-muted small mb-1">
-                          <i className="fa-solid fa-tag me-1"></i>
-                          Type: {displayOrganization.organizationType || displayOrganization.type || "N/A"}
-                        </p>
-                        {(displayOrganization.organizationAddress || (displayOrganization.addressStreet1 || displayOrganization.addressCity)) && (
-                            <p className="text-muted small mb-1">
-                              <i className="fa-solid fa-location-dot me-1"></i>
-                            Address: {displayOrganization.organizationAddress || 
-                                     `${displayOrganization.addressStreet1 || ''}${displayOrganization.addressStreet2 ? ', ' + displayOrganization.addressStreet2 : ''}, ${displayOrganization.addressCity || ''}, ${displayOrganization.addressState || ''} ${displayOrganization.addressZip || ''}`.replace(/^,\s*/, '').replace(/,\s*$/, '')}
-                            </p>
-                        )}
-                        {(displayOrganization.primaryContact || (displayOrganization.primaryContactName || displayOrganization.primaryContactEmail || displayOrganization.primaryContactPhone)) && (
-                            <p className="text-muted small mb-1">
-                              <i className="fa-solid fa-user me-1"></i>
-                            Contact: {displayOrganization.primaryContact || 
-                                     `${displayOrganization.primaryContactName || ''}${displayOrganization.primaryContactEmail ? ', ' + displayOrganization.primaryContactEmail : ''}${displayOrganization.primaryContactPhone ? ', ' + displayOrganization.primaryContactPhone : ''}`.replace(/^,\s*/, '').replace(/,\s*$/, '')}
-                          </p>
-                        )}
-                        <span className="badge bg-success">
-                          <i className="fa-solid fa-check-circle me-1"></i>
-                          Active Member
-                            </span>
+                    );
+                  }
+                  
+                  // For org admins, show organization details
+                  return (
+                    <div className="col-md-4 mb-3">
+                      <div className="stat-card h-100">
+                        <h5 className="stat-count mb-3" style={{ fontSize: '1.2rem' }}>Organization Details</h5>
+                        {isLoadingOrgData ? (
+                          <div className="text-center py-3">
+                            <div className="spinner-border spinner-border-sm text-primary" role="status">
+                              <span className="visually-hidden">Loading...</span>
+                            </div>
+                            <p className="mt-2 text-muted small">Loading organization details...</p>
                           </div>
-                    ) : (
-                      <div className="text-center">
-                        <p className="text-muted small mb-0">Organization details not available</p>
+                        ) : displayOrganization ? (
+                          <div className="organization-info">
+                            <h6 className="mb-2 fw-bold">{displayOrganization.organizationName || displayOrganization.name}</h6>
+                            <p className="text-muted small mb-1">
+                              <i className="fa-solid fa-tag me-1"></i>
+                              Type: {displayOrganization.organizationType || displayOrganization.type || "N/A"}
+                            </p>
+                            {(displayOrganization.organizationAddress || (displayOrganization.addressStreet1 || displayOrganization.addressCity)) && (
+                                <p className="text-muted small mb-1">
+                                  <i className="fa-solid fa-location-dot me-1"></i>
+                                Address: {displayOrganization.organizationAddress || 
+                                         `${displayOrganization.addressStreet1 || ''}${displayOrganization.addressStreet2 ? ', ' + displayOrganization.addressStreet2 : ''}, ${displayOrganization.addressCity || ''}, ${displayOrganization.addressState || ''} ${displayOrganization.addressZip || ''}`.replace(/^,\s*/, '').replace(/,\s*$/, '')}
+                                </p>
+                            )}
+                            {(displayOrganization.primaryContact || (displayOrganization.primaryContactName || displayOrganization.primaryContactEmail || displayOrganization.primaryContactPhone)) && (
+                                <p className="text-muted small mb-1">
+                                  <i className="fa-solid fa-user me-1"></i>
+                                Contact: {displayOrganization.primaryContact || 
+                                         `${displayOrganization.primaryContactName || ''}${displayOrganization.primaryContactEmail ? ', ' + displayOrganization.primaryContactEmail : ''}${displayOrganization.primaryContactPhone ? ', ' + displayOrganization.primaryContactPhone : ''}`.replace(/^,\s*/, '').replace(/,\s*$/, '')}
+                              </p>
+                            )}
+                            <span className="badge bg-success">
+                              <i className="fa-solid fa-check-circle me-1"></i>
+                              Active Member
+                                </span>
+                              </div>
+                        ) : (
+                          <div className="text-center">
+                            <p className="text-muted small mb-0">Organization details not available</p>
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                </div>
+                    </div>
+                  );
+                })()}
 
                 {/* User Details Card */}
                 <div className="col-md-4 mb-3">
@@ -460,8 +475,6 @@ function Dashboard() {
                 )}
               </div>
             </div>
-            ) : (
-              <NoOrganizationAccess />
             )
           )}
 
