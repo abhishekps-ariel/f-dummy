@@ -129,7 +129,6 @@ class PetitionApiService {
     const params = {
       pageNumber: Math.max(1, parseInt(pageNumber) || 1), // API uses 1-based indexing
       pageSize: Math.max(1, parseInt(pageSize) || 10),
-      status: status !== null && status !== undefined ? parseInt(status) : 0, // 0 means all statuses in API
       sortColumn: validSortColumn,
       sortDirection: validSortDirection
     };
@@ -142,6 +141,12 @@ class PetitionApiService {
     // Only include userId if it has a value
     if (userId) {
       params.userId = userId;
+    }
+
+    // Only include status if a specific status filter is selected (0, 1, 2, 3, 4, 5)
+    // Don't send status field at all if no filter is selected
+    if (status !== null && status !== undefined) {
+      params.status = parseInt(status);
     }
 
     // Add optional parameters only if they have values
