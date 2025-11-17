@@ -102,9 +102,9 @@ const EmbeddedOrganizationSelector = ({
           onClick={() => setShowDropdown(!showDropdown)}
           style={{ cursor: "pointer" }}
         >
-          <i className="fa-solid fa-building me-1" style={{ fontSize: "0.75rem" }}></i>
+          <i className="fa-solid fa-building me-1" style={{ fontSize: "0.9rem" }}></i>
           <span className="org-name">{selectedOrganizationData.name}</span>
-          <i className="fa-solid fa-chevron-down ms-1" style={{ fontSize: "0.65rem" }}></i>
+          <i className="fa-solid fa-chevron-down ms-1" style={{ fontSize: "0.8rem" }}></i>
         </div>
       ) : (
         <button
@@ -112,7 +112,7 @@ const EmbeddedOrganizationSelector = ({
           className="btn-select-org-minimal"
           onClick={() => setShowDropdown(!showDropdown)}
         >
-          <i className="fa-solid fa-building me-1" style={{ fontSize: "0.75rem" }}></i>
+          <i className="fa-solid fa-building me-1" style={{ fontSize: "0.9rem" }}></i>
           <span>Select Organization</span>
         </button>
       )}

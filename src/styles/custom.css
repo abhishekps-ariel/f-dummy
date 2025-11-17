@@ -1689,18 +1689,18 @@ input, textarea, select {
 /* Embedded Organization Selector Styles */
 .embedded-org-selector {
     position: relative;
-    min-width: 150px;
+    min-width: 200px;
 }
 
 .selected-org-display {
     display: flex;
     align-items: center;
-    padding: 4px 8px;
+    padding: 8px 14px;
     background: rgba(255, 255, 255, 0.15);
     border: 1px solid rgba(255, 255, 255, 0.25);
-    border-radius: 4px;
+    border-radius: 6px;
     color: white;
-    font-size: 0.8rem;
+    font-size: 0.95rem;
     transition: all 0.2s;
 }
 
@@ -1711,22 +1711,22 @@ input, textarea, select {
 
 .org-name {
     font-weight: 400;
-    max-width: 180px;
+    max-width: 250px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: 0.8rem;
+    font-size: 0.95rem;
 }
 
 .btn-select-org-minimal {
     display: flex;
     align-items: center;
-    padding: 4px 8px;
+    padding: 8px 14px;
     background: rgba(255, 255, 255, 0.15);
     border: 1px solid rgba(255, 255, 255, 0.25);
-    border-radius: 4px;
+    border-radius: 6px;
     color: white;
-    font-size: 0.8rem;
+    font-size: 0.95rem;
     transition: all 0.2s;
     cursor: pointer;
     font-weight: 400;
@@ -1769,6 +1769,31 @@ input, textarea, select {
 .embedded-org-results {
     max-height: 300px;
     overflow-y: auto;
+}
+
+/* Custom scrollbar for embedded organization results */
+.embedded-org-results::-webkit-scrollbar {
+    width: 8px;
+}
+
+.embedded-org-results::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.embedded-org-results::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 10px;
+}
+
+.embedded-org-results::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Firefox scrollbar for embedded organization results */
+.embedded-org-results {
+    scrollbar-width: thin;
+    scrollbar-color: #c1c1c1 #f1f1f1;
 }
 
 .embedded-org-loading {
@@ -3051,6 +3076,78 @@ body.high-contrast .text-size-dropdown-item.selected {
         padding: 6px 12px;
         font-size: 13px;
     }
+}
+
+/* Edit Options Dropdown Styles */
+.edit-options-dropdown {
+    position: relative;
+}
+
+.edit-options-dropdown .dashboard-btn-create.active {
+    background: var(--theme-color);
+    border-color: var(--theme-color);
+}
+
+.transition-icon {
+    transition: transform 0.2s ease;
+}
+
+.transition-icon.rotate {
+    transform: rotate(180deg);
+}
+
+.edit-options-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    min-width: 180px;
+    padding: 4px 0;
+}
+
+.edit-option-item {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 10px 16px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+    text-align: left;
+    font-size: 0.9rem;
+    color: #495057;
+}
+
+.edit-option-item:hover {
+    background: #f8f9fa;
+    color: var(--theme-color);
+}
+
+.edit-option-item:active {
+    background: #e9ecef;
+}
+
+.edit-option-item .edit-option-icon {
+    width: 18px;
+    margin-right: 10px;
+    color: #6c757d;
+    font-size: 0.9rem;
+    text-align: left;
+    flex-shrink: 0;
+}
+
+.edit-option-item:hover .edit-option-icon {
+    color: var(--theme-color);
+}
+
+.edit-option-item span {
+    flex: 1;
+    text-align: left;
 }
 
 .nav-btn-pill {

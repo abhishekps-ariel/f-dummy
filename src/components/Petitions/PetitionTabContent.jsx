@@ -19,6 +19,8 @@ import ForeclosureSaleSection from "./Sections/ForeclosureSaleSection";
 import StepForm35BCompliance from "./Sections/StepForm35BCompliance";
 import StepLoanAssignees from "./Sections/StepLoanAssignees";
 import StepSignaturesSection from "./Sections/StepSignaturesSection";
+import EditJudgementModal from "./EditJudgementModal";
+import EditForeclosureModal from "./EditForeclosureModal";
 
 const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
   const { loadingTabs, activeTabId, refreshTab, tabs } = useTabs();
@@ -39,6 +41,11 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
+  
+  // Modal states
+  const [showJudgementModal, setShowJudgementModal] = useState(false);
+  const [showForeclosureModal, setShowForeclosureModal] = useState(false);
+  const [showEditDropdown, setShowEditDropdown] = useState(false);
 
   // Google Places/Geocoder (property address)
   const LIBRARIES = ["places"];
@@ -525,6 +532,9 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
       isMinApplicable: details.loan?.minNumber ? "yes" : "no",
       minNumber: details.loan?.minNumber || "",
       loanNumber: details.loan?.loanNumber || "",
+      
+      // Judgment
+      judgment: details.judgment || null,
       petitionLoanTypeId: details.loan?.petitionLoanTypeId || "",
       petitionLoanTypeName: details.loan?.petitionLoanTypeName || "",
       lienPosition: details.loan?.lienPosition ?? "",
@@ -636,6 +646,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
       // Additional
       documents: details.documents || [],
       isAllStepsCompleted: true,
+      organizationId: petition.organizationId || null,
     };
   }, [petition]);
 
@@ -652,7 +663,23 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
   useEffect(() => {
     setIsEditing(false);
     setFieldErrors({});
+    setShowEditDropdown(false);
+    setShowJudgementModal(false);
+    setShowForeclosureModal(false);
   }, [petition?.id]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showEditDropdown && !event.target.closest('.dropdown')) {
+        setShowEditDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showEditDropdown]);
 
   // Removed status check - now all petitions (draft and submitted) can be edited
 
@@ -1207,6 +1234,67 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
       setFieldErrors({});
     }
     setIsEditing(!isEditing);
+    setShowEditDropdown(false);
+  };
+
+  // Handle edit dropdown selection
+  const handleEditOptionSelect = (option) => {
+    setShowEditDropdown(false);
+    if (option === "filing") {
+      handleEditToggle();
+    } else if (option === "judgement") {
+      setShowJudgementModal(true);
+    } else if (option === "foreclosure") {
+      setShowForeclosureModal(true);
+    }
+  };
+
+  // Handle saving judgment data
+  const handleSaveJudgment = async (updatedFormData) => {
+    try {
+      // Ensure organizationId is set from petition if not in formData
+      const dataToSave = {
+        ...updatedFormData,
+        organizationId: updatedFormData.organizationId || petition.organizationId || formData.organizationId,
+      };
+      await submitPetition(dataToSave, true, petition.id);
+      toast.success("Judgment saved successfully.");
+      if (onPetitionUpdated) {
+        setTimeout(() => {
+          onPetitionUpdated();
+        }, 200);
+      }
+      if (activeTabId && refreshTab) {
+        await refreshTab(activeTabId);
+      }
+    } catch (error) {
+      console.error("Error saving judgment:", error);
+      throw error;
+    }
+  };
+
+  // Handle saving foreclosure data
+  const handleSaveForeclosure = async (updatedFormData) => {
+    try {
+      // Ensure organizationId is set from petition if not in formData
+      const dataToSave = {
+        ...updatedFormData,
+        organizationId: updatedFormData.organizationId || petition.organizationId || formData.organizationId,
+      };
+      await submitPetition(dataToSave, true, petition.id);
+      toast.success("Foreclosure saved successfully.");
+      if (onPetitionUpdated) {
+        setTimeout(() => {
+          onPetitionUpdated();
+        }, 200);
+      }
+      if (activeTabId && refreshTab) {
+        await refreshTab(activeTabId);
+      }
+    } catch (error) {
+      console.error("Error saving foreclosure:", error);
+      throw error;
+    }
   };
 
   // Save as Draft (does not mark submitted) - no validation required for drafts
@@ -1214,7 +1302,12 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
     setIsSavingDraft(true);
     try {
       // No address validation required for drafts - user can save incomplete data
-      const petitionData = { ...formData, isAllStepsCompleted: false };
+      // Ensure organizationId is set from petition if not in formData
+      const petitionData = { 
+        ...formData, 
+        isAllStepsCompleted: false,
+        organizationId: formData.organizationId || petition.organizationId,
+      };
       await submitPetition(petitionData, true, petition.id);
       // Toast message is shown by submitPetition function
       setIsEditing(false);
@@ -1251,7 +1344,12 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
         toast.error("Property address could not be validated.");
         return;
       }
-      const petitionData = { ...formData, isAllStepsCompleted: true };
+      // Ensure organizationId is set from petition if not in formData
+      const petitionData = { 
+        ...formData, 
+        isAllStepsCompleted: true,
+        organizationId: formData.organizationId || petition.organizationId,
+      };
       await submitPetition(petitionData, false, petition.id);
       // Toast message is shown by submitPetition function
       setIsEditing(false);
@@ -1780,15 +1878,43 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
                 <div className="d-flex align-items-center gap-2 petition-header-actions">
                   {!isEditing ? (
                     <>
-                      <button
-                        type="button"
-                        className="dashboard-btn-create"
-                        onClick={handleEditToggle}
-                        title="Edit petition"
-                      >
-                        <i className="fas fa-edit me-1"></i>
-                        Edit
-                      </button>
+                      <div className="dropdown edit-options-dropdown" style={{ position: "relative" }}>
+                        <button
+                          type="button"
+                          className={`dashboard-btn-create ${showEditDropdown ? 'active' : ''}`}
+                          onClick={() => setShowEditDropdown(!showEditDropdown)}
+                          title="Edit options"
+                        >
+                          <i className="fas fa-edit me-1"></i>
+                          Edit
+                          <i className={`fas fa-chevron-down ms-1 transition-icon ${showEditDropdown ? 'rotate' : ''}`} style={{ fontSize: "0.7rem" }}></i>
+                        </button>
+                        {showEditDropdown && (
+                          <div className="edit-options-menu">
+                            <button
+                              className="edit-option-item"
+                              onClick={() => handleEditOptionSelect("filing")}
+                            >
+                              <i className="fas fa-edit edit-option-icon"></i>
+                              <span>Edit Filing</span>
+                            </button>
+                            <button
+                              className="edit-option-item"
+                              onClick={() => handleEditOptionSelect("judgement")}
+                            >
+                              <i className="fas fa-edit edit-option-icon"></i>
+                              <span>Edit Judgement</span>
+                            </button>
+                            <button
+                              className="edit-option-item"
+                              onClick={() => handleEditOptionSelect("foreclosure")}
+                            >
+                              <i className="fas fa-edit edit-option-icon"></i>
+                              <span>Edit Foreclosure</span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
                       <button
                         type="button"
                         className="dashboard-btn-refresh"
@@ -1952,18 +2078,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
             handleNoticeAddressSelect={handleNoticeAddressSelect}
           />
 
-          {/* Foreclosure Sale Section - Only show if Right to Cure is "Yes" AND petition is not Draft */}
-          <ForeclosureSaleSection
-            SectionHeader={SectionHeader}
-            formData={formData}
-            petition={petition}
-            isEditing={isEditing}
-            fieldErrors={fieldErrors}
-            foreclosureSaleSectionRef={foreclosureSaleSectionRef}
-            getBuyerTypes={getBuyerTypes}
-            findOptionByValue={findOptionByValue}
-            updateForeclosureSale={updateForeclosureSale}
-          />
+          {/* Foreclosure Sale Section removed - now handled in modal */}
 
 
           {/* Form 35B Compliance Section */}
@@ -2008,6 +2123,28 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
           />
         </form>
       </div>
+
+      {/* Edit Judgement Modal */}
+      <EditJudgementModal
+        isOpen={showJudgementModal}
+        onClose={() => setShowJudgementModal(false)}
+        petition={petition}
+        formData={formData}
+        setFormData={setFormData}
+        onSave={handleSaveJudgment}
+      />
+
+      {/* Edit Foreclosure Modal */}
+      <EditForeclosureModal
+        isOpen={showForeclosureModal}
+        onClose={() => setShowForeclosureModal(false)}
+        petition={petition}
+        formData={formData}
+        setFormData={setFormData}
+        getBuyerTypes={getBuyerTypes}
+        findOptionByValue={findOptionByValue}
+        onSave={handleSaveForeclosure}
+      />
     </div>
   );
 };

@@ -234,6 +234,13 @@ class PetitionApiService {
         reoBusinessPhone: formData.foreclosureSale.reoBusinessPhone || null,
         reoEmergencyPhone: formData.foreclosureSale.reoEmergencyPhone || null
       } : null,
+      judgment: formData.judgment ? {
+        judgmentDate: safeDateConversion(formData.judgment.judgmentDate),
+        judgmentAmount: formData.judgment.judgmentAmount || null,
+        judgmentType: formData.judgment.judgmentType || null,
+        courtInformation: formData.judgment.courtInformation || null,
+        docketNumbers: formData.judgment.docketNumbers || null
+      } : null,
       affidavit: {
         certainMortgageLoan: formData.certainMortgageLoan || false,
         form35bComplianceAffidavitPdf: await fileToBase64(formData.form35bComplianceAffidavitPdf),
