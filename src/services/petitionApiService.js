@@ -234,13 +234,30 @@ class PetitionApiService {
         reoBusinessPhone: formData.foreclosureSale.reoBusinessPhone || null,
         reoEmergencyPhone: formData.foreclosureSale.reoEmergencyPhone || null
       } : null,
+      // Include judgment object - send empty object if no data, or full object if data exists
       judgment: formData.judgment ? {
+        id: formData.judgment.id || null,
+        petitionId: petitionId || null,
         judgmentDate: safeDateConversion(formData.judgment.judgmentDate),
-        judgmentAmount: formData.judgment.judgmentAmount || null,
-        judgmentType: formData.judgment.judgmentType || null,
-        courtInformation: formData.judgment.courtInformation || null,
-        docketNumbers: formData.judgment.docketNumbers || null
-      } : null,
+        judgmentAmount: typeof formData.judgment.judgmentAmount === 'number' 
+          ? formData.judgment.judgmentAmount 
+          : (formData.judgment.judgmentAmount ? parseFloat(formData.judgment.judgmentAmount) : 0),
+        judgmentType: typeof formData.judgment.judgmentType === 'number' 
+          ? formData.judgment.judgmentType 
+          : (formData.judgment.judgmentType !== null && formData.judgment.judgmentType !== undefined && formData.judgment.judgmentType !== ""
+              ? parseInt(formData.judgment.judgmentType, 10) 
+              : 0),
+        courtInformation: formData.judgment.courtInformation || "",
+        docketNumbers: formData.judgment.docketNumbers || ""
+      } : {
+        id: null,
+        petitionId: petitionId || null,
+        judgmentDate: null,
+        judgmentAmount: 0,
+        judgmentType: 0,
+        courtInformation: "",
+        docketNumbers: ""
+      },
       affidavit: {
         certainMortgageLoan: formData.certainMortgageLoan || false,
         form35bComplianceAffidavitPdf: await fileToBase64(formData.form35bComplianceAffidavitPdf),
@@ -303,6 +320,11 @@ class PetitionApiService {
       documents: (formData.documents || []).map(document => ({
         ...document,
         uploadedOn: safeDateConversion(document.uploadedOn)
+      })),
+      notes: (formData.notes || []).map(note => ({
+        id: note.id || null,
+        petitionId: petitionId || null,
+        noteText: note.noteText || note.content || ""
       }))
     };
 
@@ -355,7 +377,9 @@ class PetitionApiService {
         signatures: petition.signatures,
         borrowers: petition.borrowers,
         loanAssignees: petition.loanAssignees,
-        documents: petition.documents
+        documents: petition.documents,
+        judgment: petition.judgment || null,
+        notes: petition.notes || []
       }
     };
   }

@@ -21,6 +21,9 @@ import StepLoanAssignees from "./Sections/StepLoanAssignees";
 import StepSignaturesSection from "./Sections/StepSignaturesSection";
 import EditJudgementModal from "./EditJudgementModal";
 import EditForeclosureModal from "./EditForeclosureModal";
+import NotesModal from "./NotesModal";
+import { useAuth } from "../../context/AuthContext";
+import { getUserRole } from "../../utils/storage";
 
 const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
   const { loadingTabs, activeTabId, refreshTab, tabs } = useTabs();
@@ -30,6 +33,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
     getAssigneeRoles,
     getLienPositions,
     getBuyerTypes,
+    getJudgmentTypes,
     getOptionName,
     findOptionByValue,
     loading: commonDataLoading,
@@ -46,6 +50,9 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
   const [showJudgementModal, setShowJudgementModal] = useState(false);
   const [showForeclosureModal, setShowForeclosureModal] = useState(false);
   const [showEditDropdown, setShowEditDropdown] = useState(false);
+  const [showNotesModal, setShowNotesModal] = useState(false);
+  
+  const { user } = useAuth();
 
   // Google Places/Geocoder (property address)
   const LIBRARIES = ["places"];
@@ -647,6 +654,9 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
       documents: details.documents || [],
       isAllStepsCompleted: true,
       organizationId: petition.organizationId || null,
+      
+      // Notes
+      notes: petition.notes || details.notes || [],
     };
   }, [petition]);
 
@@ -1252,12 +1262,65 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
   // Handle saving judgment data
   const handleSaveJudgment = async (updatedFormData) => {
     try {
-      // For now, just update the local formData state without submitting to API
+      // Ensure organizationId is set from petition if not in formData
+      const dataToSave = {
+        ...updatedFormData,
+        organizationId: updatedFormData.organizationId || petition.organizationId || formData.organizationId,
+      };
+      
+      // Suppress the default toast and show custom message
+      await submitPetition(dataToSave, true, petition.id, true); // true = suppressToast, true = isDraft
+      
+      toast.success("Judgment saved successfully.");
+      
+      // Update local formData state
       setFormData(updatedFormData);
-      toast.success("Judgment saved locally.");
-      // Don't call submitPetition or refresh - just update local state
+      
+      if (onPetitionUpdated) {
+        setTimeout(() => {
+          onPetitionUpdated();
+        }, 200);
+      }
+      if (activeTabId && refreshTab) {
+        await refreshTab(activeTabId);
+      }
     } catch (error) {
       console.error("Error saving judgment:", error);
+      const errorMessage = error?.response?.data?.message || error?.message || "Failed to save judgment. Please try again.";
+      toast.error(errorMessage);
+      throw error;
+    }
+  };
+
+  // Handle saving notes
+  const handleSaveNotes = async (updatedFormData) => {
+    try {
+      // Ensure organizationId is set from petition if not in formData
+      // Also ensure judgment is preserved from current formData if not in updatedFormData
+      const dataToSave = {
+        ...updatedFormData,
+        organizationId: updatedFormData.organizationId || petition.organizationId || formData.organizationId,
+        // Preserve judgment from current formData if it exists and is not in updatedFormData
+        judgment: updatedFormData.judgment !== undefined ? updatedFormData.judgment : formData.judgment,
+      };
+      // Suppress the default toast
+      await submitPetition(dataToSave, true, petition.id, true); // true = suppressToast
+      
+      // Update local formData state
+      setFormData(dataToSave);
+      
+      if (onPetitionUpdated) {
+        setTimeout(() => {
+          onPetitionUpdated();
+        }, 200);
+      }
+      if (activeTabId && refreshTab) {
+        await refreshTab(activeTabId);
+      }
+    } catch (error) {
+      console.error("Error saving notes:", error);
+      const errorMessage = error?.response?.data?.message || error?.message || "Failed to save notes. Please try again.";
+      toast.error(errorMessage);
       throw error;
     }
   };
@@ -1910,6 +1973,15 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
                       <button
                         type="button"
                         className="dashboard-btn-refresh"
+                        onClick={() => setShowNotesModal(true)}
+                        title="View and Add Notes"
+                      >
+                        <i className="fas fa-sticky-note me-1"></i>
+                        Notes
+                      </button>
+                      <button
+                        type="button"
+                        className="dashboard-btn-refresh"
                         onClick={handleDownloadPDF}
                         title="Download as PDF"
                       >
@@ -2123,6 +2195,8 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
         petition={petition}
         formData={formData}
         setFormData={setFormData}
+        getJudgmentTypes={getJudgmentTypes}
+        findOptionByValue={findOptionByValue}
         onSave={handleSaveJudgment}
       />
 
@@ -2136,6 +2210,16 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
         getBuyerTypes={getBuyerTypes}
         findOptionByValue={findOptionByValue}
         onSave={handleSaveForeclosure}
+      />
+
+      {/* Notes Modal */}
+      <NotesModal
+        isOpen={showNotesModal}
+        onClose={() => setShowNotesModal(false)}
+        petition={petition}
+        formData={formData}
+        setFormData={setFormData}
+        onSave={handleSaveNotes}
       />
     </div>
   );

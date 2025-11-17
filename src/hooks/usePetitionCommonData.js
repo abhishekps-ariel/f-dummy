@@ -7,7 +7,8 @@ export const usePetitionCommonData = () => {
       petitionStatus: [],
       filingEntityRole: [],
       lienPosition: [],
-      addressValidationStatus: []
+      addressValidationStatus: [],
+      judgmentTypes: []
     },
     loanTypes: [],
     assigneeTypes: [],
@@ -45,6 +46,7 @@ export const usePetitionCommonData = () => {
   const getFilingEntityRoles = () => data.enums.filingEntityRole || [];
   const getLienPositions = () => data.enums.lienPosition || [];
   const getAddressValidationStatuses = () => data.enums.addressValidationStatus || [];
+  const getJudgmentTypes = () => data.enums.judgmentTypes || [];
   const getLoanTypes = () => data.loanTypes || [];
   const getAssigneeTypes = () => data.assigneeTypes || [];
   const getAssigneeRoles = () => data.assigneeRoles || [];
@@ -70,6 +72,7 @@ export const usePetitionCommonData = () => {
     getFilingEntityRoles,
     getLienPositions,
     getAddressValidationStatuses,
+    getJudgmentTypes,
     getLoanTypes,
     getAssigneeTypes,
     getAssigneeRoles,

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import CustomDropdown from "../shared/CustomDropdown";
 import { toast } from "react-toastify";
 
-const EditJudgementModal = ({ isOpen, onClose, petition, onSave, formData, setFormData }) => {
+const EditJudgementModal = ({ isOpen, onClose, petition, onSave, formData, setFormData, getJudgmentTypes, findOptionByValue }) => {
   const [judgmentData, setJudgmentData] = useState({
     judgmentDate: formData?.judgment?.judgmentDate || "",
     judgmentAmount: formData?.judgment?.judgmentAmount || "",
@@ -14,27 +14,53 @@ const EditJudgementModal = ({ isOpen, onClose, petition, onSave, formData, setFo
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    if (isOpen && formData?.judgment) {
-      setJudgmentData({
-        judgmentDate: formData.judgment.judgmentDate || "",
-        judgmentAmount: formData.judgment.judgmentAmount || "",
-        judgmentType: formData.judgment.judgmentType || "",
-        courtInformation: formData.judgment.courtInformation || "",
-        docketNumbers: formData.judgment.docketNumbers || "",
-      });
+    if (isOpen) {
+      if (formData?.judgment) {
+        // Convert judgmentType number to string for dropdown
+        const judgmentTypeValue = formData.judgment.judgmentType !== null && formData.judgment.judgmentType !== undefined
+          ? String(formData.judgment.judgmentType)
+          : "";
+        
+        // Format judgment amount - handle both number and string
+        const judgmentAmountValue = formData.judgment.judgmentAmount !== null && formData.judgment.judgmentAmount !== undefined
+          ? (typeof formData.judgment.judgmentAmount === 'number' 
+              ? formData.judgment.judgmentAmount.toString() 
+              : formData.judgment.judgmentAmount)
+          : "";
+        
+        setJudgmentData({
+          judgmentDate: formData.judgment.judgmentDate 
+            ? (formData.judgment.judgmentDate.includes("T") 
+                ? formData.judgment.judgmentDate.split("T")[0] 
+                : formData.judgment.judgmentDate)
+            : "",
+          judgmentAmount: judgmentAmountValue,
+          judgmentType: judgmentTypeValue,
+          courtInformation: formData.judgment.courtInformation || "",
+          docketNumbers: formData.judgment.docketNumbers || "",
+        });
+      } else {
+        // Reset if no judgment data
+        setJudgmentData({
+          judgmentDate: "",
+          judgmentAmount: "",
+          judgmentType: "",
+          courtInformation: "",
+          docketNumbers: "",
+        });
+      }
       setFieldErrors({});
     }
   }, [isOpen, formData]);
 
+  // Get judgment types from API
+  const judgmentTypesFromApi = getJudgmentTypes ? getJudgmentTypes() : [];
   const judgmentTypes = [
     { value: "", label: "Select Judgment Type" },
-    { value: "Foreclosure Judgment", label: "Foreclosure Judgment" },
-    { value: "Default Judgment", label: "Default Judgment" },
-    { value: "Summary Judgment", label: "Summary Judgment" },
-    { value: "Judgment of Sale", label: "Judgment of Sale" },
-    { value: "Judgment Dismissal", label: "Judgment Dismissal" },
-    { value: "Judgment Vacated", label: "Judgment Vacated" },
-    { value: "Other", label: "Other" },
+    ...judgmentTypesFromApi.map((jt) => ({
+      value: jt.value || jt.id,
+      label: jt.description || jt.name,
+    })),
   ];
 
   const handleInputChange = (e) => {
@@ -71,19 +97,20 @@ const EditJudgementModal = ({ isOpen, onClose, petition, onSave, formData, setFo
 
   const validate = () => {
     const errors = {};
-    if (!judgmentData.judgmentDate?.trim()) {
+    if (!judgmentData.judgmentDate || (typeof judgmentData.judgmentDate === 'string' && !judgmentData.judgmentDate.trim())) {
       errors.judgmentDate = "Judgment date is required";
     }
-    if (!judgmentData.judgmentAmount?.trim()) {
+    if (!judgmentData.judgmentAmount || (typeof judgmentData.judgmentAmount === 'string' && !judgmentData.judgmentAmount.trim())) {
       errors.judgmentAmount = "Judgment amount is required";
     }
-    if (!judgmentData.judgmentType?.trim()) {
+    // judgmentType can be a number (0 is valid) or string, so check for empty string or null/undefined
+    if (judgmentData.judgmentType === "" || judgmentData.judgmentType === null || judgmentData.judgmentType === undefined) {
       errors.judgmentType = "Judgment type is required";
     }
-    if (!judgmentData.courtInformation?.trim()) {
+    if (!judgmentData.courtInformation || (typeof judgmentData.courtInformation === 'string' && !judgmentData.courtInformation.trim())) {
       errors.courtInformation = "Court information is required";
     }
-    if (!judgmentData.docketNumbers?.trim()) {
+    if (!judgmentData.docketNumbers || (typeof judgmentData.docketNumbers === 'string' && !judgmentData.docketNumbers.trim())) {
       errors.docketNumbers = "Docket numbers are required";
     }
     setFieldErrors(errors);
@@ -91,29 +118,64 @@ const EditJudgementModal = ({ isOpen, onClose, petition, onSave, formData, setFo
   };
 
   const handleSave = async () => {
+    console.log("Save Judgment button clicked");
+    
     if (!validate()) {
+      toast.error("Please fill all required fields.");
       return;
     }
 
     setIsSaving(true);
     try {
+      // Convert judgmentType string to number for API
+      // Note: judgmentType can be 0, so we need to check for empty string, not falsy
+      const judgmentTypeNumber = judgmentData.judgmentType !== "" && judgmentData.judgmentType !== null && judgmentData.judgmentType !== undefined
+        ? parseInt(judgmentData.judgmentType, 10) 
+        : null;
+      
+      if (judgmentTypeNumber === null || isNaN(judgmentTypeNumber)) {
+        toast.error("Please select a judgment type.");
+        setIsSaving(false);
+        return;
+      }
+      
       // Update formData with judgment data
       const updatedFormData = {
         ...formData,
         judgment: {
-          ...judgmentData,
+          id: formData?.judgment?.id || null,
+          petitionId: petition?.id || null,
+          judgmentDate: judgmentData.judgmentDate,
+          judgmentAmount: parseFloat(judgmentData.judgmentAmount) || 0,
+          judgmentType: judgmentTypeNumber,
+          courtInformation: judgmentData.courtInformation,
+          docketNumbers: judgmentData.docketNumbers,
         },
       };
+      
+      console.log("Updated formData with judgment:", updatedFormData.judgment);
+      
+      // Update local state first
       setFormData(updatedFormData);
 
+      // Then save to backend
       if (onSave) {
+        console.log("Calling onSave function");
         await onSave(updatedFormData);
+        console.log("onSave completed successfully");
+      } else {
+        console.error("onSave function is not provided!");
+        toast.error("Save function not available. Please try again.");
+        setIsSaving(false);
+        return;
       }
 
+      // Close modal after successful save
       onClose();
     } catch (error) {
       console.error("Error saving judgment:", error);
-      toast.error("Failed to save judgment. Please try again.");
+      toast.error(error?.message || "Failed to save judgment. Please try again.");
+      // Don't close the modal if there's an error
     } finally {
       setIsSaving(false);
     }
@@ -122,12 +184,30 @@ const EditJudgementModal = ({ isOpen, onClose, petition, onSave, formData, setFo
   const handleCancel = () => {
     // Reset to original data
     if (formData?.judgment) {
+      // Convert judgmentType number to string for dropdown
+      const judgmentTypeValue = formData.judgment.judgmentType !== null && formData.judgment.judgmentType !== undefined
+        ? String(formData.judgment.judgmentType)
+        : "";
+      
       setJudgmentData({
-        judgmentDate: formData.judgment.judgmentDate || "",
+        judgmentDate: formData.judgment.judgmentDate 
+          ? (formData.judgment.judgmentDate.includes("T") 
+              ? formData.judgment.judgmentDate.split("T")[0] 
+              : formData.judgment.judgmentDate)
+          : "",
         judgmentAmount: formData.judgment.judgmentAmount || "",
-        judgmentType: formData.judgment.judgmentType || "",
+        judgmentType: judgmentTypeValue,
         courtInformation: formData.judgment.courtInformation || "",
         docketNumbers: formData.judgment.docketNumbers || "",
+      });
+    } else {
+      // Reset to empty if no judgment data
+      setJudgmentData({
+        judgmentDate: "",
+        judgmentAmount: "",
+        judgmentType: "",
+        courtInformation: "",
+        docketNumbers: "",
       });
     }
     setFieldErrors({});
