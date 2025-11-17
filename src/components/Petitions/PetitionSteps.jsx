@@ -37,6 +37,7 @@ import Step6Form35BCompliance from "./MultiStepForm/Step6Form35BCompliance";
 import Step7LoanAssignees from "./MultiStepForm/Step7LoanAssignees";
 import Step8PetitionAttestation from "./MultiStepForm/Step8PetitionAttestation";
 import Step9ReviewSubmit from "./MultiStepForm/Step9ReviewSubmit";
+import EmbeddedOrganizationSelector from "./EmbeddedOrganizationSelector";
 
 // Static libraries array to prevent LoadScript reload
 
@@ -140,6 +141,9 @@ const PetitionSteps = ({
   const [organizationData, setOrganizationData] = useState(null);
 
   const [organizationLoading, setOrganizationLoading] = useState(false);
+  
+  // Organization selection state (for filers)
+  const [selectedOrganizationId, setSelectedOrganizationId] = useState(null);
 
   // Load petition common data
 
@@ -172,10 +176,20 @@ const PetitionSteps = ({
     organization: organizationFromAuth,
   } = useAuth();
 
+  // Check if user is org admin (filer if not org admin)
+  const isOrgAdmin = user?.isManager === true || 
+    (user?.roles && Array.isArray(user?.roles) && user.roles.some(
+      (role) => role === 'Organisation Admin' || role === 'Organization Admin' || role === 'orgAdmin'
+    )) ||
+    getUserRole(user) === 'orgAdmin' || 
+    getUserRole(user) === 'Organisation Admin' || 
+    getUserRole(user) === 'Organization Admin';
+
   // Get organization ID from user object (stored in browser storage) or organization prop/context
-  // Priority: user.organizationId > organization.id (from prop) > organizationFromContext.id
+  // Priority: selectedOrganizationId (from modal) > user.organizationId > organization.id (from prop) > organizationFromContext.id
   const storedActiveOrganizationId = getActiveOrganizationId();
   const organizationId =
+    selectedOrganizationId ||
     storedActiveOrganizationId ||
     user?.organizationId ||
     organization?.id ||
@@ -432,7 +446,88 @@ const PetitionSteps = ({
     };
 
     loadOrganizationData();
-  }, [organizationId]);
+  }, [organizationId, selectedOrganizationId]);
+
+  // Reset selected organization when opening a new petition (not when editing existing)
+  useEffect(() => {
+    if (isOpen && !formData?.id) {
+      // Reset selected organization when opening a new petition (for filers)
+      // Users can select organization from the embedded selector in the header
+      setSelectedOrganizationId(null);
+      setOrganizationData(null);
+    }
+  }, [isOpen]);
+
+  // Clear organization selection when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      // Clear organization selection when modal is closed
+      setSelectedOrganizationId(null);
+      setOrganizationData(null);
+    }
+  }, [isOpen]);
+
+  // Handler for organization selection (from embedded selector or modal)
+  const handleOrganizationSelect = async (orgId, orgData) => {
+    setSelectedOrganizationId(orgId);
+    
+    // Update form data with organization ID
+    setFormData((prev) => ({
+      ...prev,
+      organizationId: orgId,
+    }));
+
+    if (orgData) {
+      // Prefill filing entity fields with organization data
+      setOrganizationLoading(true);
+      try {
+        setFormData((prev) => ({
+          ...prev,
+          organizationId: orgId,
+          filingEntityLegalName: orgData.name || "",
+          filingEntityStreet1: orgData.addressStreet1 || "",
+          filingEntityStreet2: orgData.addressStreet2 || "",
+          filingEntityCity: orgData.addressCity || "",
+          filingEntityState: orgData.addressState || "",
+          filingEntityZip: orgData.addressZip || "",
+          filingContactName: orgData.primaryContactName || "",
+          filingContactEmail: orgData.primaryContactEmail || "",
+          filingContactPhone: orgData.primaryContactPhone || "",
+        }));
+        setOrganizationData(orgData);
+      } finally {
+        setOrganizationLoading(false);
+      }
+    } else if (orgId) {
+      // If only orgId is provided, fetch full organization details
+      setOrganizationLoading(true);
+      try {
+        const orgResponse = await getOrganizationById(orgId);
+        if (orgResponse.isSuccess && orgResponse.data) {
+          const org = orgResponse.data;
+          setFormData((prev) => ({
+            ...prev,
+            organizationId: orgId,
+            filingEntityLegalName: org.name || "",
+            filingEntityStreet1: org.addressStreet1 || "",
+            filingEntityStreet2: org.addressStreet2 || "",
+            filingEntityCity: org.addressCity || "",
+            filingEntityState: org.addressState || "",
+            filingEntityZip: org.addressZip || "",
+            filingContactName: org.primaryContactName || "",
+            filingContactEmail: org.primaryContactEmail || "",
+            filingContactPhone: org.primaryContactPhone || "",
+          }));
+          setOrganizationData(org);
+        }
+      } catch (error) {
+        toast.error("Failed to load organization details");
+      } finally {
+        setOrganizationLoading(false);
+      }
+    }
+  };
+
 
   // Prefill signer fields from user data
 
@@ -1348,6 +1443,10 @@ const PetitionSteps = ({
 
       // Reset visited steps (start with step 1)
       setVisitedSteps(new Set([1]));
+
+      // Reset selected organization (for filers)
+      setSelectedOrganizationId(null);
+      setOrganizationData(null);
 
       if (typeof resetWizard === "function") {
         resetWizard();
@@ -4088,6 +4187,16 @@ const PetitionSteps = ({
     setIsSaving(true);
 
     try {
+      // Validate organization selection for filers (mandatory)
+      if (!isOrgAdmin) {
+        const finalOrganizationId = selectedOrganizationId || formData.organizationId || organizationId;
+        if (!finalOrganizationId) {
+          toast.error("Please select an organization before saving.");
+          setIsSaving(false);
+          return;
+        }
+      }
+
       // Prepare petition data with isAllStepsCompleted: false for draft
       // For drafts, preserve existing signature data if available, otherwise create new
 
@@ -4125,9 +4234,17 @@ const PetitionSteps = ({
         ],
       };
 
-      // Submit petition as draft using API
+      // Use selected organization ID if available (for filers), otherwise fall back to formData.organizationId or organizationId
+      const finalOrganizationId = selectedOrganizationId || formData.organizationId || organizationId;
+      
+      // Ensure organizationId is included in petition data for draft
+      const finalDraftData = {
+        ...petitionData,
+        organizationId: finalOrganizationId,
+      };
 
-      await submitPetition(petitionData, true); // Pass isDraft: true
+      // Submit petition as draft using API
+      await submitPetition(finalDraftData, true); // Pass isDraft: true
 
       // Notify parent component that petition was saved as draft
 
@@ -4755,6 +4872,15 @@ const PetitionSteps = ({
       return;
     }
 
+    // Validate organization selection for filers (mandatory)
+    if (!isOrgAdmin) {
+      const finalOrganizationId = selectedOrganizationId || formData.organizationId || organizationId;
+      if (!finalOrganizationId) {
+        toast.error("Please select an organization before submitting the petition.");
+        return;
+      }
+    }
+
     // Run comprehensive validation
     const validationResult = await validateAllSteps();
     
@@ -4809,9 +4935,17 @@ const PetitionSteps = ({
         ],
       };
 
-      // Submit petition using API
+      // Use selected organization ID if available (for filers), otherwise fall back to formData.organizationId or organizationId
+      const finalOrganizationId = selectedOrganizationId || formData.organizationId || organizationId;
+      
+      // Ensure organizationId is included in petition data
+      const finalPetitionData = {
+        ...petitionData,
+        organizationId: finalOrganizationId,
+      };
 
-      await submitPetition(petitionData);
+      // Submit petition using API
+      await submitPetition(finalPetitionData);
 
       // Notify parent component that petition was submitted successfully
 
@@ -5122,23 +5256,32 @@ const PetitionSteps = ({
       )}
 
       {/* Main Modal */}
-
       <div
         className="modal fade show d-block petition-steps-modal"
-        style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        style={{ backgroundColor: "rgba(0,0,0,0.5)", zIndex: 1050 }}
         tabIndex="-1"
       >
         <div className="modal-dialog petition-steps-modal-dialog modal-dialog-centered">
           <div className="modal-content petition-steps-modal-content">
-            <div className="modal-header text-white theme-bg petition-steps-header">
-              <h5 className="modal-title">Foreclosure Petition Filing</h5>
-
-              <button
-                type="button"
-                className="btn-close btn-close-white"
-                onClick={handleCloseAttempt}
-                aria-label="Close"
-              ></button>
+            <div className="modal-header text-white theme-bg petition-steps-header d-flex justify-content-between align-items-center">
+              <h5 className="modal-title mb-0">Foreclosure Petition Filing</h5>
+              
+              <div className="d-flex align-items-center gap-3">
+                {/* Embedded Organization Selector (for filers) */}
+                <EmbeddedOrganizationSelector
+                  selectedOrganizationId={selectedOrganizationId || organizationId}
+                  selectedOrganizationData={organizationData}
+                  onSelect={handleOrganizationSelect}
+                  isOrgAdmin={isOrgAdmin}
+                />
+                
+                <button
+                  type="button"
+                  className="btn-close btn-close-white"
+                  onClick={handleCloseAttempt}
+                  aria-label="Close"
+                ></button>
+              </div>
             </div>
 
             <div className="modal-body petition-steps-body">

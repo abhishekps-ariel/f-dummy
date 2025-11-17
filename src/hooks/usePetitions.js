@@ -131,11 +131,11 @@ export const usePetitions = () => {
     let errorAlreadyShown = false; // Track if we've already shown the error toast
 
     try {
-      // Get the organization ID from the user's organization details
-      let organizationId = userOrganizationId;
+      // Get the organization ID - prioritize from formData (for filers who select org), then fall back to user's org
+      let organizationId = formData?.organizationId || userOrganizationId;
       
       if (!organizationId) {
-        throw new Error('Organization ID not found. Please ensure you are part of an organization.');
+        throw new Error('Organization ID not found. Please select an organization or ensure you are part of an organization.');
       }
       
       const apiData = await petitionApiService.transformFormDataToApiFormat(formData, organizationId, petitionId);

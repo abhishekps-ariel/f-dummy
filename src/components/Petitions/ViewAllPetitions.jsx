@@ -601,7 +601,12 @@ const ViewAllPetitions = ({ onBack }) => {
   };
 
   const handlePetitionSubmitted = () => {
-    if (!organizationId || !fetchPetitionsRef.current) return;
+    // For filers, check userId; for org admins, check organizationId
+    if ((isOrgAdmin && !organizationId) || (!isOrgAdmin && !userId)) {
+      return;
+    }
+    
+    if (!fetchPetitionsRef.current) return;
 
     // Give the backend a short moment to finish processing, then refresh once
     setTimeout(() => {
