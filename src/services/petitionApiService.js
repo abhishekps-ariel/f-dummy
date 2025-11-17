@@ -323,7 +323,6 @@ class PetitionApiService {
       })),
       notes: (formData.notes || []).map(note => ({
         id: note.id || null,
-        petitionId: petitionId || null,
         noteText: note.noteText || note.content || ""
       }))
     };

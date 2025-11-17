@@ -113,14 +113,15 @@ const NotesModal = ({ isOpen, onClose, petition, formData, setFormData, onSave }
               </div>
               <button
                 type="button"
-                className="btn btn-primary btn-sm"
+                className="dashboard-btn-create"
                 onClick={handleAddNote}
                 disabled={!newNote.trim() || isSaving}
+                style={{ minWidth: '120px' }}
               >
                 {isSaving ? (
                   <>
                     <span
-                      className="spinner-border spinner-border-sm me-1"
+                      className="spinner-border spinner-border-sm me-2"
                       role="status"
                       aria-hidden="true"
                     ></span>
@@ -178,9 +179,10 @@ const NotesModal = ({ isOpen, onClose, petition, formData, setFormData, onSave }
           <div className="modal-footer">
             <button
               type="button"
-              className="btn btn-secondary"
+              className="dashboard-btn-refresh"
               onClick={onClose}
               disabled={isSaving}
+              style={{ minWidth: '80px' }}
             >
               Close
             </button>
