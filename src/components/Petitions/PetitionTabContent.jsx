@@ -1252,21 +1252,10 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
   // Handle saving judgment data
   const handleSaveJudgment = async (updatedFormData) => {
     try {
-      // Ensure organizationId is set from petition if not in formData
-      const dataToSave = {
-        ...updatedFormData,
-        organizationId: updatedFormData.organizationId || petition.organizationId || formData.organizationId,
-      };
-      await submitPetition(dataToSave, true, petition.id);
-      toast.success("Judgment saved successfully.");
-      if (onPetitionUpdated) {
-        setTimeout(() => {
-          onPetitionUpdated();
-        }, 200);
-      }
-      if (activeTabId && refreshTab) {
-        await refreshTab(activeTabId);
-      }
+      // For now, just update the local formData state without submitting to API
+      setFormData(updatedFormData);
+      toast.success("Judgment saved locally.");
+      // Don't call submitPetition or refresh - just update local state
     } catch (error) {
       console.error("Error saving judgment:", error);
       throw error;
@@ -1281,7 +1270,8 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
         ...updatedFormData,
         organizationId: updatedFormData.organizationId || petition.organizationId || formData.organizationId,
       };
-      await submitPetition(dataToSave, true, petition.id);
+      // Suppress the default toast and show custom message
+      await submitPetition(dataToSave, true, petition.id, true); // true = suppressToast
       toast.success("Foreclosure saved successfully.");
       if (onPetitionUpdated) {
         setTimeout(() => {
@@ -1908,6 +1898,8 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
                             <button
                               className="edit-option-item"
                               onClick={() => handleEditOptionSelect("foreclosure")}
+                              disabled={formData.noticeSent !== true}
+                              title={formData.noticeSent !== true ? "Right to Cure notice must be sent first" : ""}
                             >
                               <i className="fas fa-edit edit-option-icon"></i>
                               <span>Edit Foreclosure</span>

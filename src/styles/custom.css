@@ -3132,6 +3132,17 @@ body.high-contrast .text-size-dropdown-item.selected {
     background: #e9ecef;
 }
 
+.edit-option-item:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.edit-option-item:disabled:hover {
+    background: transparent;
+    color: #495057;
+}
+
 .edit-option-item .edit-option-icon {
     width: 18px;
     margin-right: 10px;

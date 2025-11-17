@@ -125,7 +125,7 @@ export const usePetitions = () => {
   };
 
   // Submit a new petition or update existing petition
-  const submitPetition = async (formData, isDraft = false, petitionId = null) => {
+  const submitPetition = async (formData, isDraft = false, petitionId = null, suppressToast = false) => {
     setLoading(true);
     setError(null);
     let errorAlreadyShown = false; // Track if we've already shown the error toast
@@ -143,10 +143,12 @@ export const usePetitions = () => {
       const response = await petitionApiService.submitPetition(apiData);
       
       if (response.success) {
-        if (isDraft) {
-          toast.success('Draft saved successfully.');
-        } else {
-          toast.success('Petition submitted successfully!');
+        if (!suppressToast) {
+          if (isDraft) {
+            toast.success('Draft saved successfully.');
+          } else {
+            toast.success('Petition submitted successfully!');
+          }
         }
         // Refresh the petitions list
         await fetchPetitions();
