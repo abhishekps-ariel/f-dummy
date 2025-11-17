@@ -522,6 +522,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
       assessorParcelId: details.property?.assessorParcelId || "",
 
       // Loan Details
+      isMinApplicable: details.loan?.minNumber ? "yes" : "no",
       minNumber: details.loan?.minNumber || "",
       loanNumber: details.loan?.loanNumber || "",
       petitionLoanTypeId: details.loan?.petitionLoanTypeId || "",
@@ -752,6 +753,12 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
     if (!formData.propertyZip) errors.propertyZip = "Required";
 
     // Loan basics
+    if (!formData.isMinApplicable || (formData.isMinApplicable !== "yes" && formData.isMinApplicable !== "no")) {
+      errors.isMinApplicable = "Please select if MIN is applicable";
+    }
+    if (formData.isMinApplicable === "yes" && !formData.minNumber?.trim()) {
+      errors.minNumber = "MIN Number is required when MIN is applicable";
+    }
     if (!formData.loanNumber) errors.loanNumber = "Required";
     if (!formData.petitionLoanTypeId) errors.petitionLoanTypeId = "Required";
     // Note: lienPosition can be 0 (for "First"), so we check for null/undefined/empty string specifically
@@ -931,6 +938,24 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
   // Handle input change - similar to PetitionSteps
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
+
+    // If isMinApplicable is set to "no", clear minNumber
+    if (name === "isMinApplicable" && value === "no") {
+      setFormData((prev) => ({
+        ...prev,
+        isMinApplicable: value,
+        minNumber: "",
+      }));
+      // Clear minNumber error if it exists
+      if (fieldErrors.minNumber) {
+        setFieldErrors((prev) => {
+          const newErrors = { ...prev };
+          delete newErrors.minNumber;
+          return newErrors;
+        });
+      }
+      return;
+    }
 
     // Define integer fields that should not show decimal values
     const integerFields = ["delinquencyDaysAtFiling", "daysDelinquentAtNotice"];

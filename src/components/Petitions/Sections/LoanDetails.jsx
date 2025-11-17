@@ -32,24 +32,69 @@ const LoanDetails = ({
               <div className="row">
                 <div className="col-md-6">
                   <div className="form-group mb-3">
-                    <label className="form-label">MIN Number (Optional)</label>
-                    <input
-                      type="text"
-                      name="minNumber"
-                      className={`form-control ${
-                        fieldErrors.minNumber ? "is-invalid" : ""
-                      }`}
-                      value={formData.minNumber || ""}
-                      readOnly={!isEditing}
-                      onChange={handleInputChange}
-                    />
-                    {fieldErrors.minNumber && (
+                    <label className="form-label">Is MIN Applicable? *</label>
+                    <div className="d-flex gap-3">
+                      <div className="form-check">
+                        <input
+                          className="form-check-input"
+                          type="radio"
+                          name="isMinApplicable"
+                          id="isMinApplicableYes"
+                          value="yes"
+                          checked={formData.isMinApplicable === "yes"}
+                          onChange={handleInputChange}
+                          disabled={!isEditing}
+                        />
+                        <label className="form-check-label" htmlFor="isMinApplicableYes">
+                          Yes
+                        </label>
+                      </div>
+                      <div className="form-check">
+                        <input
+                          className="form-check-input"
+                          type="radio"
+                          name="isMinApplicable"
+                          id="isMinApplicableNo"
+                          value="no"
+                          checked={formData.isMinApplicable === "no"}
+                          onChange={handleInputChange}
+                          disabled={!isEditing}
+                        />
+                        <label className="form-check-label" htmlFor="isMinApplicableNo">
+                          No
+                        </label>
+                      </div>
+                    </div>
+                    {fieldErrors.isMinApplicable && (
                       <div className="text-danger small mt-1">
-                        {fieldErrors.minNumber}
+                        {fieldErrors.isMinApplicable}
                       </div>
                     )}
                   </div>
                 </div>
+
+                {formData.isMinApplicable === "yes" && (
+                  <div className="col-md-6">
+                    <div className="form-group mb-3">
+                      <label className="form-label">MIN Number *</label>
+                      <input
+                        type="text"
+                        name="minNumber"
+                        className={`form-control ${
+                          fieldErrors.minNumber ? "is-invalid" : ""
+                        }`}
+                        value={formData.minNumber || ""}
+                        readOnly={!isEditing}
+                        onChange={handleInputChange}
+                      />
+                      {fieldErrors.minNumber && (
+                        <div className="text-danger small mt-1">
+                          {fieldErrors.minNumber}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
                 <div className="col-md-6">
                   <div className="form-group mb-3">
                     <label className="form-label">Loan Number *</label>

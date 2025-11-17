@@ -194,7 +194,7 @@ class PetitionApiService {
         assessorParcelId: formData.assessorParcelId || ""
       },
       loan: {
-        minNumber: formData.minNumber || "",
+        minNumber: formData.isMinApplicable === "yes" ? (formData.minNumber || "") : "",
         loanNumber: formData.loanNumber || "",
         petitionLoanTypeId: formData.petitionLoanTypeId && formData.petitionLoanTypeId.trim() !== '' ? formData.petitionLoanTypeId : null,
         petitionLoanTypeName: formData.petitionLoanTypeName || "",

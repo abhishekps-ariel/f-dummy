@@ -474,6 +474,30 @@ const PetitionSteps = ({
     }
   }, [isOpen]);
 
+  // Handler for input change - handle isMinApplicable to clear minNumber when set to "no"
+  const handleInputChangeWithMinLogic = (e) => {
+    const { name, value } = e.target;
+    
+    // If isMinApplicable is set to "no", clear minNumber
+    if (name === "isMinApplicable" && value === "no") {
+      setFormData((prev) => ({
+        ...prev,
+        isMinApplicable: value,
+        minNumber: "",
+      }));
+      // Clear minNumber error if it exists
+      if (fieldErrors.minNumber) {
+        setFieldErrors((prev) => {
+          const newErrors = { ...prev };
+          delete newErrors.minNumber;
+          return newErrors;
+        });
+      }
+    } else {
+      handleInputChange(e);
+    }
+  };
+
   // Handler for organization selection (from embedded selector or modal)
   const handleOrganizationSelect = async (orgId, orgData) => {
     setSelectedOrganizationId(orgId);
@@ -693,6 +717,7 @@ const PetitionSteps = ({
 
     // Step 2: Loan Details
 
+    isMinApplicable: "",
     minNumber: "",
 
     loanNumber: "",
@@ -937,7 +962,11 @@ const PetitionSteps = ({
                   isAddressVerified);
       
       case 2: // Loan Details - check all required fields (matching validateLoanDetails)
-        return !!(formData.loanNumber?.trim() && 
+        const hasMinApplicable = formData.isMinApplicable === "yes" || formData.isMinApplicable === "no";
+        const hasMinNumberIfRequired = formData.isMinApplicable !== "yes" || (formData.isMinApplicable === "yes" && formData.minNumber?.trim());
+        return !!(hasMinApplicable &&
+                  hasMinNumberIfRequired &&
+                  formData.loanNumber?.trim() && 
                   formData.petitionLoanTypeId && 
                   (formData.lienPosition != null && formData.lienPosition !== "") &&
                   formData.originationDate?.trim() &&
@@ -3278,6 +3307,18 @@ const PetitionSteps = ({
 
     let hasErrors = false;
 
+    // Is MIN Applicable is required
+    if (!formData.isMinApplicable || (formData.isMinApplicable !== "yes" && formData.isMinApplicable !== "no")) {
+      errors.isMinApplicable = "Please select if MIN is applicable";
+      hasErrors = true;
+    }
+
+    // MIN Number is required if MIN is applicable
+    if (formData.isMinApplicable === "yes" && !formData.minNumber?.trim()) {
+      errors.minNumber = "MIN Number is required when MIN is applicable";
+      hasErrors = true;
+    }
+
     // Loan Number is required
 
     if (!formData.loanNumber.trim()) {
@@ -5022,7 +5063,7 @@ const PetitionSteps = ({
             commonDataLoading={commonDataLoading}
             fieldErrors={fieldErrors}
             formData={formData}
-            handleInputChange={handleInputChange}
+            handleInputChange={handleInputChangeWithMinLogic}
             getLoanTypes={getLoanTypes}
             getLienPositions={getLienPositions}
           />
