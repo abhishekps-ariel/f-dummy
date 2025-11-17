@@ -152,6 +152,15 @@ export const usePetitions = () => {
         await fetchPetitions();
         return response.data;
       } else {
+        // Check if this is a duplicate with take-over option
+        if (response.isDuplicate && response.duplicateInfo?.canTakeOver) {
+          // Return the duplicate info so the component can show the modal
+          const duplicateError = new Error(response.message || 'A petition with the same property already exists.');
+          duplicateError.isDuplicate = true;
+          duplicateError.duplicateInfo = response.duplicateInfo;
+          throw duplicateError;
+        }
+        
         const errorMessage = response.message || 'Failed to submit petition';
         setError(errorMessage);
         toast.error(errorMessage);
@@ -159,6 +168,20 @@ export const usePetitions = () => {
         throw new Error(errorMessage);
       }
     } catch (err) {
+      // If it's a duplicate error with take-over option, re-throw it as-is
+      if (err.isDuplicate && err.duplicateInfo) {
+        throw err;
+      }
+      
+      // Check if the error response contains duplicate info
+      const responseData = err.response?.data;
+      if (responseData?.isDuplicate && responseData?.duplicateInfo?.canTakeOver) {
+        const duplicateError = new Error(responseData.message || 'A petition with the same property already exists.');
+        duplicateError.isDuplicate = true;
+        duplicateError.duplicateInfo = responseData.duplicateInfo;
+        throw duplicateError;
+      }
+      
       const errorMessage = err.response?.data?.message || err.message || 'Failed to submit petition';
       setError(errorMessage);
       

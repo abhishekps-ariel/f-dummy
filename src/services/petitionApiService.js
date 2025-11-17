@@ -182,7 +182,8 @@ class PetitionApiService {
       id: petitionId, 
       isAllStepsCompleted: formData.isAllStepsCompleted || false,
       organizationId: organizationId,
-      duplicateHash: "", 
+      duplicateHash: "",
+      takeOverToUserId: formData.takeOverToUserId || null, 
       property: {
         propertyStreet1: formData.propertyStreet1 || "",
         propertyStreet2: formData.propertyStreet2 || "",

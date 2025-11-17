@@ -38,6 +38,7 @@ import Step7LoanAssignees from "./MultiStepForm/Step7LoanAssignees";
 import Step8PetitionAttestation from "./MultiStepForm/Step8PetitionAttestation";
 import Step9ReviewSubmit from "./MultiStepForm/Step9ReviewSubmit";
 import EmbeddedOrganizationSelector from "./EmbeddedOrganizationSelector";
+import TakeOverPetitionModal from "./TakeOverPetitionModal";
 
 // Static libraries array to prevent LoadScript reload
 
@@ -144,6 +145,12 @@ const PetitionSteps = ({
   
   // Organization selection state (for filers)
   const [selectedOrganizationId, setSelectedOrganizationId] = useState(null);
+  
+  // Take over petition state
+  const [showTakeOverModal, setShowTakeOverModal] = useState(false);
+  const [duplicateInfo, setDuplicateInfo] = useState(null);
+  const [shouldTakeOver, setShouldTakeOver] = useState(false);
+  const [pendingAction, setPendingAction] = useState(null); // 'save' or 'submit'
 
   // Load petition common data
 
@@ -4192,8 +4199,8 @@ const PetitionSteps = ({
         const finalOrganizationId = selectedOrganizationId || formData.organizationId || organizationId;
         if (!finalOrganizationId) {
           toast.error("Please select an organization before saving.");
-          setIsSaving(false);
-          return;
+        setIsSaving(false);
+        return;
         }
       }
 
@@ -4258,7 +4265,19 @@ const PetitionSteps = ({
       // Close the form modal
       onClose();
     } catch (error) {
-      toast.error("Failed to save step. Please try again.");
+      // Check if this is a duplicate with take-over option
+      if (error.isDuplicate && error.duplicateInfo?.canTakeOver) {
+        // Show take-over modal instead of error toast
+        setDuplicateInfo(error.duplicateInfo);
+        setPendingAction('save');
+        setShowTakeOverModal(true);
+        setIsSaving(false);
+        return;
+      }
+      
+      // Error toast is already shown by submitPetition function, so we don't show another one here
+      // Only log the error for debugging
+      console.error("Error saving draft:", error);
     } finally {
       setIsSaving(false);
     }
@@ -4877,7 +4896,7 @@ const PetitionSteps = ({
       const finalOrganizationId = selectedOrganizationId || formData.organizationId || organizationId;
       if (!finalOrganizationId) {
         toast.error("Please select an organization before submitting the petition.");
-        return;
+      return;
       }
     }
 
@@ -4958,6 +4977,15 @@ const PetitionSteps = ({
 
       onClose();
     } catch (error) {
+      // Check if this is a duplicate with take-over option
+      if (error.isDuplicate && error.duplicateInfo?.canTakeOver) {
+        // Show take-over modal instead of error toast
+        setDuplicateInfo(error.duplicateInfo);
+        setPendingAction('submit');
+        setShowTakeOverModal(true);
+        return;
+      }
+      
       // Error is already handled in the submitPetition function with toast
     }
   };
@@ -5121,8 +5149,162 @@ const PetitionSteps = ({
 
   if (!isOpen) return null;
 
+  // Handle take-over confirmation
+  const handleTakeOverConfirm = async () => {
+    setShowTakeOverModal(false);
+    setShouldTakeOver(true);
+    
+    // Retry the save/submit with takeOverToUserId based on pending action
+    if (pendingAction === 'save') {
+      // Retry save as draft
+      await handleRetrySaveDraft();
+    } else if (pendingAction === 'submit') {
+      // Retry final submit
+      await handleRetrySubmit();
+    }
+    
+    setPendingAction(null);
+  };
+
+  const handleTakeOverCancel = () => {
+    setShowTakeOverModal(false);
+    setDuplicateInfo(null);
+    setShouldTakeOver(false);
+    setPendingAction(null);
+  };
+
+  // Retry save draft with take-over
+  const handleRetrySaveDraft = async () => {
+    setIsSaving(true);
+    try {
+      const existingSignature = formData.signatures && formData.signatures.length > 0 
+        ? formData.signatures[0] 
+        : null;
+
+      const petitionData = {
+        isAllStepsCompleted: false,
+        ...formData,
+        id: duplicateInfo?.petitionId || null, // Set the duplicate petition ID to update it
+        signatures: [
+          {
+            signerFullName: `${formData.signerFirstName || ""} ${
+              formData.signerMiddleInitial || ""
+            } ${formData.signerLastName || ""}`.trim(),
+            signerTitle: formData.signerTitle || getUserRole(user) || "User",
+            signerEmail: formData.signerEmail || "",
+            esignConsent: formData.certification_check ?? existingSignature?.esignConsent ?? false,
+            signatureDrawnOrTyped: existingSignature?.signatureDrawnOrTyped || userProfile?.signatureUrl || "",
+            signedAt: existingSignature?.signedAt || (existingSignature ? "" : new Date().toISOString()),
+            signerIp: existingSignature?.signerIp || "",
+            otpCode: existingSignature?.otpCode || "",
+          },
+        ],
+        takeOverToUserId: user?.id || null,
+      };
+
+      const finalOrganizationId = selectedOrganizationId || formData.organizationId || organizationId;
+      
+      const finalDraftData = {
+        ...petitionData,
+        organizationId: finalOrganizationId,
+      };
+
+      // Pass the duplicate petition ID to update the existing petition (like editing)
+      await submitPetition(finalDraftData, true, duplicateInfo?.petitionId || null);
+
+      if (onPetitionSubmitted) {
+        onPetitionSubmitted();
+      }
+
+      clearFormAndWizardState();
+      onClose();
+    } catch (error) {
+      // Check if this is still a duplicate error (shouldn't happen with takeOverToUserId, but handle it)
+      if (error.isDuplicate && error.duplicateInfo?.canTakeOver) {
+        // Show error - this shouldn't happen if takeOverToUserId is set correctly
+        toast.error("Unable to take over petition. Please try again.");
+        setShowTakeOverModal(true);
+        setDuplicateInfo(error.duplicateInfo);
+      } else {
+        // Other errors are already handled by submitPetition
+        console.error("Error saving draft with take-over:", error);
+      }
+    } finally {
+      setIsSaving(false);
+      setShouldTakeOver(false);
+    }
+  };
+
+  // Retry final submit with take-over
+  const handleRetrySubmit = async () => {
+    try {
+      const existingSignature = formData.signatures && formData.signatures.length > 0 
+        ? formData.signatures[0] 
+        : null;
+
+      const petitionData = {
+        isAllStepsCompleted: true,
+        ...formData,
+        id: duplicateInfo?.petitionId || null, // Set the duplicate petition ID to update it
+        signatures: [
+          {
+            signerFullName: `${formData.signerFirstName || ""} ${
+              formData.signerMiddleInitial || ""
+            } ${formData.signerLastName || ""}`.trim(),
+            signerTitle: formData.signerTitle || getUserRole(user) || "User",
+            signerEmail: formData.signerEmail || "",
+            esignConsent: formData.certification_check || false,
+            signatureDrawnOrTyped: existingSignature?.signatureDrawnOrTyped || userProfile?.signatureUrl || "",
+            signedAt: new Date().toISOString(),
+            signerIp: "",
+            otpCode: "",
+          },
+        ],
+        takeOverToUserId: user?.id || null,
+      };
+
+      const finalOrganizationId = selectedOrganizationId || formData.organizationId || organizationId;
+      
+      const finalPetitionData = {
+        ...petitionData,
+        organizationId: finalOrganizationId,
+      };
+
+      // Pass the duplicate petition ID to update the existing petition (like editing)
+      await submitPetition(finalPetitionData, false, duplicateInfo?.petitionId || null);
+
+      if (onPetitionSubmitted) {
+        onPetitionSubmitted();
+      }
+
+      clearFormAndWizardState();
+      onClose();
+    } catch (error) {
+      // Check if this is still a duplicate error (shouldn't happen with takeOverToUserId, but handle it)
+      if (error.isDuplicate && error.duplicateInfo?.canTakeOver) {
+        // Show error - this shouldn't happen if takeOverToUserId is set correctly
+        toast.error("Unable to take over petition. Please try again.");
+        setShowTakeOverModal(true);
+        setDuplicateInfo(error.duplicateInfo);
+      } else {
+        // Other errors are already handled by submitPetition
+        console.error("Error submitting with take-over:", error);
+      }
+    } finally {
+      setShouldTakeOver(false);
+    }
+  };
+
   return (
     <React.Fragment>
+      {/* Take Over Petition Modal */}
+      <TakeOverPetitionModal
+        isOpen={showTakeOverModal}
+        duplicateInfo={duplicateInfo}
+        onConfirm={handleTakeOverConfirm}
+        onCancel={handleTakeOverCancel}
+      />
+
       {/* Address Validation Dialog */}
 
       {showAddressValidationDialog && (
@@ -5274,13 +5456,13 @@ const PetitionSteps = ({
                   onSelect={handleOrganizationSelect}
                   isOrgAdmin={isOrgAdmin}
                 />
-                
-                <button
-                  type="button"
-                  className="btn-close btn-close-white"
-                  onClick={handleCloseAttempt}
-                  aria-label="Close"
-                ></button>
+
+              <button
+                type="button"
+                className="btn-close btn-close-white"
+                onClick={handleCloseAttempt}
+                aria-label="Close"
+              ></button>
               </div>
             </div>
 
