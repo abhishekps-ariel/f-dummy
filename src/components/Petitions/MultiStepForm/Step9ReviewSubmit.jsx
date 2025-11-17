@@ -9,13 +9,11 @@ const Step9ReviewSubmit = ({
   getAssigneeTypes,
   getAssigneeRoles,
   userProfile,
-  selectedOrganization,
-  isOrgAdmin,
 }) => {
     return (
           <div>
             <h2 className="theme-color font-med mb-1">
-              {isOrgAdmin ? "9. Review & Submit Petition" : "10. Review & Submit Petition"}
+              9. Review & Submit Petition
             </h2>
 
             <p className="text-muted small mb-3">
@@ -26,65 +24,6 @@ const Step9ReviewSubmit = ({
             {/* Read-only Summary */}
 
             <div className="petition-review-summary">
-              {/* Organization Information (for filers only) */}
-              {!isOrgAdmin && selectedOrganization && (
-                <div className="review-section mb-4">
-                  <div className="d-flex justify-content-between align-items-center mb-2">
-                    <h5 className="review-section-title mb-0">
-                      Organization
-                    </h5>
-                    <button
-                      type="button"
-                      className="dashboard-btn-create"
-                      onClick={() => handleEditSection(1)}
-                      style={{ padding: "6px 12px", fontSize: "13px" }}
-                    >
-                      <i className="fas fa-edit me-1"></i>Edit
-                    </button>
-                  </div>
-                  <div className="review-content">
-                    <div className="row g-3">
-                      <div className="col-md-6">
-                        <strong>Organization Name:</strong> {selectedOrganization.name}
-                      </div>
-                      {selectedOrganization.type && (
-                        <div className="col-md-6">
-                          <strong>Organization Type:</strong> {selectedOrganization.type}
-                        </div>
-                      )}
-                      {(selectedOrganization.addressStreet1 ||
-                        selectedOrganization.addressCity ||
-                        selectedOrganization.addressState ||
-                        selectedOrganization.addressZip) && (
-                        <div className="col-12">
-                          <strong>Address:</strong>{" "}
-                          {selectedOrganization.addressStreet1 || ""}
-                          {selectedOrganization.addressStreet2 && (
-                            <>
-                              <br />
-                              <span className="text-muted">
-                                {selectedOrganization.addressStreet2}
-                              </span>
-                            </>
-                          )}
-                          {(selectedOrganization.addressCity ||
-                            selectedOrganization.addressState ||
-                            selectedOrganization.addressZip) && (
-                            <>
-                              <br />
-                              {selectedOrganization.addressCity || ""}
-                              {selectedOrganization.addressCity && selectedOrganization.addressState && ", "}
-                              {selectedOrganization.addressState || ""}{" "}
-                              {selectedOrganization.addressZip || ""}
-                            </>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-
               {/* Property Information */}
 
               <div className="review-section mb-4">
@@ -157,21 +96,6 @@ const Step9ReviewSubmit = ({
 
                 <div className="review-content">
                   <div className="row g-3">
-                    <div className="col-md-6">
-                      <strong>Is MIN Applicable:</strong>{" "}
-                      {formData.isMinApplicable === true
-                        ? "Yes"
-                        : formData.isMinApplicable === false
-                        ? "No"
-                        : "N/A"}
-                    </div>
-
-                    {formData.isMinApplicable === true && formData.minNumber && (
-                      <div className="col-md-6">
-                        <strong>MIN Number:</strong> {formData.minNumber}
-                      </div>
-                    )}
-
                     <div className="col-md-6">
                       <strong>Loan Type:</strong>{" "}
                       {getLoanTypes().find(

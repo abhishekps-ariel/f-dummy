@@ -6,7 +6,6 @@ import { usePetitionWizard } from "../../context/PetitionWizardContext";
 import { ROUTES } from "../../constants/routerConstants";
 import { logout as logoutApi, updateUser, getUserById, uploadUserSignature, getSignatureById } from "../../services/authService";
 import { getFilingEntityTypes } from "../../services/commonService";
-import { getUserJoinRequests, getOrganizationById } from "../../services/organizationService";
 import { toast } from "react-toastify";
 import Sidebar from "../../components/shared/Sidebar";
 import Header from "../../components/shared/Header";
@@ -27,11 +26,6 @@ function Profile() {
     lastName: "",
   });
 
-  // Organization state
-  const [joinRequests, setJoinRequests] = useState([]);
-  const [userOrganization, setUserOrganization] = useState(null);
-  const [isLoadingOrgData, setIsLoadingOrgData] = useState(false);
-  const [hasLoadedOrgData, setHasLoadedOrgData] = useState(false);
 
   // Signature capture state
   const [showSignatureModal, setShowSignatureModal] = useState(false);
@@ -44,16 +38,17 @@ function Profile() {
     logout: authLogout,
     login,
     updateUserSignature,
-    organization: organizationFromContext,
-    checkOrganizationAccess,
   } = useAuth();
   
   // Get resetWizard function from PetitionWizard context
   const { resetWizard } = usePetitionWizard();
 
-  // Use organization from context (for org admins) or from join requests (for regular users)
-  // Priority: organizationFromContext > userOrganization
-  const displayOrganization = organizationFromContext || userOrganization;
+  // Check if user is a filer
+  const isFiler = () => {
+    if (!user) return false;
+    const userRole = getUserRole(user);
+    return userRole && userRole.toLowerCase() === 'filer';
+  };
 
   useEffect(() => {
     const { user: userData, token } = getAuthData();
@@ -111,28 +106,6 @@ function Profile() {
     fetchFilingEntityTypes();
   }, []); // Load on page load instead of only when entering edit mode
 
-  // Re-check organization access when Profile mounts or user changes
-  // This ensures access is always validated when navigating to Profile
-  useEffect(() => {
-    if (user) {
-      // Re-check organization access to ensure it's current
-      checkOrganizationAccess();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]); // Only depend on user, not checkOrganizationAccess function reference
-
-  // Load organization data (only for join requests, not for org admins who already have organizationId)
-  useEffect(() => {
-    if (user && !organizationFromContext) {
-      // Only load join requests if user doesn't have organization from context
-      // Org admins already have organizationId in their user object, so we skip this
-      loadOrganizationData();
-    } else if (organizationFromContext) {
-      // If we have organization from context, mark as loaded
-      setIsLoadingOrgData(false);
-      setHasLoadedOrgData(true);
-    }
-  }, [user, organizationFromContext]);
 
   // Load signature separately to avoid infinite loop
   useEffect(() => {
@@ -175,93 +148,7 @@ function Profile() {
     }
   };
 
-  const loadOrganizationData = async () => {
-    setIsLoadingOrgData(true);
-    try {
-      // If user has organizationId from context (org admins), use that instead of join requests
-      if (organizationFromContext) {
-        // Organization already loaded from AuthContext, just mark as complete
-        setHasLoadedOrgData(true);
-        setIsLoadingOrgData(false);
-        return;
-      }
 
-      // For regular users, fetch join requests to see pending/approved status
-      const response = await getUserJoinRequests();
-      if (response.isSuccess) {
-        const requests = response.data || [];
-        
-        // Sort requests by date
-        const sortedRequests = requests.sort((a, b) => {
-          return new Date(b.requestedOn) - new Date(a.requestedOn);
-        });
-
-        // Fetch organization details for each request
-        const requestsWithOrgNames = await Promise.all(
-          sortedRequests.map(async (request) => {
-            try {
-              const orgResponse = await getOrganizationById(request.organizationId);
-              if (orgResponse.isSuccess && orgResponse.data) {
-                return {
-                  ...request,
-                  organizationName: orgResponse.data.name,
-                  organizationType: orgResponse.data.type,
-                  organizationAddress: `${orgResponse.data.addressStreet1 || ''}${orgResponse.data.addressStreet2 ? ', ' + orgResponse.data.addressStreet2 : ''}, ${orgResponse.data.addressCity || ''}, ${orgResponse.data.addressState || ''} ${orgResponse.data.addressZip || ''}`.replace(/^,\s*/, '').replace(/,\s*$/, ''),
-                  primaryContactName: orgResponse.data.primaryContactName,
-                  primaryContactEmail: orgResponse.data.primaryContactEmail,
-                  primaryContactPhone: orgResponse.data.primaryContactPhone,
-                };
-              }
-              return request;
-            } catch (error) {
-              return request;
-            }
-          })
-        );
-
-        setJoinRequests(requestsWithOrgNames);
-        
-        // Check if user has any approved requests and load their organization
-        // Note: This is only for display - actual organizationId should come from AuthContext
-        const approvedRequest = requestsWithOrgNames.find(request => request.status === 1);
-        if (approvedRequest) {
-          setUserOrganization(approvedRequest);
-        }
-      } else {
-        setJoinRequests([]);
-      }
-    } catch (error) {
-      setJoinRequests([]);
-    } finally {
-      setIsLoadingOrgData(false);
-      setHasLoadedOrgData(true);
-    }
-  };
-
-  const getStatusInfo = (status) => {
-    switch (status) {
-      case 0:
-        return { text: "Pending", class: "status-pending", icon: "fa-clock" };
-      case 1:
-        return {
-          text: "Approved",
-          class: "status-approved",
-          icon: "fa-check-circle",
-        };
-      case 2:
-        return {
-          text: "Rejected",
-          class: "status-rejected",
-          icon: "fa-times-circle",
-        };
-      default:
-        return {
-          text: "Unknown",
-          class: "status-unknown",
-          icon: "fa-question-circle",
-        };
-    }
-  };
 
   const handleLogout = async () => {
     try {
@@ -479,8 +366,6 @@ function Profile() {
         onSectionChange={(section) => {
           if (section === 'dashboard') {
             navigate(ROUTES.DASHBOARD);
-          } else if (section === 'organizations') {
-            navigate(ROUTES.ORGANIZATIONS);
           }
         }}
         onLogout={handleLogout}
@@ -781,160 +666,6 @@ function Profile() {
                 </div>
               </div>
 
-            </div>
-
-            {/* Organization Section */}
-            <div className="row mb-4">
-              <div className="col-12 mb-3">
-                <div className="stat-card p-4">
-                  <h4 className="fw-medium mb-4">
-                    <i className="fas fa-building me-2 text-secondary"></i>
-                    Organization Information
-                  </h4>
-                  
-                  {isLoadingOrgData && !organizationFromContext ? (
-                    <div className="text-center py-3">
-                      <div className="spinner-border spinner-border-sm text-primary" role="status">
-                        <span className="visually-hidden">Loading...</span>
-                      </div>
-                      <p className="mt-2 text-muted small">Loading...</p>
-                    </div>
-                  ) : hasLoadedOrgData || organizationFromContext ? (
-                    <>
-                      {displayOrganization ? (
-                        // User is part of an organization
-                        <div className="row g-3">
-                          <div className="col-12">
-                            <label className="form-label text-muted small">Organization</label>
-                            <p className="fw-medium mb-0">{displayOrganization.organizationName || displayOrganization.name}</p>
-                          </div>
-                          <div className="col-12">
-                            <label className="form-label text-muted small">Type</label>
-                            <p className="fw-medium mb-0">{displayOrganization.organizationType || displayOrganization.type || "N/A"}</p>
-                          </div>
-                          {(displayOrganization.organizationAddress || (displayOrganization.addressStreet1 || displayOrganization.addressCity)) && (
-                            <div className="col-12">
-                              <label className="form-label text-muted small">Address</label>
-                              <p className="fw-medium mb-0 small">
-                                {displayOrganization.organizationAddress || 
-                                 `${displayOrganization.addressStreet1 || ''}${displayOrganization.addressStreet2 ? ', ' + displayOrganization.addressStreet2 : ''}, ${displayOrganization.addressCity || ''}, ${displayOrganization.addressState || ''} ${displayOrganization.addressZip || ''}`.replace(/^,\s*/, '').replace(/,\s*$/, '')}
-                              </p>
-                            </div>
-                          )}
-                          {(displayOrganization.primaryContactName || displayOrganization.primaryContactEmail || displayOrganization.primaryContactPhone) && (
-                            <div className="col-12">
-                              <label className="form-label text-muted small">Primary Contact</label>
-                              <div className="fw-medium mb-0 small">
-                                {displayOrganization.primaryContactName && (
-                                  <div><i className="fa-solid fa-user me-1"></i>{displayOrganization.primaryContactName}</div>
-                                )}
-                                {displayOrganization.primaryContactEmail && (
-                                  <div><i className="fa-solid fa-envelope me-1"></i>{displayOrganization.primaryContactEmail}</div>
-                                )}
-                                {displayOrganization.primaryContactPhone && (
-                                  <div><i className="fa-solid fa-phone me-1"></i>{displayOrganization.primaryContactPhone}</div>
-                                )}
-                              </div>
-                            </div>
-                          )}
-                          <div className="col-12">
-                            <label className="form-label text-muted small">Status</label>
-                            <p className="fw-medium mb-0">
-                              <span className="badge bg-success fs-6">
-                                <i className="fa-solid fa-check-circle me-1"></i>
-                                Active Member
-                              </span>
-                            </p>
-                          </div>
-                          {(displayOrganization.respondedOn || displayOrganization.requestedOn) && (
-                            <div className="col-12">
-                              <label className="form-label text-muted small">Joined</label>
-                              <p className="fw-medium mb-0">
-                                {new Date(displayOrganization.respondedOn || displayOrganization.requestedOn).toLocaleDateString()}
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      ) : joinRequests.length > 0 ? (
-                        // User has pending requests
-                        <div className="row g-3">
-                          <div className="col-12">
-                            <div className="alert alert-info py-2 px-3 mb-3">
-                              <i className="fa-solid fa-clock me-1"></i>
-                              <small>You have pending requests</small>
-                            </div>
-                          </div>
-                          {joinRequests.slice(0, 2).map((request) => {
-                            const statusInfo = getStatusInfo(request.status);
-                            return (
-                              <div key={request.id} className="col-12">
-                                <div className="border rounded p-3">
-                                  <div className="d-flex justify-content-between align-items-start mb-2">
-                                    <div>
-                                      <h6 className="mb-1 small">{request.organizationName}</h6>
-                                      <small className="text-muted">{request.organizationType}</small>
-                                    </div>
-                                    <span className={`badge ${statusInfo.class} fs-6`}>
-                                      <i className={`fa-solid ${statusInfo.icon} me-1`}></i>
-                                      {statusInfo.text}
-                                    </span>
-                                  </div>
-                                  <small className="text-muted">
-                                    <i className="fa-solid fa-calendar me-1"></i>
-                                    Requested: {new Date(request.requestedOn).toLocaleDateString()}
-                                  </small>
-                                </div>
-                              </div>
-                            );
-                          })}
-                          {joinRequests.length > 2 && (
-                            <div className="col-12">
-                              <small className="text-muted">
-                                +{joinRequests.length - 2} more requests
-                              </small>
-                            </div>
-                          )}
-                          <div className="col-12 mt-2">
-                            <button 
-                              className="dashboard-btn-create w-100"
-                              onClick={() => navigate(ROUTES.ORGANIZATIONS)}
-                            >
-                              <i className="fa-solid fa-building me-1"></i>
-                              View All Requests
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        // User is not part of any organization
-                        <div className="text-center py-3">
-                          <div className="mb-3">
-                            <i className="fa-solid fa-building text-muted" style={{ fontSize: "2rem" }}></i>
-                          </div>
-                          <h6 className="text-muted mb-2">Not part of any organization</h6>
-                          <p className="text-muted mb-3 small">
-                            Join an organization to access the petition filing dashboard.
-                          </p>
-                          <button 
-                            className="dashboard-btn-create w-100"
-                            onClick={() => navigate(ROUTES.ORGANIZATIONS)}
-                          >
-                            <i className="fa-solid fa-building me-1"></i>
-                            Join Organization
-                          </button>
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <div className="text-center py-3">
-                      <div className="spinner-border spinner-border-sm text-primary" role="status">
-                        <span className="visually-hidden">Loading...</span>
-                      </div>
-                      <p className="mt-2 text-muted small">Loading...</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-              
             </div>
 
           </div>

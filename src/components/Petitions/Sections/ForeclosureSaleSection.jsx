@@ -11,21 +11,14 @@ const ForeclosureSaleSection = ({
   getBuyerTypes,
   findOptionByValue,
   updateForeclosureSale,
-  alwaysShow = false, // New prop to always show the section (for modal)
 }) => {
-  // If alwaysShow is true, skip the conditional check
-  const shouldShow = alwaysShow || (
-    formData.noticeSent === true && 
-    petition.status?.toLowerCase() !== "draft" && 
-    petition.statusClass?.toLowerCase() !== "draft"
-  );
-
-  if (!shouldShow) return null;
-
   return (
     <>
-      {/* Foreclosure Sale Section */}
-      <div 
+      {/* Foreclosure Sale Section - Only show if Right to Cure is "Yes" AND petition is not Draft */}
+      {formData.noticeSent === true && 
+           petition.status?.toLowerCase() !== "draft" && 
+           petition.statusClass?.toLowerCase() !== "draft" && (
+            <div 
               ref={foreclosureSaleSectionRef}
               className={`card mb-4 ${isEditing ? "editing" : ""} ${
                 Object.keys(fieldErrors).some(key => key.startsWith("foreclosureSale.")) 
@@ -282,6 +275,7 @@ const ForeclosureSaleSection = ({
                 })()}
               </div>
             </div>
+          )}
     </>
   );
 };

@@ -9,25 +9,17 @@ class PetitionApiService {
   }
 
 
-  /**
-   * Get petition count
-   * @param {Object} params - The count parameters
-   * @param {string} [params.organizationId] - Organization ID (required for org admin, null for filer)
-   * @param {string} [params.userId] - User ID (required for filer, null for org admin)
-   * @returns {Promise<Object>} API response with petition count data
-   */
+  // Get petition count by organization ID or user ID
   async getPetitionCount(params) {
     const { organizationId, userId } = params;
     
-    // Validate that either organizationId or userId is provided (but not both)
-    if (!organizationId && !userId) {
-      throw new Error('Either organizationId (for org admin) or userId (for filer) is required');
+    const requestBody = {};
+    if (organizationId) {
+      requestBody.organizationId = organizationId;
     }
-    
-    const requestBody = {
-      organizationId: organizationId || null,
-      userId: userId || null
-    };
+    if (userId) {
+      requestBody.userId = userId;
+    }
     
     const response = await axiosInstance.post(PETITION_ENDPOINTS.GET_PETITION_COUNT, requestBody, {
       headers: {
@@ -37,11 +29,6 @@ class PetitionApiService {
     });
     
     return response.data;
-  }
-
-  // Legacy method name for backward compatibility
-  async getPetitionCountByOrganization(organizationId) {
-    return this.getPetitionCount({ organizationId, userId: null });
   }
 
   async deletePetitionById(petitionId) {
@@ -70,10 +57,10 @@ class PetitionApiService {
   }
 
   /**
-   * Get paginated petitions with filters, search, and sorting
+   * Get paginated petitions by organization ID or user ID with filters, search, and sorting
    * @param {Object} paginationParams - The pagination and filter parameters
-   * @param {string} [paginationParams.organizationId] - Organization ID (required for org admin, null for filer)
-   * @param {string} [paginationParams.userId] - User ID (required for filer, null for org admin)
+   * @param {string} [paginationParams.organizationId] - Organization ID (for org admins)
+   * @param {string} [paginationParams.userId] - User ID (for filers)
    * @param {number} [paginationParams.pageNumber=1] - Page number (1-based)
    * @param {number} [paginationParams.pageSize=10] - Number of items per page
    * @param {string} [paginationParams.searchText=""] - Search text for filtering
@@ -111,9 +98,9 @@ class PetitionApiService {
       sortDirection = "desc"
     } = options;
 
-    // Validate that either organizationId or userId is provided (but not both)
+    // Validate that at least one of organizationId or userId is provided
     if (!organizationId && !userId) {
-      throw new Error('Either organizationId (for org admin) or userId (for filer) is required');
+      throw new Error('Either organizationId or userId is required');
     }
 
     // Validate sort column
@@ -124,36 +111,26 @@ class PetitionApiService {
     const allowedSortDirections = ["asc", "desc"];
     const validSortDirection = allowedSortDirections.includes(sortDirection.toLowerCase()) ? sortDirection.toLowerCase() : "desc";
 
-    // Build parameters object - API expects 1-based pageNumber
-    // Only include organizationId or userId if they have values (don't send null)
+    // Build parameters object
     const params = {
-      pageNumber: Math.max(1, parseInt(pageNumber) || 1), // API uses 1-based indexing
+      pageNumber: Math.max(1, parseInt(pageNumber) || 1), // Ensure minimum page 1
       pageSize: Math.max(1, parseInt(pageSize) || 10),
+      status: status !== null ? parseInt(status) : null,
       sortColumn: validSortColumn,
       sortDirection: validSortDirection
     };
 
-    // Only include organizationId if it has a value
+    // Add organizationId or userId (only one should be sent)
     if (organizationId) {
       params.organizationId = organizationId;
     }
-
-    // Only include userId if it has a value
     if (userId) {
       params.userId = userId;
-    }
-
-    // Only include status if a specific status filter is selected (0, 1, 2, 3, 4, 5)
-    // Don't send status field at all if no filter is selected
-    if (status !== null && status !== undefined) {
-      params.status = parseInt(status);
     }
 
     // Add optional parameters only if they have values
     if (searchText && searchText.trim()) {
       params.searchText = searchText.trim();
-    } else {
-      params.searchText = ""; // Empty string if no search text
     }
 
     if (fromDate) {

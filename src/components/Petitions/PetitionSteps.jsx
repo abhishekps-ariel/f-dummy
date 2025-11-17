@@ -21,8 +21,7 @@ import { getUserById, getSignatureById } from "../../services/authService";
 
 import { getFilingEntityTypes } from "../../services/commonService";
 
-import { getOrganizationById, getAllOrganizations, searchOrganizations } from "../../services/organizationService";
-import { useDebounce } from "../../hooks/useDebounce";
+import { getOrganizationById } from "../../services/organizationService";
 
 import PetitionStepper from "./PetitionStepper";
 
@@ -85,54 +84,10 @@ const PetitionSteps = ({
     clearAllStepErrors,
   } = usePetitionWizard();
 
-  // Get user info from auth context (needed early for role check)
-  const {
-    user,
-    organization: organizationFromAuth,
-  } = useAuth();
-
-  // Check if user is org admin (helper function)
-  const checkIsOrgAdminUser = (userData) => {
-    if (!userData) return false;
-    if (userData.isManager === true) return true;
-
-    if (Array.isArray(userData.roles)) {
-      const normalizedRoles = userData.roles.map((role) => role?.toLowerCase?.() ?? role);
-      if (
-        normalizedRoles.includes("organisation admin") ||
-        normalizedRoles.includes("organization admin") ||
-        normalizedRoles.includes("orgadmin")
-      ) {
-        return true;
-      }
-    }
-
-    const primaryRole =
-      userData.role ||
-      (Array.isArray(userData.roles) && userData.roles.length > 0 ? userData.roles[0] : null);
-    return (
-      primaryRole === "orgAdmin" ||
-      primaryRole === "Organisation Admin" ||
-      primaryRole === "Organization Admin"
-    );
-  };
-
-  // For filers: start at step 1 (organization selection), totalSteps = 10 (steps 1-10)
-  // For org admins: start at step 1 (property details), totalSteps = 9 (steps 1-9)
   const [currentStep, setCurrentStep] = useState(1);
-  const [visitedSteps, setVisitedSteps] = useState(new Set([1]));
+  const [visitedSteps, setVisitedSteps] = useState(new Set([1])); // Track visited steps, start with step 1
 
-  const isOrgAdmin = checkIsOrgAdminUser(user);
-  const totalSteps = isOrgAdmin ? 9 : 10; // Filers: 10 steps (1-10), Org admins: 9 steps (1-9)
-
-  // Organization selection state (for Step 1 - filers only)
-  const [selectedPetitionOrganization, setSelectedPetitionOrganization] = useState(null);
-  const [orgSearchTerm, setOrgSearchTerm] = useState("");
-  const [orgSearchResults, setOrgSearchResults] = useState([]);
-  const [isLoadingOrgs, setIsLoadingOrgs] = useState(false);
-  const [showOrgDropdown, setShowOrgDropdown] = useState(false);
-  const orgSearchRef = useRef(null);
-  const debouncedOrgSearchQuery = useDebounce(orgSearchTerm, 300);
+  const totalSteps = 9;
 
   // Address validation state (declared early to avoid initialization errors)
   const [isAddressVerified, setIsAddressVerified] = useState(false);
@@ -206,19 +161,21 @@ const PetitionSteps = ({
 
   const {
     submitPetition,
-    hasOrganizationAccess,
     organization: organizationFromContext,
     loading: petitionLoading,
   } = usePetitions();
 
+  // Get user info from auth context
 
-  // Get organization ID - priority: selectedPetitionOrganization (filers) > stored > user > prop/context
-  // For filers: use selectedPetitionOrganization from Step 0
-  // For org admins: use their organization
+  const {
+    user,
+    organization: organizationFromAuth,
+  } = useAuth();
+
+  // Get organization ID from user object (stored in browser storage) or organization prop/context
+  // Priority: user.organizationId > organization.id (from prop) > organizationFromContext.id
   const storedActiveOrganizationId = getActiveOrganizationId();
   const organizationId =
-    (!isOrgAdmin && selectedPetitionOrganization?.id) ||
-    (!isOrgAdmin && selectedPetitionOrganization?.organizationId) ||
     storedActiveOrganizationId ||
     user?.organizationId ||
     organization?.id ||
@@ -477,81 +434,6 @@ const PetitionSteps = ({
     loadOrganizationData();
   }, [organizationId]);
 
-  // Organization search functionality (for Step 0 - filers only)
-  const loadAllOrganizationsForSearch = useCallback(async () => {
-    setIsLoadingOrgs(true);
-    try {
-      const response = await getAllOrganizations();
-      if (response.isSuccess && Array.isArray(response.data)) {
-        setOrgSearchResults(response.data);
-      } else {
-        setOrgSearchResults([]);
-      }
-    } catch (error) {
-      setOrgSearchResults([]);
-    } finally {
-      setIsLoadingOrgs(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    const query = debouncedOrgSearchQuery.trim();
-    if (!query) {
-      setOrgSearchResults([]);
-      return;
-    }
-
-    const fetchBySearch = async () => {
-      setIsLoadingOrgs(true);
-      try {
-        const response = await searchOrganizations(query);
-        if (response.isSuccess && Array.isArray(response.data)) {
-          setOrgSearchResults(response.data);
-        } else {
-          setOrgSearchResults([]);
-        }
-      } catch (error) {
-        setOrgSearchResults([]);
-      } finally {
-        setIsLoadingOrgs(false);
-      }
-    };
-
-    fetchBySearch();
-  }, [debouncedOrgSearchQuery]);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (orgSearchRef.current && !orgSearchRef.current.contains(event.target)) {
-        setShowOrgDropdown(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  const handleOrgSearchFocus = () => {
-    setShowOrgDropdown(true);
-    if (!orgSearchTerm.trim()) {
-      loadAllOrganizationsForSearch();
-    }
-  };
-
-  const handleOrganizationSelect = (org) => {
-    setSelectedPetitionOrganization(org);
-    setOrgSearchTerm("");
-    setShowOrgDropdown(false);
-  };
-
-  const handleRemoveSelectedOrganization = () => {
-    setSelectedPetitionOrganization(null);
-    setOrgSearchTerm("");
-    setShowOrgDropdown(false);
-  };
-
   // Prefill signer fields from user data
 
   useEffect(() => {
@@ -708,8 +590,6 @@ const PetitionSteps = ({
     assessorParcelId: "",
 
     // Step 2: Loan Details
-
-    isMinApplicable: null,
 
     minNumber: "",
 
@@ -955,11 +835,6 @@ const PetitionSteps = ({
                   isAddressVerified);
       
       case 2: // Loan Details - check all required fields (matching validateLoanDetails)
-        const minApplicableCheck = formData.isMinApplicable !== null && formData.isMinApplicable !== undefined;
-        const minNumberCheck = formData.isMinApplicable === true 
-          ? (formData.minNumber?.trim() && formData.minNumber.trim().length > 0)
-          : true; // If MIN is not applicable, this check passes
-        
         return !!(formData.loanNumber?.trim() && 
                   formData.petitionLoanTypeId && 
                   (formData.lienPosition != null && formData.lienPosition !== "") &&
@@ -976,9 +851,7 @@ const PetitionSteps = ({
                   formData.monthlyPaymentAmount > 0 &&
                   formData.delinquencyDaysAtFiling != null &&
                   formData.delinquencyDaysAtFiling !== "" &&
-                  formData.delinquencyDaysAtFiling >= 0 &&
-                  minApplicableCheck &&
-                  minNumberCheck);
+                  formData.delinquencyDaysAtFiling >= 0);
       
       case 3: // Borrower Details - check if at least one borrower with required fields
         if (!formData.borrowers || !Array.isArray(formData.borrowers) || formData.borrowers.length === 0) {
@@ -3435,20 +3308,6 @@ const PetitionSteps = ({
       hasErrors = true;
     }
 
-    // Is MIN Applicable is required
-    if (formData.isMinApplicable === null || formData.isMinApplicable === undefined) {
-      errors.isMinApplicable = "Is MIN Applicable is required";
-      hasErrors = true;
-    }
-
-    // MIN Number is required if MIN is applicable
-    if (formData.isMinApplicable === true) {
-      if (!formData.minNumber || !formData.minNumber.trim()) {
-        errors.minNumber = "MIN Number is required when MIN is applicable";
-        hasErrors = true;
-      }
-    }
-
     return { hasErrors, errors };
   };
 
@@ -4229,18 +4088,6 @@ const PetitionSteps = ({
     setIsSaving(true);
 
     try {
-      // Check organization access
-
-      if (!hasOrganizationAccess) {
-        toast.error(
-          "You must be part of an organization to save petition drafts."
-        );
-
-        setIsSaving(false);
-
-        return;
-      }
-
       // Prepare petition data with isAllStepsCompleted: false for draft
       // For drafts, preserve existing signature data if available, otherwise create new
 
@@ -4303,31 +4150,8 @@ const PetitionSteps = ({
   const nextStep = async (direction) => {
     const newStep = currentStep + direction;
 
-    // Validate organization selection for filers on step 1
-    if (!isOrgAdmin && currentStep === 1 && direction === 1) {
-      if (!selectedPetitionOrganization) {
-        toast.error("Please select an organization to continue.");
-        return;
-      }
-      // Mark step 1 as completed when organization is selected
-      if (!completedSteps.has(1)) {
-        markStepCompleted(1);
-      }
-      // Proceed to step 2 after validation
-      if (newStep >= 1 && newStep <= totalSteps) {
-        await autoSaveCurrentStep();
-        setCurrentStep(newStep);
-        wizardGoToStep(newStep);
-        previousStepRef.current = newStep;
-        window.scrollTo(0, 0);
-        return;
-      }
-    }
-
-    // When navigating away from Property Address step, automatically validate address
-    // For filers: Property Details is step 2, for org admins: step 1
-    const propertyDetailsStep = isOrgAdmin ? 1 : 2;
-    if (currentStep === propertyDetailsStep && direction === 1 && formData?.propertyStreet1?.trim() && !isAddressVerified) {
+    // When navigating away from Property Address step (step 1), automatically validate address
+    if (currentStep === 1 && direction === 1 && formData?.propertyStreet1?.trim() && !isAddressVerified) {
       // Store the intended step change
       setPendingStepChange(newStep);
       // Automatically run address validation
@@ -4335,9 +4159,9 @@ const PetitionSteps = ({
       if (validation.isValid) {
         // Address validated successfully, proceed with navigation
         setIsAddressVerified(true);
-        clearStepError(propertyDetailsStep);
+        clearStepError(1);
         if (newStep >= 1 && newStep <= totalSteps) {
-          // Mark property details step as completed since validation passed and all required fields are filled
+          // Mark step 1 as completed since validation passed and all required fields are filled
           // Check if all address fields are filled (validation already confirmed this)
           const hasAllAddressFields = !!(formData.propertyStreet1?.trim() && 
                                         formData.propertyCity?.trim() && 
@@ -4345,11 +4169,11 @@ const PetitionSteps = ({
                                         formData.propertyZip?.trim() && 
                                         formData.propertyCounty?.trim());
           if (hasAllAddressFields) {
-            if (!completedSteps.has(propertyDetailsStep)) {
-              markStepCompleted(propertyDetailsStep);
+            if (!completedSteps.has(1)) {
+              markStepCompleted(1);
             }
-            if (stepsWithErrors.has(propertyDetailsStep)) {
-              clearStepError(propertyDetailsStep);
+            if (stepsWithErrors.has(1)) {
+              clearStepError(1);
             }
           }
           await autoSaveCurrentStep();
@@ -4931,12 +4755,6 @@ const PetitionSteps = ({
       return;
     }
 
-    // Check organization access
-    if (!hasOrganizationAccess) {
-      toast.error("You must be part of an organization to submit petitions.");
-      return;
-    }
-
     // Run comprehensive validation
     const validationResult = await validateAllSteps();
     
@@ -5011,225 +4829,46 @@ const PetitionSteps = ({
   };
 
   const renderStep = () => {
-    // Step 1: Organization selection (for filers only)
-    if (!isOrgAdmin && currentStep === 1) {
-      return (
-        <div>
-          <h2 className="theme-color font-med mb-1">Select Organization</h2>
-          <p className="text-muted small mb-3">
-            Please select an organization to file this petition for.
-          </p>
-          <div className="search-form-wrapper" ref={orgSearchRef}>
-            {selectedPetitionOrganization ? (
-              <div className="selected-org-container mb-3">
-                <div className="selected-org-badge">
-                  <div className="selected-org-icon">
-                    <i className="fa-solid fa-building"></i>
-                  </div>
-                  <div className="selected-org-info">
-                    <div className="selected-org-name">
-                      {selectedPetitionOrganization.name}
-                    </div>
-                    <div className="selected-org-details">
-                      {selectedPetitionOrganization.type && (
-                        <span className="selected-org-type">
-                          {selectedPetitionOrganization.type}
-                        </span>
-                      )}
-                      {(selectedPetitionOrganization.addressStreet1 ||
-                        selectedPetitionOrganization.addressCity ||
-                        selectedPetitionOrganization.addressState ||
-                        selectedPetitionOrganization.addressZip) && (
-                        <span className="selected-org-address">
-                          {`
-                            ${selectedPetitionOrganization.addressStreet1 || ""}${
-                              selectedPetitionOrganization.addressStreet2
-                                ? ", " + selectedPetitionOrganization.addressStreet2
-                                : ""
-                            }, ${selectedPetitionOrganization.addressCity || ""}, ${
-                              selectedPetitionOrganization.addressState || ""
-                            } ${selectedPetitionOrganization.addressZip || ""}
-                          `
-                            .replace(/^,\s*/, "")
-                            .replace(/,\s*$/, "")}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    className="selected-org-remove"
-                    title="Remove selection"
-                    onClick={handleRemoveSelectedOrganization}
-                  >
-                    <i className="fa-solid fa-times"></i>
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="search-input-container">
-                <input
-                  className="form-control"
-                  type="search"
-                  placeholder="Search by organization name or EIN"
-                  aria-label="Search"
-                  value={orgSearchTerm}
-                  onChange={(e) => {
-                    setOrgSearchTerm(e.target.value);
-                    setShowOrgDropdown(true);
-                  }}
-                  onFocus={handleOrgSearchFocus}
-                />
-
-                {showOrgDropdown && (
-                  <div className="org-search-dropdown">
-                    {isLoadingOrgs ? (
-                      <div className="org-search-loading">
-                        <div
-                          className="spinner-border spinner-border-sm text-primary me-2"
-                          role="status"
-                        >
-                          <span className="visually-hidden">Loading...</span>
-                        </div>
-                        <span>Loading organizations...</span>
-                      </div>
-                    ) : orgSearchResults.length > 0 ? (
-                      <div className="org-search-results">
-                        {orgSearchResults.map((org) => {
-                          const orgId = org.id || org.organizationId;
-                          return (
-                            <div
-                              key={orgId}
-                              className="org-search-item"
-                              onClick={() => handleOrganizationSelect(org)}
-                            >
-                              <div className="org-item-name">{org.name}</div>
-                              <div className="org-item-details">
-                                <span className="org-item-type">
-                                  <i className="fa-solid fa-building me-1"></i>
-                                  {org.type || "N/A"}
-                                </span>
-                                {(org.addressStreet1 ||
-                                  org.addressCity ||
-                                  org.addressState ||
-                                  org.addressZip) && (
-                                  <span className="org-item-address ms-3">
-                                    <i className="fa-solid fa-location-dot me-1"></i>
-                                    {`${org.addressStreet1 || ""}${
-                                      org.addressStreet2 ? ", " + org.addressStreet2 : ""
-                                    }, ${org.addressCity || ""}, ${org.addressState || ""} ${
-                                      org.addressZip || ""
-                                    }`
-                                      .replace(/^,\s*/, "")
-                                      .replace(/,\s*$/, "")}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <div className="org-search-no-results">
-                        <i className="fa-solid fa-search me-2"></i>
-                        No organizations found.
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      );
-    }
-
     switch (currentStep) {
       case 1:
-        // For filers: Organization selection (handled above)
-        // For org admins: Property Details
-        if (isOrgAdmin) {
-          return (
-            <Step1PropertyDetails
-            isAddressVerified={isAddressVerified}
-            loadError={loadError}
-            isLoaded={isLoaded}
-            autocompleteRef={autocompleteRef}
-            fieldErrors={fieldErrors}
-            formData={formData}
-            handleInputChange={handleInputChange}
-            handleAddressInput={handleAddressInput}
-            handleKeyDown={handleKeyDown}
-            setShowPredictions={setShowPredictions}
-            showPredictions={showPredictions}
-            predictions={predictions}
-            selectedPredictionIndex={selectedPredictionIndex}
-            selectPrediction={selectPrediction}
-            addressValidationError={addressValidationError}
-            isValidatingAddress={isValidatingAddress}
-            isLoadingPredictions={isLoadingPredictions}
-          />
-          );
-        }
-        // Filers: Organization selection already handled above
-        return null;
+        return (
+          <Step1PropertyDetails
+          isAddressVerified={isAddressVerified}
+          loadError={loadError}
+          isLoaded={isLoaded}
+          autocompleteRef={autocompleteRef}
+          fieldErrors={fieldErrors}
+          formData={formData}
+          handleInputChange={handleInputChange}
+          handleAddressInput={handleAddressInput}
+          handleKeyDown={handleKeyDown}
+          setShowPredictions={setShowPredictions}
+          showPredictions={showPredictions}
+          predictions={predictions}
+          selectedPredictionIndex={selectedPredictionIndex}
+          selectPrediction={selectPrediction}
+          addressValidationError={addressValidationError}
+          isValidatingAddress={isValidatingAddress}
+          isLoadingPredictions={isLoadingPredictions}
+        />
+        );
+
       case 2:
-        // For filers: Property Details (Step 2)
-        // For org admins: Loan Details (Step 2)
-        if (!isOrgAdmin) {
-          return (
-            <Step1PropertyDetails
-            isAddressVerified={isAddressVerified}
-            loadError={loadError}
-            isLoaded={isLoaded}
-            autocompleteRef={autocompleteRef}
+        return (
+          <Step2LoanDetails
+            commonDataError={commonDataError}
+            commonDataLoading={commonDataLoading}
             fieldErrors={fieldErrors}
             formData={formData}
             handleInputChange={handleInputChange}
-            handleAddressInput={handleAddressInput}
-            handleKeyDown={handleKeyDown}
-            setShowPredictions={setShowPredictions}
-            showPredictions={showPredictions}
-            predictions={predictions}
-            selectedPredictionIndex={selectedPredictionIndex}
-            selectPrediction={selectPrediction}
-            addressValidationError={addressValidationError}
-            isValidatingAddress={isValidatingAddress}
-            isLoadingPredictions={isLoadingPredictions}
+            getLoanTypes={getLoanTypes}
+            getLienPositions={getLienPositions}
           />
-          );
-        } else {
-          return (
-            <Step2LoanDetails
-              commonDataError={commonDataError}
-              commonDataLoading={commonDataLoading}
-              fieldErrors={fieldErrors}
-              formData={formData}
-              handleInputChange={handleInputChange}
-              getLoanTypes={getLoanTypes}
-              getLienPositions={getLienPositions}
-            />
-          );
-        }
+        );
 
       case 3:
-        // For filers: Loan Details (Step 3)
-        // For org admins: Borrower Details (Step 3)
-        if (!isOrgAdmin) {
-          return (
-            <Step2LoanDetails
-              commonDataError={commonDataError}
-              commonDataLoading={commonDataLoading}
-              fieldErrors={fieldErrors}
-              formData={formData}
-              handleInputChange={handleInputChange}
-              getLoanTypes={getLoanTypes}
-              getLienPositions={getLienPositions}
-            />
-          );
-        } else {
-          return (
-            <Step3BorrowerDetails
+        return (
+          <Step3BorrowerDetails
               formData={formData}
               fieldErrors={fieldErrors}
               setFieldErrors={setFieldErrors}
@@ -5247,240 +4886,99 @@ const PetitionSteps = ({
               selectedBorrowerPredictionIndex={selectedBorrowerPredictionIndex}
               setSelectedBorrowerPredictionIndex={setSelectedBorrowerPredictionIndex}
             />
-          );
-        }
+        );
 
       case 4:
-        // For filers: Borrower Details (Step 4)
-        // For org admins: Filing Entity (Step 4)
-        if (!isOrgAdmin) {
-          return (
-            <Step3BorrowerDetails
-              formData={formData}
-              fieldErrors={fieldErrors}
-              setFieldErrors={setFieldErrors}
-              setFormData={setFormData}
-              updateBorrower={updateBorrower}
-              removeBorrower={removeBorrower}
-              addBorrower={addBorrower}
-              borrowerPredictions={borrowerPredictions}
-              showBorrowerPredictions={showBorrowerPredictions}
-              setShowBorrowerPredictions={setShowBorrowerPredictions}
-              handleBorrowerAddressInput={handleBorrowerAddressInput}
-              handleBorrowerPredictionClick={handleBorrowerPredictionClick}
-              isLoadingBorrowerPredictions={isLoadingBorrowerPredictions}
-              borrowerAddressValidationErrors={borrowerAddressValidationErrors}
-              selectedBorrowerPredictionIndex={selectedBorrowerPredictionIndex}
-              setSelectedBorrowerPredictionIndex={setSelectedBorrowerPredictionIndex}
-            />
-          );
-        } else {
-          return (
-            <Step4FilingEntity
-              organizationLoading={organizationLoading}
-              organizationData={organizationData}
-              fieldErrors={fieldErrors}
-              formData={formData}
-              handleInputChange={handleInputChange}
-              profileLoading={profileLoading}
-              userFilingEntityType={userFilingEntityType}
-              filingEntityTypes={filingEntityTypes}
-            />
-          );
-        }
+        return (
+          <Step4FilingEntity
+            organizationLoading={organizationLoading}
+            organizationData={organizationData}
+            fieldErrors={fieldErrors}
+            formData={formData}
+            handleInputChange={handleInputChange}
+            profileLoading={profileLoading}
+            userFilingEntityType={userFilingEntityType}
+            filingEntityTypes={filingEntityTypes}
+          />
+        );
 
       case 5:
-        // For filers: Filing Entity (Step 5)
-        // For org admins: Right-to-Cure (Step 5)
-        if (!isOrgAdmin) {
-          return (
-            <Step4FilingEntity
-              organizationLoading={organizationLoading}
-              organizationData={organizationData}
-              fieldErrors={fieldErrors}
-              formData={formData}
-              handleInputChange={handleInputChange}
-              profileLoading={profileLoading}
-              userFilingEntityType={userFilingEntityType}
-              filingEntityTypes={filingEntityTypes}
-            />
-          );
-        } else {
-          return (
-            <Step5RightToCure
-              formData={formData}
-              fieldErrors={fieldErrors}
-              setFormData={setFormData}
-              handleInputChange={handleInputChange}
-              handleNoticeAddressInput={handleNoticeAddressInput}
-              handleNoticePredictionClick={handleNoticePredictionClick}
-              noticePredictions={noticePredictions}
-              noticeAddressValidationErrors={noticeAddressValidationErrors}
-              setShowNoticePredictions={setShowNoticePredictions}
-              showNoticePredictions={showNoticePredictions}
-              isLoadingNoticePredictions={isLoadingNoticePredictions}
-              selectedNoticePredictionIndex={selectedNoticePredictionIndex}
-              setSelectedNoticePredictionIndex={setSelectedNoticePredictionIndex}
-            />
-          );
-        }
+        return (
+          <Step5RightToCure
+            formData={formData}
+            fieldErrors={fieldErrors}
+            setFormData={setFormData}
+            handleInputChange={handleInputChange}
+            handleNoticeAddressInput={handleNoticeAddressInput}
+            handleNoticePredictionClick={handleNoticePredictionClick}
+            noticePredictions={noticePredictions}
+            noticeAddressValidationErrors={noticeAddressValidationErrors}
+            isLoadingNoticePredictions={isLoadingNoticePredictions}
+            showNoticePredictions={showNoticePredictions}
+            setShowNoticePredictions={setShowNoticePredictions}
+            selectedNoticePredictionIndex={selectedNoticePredictionIndex}
+            setSelectedNoticePredictionIndex={setSelectedNoticePredictionIndex}
+          />
+        );
 
       case 6:
-        // For filers: Right-to-Cure (Step 6)
-        // For org admins: Form 35B Compliance (Step 6)
-        if (!isOrgAdmin) {
-          return (
-            <Step5RightToCure
-              formData={formData}
-              fieldErrors={fieldErrors}
-              setFormData={setFormData}
-              handleInputChange={handleInputChange}
-              handleNoticeAddressInput={handleNoticeAddressInput}
-              handleNoticePredictionClick={handleNoticePredictionClick}
-              noticePredictions={noticePredictions}
-              noticeAddressValidationErrors={noticeAddressValidationErrors}
-              setShowNoticePredictions={setShowNoticePredictions}
-              showNoticePredictions={showNoticePredictions}
-              isLoadingNoticePredictions={isLoadingNoticePredictions}
-              selectedNoticePredictionIndex={selectedNoticePredictionIndex}
-              setSelectedNoticePredictionIndex={setSelectedNoticePredictionIndex}
-            />
-          );
-        } else {
-          return (
-            <Step6Form35BCompliance
-              formData={formData}
-              fieldErrors={fieldErrors}
-              handleInputChange={handleInputChange}
-            />
-          );
-        }
+        return (
+          <Step6Form35BCompliance
+            formData={formData}
+            setFormData={setFormData}
+            fieldErrors={fieldErrors}
+          />
+        );
 
       case 7:
-        // For filers: Form 35B Compliance (Step 7)
-        // For org admins: Loan Assignees (Step 7)
-        if (!isOrgAdmin) {
-          return (
-            <Step6Form35BCompliance
-              formData={formData}
-              fieldErrors={fieldErrors}
-              handleInputChange={handleInputChange}
-            />
-          );
-        } else {
-          return (
-            <Step7LoanAssignees
-              commonDataError={commonDataError}
-              commonDataLoading={commonDataLoading}
-              formData={formData}
-              fieldErrors={fieldErrors}
-              updateLoanAssignee={updateLoanAssignee}
-              removeLoanAssignee={removeLoanAssignee}
-              addLoanAssignee={addLoanAssignee}
-              getAssigneeTypes={getAssigneeTypes}
-              getAssigneeRoles={getAssigneeRoles}
-              handleLoanAssigneeAddressInput={handleLoanAssigneeAddressInput}
-              handleLoanAssigneePredictionClick={handleLoanAssigneePredictionClick}
-              isLoadingLoanAssigneePredictions={isLoadingLoanAssigneePredictions}
-              showLoanAssigneePredictions={showLoanAssigneePredictions}
-              loanAssigneePredictions={loanAssigneePredictions}
-              setShowLoanAssigneePredictions={setShowLoanAssigneePredictions}
-              selectedLoanAssigneePredictionIndex={selectedLoanAssigneePredictionIndex}
-              setSelectedLoanAssigneePredictionIndex={
-                setSelectedLoanAssigneePredictionIndex
-              }
-              loanAssigneeAddressValidationErrors={loanAssigneeAddressValidationErrors}
-            />
-          );
-        }
+        return (
+          <Step7LoanAssignees
+            commonDataError={commonDataError}
+            commonDataLoading={commonDataLoading}
+            formData={formData}
+            fieldErrors={fieldErrors}
+            updateLoanAssignee={updateLoanAssignee}
+            removeLoanAssignee={removeLoanAssignee}
+            addLoanAssignee={addLoanAssignee}
+            getAssigneeTypes={getAssigneeTypes}
+            getAssigneeRoles={getAssigneeRoles}
+            handleLoanAssigneeAddressInput={handleLoanAssigneeAddressInput}
+            handleLoanAssigneePredictionClick={handleLoanAssigneePredictionClick}
+            isLoadingLoanAssigneePredictions={isLoadingLoanAssigneePredictions}
+            showLoanAssigneePredictions={showLoanAssigneePredictions}
+            loanAssigneePredictions={loanAssigneePredictions}
+            setShowLoanAssigneePredictions={setShowLoanAssigneePredictions}
+            selectedLoanAssigneePredictionIndex={selectedLoanAssigneePredictionIndex}
+            setSelectedLoanAssigneePredictionIndex={
+              setSelectedLoanAssigneePredictionIndex
+            }
+            loanAssigneeAddressValidationErrors={loanAssigneeAddressValidationErrors}
+          />
+        );
 
       case 8:
-        // For filers: Loan Assignees (Step 8)
-        // For org admins: Attestation & Signatures (Step 8)
-        if (!isOrgAdmin) {
-          return (
-            <Step7LoanAssignees
-              commonDataError={commonDataError}
-              commonDataLoading={commonDataLoading}
-              formData={formData}
-              fieldErrors={fieldErrors}
-              updateLoanAssignee={updateLoanAssignee}
-              removeLoanAssignee={removeLoanAssignee}
-              addLoanAssignee={addLoanAssignee}
-              getAssigneeTypes={getAssigneeTypes}
-              getAssigneeRoles={getAssigneeRoles}
-              handleLoanAssigneeAddressInput={handleLoanAssigneeAddressInput}
-              handleLoanAssigneePredictionClick={handleLoanAssigneePredictionClick}
-              isLoadingLoanAssigneePredictions={isLoadingLoanAssigneePredictions}
-              showLoanAssigneePredictions={showLoanAssigneePredictions}
-              loanAssigneePredictions={loanAssigneePredictions}
-              setShowLoanAssigneePredictions={setShowLoanAssigneePredictions}
-              selectedLoanAssigneePredictionIndex={selectedLoanAssigneePredictionIndex}
-              setSelectedLoanAssigneePredictionIndex={
-                setSelectedLoanAssigneePredictionIndex
-              }
-              loanAssigneeAddressValidationErrors={loanAssigneeAddressValidationErrors}
-            />
-          );
-        } else {
-          return (
-            <Step8PetitionAttestation
-              formData={formData}
-              handleInputChange={handleInputChange}
-              userProfile={userProfile}
-              onClose={onClose}
-            />
-          );
-        }
+        return (
+          <Step8PetitionAttestation
+            formData={formData}
+            handleInputChange={handleInputChange}
+            userProfile={userProfile}
+            onClose={onClose}
+          />
+        );
 
       case 9:
-        // For filers: Attestation & Signatures (Step 9)
-        // For org admins: Review & Submit (Step 9)
-        if (!isOrgAdmin) {
-          return (
-            <Step8PetitionAttestation
-              formData={formData}
-              handleInputChange={handleInputChange}
-              userProfile={userProfile}
-              onClose={onClose}
-            />
-          );
-        } else {
-          return (
-            <Step9ReviewSubmit
-              formData={formData}
-              handleEditSection={handleEditSection}
-              getLoanTypes={getLoanTypes}
-              getLienPositions={getLienPositions}
-              filingEntityTypes={filingEntityTypes}
-              getAssigneeTypes={getAssigneeTypes}
-              getAssigneeRoles={getAssigneeRoles}
-              userProfile={userProfile}
-              selectedOrganization={null}
-              isOrgAdmin={true}
-            />
-          );
-        }
-
-      case 10:
-        // For filers only: Review & Submit (Step 10)
-        if (!isOrgAdmin) {
-          return (
-            <Step9ReviewSubmit
-              formData={formData}
-              handleEditSection={handleEditSection}
-              getLoanTypes={getLoanTypes}
-              getLienPositions={getLienPositions}
-              filingEntityTypes={filingEntityTypes}
-              getAssigneeTypes={getAssigneeTypes}
-              getAssigneeRoles={getAssigneeRoles}
-              userProfile={userProfile}
-              selectedOrganization={selectedPetitionOrganization}
-              isOrgAdmin={false}
-            />
-          );
-        }
-        return null;
+        return (
+          <Step9ReviewSubmit
+            formData={formData}
+            handleEditSection={handleEditSection}
+            getLoanTypes={getLoanTypes}
+            getLienPositions={getLienPositions}
+            filingEntityTypes={filingEntityTypes}
+            getAssigneeTypes={getAssigneeTypes}
+            getAssigneeRoles={getAssigneeRoles}
+            userProfile={userProfile}
+          />
+        );
 
       default:
         return null;
@@ -5662,7 +5160,7 @@ const PetitionSteps = ({
 
                   <header className="border-bottom mb-3">
                     <p className="font-base text-muted">
-                      Complete the {totalSteps} steps below to submit your foreclosure
+                      Complete the 9 steps below to submit your foreclosure
                       petition details.
                     </p>
                   </header>
@@ -5686,7 +5184,7 @@ const PetitionSteps = ({
                   <button
                     type="button"
                     className={`btn create-org-btn ${
-                      (!isOrgAdmin && currentStep === 1) ? "d-none" : ""
+                      currentStep === 1 ? "d-none" : ""
                     }`}
                     onClick={() => nextStep(-1)}
                   >
@@ -5730,16 +5228,8 @@ const PetitionSteps = ({
                     </button>
 
                     {/* Next Step, Review, or Submit Button */}
-                    {!isOrgAdmin && currentStep === 1 ? (
-                      <button
-                        type="button"
-                        className="dashboard-btn-create"
-                        onClick={() => nextStep(1)}
-                        disabled={!selectedPetitionOrganization}
-                      >
-                        Next Step
-                      </button>
-                    ) : (isOrgAdmin ? currentStep < 9 : currentStep < 10) ? (
+
+                    {currentStep < 8 ? (
                       <button
                         type="button"
                         className="dashboard-btn-create"
@@ -5747,7 +5237,7 @@ const PetitionSteps = ({
                       >
                         Next Step
                       </button>
-                    ) : (isOrgAdmin ? currentStep === 9 : currentStep === 10) ? (
+                    ) : currentStep === 8 ? (
                       <button
                         type="button"
                         className="dashboard-btn-create"

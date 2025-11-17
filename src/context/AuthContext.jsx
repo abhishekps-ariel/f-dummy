@@ -23,8 +23,6 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [organization, setOrganization] = useState(null);
-  const [hasOrganizationAccess, setHasOrganizationAccess] = useState(false);
-  const [organizationCheckComplete, setOrganizationCheckComplete] = useState(false);
   const [organizations, setOrganizations] = useState([]);
   const [activeOrganizationId, setActiveOrganizationIdState] = useState(null);
 
@@ -238,59 +236,6 @@ export const AuthProvider = ({ children }) => {
     return false;
   };
 
-  // Check organization access based on organizationId in user object
-  const checkOrganizationAccess = async (userDataOverride = null) => {
-    const userToCheck = userDataOverride || user;
-
-    if (!userToCheck) {
-      console.log('[AuthContext] No user data available for organization access check');
-      setHasOrganizationAccess(false);
-      setOrganizationCheckComplete(true);
-      return;
-    }
-
-    if (!userDataOverride && !isAuthenticated) {
-      console.log('[AuthContext] User not authenticated during access check');
-      setHasOrganizationAccess(false);
-      setOrganizationCheckComplete(true);
-      return;
-    }
-
-    try {
-      const isOrgAdmin = isOrgAdminUser(userToCheck);
-      const { organizationList, resolvedActiveId } = initializeOrganizationsState(userToCheck, {
-        preferStoredSelection: true,
-      });
-      const hasOrganizations = organizationList.length > 0 && Boolean(resolvedActiveId);
-
-      console.log('[AuthContext] access check summary', {
-        isOrgAdmin,
-        hasOrganizations,
-        resolvedActiveId,
-        organizationList,
-      });
-
-      if (hasOrganizations) {
-        setHasOrganizationAccess(true);
-        setOrganizationCheckComplete(true);
-        return;
-      }
-
-      const fallbackApplied = await applyJoinRequestFallback(userToCheck);
-      if (!fallbackApplied) {
-        setHasOrganizationAccess(false);
-        setOrganization(null);
-        persistActiveOrganizationSelection(null);
-      }
-    } catch (error) {
-      console.error('[AuthContext] Error during organization access check', error);
-      setHasOrganizationAccess(false);
-      setOrganization(null);
-      persistActiveOrganizationSelection(null);
-    } finally {
-      setOrganizationCheckComplete(true);
-    }
-  };
 
   useEffect(() => {
     const checkAuthStatus = async () => {
@@ -308,16 +253,12 @@ export const AuthProvider = ({ children }) => {
           if (storedActiveOrgId) {
             persistActiveOrganizationSelection(storedActiveOrgId);
           }
-
-          await checkOrganizationAccess(userData);
         } else {
           setIsAuthenticated(false);
           setUser(null);
           setOrganization(null);
           setOrganizations([]);
           setActiveOrganizationIdState(null);
-          setHasOrganizationAccess(false);
-          setOrganizationCheckComplete(false);
         }
       } catch (error) {
         console.error('[AuthContext] Error during auth status check', error);
@@ -326,8 +267,6 @@ export const AuthProvider = ({ children }) => {
         setOrganization(null);
         setOrganizations([]);
         setActiveOrganizationIdState(null);
-        setHasOrganizationAccess(false);
-        setOrganizationCheckComplete(false);
       } finally {
         setIsLoading(false);
       }
@@ -358,8 +297,6 @@ export const AuthProvider = ({ children }) => {
     setUser(userData);
     initializeOrganizationsState(userData, { preferStoredSelection: false });
     updateStoredUser(userData);
-
-    await checkOrganizationAccess(userData);
   };
 
   const logout = () => {
@@ -368,8 +305,6 @@ export const AuthProvider = ({ children }) => {
     setOrganization(null);
     setOrganizations([]);
     setActiveOrganizationIdState(null);
-    setHasOrganizationAccess(false);
-    setOrganizationCheckComplete(false);
 
     // Clear petition form data from localStorage on logout
     try {
@@ -381,7 +316,6 @@ export const AuthProvider = ({ children }) => {
 
   const updateOrganization = (orgData) => {
     setOrganization(orgData);
-    setHasOrganizationAccess(true);
     // Also update user data to include organization
     if (user) {
       const updatedUser = { ...user, organization: orgData };
@@ -395,7 +329,6 @@ export const AuthProvider = ({ children }) => {
     const isChangingOrganization = normalizedId !== activeOrganizationId;
 
     persistActiveOrganizationSelection(normalizedId);
-    setHasOrganizationAccess(Boolean(normalizedId));
 
     if (normalizedId) {
       const match = organizations.find((org) => org.organizationId === normalizedId);
@@ -446,8 +379,6 @@ export const AuthProvider = ({ children }) => {
     user,
     isLoading,
     organization,
-    hasOrganizationAccess,
-    organizationCheckComplete,
     organizations,
     activeOrganizationId,
     login,
@@ -457,10 +388,7 @@ export const AuthProvider = ({ children }) => {
     setActiveOrganization,
     syncUserData,
     isTokenExpired,
-    setHasOrganizationAccess,
-    setOrganizationCheckComplete,
     setOrganization,
-    checkOrganizationAccess, // Expose for manual re-checking
   };
 
   return (

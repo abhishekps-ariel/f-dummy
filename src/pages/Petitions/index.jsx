@@ -16,7 +16,6 @@ const Petitions = () => {
   const [activeSection, setActiveSection] = useState('petitions');
   const { petitions, loading, error, fetchPetitions, submitPetition } = usePetitions();
 
-
   const handleLogout = async () => {
     try {
       // Get refresh token from storage
@@ -43,8 +42,6 @@ const Petitions = () => {
         onSectionChange={(section) => {
           if (section === 'dashboard') {
             navigate(ROUTES.DASHBOARD);
-          } else if (section === 'organizations') {
-            navigate(ROUTES.ORGANIZATIONS);
           } else if (section === 'messages') {
             navigate(ROUTES.MESSAGES);
           } else if (section === 'faq') {

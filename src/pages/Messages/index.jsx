@@ -166,8 +166,6 @@ const Messages = () => {
         onSectionChange={(section) => {
           if (section === 'dashboard') {
             navigate(ROUTES.DASHBOARD);
-          } else if (section === 'organizations') {
-            navigate(ROUTES.ORGANIZATIONS);
           } else if (section === 'petitions') {
             navigate(ROUTES.PETITIONS);
           } else if (section === 'faq') {

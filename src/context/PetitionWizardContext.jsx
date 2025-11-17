@@ -38,8 +38,7 @@ export const PetitionWizardProvider = ({ children }) => {
   };
 
   const goToStep = (step) => {
-    // Allow steps 1-10 (for filers with organization selection) or 1-9 (for org admins)
-    if (step >= 1 && step <= 10) {
+    if (step >= 1 && step <= 9) {
       setCurrentStep(step);
     }
   };

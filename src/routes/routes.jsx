@@ -6,7 +6,6 @@ import { ROUTES } from '../constants/routerConstants';
 
 const Home = lazy(() => import('../pages/Home'));
 const Dashboard = lazy(() => import('../pages/Dashboard'));
-const Organizations = lazy(() => import('../pages/Organizations'));
 const Profile = lazy(() => import('../pages/Profile'));
 const Petitions = lazy(() => import('../pages/Petitions'));
 const Messages = lazy(() => import('../pages/Messages'));
@@ -88,14 +87,6 @@ export const router = createBrowserRouter([
     element: (
       <Layout>
         <Profile />
-      </Layout>
-    ),
-  },
-  {
-    path: ROUTES.ORGANIZATIONS,
-    element: (
-      <Layout>
-        <Organizations />
       </Layout>
     ),
   },
