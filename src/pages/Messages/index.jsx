@@ -12,13 +12,11 @@ import {
   getChatList,
   getMessages,
   sendMessage,
-  // SignalR imports commented out - disabled to prevent negotiate API call
-  // initializeSignalRConnection,
-  // startSignalRConnection,
-  // stopSignalRConnection,
-  // getSignalRConnection,
+  initializeSignalRConnection,
+  startSignalRConnection,
+  stopSignalRConnection,
+  getSignalRConnection,
 } from '../../services/chatService';
-// import * as signalR from '@microsoft/signalr';
 
 const Messages = () => {
   const { user, logout, hasOrganizationAccess, organizationCheckComplete } = useAuth();
@@ -31,8 +29,7 @@ const Messages = () => {
   const [loading, setLoading] = useState(true);
   const [sendingMessage, setSendingMessage] = useState(false);
   const [currentChatId, setCurrentChatId] = useState(null);
-  // SignalR connection ref disabled
-  // const signalRConnectionRef = useRef(null);
+  const signalRConnectionRef = useRef(null);
   const messagesMapRef = useRef({}); // Store messages by chatId
 
   // Hardcoded receiver ID for testing
@@ -68,7 +65,6 @@ const Messages = () => {
           name: chat.userName || 'Unknown User',
           lastMessage: chat.lastMessage || '',
           timestamp: formatTimestamp(chat.lastMessageTime),
-          unread: chat.unreadCount || 0,
           userId: chat.userId,
           avatar: chat.userName ? chat.userName.charAt(0).toUpperCase() : 'U',
         }));
@@ -116,111 +112,115 @@ const Messages = () => {
     }
   };
 
-  // SignalR connection disabled - removed to prevent negotiate API call
-  // Real-time messaging can be re-enabled later when SignalR is properly configured
-  // useEffect(() => {
-  //   const setupSignalR = async () => {
-  //     if (!user?.id) return;
-  //     
-  //     try {
-  //       const { token } = getAuthData();
-  //       if (!token) return;
+  // Initialize SignalR connection for real-time message listening
+  useEffect(() => {
+    const setupSignalR = async () => {
+      if (!user?.id) return;
+      
+      try {
+        const { token } = getAuthData();
+        if (!token) return;
 
-  //       const connection = initializeSignalRConnection(token);
-  //       signalRConnectionRef.current = connection;
+        // Initialize SignalR connection with token
+        const connection = initializeSignalRConnection(token);
+        signalRConnectionRef.current = connection;
 
-  //       // Set up message handler
-  //       connection.on('ReceiveMessage', (message) => {
-  //         console.log('Received message via SignalR:', message);
-  //         
-  //         // Add message to the appropriate chat
-  //         const chatId = message.chatId;
-  //         const formattedMessage = {
-  //           id: message.id,
-  //           chatId: message.chatId,
-  //           sender: message.author?.user || 'Unknown',
-  //           text: message.message || '',
-  //           timestamp: formatTimestamp(message.timeStamp),
-  //           isOwn: message.sendbyYou || false,
-  //           messageSeen: message.messageSeen || false,
-  //           status: message.status?.text || '',
-  //           author: message.author,
-  //         };
-  //         
-  //         // Initialize chat messages array if it doesn't exist
-  //         if (!messagesMapRef.current[chatId]) {
-  //           messagesMapRef.current[chatId] = [];
-  //         }
-  //         
-  //         // Check if message already exists (avoid duplicates)
-  //         const messageExists = messagesMapRef.current[chatId].some(
-  //           (msg) => msg.id === message.id
-  //         );
-  //         
-  //         if (!messageExists) {
-  //           // Append new message to the end (latest at bottom)
-  //           messagesMapRef.current[chatId] = [
-  //             ...messagesMapRef.current[chatId],
-  //             formattedMessage,
-  //           ];
-  //           
-  //           // Update current messages if this is the active chat
-  //           if (currentChatId === chatId) {
-  //             setMessages(messagesMapRef.current[chatId]);
-  //           }
-  //         }
-  //         
-  //         // Update conversation list with new last message
-  //         setConversations((prev) => {
-  //           const existingConv = prev.find((conv) => conv.chatId === chatId);
-  //           if (existingConv) {
-  //             return prev.map((conv) =>
-  //               conv.chatId === chatId
-  //                 ? {
-  //                     ...conv,
-  //                     lastMessage: message.message || '',
-  //                     timestamp: formatTimestamp(message.timeStamp),
-  //                     unread: conv.unread + (message.sendbyYou ? 0 : 1),
-  //                   }
-  //                 : conv
-  //             );
-  //           } else {
-  //             // New conversation - add it to the list
-  //             return [
-  //               {
-  //                 id: chatId,
-  //                 chatId: chatId,
-  //                 name: message.author?.user || 'Unknown User',
-  //                 lastMessage: message.message || '',
-  //                 timestamp: formatTimestamp(message.timeStamp),
-  //                 unread: message.sendbyYou ? 0 : 1,
-  //                 userId: message.sendbyYou ? message.receiverId : message.senderId,
-  //                 avatar: message.author?.user
-  //                   ? message.author.user.charAt(0).toUpperCase()
-  //                   : 'U',
-  //               },
-  //               ...prev,
-  //             ];
-  //           }
-  //         });
-  //       });
+        // Listen for 'chatmessages' event (matching backend pattern)
+        connection.on('chatmessages', (msg) => {
+          console.log('Received message via SignalR:', msg);
+          
+          // Format message to match our UI structure
+          const chatId = msg.chatId;
+          const formattedMessage = {
+            id: msg.id,
+            chatId: msg.chatId,
+            sender: msg.author?.user || 'Unknown',
+            text: msg.message || '',
+            timestamp: formatTimestamp(msg.timeStamp),
+            isOwn: msg.sendbyYou || false,
+            messageSeen: msg.messageSeen || false,
+            status: msg.status?.text || '',
+            author: msg.author,
+          };
+          
+          // Initialize chat messages array if it doesn't exist
+          if (!messagesMapRef.current[chatId]) {
+            messagesMapRef.current[chatId] = [];
+          }
+          
+          // Check if message already exists (avoid duplicates)
+          const messageExists = messagesMapRef.current[chatId].some(
+            (existingMsg) => existingMsg.id === msg.id
+          );
+          
+          if (!messageExists) {
+            // Append new message to the end (latest at bottom)
+            messagesMapRef.current[chatId] = [
+              ...messagesMapRef.current[chatId],
+              formattedMessage,
+            ];
+            
+            // Update current messages if this is the active chat
+            if (currentChatId === chatId) {
+              setMessages(messagesMapRef.current[chatId]);
+            }
+            
+            // Update conversation list with new last message
+            setConversations((prev) => {
+              const existingConv = prev.find((conv) => conv.chatId === chatId);
+              if (existingConv) {
+                return prev.map((conv) =>
+                  conv.chatId === chatId
+                    ? {
+                        ...conv,
+                        lastMessage: msg.message || '',
+                        timestamp: formatTimestamp(msg.timeStamp),
+                      }
+                    : conv
+                );
+              } else {
+                // New conversation - add it to the list
+                return [
+                  {
+                    id: chatId,
+                    chatId: chatId,
+                    name: msg.author?.user || 'Unknown User',
+                    lastMessage: msg.message || '',
+                    timestamp: formatTimestamp(msg.timeStamp),
+                    userId: msg.sendbyYou ? msg.receiverId : msg.senderId,
+                    avatar: msg.author?.user
+                      ? msg.author.user.charAt(0).toUpperCase()
+                      : 'U',
+                  },
+                  ...prev,
+                ];
+              }
+            });
+          }
+        });
 
-  //       await startSignalRConnection(connection);
-  //     } catch (error) {
-  //       console.error('Error setting up SignalR:', error);
-  //     }
-  //   };
+        // Start the SignalR connection
+        await startSignalRConnection(connection);
+        console.log('SignalR connection established for real-time messages');
+      } catch (error) {
+        console.error('Error setting up SignalR:', error);
+        console.warn('Real-time messaging unavailable. Messages can still be sent/received via REST API.');
+        console.warn('CORS Issue: Backend needs to set Access-Control-Allow-Origin to specific origin (not "*") when credentials are used.');
+        // Don't throw - allow the app to continue without SignalR
+        // Messages can still be sent/received via REST API
+      }
+    };
 
-  //   if (hasOrganizationAccess && organizationCheckComplete) {
-  //     setupSignalR();
-  //   }
+    if (hasOrganizationAccess && organizationCheckComplete && user?.id) {
+      setupSignalR();
+    }
 
-  //   return () => {
-  //     if (signalRConnectionRef.current) {
-  //       stopSignalRConnection();
-  //     }
-  //   };
-  // }, [user?.id, hasOrganizationAccess, organizationCheckComplete, currentChatId]);
+    return () => {
+      if (signalRConnectionRef.current) {
+        stopSignalRConnection();
+      }
+    };
+  }, [user?.id, hasOrganizationAccess, organizationCheckComplete, currentChatId]);
 
   // Load chat list on mount
   useEffect(() => {
@@ -244,10 +244,10 @@ const Messages = () => {
 
   const handleLogout = async () => {
     try {
-      // SignalR cleanup disabled
-      // if (signalRConnectionRef.current) {
-      //   await stopSignalRConnection();
-      // }
+      // Clean up SignalR connection on logout
+      if (signalRConnectionRef.current) {
+        await stopSignalRConnection();
+      }
       const { refreshToken } = getAuthData();
       if (refreshToken) {
         await logoutApi(refreshToken);

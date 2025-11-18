@@ -49,9 +49,6 @@ const ConversationsSidebar = ({ conversations, selectedConversation, onConversat
                 </div>
                 <div className="conversation-preview-row">
                   <span className="conversation-preview">{conversation.lastMessage}</span>
-                  {conversation.unread > 0 && (
-                    <span className="conversation-unread">{conversation.unread}</span>
-                  )}
                 </div>
               </div>
             </div>
