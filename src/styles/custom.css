@@ -3201,3 +3201,28 @@ body.high-contrast .text-size-dropdown-item.selected {
     border-color: var(--theme-color);
     background: rgba(2, 101, 163, 0.12);
 }
+
+/* Custom scrollbar for notes list */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Firefox scrollbar for notes list */
+.custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #c1c1c1 #f1f1f1;
+}

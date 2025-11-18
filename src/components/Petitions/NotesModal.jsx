@@ -67,8 +67,8 @@ const NotesModal = ({ isOpen, onClose, petition, formData, setFormData, onSave }
       tabIndex="-1"
     >
       <div className="modal-dialog modal-dialog-centered modal-lg">
-        <div className="modal-content">
-          <div className="modal-header">
+        <div className="modal-content" style={{ height: "600px", display: "flex", flexDirection: "column" }}>
+          <div className="modal-header" style={{ flexShrink: 0 }}>
             <h5 className="modal-title">Notes</h5>
             <button
               type="button"
@@ -77,9 +77,9 @@ const NotesModal = ({ isOpen, onClose, petition, formData, setFormData, onSave }
               aria-label="Close"
             ></button>
           </div>
-          <div className="modal-body">
+          <div className="modal-body" style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", padding: "1rem" }}>
             {/* Add Note Form */}
-            <div className="mb-4 p-3 border rounded bg-light">
+            <div className="mb-3 p-3 border rounded bg-light" style={{ flexShrink: 0 }}>
               <div className="mb-2">
                 <label htmlFor="newNote" className="form-label fw-semibold">
                   Add New Note
@@ -121,20 +121,19 @@ const NotesModal = ({ isOpen, onClose, petition, formData, setFormData, onSave }
 
             {/* Notes List */}
             {notes.length === 0 ? (
-              <div className="text-muted text-center py-4">
-                <i className="fas fa-sticky-note me-2"></i>
-                No notes yet. Add your first note above.
+              <div className="text-muted text-center py-4" style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div>
+                  <i className="fas fa-sticky-note me-2"></i>
+                  No notes yet. Add your first note above.
+                </div>
               </div>
             ) : (
-              <div className="notes-list" style={{ maxHeight: "400px", overflowY: "auto" }}>
+              <div className="notes-list custom-scrollbar" style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
                 {notes.map((note, index) => (
                   <div key={note.id || index} className="note-item mb-3 p-3 border rounded bg-white">
                     <div>
                       <div className="d-flex align-items-center gap-2 mb-2">
-                        <i className="fas fa-user text-muted"></i>
-                        <strong className="small text-primary">
-                          {user?.fullName || user?.name || "You"}
-                        </strong>
+                        <i className="fas fa-sticky-note text-muted"></i>
                         <span className="text-muted small">
                           {formatDateTime(note.createdAt || note.createdDate)}
                         </span>
@@ -148,7 +147,7 @@ const NotesModal = ({ isOpen, onClose, petition, formData, setFormData, onSave }
               </div>
             )}
           </div>
-          <div className="modal-footer">
+          <div className="modal-footer" style={{ flexShrink: 0 }}>
             <button
               type="button"
               className="dashboard-btn-refresh"
