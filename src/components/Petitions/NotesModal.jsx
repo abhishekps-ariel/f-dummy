@@ -23,22 +23,30 @@ const NotesModal = ({ isOpen, onClose, petition, formData, setFormData, onSave }
 
     setIsSaving(true);
     try {
-      const note = {
+      // Create the new note object
+      const newNoteData = {
         id: null, // Will be set by backend
         noteText: newNote.trim(),
         petitionId: petition?.id || null,
       };
 
+      // Only send notes that don't have IDs (new notes) to avoid duplicates
+      // Filter out existing notes that already have IDs
+      const existingNotesWithIds = (formData.notes || []).filter(note => note.id);
+      const newNotesWithoutIds = (formData.notes || []).filter(note => !note.id);
+      
+      // Combine existing new notes (without IDs) with the new note we're adding
       const updatedFormData = {
         ...formData,
-        notes: [...(formData.notes || []), note],
+        notes: [...newNotesWithoutIds, newNoteData],
         // Preserve judgment if it exists
         judgment: formData.judgment || null,
       };
 
-      // Save to backend
+      // Save to backend - only new notes (without IDs) will be sent
       await onSave(updatedFormData);
 
+      // Clear the input
       setNewNote("");
       toast.success("Note added successfully.");
     } catch (error) {
@@ -49,31 +57,6 @@ const NotesModal = ({ isOpen, onClose, petition, formData, setFormData, onSave }
     }
   };
 
-  const handleDeleteNote = async (noteId) => {
-    if (!window.confirm("Are you sure you want to delete this note?")) {
-      return;
-    }
-
-    setIsSaving(true);
-    try {
-      const updatedFormData = {
-        ...formData,
-        notes: (formData.notes || []).filter((note) => note.id !== noteId),
-        // Preserve judgment if it exists
-        judgment: formData.judgment || null,
-      };
-
-      // Save to backend
-      await onSave(updatedFormData);
-
-      toast.success("Note deleted successfully.");
-    } catch (error) {
-      console.error("Error deleting note:", error);
-      toast.error("Failed to delete note. Please try again.");
-    } finally {
-      setIsSaving(false);
-    }
-  };
 
   if (!isOpen) return null;
 
@@ -146,30 +129,19 @@ const NotesModal = ({ isOpen, onClose, petition, formData, setFormData, onSave }
               <div className="notes-list" style={{ maxHeight: "400px", overflowY: "auto" }}>
                 {notes.map((note, index) => (
                   <div key={note.id || index} className="note-item mb-3 p-3 border rounded bg-white">
-                    <div className="d-flex justify-content-between align-items-start">
-                      <div className="flex-grow-1">
-                        <div className="d-flex align-items-center gap-2 mb-2">
-                          <i className="fas fa-user text-muted"></i>
-                          <strong className="small text-primary">
-                            {user?.fullName || user?.name || "You"}
-                          </strong>
-                          <span className="text-muted small">
-                            {formatDateTime(note.createdAt || note.createdDate)}
-                          </span>
-                        </div>
-                        <div className="note-content" style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
-                          {note.noteText || note.content}
-                        </div>
+                    <div>
+                      <div className="d-flex align-items-center gap-2 mb-2">
+                        <i className="fas fa-user text-muted"></i>
+                        <strong className="small text-primary">
+                          {user?.fullName || user?.name || "You"}
+                        </strong>
+                        <span className="text-muted small">
+                          {formatDateTime(note.createdAt || note.createdDate)}
+                        </span>
                       </div>
-                      <button
-                        type="button"
-                        className="btn btn-sm btn-link text-danger p-0 ms-2"
-                        onClick={() => handleDeleteNote(note.id)}
-                        title="Delete note"
-                        disabled={isSaving}
-                      >
-                        <i className="fas fa-trash"></i>
-                      </button>
+                      <div className="note-content" style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+                        {note.noteText || note.content}
+                      </div>
                     </div>
                   </div>
                 ))}
