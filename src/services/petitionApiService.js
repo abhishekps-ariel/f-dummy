@@ -1,5 +1,7 @@
 import axiosInstance from '../api/axiosInstance';
 import { PETITION_ENDPOINTS } from '../constants/apiEndpoints';
+import axios from 'axios';
+import Config from '../config/index';
 
 class PetitionApiService {
   // Submit a new petition
@@ -475,6 +477,34 @@ class PetitionApiService {
     });
     
     return transformedPetitions;
+  }
+
+  // Get public petitions (no authentication required)
+  async getPublicPetitionsPaged(params) {
+    const { city, zipCode, pageNumber = 1, pageSize = 10, sortColumn, sortDirection } = params;
+    
+    const requestBody = {
+      city: city || "",
+      zipCode: zipCode || "",
+      pageNumber,
+      pageSize,
+      sortColumn: sortColumn || "",
+      sortDirection: sortDirection || "",
+    };
+
+    // Use plain axios for public endpoint (no auth required)
+    const response = await axios.post(
+      `${Config.API_URL}${PETITION_ENDPOINTS.GET_PUBLIC_PETITIONS_PAGED}`,
+      requestBody,
+      {
+        headers: {
+          'Accept': 'text/plain',
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    
+    return response.data;
   }
 }
 

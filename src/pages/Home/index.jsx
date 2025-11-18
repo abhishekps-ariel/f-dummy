@@ -1,12 +1,15 @@
 import { useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import img1 from "../../assets/loan.jpg";
 import img2 from "../../assets/moneytab.jpg";
 import img3 from "../../assets/flag.jpg";
 import coinsImg from "../../assets/coins.png";
 import HomeHeader from "../../components/Home/HomeHeader";
 import HomeFooter from "../../components/Home/HomeFooter";
+import { ROUTES } from "../../constants/routerConstants";
 
 function Home() {
+  const navigate = useNavigate();
   // Create refs for each section
   const featureRef = useRef(null);
   const contactRef = useRef(null);
@@ -249,6 +252,20 @@ function Home() {
               <div className="link-box-theme">
                 <a href="#" className="text-decoration-hover">
                   Public Records Request &rarr;
+                </a>
+              </div>
+            </div>
+            <div className="col-md-6 col-lg-4">
+              <div className="link-box-theme">
+                <a 
+                  href="#" 
+                  className="text-decoration-hover"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate(ROUTES.PUBLIC_PETITIONS);
+                  }}
+                >
+                  View Filed Petitions &rarr;
                 </a>
               </div>
             </div>

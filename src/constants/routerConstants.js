@@ -4,6 +4,7 @@ export const ROUTES = {
   ORGANIZATIONS: '/organizations',
   PROFILE: '/profile',
   PETITIONS: '/petitions',
+  PUBLIC_PETITIONS: '/public-petitions',
   MESSAGES: '/messages',
   FAQ: '/faq',
   TRAINING: '/training',
