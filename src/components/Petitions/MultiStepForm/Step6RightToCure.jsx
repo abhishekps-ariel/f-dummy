@@ -12,7 +12,7 @@ const formatCurrencyDisplay = (value) => {
   return parts.length > 1 ? parts.join(".") : parts[0];
 };
 
-const Step5RightToCure = ({
+const Step6RightToCure = ({
   formData,
   fieldErrors,
   setFormData,
@@ -30,7 +30,7 @@ const Step5RightToCure = ({
    return (
           <div>
             <h2 className="theme-color font-med mb-1">
-              5. Right-to-Cure (§35A)
+              6. Right-to-Cure (§35A)
             </h2>
 
             <p className="text-muted small mb-3">
@@ -425,4 +425,4 @@ const Step5RightToCure = ({
         );
 };
 
-export default Step5RightToCure;
+export default Step6RightToCure;

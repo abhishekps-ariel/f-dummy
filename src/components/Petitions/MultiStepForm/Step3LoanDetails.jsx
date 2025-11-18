@@ -13,7 +13,7 @@ const formatCurrencyDisplay = (value) => {
   return parts.length > 1 ? parts.join(".") : parts[0];
 }; 
 
-const Step2LoanDetails = ({
+const Step3LoanDetails = ({
   commonDataError,
   commonDataLoading,
   fieldErrors,
@@ -24,7 +24,7 @@ const Step2LoanDetails = ({
 }) => {
   return (
           <div>
-            <h2 className="theme-color font-med mb-1">2. Loan Details</h2>
+            <h2 className="theme-color font-med mb-1">3. Loan Details</h2>
 
             <p className="text-muted small mb-3">
               Provide the key financial information for the loan.
@@ -422,4 +422,4 @@ const Step2LoanDetails = ({
         );
 };
 
-export default Step2LoanDetails;
+export default Step3LoanDetails;

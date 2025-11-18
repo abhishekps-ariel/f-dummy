@@ -1,6 +1,6 @@
 import React from "react";
 
-const Step6Form35BCompliance = ({
+const Step7Form35BCompliance = ({
   formData,
   setFormData,
   fieldErrors,
@@ -8,7 +8,7 @@ const Step6Form35BCompliance = ({
   return (
           <div>
             <h2 className="theme-color font-med mb-1">
-              6. Form 35B Compliance
+              7. Form 35B Compliance
             </h2>
 
             <p className="text-muted small mb-3">
@@ -90,4 +90,4 @@ const Step6Form35BCompliance = ({
         );
 };
 
-export default Step6Form35BCompliance;
+export default Step7Form35BCompliance;

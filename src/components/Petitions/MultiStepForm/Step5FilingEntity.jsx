@@ -1,6 +1,6 @@
 import React from "react";
 
-const Step4FilingEntity = ({
+const Step5FilingEntity = ({
   organizationLoading,
   organizationData,
   fieldErrors,
@@ -12,7 +12,7 @@ const Step4FilingEntity = ({
 }) => {
    return (
           <div>
-            <h2 className="theme-color font-med mb-1">4. Filing Entity</h2>
+            <h2 className="theme-color font-med mb-1">5. Filing Entity</h2>
 
             <p className="text-muted small mb-3">
               Provide the organization and contact details for the party
@@ -345,4 +345,4 @@ const Step4FilingEntity = ({
         );
 };
 
-export default Step4FilingEntity;
+export default Step5FilingEntity;

@@ -1,6 +1,6 @@
 import React from "react";
 
-const Step9ReviewSubmit = ({
+const Step10ReviewSubmit = ({
   formData,
   handleEditSection,
   getLoanTypes,
@@ -13,7 +13,7 @@ const Step9ReviewSubmit = ({
     return (
           <div>
             <h2 className="theme-color font-med mb-1">
-              9. Review & Submit Petition
+              10. Review & Submit Petition
             </h2>
 
             <p className="text-muted small mb-3">
@@ -35,7 +35,7 @@ const Step9ReviewSubmit = ({
                   <button
                     type="button"
                     className="dashboard-btn-create"
-                    onClick={() => handleEditSection(1)}
+                    onClick={() => handleEditSection(9)}
                     style={{ padding: "6px 12px", fontSize: "13px" }}
                   >
                     <i className="fas fa-edit me-1"></i>Edit
@@ -87,7 +87,7 @@ const Step9ReviewSubmit = ({
                   <button
                     type="button"
                     className="dashboard-btn-create"
-                    onClick={() => handleEditSection(2)}
+                    onClick={() => handleEditSection(9)}
                     style={{ padding: "6px 12px", fontSize: "13px" }}
                   >
                     <i className="fas fa-edit me-1"></i>Edit
@@ -145,7 +145,7 @@ const Step9ReviewSubmit = ({
                   <button
                     type="button"
                     className="dashboard-btn-create"
-                    onClick={() => handleEditSection(3)}
+                    onClick={() => handleEditSection(9)}
                     style={{ padding: "6px 12px", fontSize: "13px" }}
                   >
                     <i className="fas fa-edit me-1"></i>Edit
@@ -207,7 +207,7 @@ const Step9ReviewSubmit = ({
                   <button
                     type="button"
                     className="dashboard-btn-create"
-                    onClick={() => handleEditSection(4)}
+                    onClick={() => handleEditSection(9)}
                     style={{ padding: "6px 12px", fontSize: "13px" }}
                   >
                     <i className="fas fa-edit me-1"></i>Edit
@@ -287,7 +287,7 @@ const Step9ReviewSubmit = ({
                   <button
                     type="button"
                     className="dashboard-btn-create"
-                    onClick={() => handleEditSection(5)}
+                    onClick={() => handleEditSection(9)}
                     style={{ padding: "6px 12px", fontSize: "13px" }}
                   >
                     <i className="fas fa-edit me-1"></i>Edit
@@ -346,7 +346,7 @@ const Step9ReviewSubmit = ({
                   <button
                     type="button"
                     className="dashboard-btn-create"
-                    onClick={() => handleEditSection(6)}
+                    onClick={() => handleEditSection(9)}
                     style={{ padding: "6px 12px", fontSize: "13px" }}
                   >
                     <i className="fas fa-edit me-1"></i>Edit
@@ -372,7 +372,7 @@ const Step9ReviewSubmit = ({
                   <button
                     type="button"
                     className="dashboard-btn-create"
-                    onClick={() => handleEditSection(7)}
+                    onClick={() => handleEditSection(9)}
                     style={{ padding: "6px 12px", fontSize: "13px" }}
                   >
                     <i className="fas fa-edit me-1"></i>Edit
@@ -455,7 +455,7 @@ const Step9ReviewSubmit = ({
                   <button
                     type="button"
                     className="dashboard-btn-create"
-                    onClick={() => handleEditSection(8)}
+                    onClick={() => handleEditSection(9)}
                     style={{ padding: "6px 12px", fontSize: "13px" }}
                   >
                     <i className="fas fa-edit me-1"></i>Edit
@@ -527,4 +527,4 @@ const Step9ReviewSubmit = ({
         );
 };
 
-export default Step9ReviewSubmit;
+export default Step10ReviewSubmit;

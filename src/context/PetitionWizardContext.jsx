@@ -38,7 +38,7 @@ export const PetitionWizardProvider = ({ children }) => {
   };
 
   const goToStep = (step) => {
-    if (step >= 1 && step <= 9) {
+    if (step >= 1 && step <= 10) {
       setCurrentStep(step);
     }
   };
