@@ -100,9 +100,9 @@ function PublicPetitions() {
       />
 
       {/* Page Header */}
-      <section className="py-4 py-lg-5 bg-light">
+      <section className="py-4 bg-light">
         <div className="container">
-          <div className="d-flex justify-content-between align-items-center mb-4">
+          <div className="d-flex justify-content-between align-items-center">
             <div>
               <h1 className="font-xl-med mb-2 fw-medium">Filed Petitions</h1>
               <p className="text-muted mb-0">
@@ -117,9 +117,14 @@ function PublicPetitions() {
               Back to Home
             </button>
           </div>
+        </div>
+      </section>
 
+      {/* Petitions Table */}
+      <section className="py-4 py-lg-5">
+        <div className="container">
           {/* Search Section */}
-          <div className="row g-3 mb-4">
+          <div className="row g-3 mb-3">
             <div className="col-md-6">
               <div className="input-group">
                 <span className="input-group-text">
@@ -149,25 +154,6 @@ function PublicPetitions() {
               </div>
             </div>
           </div>
-
-          {/* Results Count */}
-          <div className="mb-3">
-            <p className="text-muted mb-0">
-              {loading ? (
-                "Loading petitions..."
-              ) : (
-                <>
-                  Showing {petitions.length} of {totalRecords} petition{totalRecords !== 1 ? 's' : ''}
-                </>
-              )}
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Petitions Table */}
-      <section className="py-4 py-lg-5">
-        <div className="container">
           {loading ? (
             <div className="text-center py-5">
               <div className="spinner-border text-primary mb-3" role="status">
@@ -200,6 +186,19 @@ function PublicPetitions() {
             </div>
           ) : (
             <>
+              {/* Results Count */}
+              <div className="mb-2">
+                <p className="text-muted mb-0">
+                  {loading ? (
+                    "Loading petitions..."
+                  ) : (
+                    <>
+                      Showing {petitions.length} of {totalRecords} petition{totalRecords !== 1 ? 's' : ''}
+                    </>
+                  )}
+                </p>
+              </div>
+
               <div className="table-responsive">
                 <table className="table table-hover">
                   <thead className="table-light">
