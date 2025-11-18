@@ -19,11 +19,6 @@ import ForeclosureSaleSection from "./Sections/ForeclosureSaleSection";
 import StepForm35BCompliance from "./Sections/StepForm35BCompliance";
 import StepLoanAssignees from "./Sections/StepLoanAssignees";
 import StepSignaturesSection from "./Sections/StepSignaturesSection";
-import EditJudgementModal from "./EditJudgementModal";
-import EditForeclosureModal from "./EditForeclosureModal";
-import NotesModal from "./NotesModal";
-import { useAuth } from "../../context/AuthContext";
-import { getUserRole } from "../../utils/storage";
 
 const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
   const { loadingTabs, activeTabId, refreshTab, tabs } = useTabs();
@@ -33,26 +28,17 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
     getAssigneeRoles,
     getLienPositions,
     getBuyerTypes,
-    getJudgmentTypes,
     getOptionName,
     findOptionByValue,
     loading: commonDataLoading,
   } = usePetitionCommonData();
-  const { submitPetition, fetchPetitions } = usePetitions();
+  const { submitPetition, hasOrganizationAccess, fetchPetitions } = usePetitions();
 
   // Single edit mode state - makes all fields editable at once
   const [isEditing, setIsEditing] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
-  
-  // Modal states
-  const [showJudgementModal, setShowJudgementModal] = useState(false);
-  const [showForeclosureModal, setShowForeclosureModal] = useState(false);
-  const [showEditDropdown, setShowEditDropdown] = useState(false);
-  const [showNotesModal, setShowNotesModal] = useState(false);
-  
-  const { user } = useAuth();
 
   // Google Places/Geocoder (property address)
   const LIBRARIES = ["places"];
@@ -536,12 +522,8 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
       assessorParcelId: details.property?.assessorParcelId || "",
 
       // Loan Details
-      isMinApplicable: details.loan?.minNumber ? "yes" : "no",
       minNumber: details.loan?.minNumber || "",
       loanNumber: details.loan?.loanNumber || "",
-      
-      // Judgment
-      judgment: details.judgment || null,
       petitionLoanTypeId: details.loan?.petitionLoanTypeId || "",
       petitionLoanTypeName: details.loan?.petitionLoanTypeName || "",
       lienPosition: details.loan?.lienPosition ?? "",
@@ -653,10 +635,6 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
       // Additional
       documents: details.documents || [],
       isAllStepsCompleted: true,
-      organizationId: petition.organizationId || null,
-      
-      // Notes
-      notes: petition.notes || details.notes || [],
     };
   }, [petition]);
 
@@ -673,23 +651,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
   useEffect(() => {
     setIsEditing(false);
     setFieldErrors({});
-    setShowEditDropdown(false);
-    setShowJudgementModal(false);
-    setShowForeclosureModal(false);
   }, [petition?.id]);
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (showEditDropdown && !event.target.closest('.dropdown')) {
-        setShowEditDropdown(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showEditDropdown]);
 
   // Removed status check - now all petitions (draft and submitted) can be edited
 
@@ -790,12 +752,6 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
     if (!formData.propertyZip) errors.propertyZip = "Required";
 
     // Loan basics
-    if (!formData.isMinApplicable || (formData.isMinApplicable !== "yes" && formData.isMinApplicable !== "no")) {
-      errors.isMinApplicable = "Please select if MIN is applicable";
-    }
-    if (formData.isMinApplicable === "yes" && !formData.minNumber?.trim()) {
-      errors.minNumber = "MIN Number is required when MIN is applicable";
-    }
     if (!formData.loanNumber) errors.loanNumber = "Required";
     if (!formData.petitionLoanTypeId) errors.petitionLoanTypeId = "Required";
     // Note: lienPosition can be 0 (for "First"), so we check for null/undefined/empty string specifically
@@ -975,24 +931,6 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
   // Handle input change - similar to PetitionSteps
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-
-    // If isMinApplicable is set to "no", clear minNumber
-    if (name === "isMinApplicable" && value === "no") {
-      setFormData((prev) => ({
-        ...prev,
-        isMinApplicable: value,
-        minNumber: "",
-      }));
-      // Clear minNumber error if it exists
-      if (fieldErrors.minNumber) {
-        setFieldErrors((prev) => {
-          const newErrors = { ...prev };
-          delete newErrors.minNumber;
-          return newErrors;
-        });
-      }
-      return;
-    }
 
     // Define integer fields that should not show decimal values
     const integerFields = ["delinquencyDaysAtFiling", "daysDelinquentAtNotice"];
@@ -1244,123 +1182,20 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
       setFieldErrors({});
     }
     setIsEditing(!isEditing);
-    setShowEditDropdown(false);
-  };
-
-  // Handle edit dropdown selection
-  const handleEditOptionSelect = (option) => {
-    setShowEditDropdown(false);
-    if (option === "filing") {
-      handleEditToggle();
-    } else if (option === "judgement") {
-      setShowJudgementModal(true);
-    } else if (option === "foreclosure") {
-      setShowForeclosureModal(true);
-    }
-  };
-
-  // Handle saving judgment data
-  const handleSaveJudgment = async (updatedFormData) => {
-    try {
-      // Ensure organizationId is set from petition if not in formData
-      const dataToSave = {
-        ...updatedFormData,
-        organizationId: updatedFormData.organizationId || petition.organizationId || formData.organizationId,
-      };
-      
-      // Suppress the default toast and show custom message
-      await submitPetition(dataToSave, true, petition.id, true); // true = suppressToast, true = isDraft
-      
-      toast.success("Judgment saved successfully.");
-      
-      // Update local formData state
-      setFormData(updatedFormData);
-      
-      if (onPetitionUpdated) {
-        setTimeout(() => {
-          onPetitionUpdated();
-        }, 200);
-      }
-      if (activeTabId && refreshTab) {
-        await refreshTab(activeTabId);
-      }
-    } catch (error) {
-      console.error("Error saving judgment:", error);
-      const errorMessage = error?.response?.data?.message || error?.message || "Failed to save judgment. Please try again.";
-      toast.error(errorMessage);
-      throw error;
-    }
-  };
-
-  // Handle saving notes
-  const handleSaveNotes = async (updatedFormData) => {
-    try {
-      // Ensure organizationId is set from petition if not in formData
-      // Also ensure judgment is preserved from current formData if not in updatedFormData
-      const dataToSave = {
-        ...updatedFormData,
-        organizationId: updatedFormData.organizationId || petition.organizationId || formData.organizationId,
-        // Preserve judgment from current formData if it exists and is not in updatedFormData
-        judgment: updatedFormData.judgment !== undefined ? updatedFormData.judgment : formData.judgment,
-      };
-      // Suppress the default toast
-      await submitPetition(dataToSave, true, petition.id, true); // true = suppressToast
-      
-      // Update local formData state
-      setFormData(dataToSave);
-      
-      if (onPetitionUpdated) {
-        setTimeout(() => {
-          onPetitionUpdated();
-        }, 200);
-      }
-      if (activeTabId && refreshTab) {
-        await refreshTab(activeTabId);
-      }
-    } catch (error) {
-      console.error("Error saving notes:", error);
-      const errorMessage = error?.response?.data?.message || error?.message || "Failed to save notes. Please try again.";
-      toast.error(errorMessage);
-      throw error;
-    }
-  };
-
-  // Handle saving foreclosure data
-  const handleSaveForeclosure = async (updatedFormData) => {
-    try {
-      // Ensure organizationId is set from petition if not in formData
-      const dataToSave = {
-        ...updatedFormData,
-        organizationId: updatedFormData.organizationId || petition.organizationId || formData.organizationId,
-      };
-      // Suppress the default toast and show custom message
-      await submitPetition(dataToSave, true, petition.id, true); // true = suppressToast
-      toast.success("Foreclosure saved successfully.");
-      if (onPetitionUpdated) {
-        setTimeout(() => {
-          onPetitionUpdated();
-        }, 200);
-      }
-      if (activeTabId && refreshTab) {
-        await refreshTab(activeTabId);
-      }
-    } catch (error) {
-      console.error("Error saving foreclosure:", error);
-      throw error;
-    }
   };
 
   // Save as Draft (does not mark submitted) - no validation required for drafts
   const handleSaveDraft = async () => {
     setIsSavingDraft(true);
     try {
+      if (!hasOrganizationAccess) {
+        toast.error(
+          "You must be part of an organization to save petition drafts."
+        );
+        return;
+      }
       // No address validation required for drafts - user can save incomplete data
-      // Ensure organizationId is set from petition if not in formData
-      const petitionData = { 
-        ...formData, 
-        isAllStepsCompleted: false,
-        organizationId: formData.organizationId || petition.organizationId,
-      };
+      const petitionData = { ...formData, isAllStepsCompleted: false };
       await submitPetition(petitionData, true, petition.id);
       // Toast message is shown by submitPetition function
       setIsEditing(false);
@@ -1387,6 +1222,10 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
   const handleFinalSubmit = async () => {
     setIsSubmitting(true);
     try {
+      if (!hasOrganizationAccess) {
+        toast.error("You must be part of an organization to submit petitions.");
+        return;
+      }
       // Validate all sections
       if (!validateFormForSubmit()) {
         toast.error("Please fill all required fields.");
@@ -1397,12 +1236,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
         toast.error("Property address could not be validated.");
         return;
       }
-      // Ensure organizationId is set from petition if not in formData
-      const petitionData = { 
-        ...formData, 
-        isAllStepsCompleted: true,
-        organizationId: formData.organizationId || petition.organizationId,
-      };
+      const petitionData = { ...formData, isAllStepsCompleted: true };
       await submitPetition(petitionData, false, petition.id);
       // Toast message is shown by submitPetition function
       setIsEditing(false);
@@ -1931,53 +1765,14 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
                 <div className="d-flex align-items-center gap-2 petition-header-actions">
                   {!isEditing ? (
                     <>
-                      <div className="dropdown edit-options-dropdown" style={{ position: "relative" }}>
-                        <button
-                          type="button"
-                          className={`dashboard-btn-create ${showEditDropdown ? 'active' : ''}`}
-                          onClick={() => setShowEditDropdown(!showEditDropdown)}
-                          title="Edit options"
-                        >
-                          <i className="fas fa-edit me-1"></i>
-                          Edit
-                          <i className={`fas fa-chevron-down ms-1 transition-icon ${showEditDropdown ? 'rotate' : ''}`} style={{ fontSize: "0.7rem" }}></i>
-                        </button>
-                        {showEditDropdown && (
-                          <div className="edit-options-menu">
-                            <button
-                              className="edit-option-item"
-                              onClick={() => handleEditOptionSelect("filing")}
-                            >
-                              <i className="fas fa-edit edit-option-icon"></i>
-                              <span>Edit Filing</span>
-                            </button>
-                            <button
-                              className="edit-option-item"
-                              onClick={() => handleEditOptionSelect("judgement")}
-                            >
-                              <i className="fas fa-edit edit-option-icon"></i>
-                              <span>Edit Judgement</span>
-                            </button>
-                            <button
-                              className="edit-option-item"
-                              onClick={() => handleEditOptionSelect("foreclosure")}
-                              disabled={formData.noticeSent !== true}
-                              title={formData.noticeSent !== true ? "Right to Cure notice must be sent first" : ""}
-                            >
-                              <i className="fas fa-edit edit-option-icon"></i>
-                              <span>Edit Foreclosure</span>
-                            </button>
-                          </div>
-                        )}
-                      </div>
                       <button
                         type="button"
-                        className="dashboard-btn-refresh"
-                        onClick={() => setShowNotesModal(true)}
-                        title="View and Add Notes"
+                        className="dashboard-btn-create"
+                        onClick={handleEditToggle}
+                        title="Edit petition"
                       >
-                        <i className="fas fa-sticky-note me-1"></i>
-                        Notes
+                        <i className="fas fa-edit me-1"></i>
+                        Edit
                       </button>
                       <button
                         type="button"
@@ -2142,7 +1937,18 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
             handleNoticeAddressSelect={handleNoticeAddressSelect}
           />
 
-          {/* Foreclosure Sale Section removed - now handled in modal */}
+          {/* Foreclosure Sale Section - Only show if Right to Cure is "Yes" AND petition is not Draft */}
+          <ForeclosureSaleSection
+            SectionHeader={SectionHeader}
+            formData={formData}
+            petition={petition}
+            isEditing={isEditing}
+            fieldErrors={fieldErrors}
+            foreclosureSaleSectionRef={foreclosureSaleSectionRef}
+            getBuyerTypes={getBuyerTypes}
+            findOptionByValue={findOptionByValue}
+            updateForeclosureSale={updateForeclosureSale}
+          />
 
 
           {/* Form 35B Compliance Section */}
@@ -2187,40 +1993,6 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
           />
         </form>
       </div>
-
-      {/* Edit Judgement Modal */}
-      <EditJudgementModal
-        isOpen={showJudgementModal}
-        onClose={() => setShowJudgementModal(false)}
-        petition={petition}
-        formData={formData}
-        setFormData={setFormData}
-        getJudgmentTypes={getJudgmentTypes}
-        findOptionByValue={findOptionByValue}
-        onSave={handleSaveJudgment}
-      />
-
-      {/* Edit Foreclosure Modal */}
-      <EditForeclosureModal
-        isOpen={showForeclosureModal}
-        onClose={() => setShowForeclosureModal(false)}
-        petition={petition}
-        formData={formData}
-        setFormData={setFormData}
-        getBuyerTypes={getBuyerTypes}
-        findOptionByValue={findOptionByValue}
-        onSave={handleSaveForeclosure}
-      />
-
-      {/* Notes Modal */}
-      <NotesModal
-        isOpen={showNotesModal}
-        onClose={() => setShowNotesModal(false)}
-        petition={petition}
-        formData={formData}
-        setFormData={setFormData}
-        onSave={handleSaveNotes}
-      />
     </div>
   );
 };

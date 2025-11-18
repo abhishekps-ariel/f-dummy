@@ -13,7 +13,7 @@ const formatCurrencyDisplay = (value) => {
   return parts.length > 1 ? parts.join(".") : parts[0];
 }; 
 
-const Step3LoanDetails = ({
+const Step2LoanDetails = ({
   commonDataError,
   commonDataLoading,
   fieldErrors,
@@ -24,7 +24,7 @@ const Step3LoanDetails = ({
 }) => {
   return (
           <div>
-            <h2 className="theme-color font-med mb-1">3. Loan Details</h2>
+            <h2 className="theme-color font-med mb-1">2. Loan Details</h2>
 
             <p className="text-muted small mb-3">
               Provide the key financial information for the loan.
@@ -40,73 +40,30 @@ const Step3LoanDetails = ({
 
             <div className="row g-3">
               <div className="col-md-6">
-                <label className="form-label">
-                  Is MIN Applicable? *
+                <label htmlFor="minNumber" className="form-label">
+                  MIN Number (Optional)
                 </label>
-                <div className="d-flex gap-3">
-                  <div className="form-check">
-                    <input
-                      className="form-check-input"
-                      type="radio"
-                      name="isMinApplicable"
-                      id="isMinApplicableYes"
-                      value="yes"
-                      checked={formData.isMinApplicable === "yes"}
-                      onChange={handleInputChange}
-                    />
-                    <label className="form-check-label" htmlFor="isMinApplicableYes">
-                      Yes
-                    </label>
-                  </div>
-                  <div className="form-check">
-                    <input
-                      className="form-check-input"
-                      type="radio"
-                      name="isMinApplicable"
-                      id="isMinApplicableNo"
-                      value="no"
-                      checked={formData.isMinApplicable === "no"}
-                      onChange={handleInputChange}
-                    />
-                    <label className="form-check-label" htmlFor="isMinApplicableNo">
-                      No
-                    </label>
-                  </div>
-                </div>
-                {fieldErrors.isMinApplicable && (
+
+                <input
+                  type="text"
+                  id="minNumber"
+                  name="minNumber"
+                  className={`form-control ${
+                    fieldErrors.minNumber ? "is-invalid" : ""
+                  }`}
+                  value={formData.minNumber}
+                  onChange={handleInputChange}
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  placeholder="Enter MIN number"
+                />
+
+                {fieldErrors.minNumber && (
                   <div className="text-danger small mt-1">
-                    {fieldErrors.isMinApplicable}
+                    {fieldErrors.minNumber}
                   </div>
                 )}
               </div>
-
-              {formData.isMinApplicable === "yes" && (
-                <div className="col-md-6">
-                  <label htmlFor="minNumber" className="form-label">
-                    MIN Number *
-                  </label>
-
-                  <input
-                    type="text"
-                    id="minNumber"
-                    name="minNumber"
-                    className={`form-control ${
-                      fieldErrors.minNumber ? "is-invalid" : ""
-                    }`}
-                    value={formData.minNumber || ""}
-                    onChange={handleInputChange}
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    placeholder="Enter MIN number"
-                  />
-
-                  {fieldErrors.minNumber && (
-                    <div className="text-danger small mt-1">
-                      {fieldErrors.minNumber}
-                    </div>
-                  )}
-                </div>
-              )}
 
               <div className="col-md-6">
                 <label htmlFor="loanNumber" className="form-label">
@@ -422,4 +379,4 @@ const Step3LoanDetails = ({
         );
 };
 
-export default Step3LoanDetails;
+export default Step2LoanDetails;

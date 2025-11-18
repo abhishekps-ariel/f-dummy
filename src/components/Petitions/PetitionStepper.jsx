@@ -3,7 +3,6 @@ import { usePetitionWizard } from "../../context/PetitionWizardContext";
 import "./PetitionStepper.css";
 
 const stepLabels = [
-  "Select Organization",
   "Property Details",
   "Loan Details",
   "Borrower Details",

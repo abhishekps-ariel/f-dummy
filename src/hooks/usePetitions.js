@@ -3,33 +3,15 @@ import { useAuth } from '../context/AuthContext';
 import petitionApiService from '../services/petitionApiService';
 import { getOrganizationById } from '../services/organizationService';
 import { toast } from 'react-toastify';
-import { getActiveOrganizationId, getUserRole } from '../utils/storage';
-
-// Helper function to check if user is org admin
-const isOrgAdminUser = (userData) => {
-  if (!userData) return false;
-  if (userData.isManager === true) return true;
-  if (userData.roles && Array.isArray(userData.roles)) {
-    return userData.roles.some(
-      (role) =>
-        role === 'Organisation Admin' ||
-        role === 'Organization Admin' ||
-        role === 'orgAdmin'
-    );
-  }
-  const userRole = getUserRole(userData);
-  return (
-    userRole === 'orgAdmin' ||
-    userRole === 'Organisation Admin' ||
-    userRole === 'Organization Admin'
-  );
-};
+import { getActiveOrganizationId } from '../utils/storage';
 
 export const usePetitions = () => {
   const {
     organization,
     user,
     isAuthenticated,
+    hasOrganizationAccess,
+    organizationCheckComplete,
   } = useAuth();
   const [petitions, setPetitions] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -41,26 +23,26 @@ export const usePetitions = () => {
     totalClosedCount: 0
   });
 
-  // Determine if user is org admin or filer
-  const isOrgAdmin = isOrgAdminUser(user);
-  
-  // Get organization ID from user object or active organization context (for org admins)
+  // Get organization ID from user object or active organization context
   // Priority: activeOrganizationId > user.organizationId > organization.id
   const storedActiveOrganizationId = getActiveOrganizationId();
   const userOrganizationId =
     storedActiveOrganizationId || user?.organizationId || organization?.id || null;
-  
-  // For filers, use userId; for org admins, use organizationId
-  const userId = user?.id || null;
 
 
   // Fetch recent petitions for the user's organization (last 5 updated)
   const fetchRecentPetitions = async () => {
+    if (!hasOrganizationAccess) {
+      setError('User must be part of an organization to view petitions');
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
     try {
       const paginationParams = {
+        organizationId: userOrganizationId,
         pageNumber: 1,
         pageSize: 5, // Get only last 5 petitions
         searchText: "",
@@ -70,13 +52,6 @@ export const usePetitions = () => {
         sortColumn: "ModifiedDate", // Sort by modification date
         sortDirection: "desc" // Most recent first
       };
-
-      // For filers, send userId; for org admins, send organizationId
-      if (isOrgAdmin && userOrganizationId) {
-        paginationParams.organizationId = userOrganizationId;
-      } else if (!isOrgAdmin && userId) {
-        paginationParams.userId = userId;
-      }
 
       const response = await petitionApiService.getPetitionsPaged(paginationParams);
       
@@ -96,20 +71,15 @@ export const usePetitions = () => {
     }
   };
 
-  // Fetch petition counts for the user's organization or user
+  // Fetch petition counts for the user's organization
   const fetchPetitionCounts = async () => {
-    try {
-      const params = {};
-      // For filers, send userId; for org admins, send organizationId
-      if (isOrgAdmin && userOrganizationId) {
-        params.organizationId = userOrganizationId;
-      } else if (!isOrgAdmin && userId) {
-        params.userId = userId;
-      } else {
-        return; // No valid ID to fetch counts
-      }
+    if (!hasOrganizationAccess) {
+      return;
+    }
 
-      const response = await petitionApiService.getPetitionCount(params);
+
+    try {
+      const response = await petitionApiService.getPetitionCountByOrganization(userOrganizationId);
       
       if (response.success && response.data) {
         setPetitionCounts(response.data);
@@ -125,17 +95,21 @@ export const usePetitions = () => {
   };
 
   // Submit a new petition or update existing petition
-  const submitPetition = async (formData, isDraft = false, petitionId = null, suppressToast = false) => {
+  const submitPetition = async (formData, isDraft = false, petitionId = null) => {
+    if (!hasOrganizationAccess) {
+      throw new Error('User must be part of an organization to submit petitions');
+    }
+
     setLoading(true);
     setError(null);
     let errorAlreadyShown = false; // Track if we've already shown the error toast
 
     try {
-      // Get the organization ID - prioritize from formData (for filers who select org), then fall back to user's org
-      let organizationId = formData?.organizationId || userOrganizationId;
+      // Get the organization ID from the user's organization details
+      let organizationId = userOrganizationId;
       
       if (!organizationId) {
-        throw new Error('Organization ID not found. Please select an organization or ensure you are part of an organization.');
+        throw new Error('Organization ID not found. Please ensure you are part of an organization.');
       }
       
       const apiData = await petitionApiService.transformFormDataToApiFormat(formData, organizationId, petitionId);
@@ -143,26 +117,15 @@ export const usePetitions = () => {
       const response = await petitionApiService.submitPetition(apiData);
       
       if (response.success) {
-        if (!suppressToast) {
-          if (isDraft) {
-            toast.success('Draft saved successfully.');
-          } else {
-            toast.success('Petition submitted successfully!');
-          }
+        if (isDraft) {
+          toast.success('Draft saved successfully.');
+        } else {
+          toast.success('Petition submitted successfully!');
         }
         // Refresh the petitions list
         await fetchPetitions();
         return response.data;
       } else {
-        // Check if this is a duplicate with take-over option
-        if (response.isDuplicate && response.duplicateInfo?.canTakeOver) {
-          // Return the duplicate info so the component can show the modal
-          const duplicateError = new Error(response.message || 'A petition with the same property already exists.');
-          duplicateError.isDuplicate = true;
-          duplicateError.duplicateInfo = response.duplicateInfo;
-          throw duplicateError;
-        }
-        
         const errorMessage = response.message || 'Failed to submit petition';
         setError(errorMessage);
         toast.error(errorMessage);
@@ -170,20 +133,6 @@ export const usePetitions = () => {
         throw new Error(errorMessage);
       }
     } catch (err) {
-      // If it's a duplicate error with take-over option, re-throw it as-is
-      if (err.isDuplicate && err.duplicateInfo) {
-        throw err;
-      }
-      
-      // Check if the error response contains duplicate info
-      const responseData = err.response?.data;
-      if (responseData?.isDuplicate && responseData?.duplicateInfo?.canTakeOver) {
-        const duplicateError = new Error(responseData.message || 'A petition with the same property already exists.');
-        duplicateError.isDuplicate = true;
-        duplicateError.duplicateInfo = responseData.duplicateInfo;
-        throw duplicateError;
-      }
-      
       const errorMessage = err.response?.data?.message || err.message || 'Failed to submit petition';
       setError(errorMessage);
       
@@ -197,27 +146,36 @@ export const usePetitions = () => {
     }
   };
 
-  // Auto-fetch petitions and counts when user is authenticated
+  // Auto-fetch petitions and counts when organization access is confirmed
   useEffect(() => {
-    if (isAuthenticated) {
-      // For filers, check userId; for org admins, check organizationId
-      if ((isOrgAdmin && userOrganizationId) || (!isOrgAdmin && userId)) {
-        fetchRecentPetitions();
-        fetchPetitionCounts();
-      }
+    
+    if (organizationCheckComplete && hasOrganizationAccess && userOrganizationId) {
+      fetchRecentPetitions();
+      fetchPetitionCounts();
+    } else if (organizationCheckComplete && !hasOrganizationAccess) {
+      setPetitions([]);
+      setPetitionCounts({
+        totalRecords: 0,
+        totalSubmittedCount: 0,
+        totalDraftedCount: 0,
+        totalClosedCount: 0
+      });
+      setError(null);
     }
-  }, [isAuthenticated, isOrgAdmin, userOrganizationId, userId]);
+  }, [organizationCheckComplete, hasOrganizationAccess, userOrganizationId]);
 
   return {
     petitions,
     loading,
     error,
     petitionCounts,
+    hasOrganizationAccess,
     fetchPetitions,
     fetchRecentPetitions,
     fetchPetitionCounts,
     submitPetition,
     organization: organization,
     userOrganizationId,
+    organizationCheckComplete
   };
 };

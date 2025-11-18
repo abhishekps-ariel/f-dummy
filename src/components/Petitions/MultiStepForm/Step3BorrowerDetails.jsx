@@ -1,6 +1,6 @@
 import React from "react";
 
-const Step4BorrowerDetails = ({
+const Step3BorrowerDetails = ({
   formData,
   fieldErrors,
   setFieldErrors,
@@ -20,7 +20,7 @@ const Step4BorrowerDetails = ({
 }) => {
           return (
           <div>
-            <h2 className="theme-color font-med mb-1">4. Borrower Details</h2>
+            <h2 className="theme-color font-med mb-1">3. Borrower Details</h2>
 
             <p className="text-muted small mb-3">
               Enter the full name for each borrower on the loan. At least one
@@ -511,4 +511,4 @@ const Step4BorrowerDetails = ({
         );
 };
 
-export default Step4BorrowerDetails;
+export default Step3BorrowerDetails;

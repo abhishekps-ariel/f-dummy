@@ -1,7 +1,7 @@
 import React from "react";
 import CustomDropdown from "../../shared/CustomDropdown"; 
 
-const Step8LoanAssignees = ({
+const Step7LoanAssignees = ({
   commonDataError,
   commonDataLoading,
   formData,
@@ -23,7 +23,7 @@ const Step8LoanAssignees = ({
 }) => {
    return (
           <div>
-            <h2 className="theme-color font-med mb-1">8. Loan Assignees</h2>
+            <h2 className="theme-color font-med mb-1">7. Loan Assignees</h2>
 
             <p className="text-muted small mb-3">
               List any prior holders or assignees of the loan.
@@ -460,4 +460,4 @@ const Step8LoanAssignees = ({
         );
 };
 
-export default Step8LoanAssignees;
+export default Step7LoanAssignees;

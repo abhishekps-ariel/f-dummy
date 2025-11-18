@@ -10,6 +10,7 @@ import { getFilingEntityTypes } from "../../services/commonService";
 import Sidebar from "../../components/shared/Sidebar";
 import Header from "../../components/shared/Header";
 import { usePetitions } from "../../hooks/usePetitions";
+import NoOrganizationAccess from "../../components/Petitions/NoOrganizationAccess";
 import "../../styles/custom.css";
 
 
@@ -22,7 +23,9 @@ function Dashboard() {
     petitions, 
     loading: petitionsLoading, 
     petitionCounts,
+    hasOrganizationAccess,
     organization,
+    organizationCheckComplete,
     fetchPetitions,
     fetchPetitionCounts
   } = usePetitions();
@@ -50,6 +53,7 @@ function Dashboard() {
   const {
     logout: authLogout,
     organization: organizationFromContext,
+    checkOrganizationAccess,
   } = useAuth();
 
   // Use organization from context (for org admins) or from join requests (for regular users)
@@ -82,6 +86,15 @@ function Dashboard() {
     }
   }, [navigate]);
 
+  // Re-check organization access when Dashboard mounts or user changes
+  // This ensures access is always validated when navigating to Dashboard
+  useEffect(() => {
+    if (user) {
+      // Re-check organization access to ensure it's current
+      checkOrganizationAccess();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]); // Only depend on user, not checkOrganizationAccess function reference
 
   // Load organization data when user is available
   useEffect(() => {
@@ -236,16 +249,16 @@ function Dashboard() {
         <div className="dashboard-content-section">
           {/* Petition Dashboard Section */}
           {activeSection === "dashboard" && (
-            petitionsLoading ? (
+            (petitionsLoading || !organizationCheckComplete) ? (
               <div className="shadow-custom bg-white org-search-box">
                 <div className="text-center py-5">
                   <div className="spinner-border text-primary" role="status">
                     <span className="visually-hidden">Loading...</span>
                   </div>
-                  <p className="mt-3 text-muted">Loading...</p>
+                  <p className="mt-3 text-muted">Checking organization access...</p>
                 </div>
               </div>
-            ) : (
+            ) : hasOrganizationAccess ? (
             <div className="shadow-custom bg-white org-search-box">
               <h2 className="font-med mb-4">Dashboard</h2>
               <div className="row mb-5">
@@ -447,6 +460,8 @@ function Dashboard() {
                 )}
               </div>
             </div>
+            ) : (
+              <NoOrganizationAccess />
             )
           )}
 

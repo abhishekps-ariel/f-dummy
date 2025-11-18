@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../../../constants/routerConstants";
 
-const Step9PetitionAttestation = ({
+const Step8PetitionAttestation = ({
   formData,
   handleInputChange,
   userProfile,
@@ -12,7 +12,7 @@ const Step9PetitionAttestation = ({
    return (
           <div>
             <h2 className="theme-color font-med mb-1">
-              9. Petition Attestation & Certification
+              8. Petition Attestation & Certification
             </h2>
 
             <p className="text-muted small mb-3">
@@ -273,4 +273,4 @@ const Step9PetitionAttestation = ({
         );
 };
 
-export default Step9PetitionAttestation;
+export default Step8PetitionAttestation;

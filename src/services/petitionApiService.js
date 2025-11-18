@@ -1,7 +1,5 @@
 import axiosInstance from '../api/axiosInstance';
 import { PETITION_ENDPOINTS } from '../constants/apiEndpoints';
-import axios from 'axios';
-import Config from '../config/index';
 
 class PetitionApiService {
   // Submit a new petition
@@ -11,19 +9,11 @@ class PetitionApiService {
   }
 
 
-  // Get petition count by organization ID or user ID
-  async getPetitionCount(params) {
-    const { organizationId, userId } = params;
+  // Get petition count by organization ID
+  async getPetitionCountByOrganization(organizationId) {
+    const url = `/api/Petition/get-petition-count-by-organisationId/${organizationId}`;
     
-    const requestBody = {};
-    if (organizationId) {
-      requestBody.organizationId = organizationId;
-    }
-    if (userId) {
-      requestBody.userId = userId;
-    }
-    
-    const response = await axiosInstance.post(PETITION_ENDPOINTS.GET_PETITION_COUNT, requestBody, {
+    const response = await axiosInstance.post(url, {}, {
       headers: {
         'Accept': 'text/plain',
         'Content-Type': 'application/json'
@@ -59,10 +49,9 @@ class PetitionApiService {
   }
 
   /**
-   * Get paginated petitions by organization ID or user ID with filters, search, and sorting
+   * Get paginated petitions by organization ID with filters, search, and sorting
    * @param {Object} paginationParams - The pagination and filter parameters
-   * @param {string} [paginationParams.organizationId] - Organization ID (for org admins)
-   * @param {string} [paginationParams.userId] - User ID (for filers)
+   * @param {string} paginationParams.organizationId - Required organization ID
    * @param {number} [paginationParams.pageNumber=1] - Page number (1-based)
    * @param {number} [paginationParams.pageSize=10] - Number of items per page
    * @param {string} [paginationParams.searchText=""] - Search text for filtering
@@ -89,7 +78,6 @@ class PetitionApiService {
   createPaginationParams(options = {}) {
     const {
       organizationId,
-      userId,
       pageNumber = 1,
       pageSize = 10,
       searchText = "",
@@ -100,9 +88,9 @@ class PetitionApiService {
       sortDirection = "desc"
     } = options;
 
-    // Validate that at least one of organizationId or userId is provided
-    if (!organizationId && !userId) {
-      throw new Error('Either organizationId or userId is required');
+    // Validate required parameters
+    if (!organizationId) {
+      throw new Error('organizationId is required');
     }
 
     // Validate sort column
@@ -115,20 +103,13 @@ class PetitionApiService {
 
     // Build parameters object
     const params = {
+      organizationId,
       pageNumber: Math.max(1, parseInt(pageNumber) || 1), // Ensure minimum page 1
       pageSize: Math.max(1, parseInt(pageSize) || 10),
       status: status !== null ? parseInt(status) : null,
       sortColumn: validSortColumn,
       sortDirection: validSortDirection
     };
-
-    // Add organizationId or userId (only one should be sent)
-    if (organizationId) {
-      params.organizationId = organizationId;
-    }
-    if (userId) {
-      params.userId = userId;
-    }
 
     // Add optional parameters only if they have values
     if (searchText && searchText.trim()) {
@@ -184,8 +165,7 @@ class PetitionApiService {
       id: petitionId, 
       isAllStepsCompleted: formData.isAllStepsCompleted || false,
       organizationId: organizationId,
-      duplicateHash: "",
-      takeOverToUserId: formData.takeOverToUserId || null, 
+      duplicateHash: "", 
       property: {
         propertyStreet1: formData.propertyStreet1 || "",
         propertyStreet2: formData.propertyStreet2 || "",
@@ -196,7 +176,7 @@ class PetitionApiService {
         assessorParcelId: formData.assessorParcelId || ""
       },
       loan: {
-        minNumber: formData.isMinApplicable === "yes" ? (formData.minNumber || "") : "",
+        minNumber: formData.minNumber || "",
         loanNumber: formData.loanNumber || "",
         petitionLoanTypeId: formData.petitionLoanTypeId && formData.petitionLoanTypeId.trim() !== '' ? formData.petitionLoanTypeId : null,
         petitionLoanTypeName: formData.petitionLoanTypeName || "",
@@ -236,30 +216,6 @@ class PetitionApiService {
         reoBusinessPhone: formData.foreclosureSale.reoBusinessPhone || null,
         reoEmergencyPhone: formData.foreclosureSale.reoEmergencyPhone || null
       } : null,
-      // Include judgment object - send empty object if no data, or full object if data exists
-      judgment: formData.judgment ? {
-        id: formData.judgment.id || null,
-        petitionId: petitionId || null,
-        judgmentDate: safeDateConversion(formData.judgment.judgmentDate),
-        judgmentAmount: typeof formData.judgment.judgmentAmount === 'number' 
-          ? formData.judgment.judgmentAmount 
-          : (formData.judgment.judgmentAmount ? parseFloat(formData.judgment.judgmentAmount) : 0),
-        judgmentType: typeof formData.judgment.judgmentType === 'number' 
-          ? formData.judgment.judgmentType 
-          : (formData.judgment.judgmentType !== null && formData.judgment.judgmentType !== undefined && formData.judgment.judgmentType !== ""
-              ? parseInt(formData.judgment.judgmentType, 10) 
-              : 0),
-        courtInformation: formData.judgment.courtInformation || "",
-        docketNumbers: formData.judgment.docketNumbers || ""
-      } : {
-        id: null,
-        petitionId: petitionId || null,
-        judgmentDate: null,
-        judgmentAmount: 0,
-        judgmentType: 0,
-        courtInformation: "",
-        docketNumbers: ""
-      },
       affidavit: {
         certainMortgageLoan: formData.certainMortgageLoan || false,
         form35bComplianceAffidavitPdf: await fileToBase64(formData.form35bComplianceAffidavitPdf),
@@ -322,10 +278,6 @@ class PetitionApiService {
       documents: (formData.documents || []).map(document => ({
         ...document,
         uploadedOn: safeDateConversion(document.uploadedOn)
-      })),
-      notes: (formData.notes || []).map(note => ({
-        id: note.id || null,
-        noteText: note.noteText || note.content || ""
       }))
     };
 
@@ -378,9 +330,7 @@ class PetitionApiService {
         signatures: petition.signatures,
         borrowers: petition.borrowers,
         loanAssignees: petition.loanAssignees,
-        documents: petition.documents,
-        judgment: petition.judgment || null,
-        notes: petition.notes || []
+        documents: petition.documents
       }
     };
   }
@@ -477,34 +427,6 @@ class PetitionApiService {
     });
     
     return transformedPetitions;
-  }
-
-  // Get public petitions (no authentication required)
-  async getPublicPetitionsPaged(params) {
-    const { city, zipCode, pageNumber = 1, pageSize = 10, sortColumn, sortDirection } = params;
-    
-    const requestBody = {
-      city: city || "",
-      zipCode: zipCode || "",
-      pageNumber,
-      pageSize,
-      sortColumn: sortColumn || "",
-      sortDirection: sortDirection || "",
-    };
-
-    // Use plain axios for public endpoint (no auth required)
-    const response = await axios.post(
-      `${Config.API_URL}${PETITION_ENDPOINTS.GET_PUBLIC_PETITIONS_PAGED}`,
-      requestBody,
-      {
-        headers: {
-          'Accept': 'text/plain',
-          'Content-Type': 'application/json'
-        }
-      }
-    );
-    
-    return response.data;
   }
 }
 

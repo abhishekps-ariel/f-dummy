@@ -28,17 +28,15 @@ import PetitionStepper from "./PetitionStepper";
 import CustomDropdown from "../shared/CustomDropdown";
 
 import "../shared/CustomDropdown.css";
-import Step1OrganizationSelection from "./MultiStepForm/Step1OrganizationSelection";
-import Step2PropertyDetails from "./MultiStepForm/Step2PropertyDetails";
-import Step3LoanDetails from "./MultiStepForm/Step3LoanDetails";
-import Step4BorrowerDetails from "./MultiStepForm/Step4BorrowerDetails";
-import Step5FilingEntity from "./MultiStepForm/Step5FilingEntity";
-import Step6RightToCure from "./MultiStepForm/Step6RightToCure";
-import Step7Form35BCompliance from "./MultiStepForm/Step7Form35BCompliance";
-import Step8LoanAssignees from "./MultiStepForm/Step8LoanAssignees";
-import Step9PetitionAttestation from "./MultiStepForm/Step9PetitionAttestation";
-import Step10ReviewSubmit from "./MultiStepForm/Step10ReviewSubmit";
-import TakeOverPetitionModal from "./TakeOverPetitionModal";
+import Step1PropertyDetails from "./MultiStepForm/Step1PropertyDetails";
+import Step2LoanDetails from "./MultiStepForm/Step2LoanDetails";
+import Step3BorrowerDetails from "./MultiStepForm/Step3BorrowerDetails";
+import Step4FilingEntity from "./MultiStepForm/Step4FilingEntity";
+import Step5RightToCure from "./MultiStepForm/Step5RightToCure";
+import Step6Form35BCompliance from "./MultiStepForm/Step6Form35BCompliance";
+import Step7LoanAssignees from "./MultiStepForm/Step7LoanAssignees";
+import Step8PetitionAttestation from "./MultiStepForm/Step8PetitionAttestation";
+import Step9ReviewSubmit from "./MultiStepForm/Step9ReviewSubmit";
 
 // Static libraries array to prevent LoadScript reload
 
@@ -89,7 +87,7 @@ const PetitionSteps = ({
   const [currentStep, setCurrentStep] = useState(1);
   const [visitedSteps, setVisitedSteps] = useState(new Set([1])); // Track visited steps, start with step 1
 
-  const totalSteps = 10;
+  const totalSteps = 9;
 
   // Address validation state (declared early to avoid initialization errors)
   const [isAddressVerified, setIsAddressVerified] = useState(false);
@@ -142,15 +140,6 @@ const PetitionSteps = ({
   const [organizationData, setOrganizationData] = useState(null);
 
   const [organizationLoading, setOrganizationLoading] = useState(false);
-  
-  // Organization selection state (for filers)
-  const [selectedOrganizationId, setSelectedOrganizationId] = useState(null);
-  
-  // Take over petition state
-  const [showTakeOverModal, setShowTakeOverModal] = useState(false);
-  const [duplicateInfo, setDuplicateInfo] = useState(null);
-  const [shouldTakeOver, setShouldTakeOver] = useState(false);
-  const [pendingAction, setPendingAction] = useState(null); // 'save' or 'submit'
 
   // Load petition common data
 
@@ -172,6 +161,7 @@ const PetitionSteps = ({
 
   const {
     submitPetition,
+    hasOrganizationAccess,
     organization: organizationFromContext,
     loading: petitionLoading,
   } = usePetitions();
@@ -183,20 +173,10 @@ const PetitionSteps = ({
     organization: organizationFromAuth,
   } = useAuth();
 
-  // Check if user is org admin (filer if not org admin)
-  const isOrgAdmin = user?.isManager === true || 
-    (user?.roles && Array.isArray(user?.roles) && user.roles.some(
-      (role) => role === 'Organisation Admin' || role === 'Organization Admin' || role === 'orgAdmin'
-    )) ||
-    getUserRole(user) === 'orgAdmin' || 
-    getUserRole(user) === 'Organisation Admin' || 
-    getUserRole(user) === 'Organization Admin';
-
   // Get organization ID from user object (stored in browser storage) or organization prop/context
-  // Priority: selectedOrganizationId (from modal) > user.organizationId > organization.id (from prop) > organizationFromContext.id
+  // Priority: user.organizationId > organization.id (from prop) > organizationFromContext.id
   const storedActiveOrganizationId = getActiveOrganizationId();
   const organizationId =
-    selectedOrganizationId ||
     storedActiveOrganizationId ||
     user?.organizationId ||
     organization?.id ||
@@ -293,137 +273,6 @@ const PetitionSteps = ({
   const autocompleteServiceRef = useRef(null);
 
   const geocoderRef = useRef(null);
-
-  // Default form data structure (defined early for use in formData initialization)
-  const defaultFormData = {
-    // Step 2: Property Details
-    propertyStreet1: "",
-    propertyStreet2: "",
-    propertyCity: "",
-    propertyState: "MA",
-    propertyZip: "",
-    propertyCounty: "",
-    assessorParcelId: "",
-    // Step 3: Loan Details
-    isMinApplicable: "",
-    minNumber: "",
-    loanNumber: "",
-    petitionLoanTypeId: "",
-    petitionLoanTypeName: "",
-    lienPosition: "",
-    originationDate: "",
-    originalPrincipalAmount: 0,
-    currentPrincipalBalance: 0,
-    interestRatePercent: null,
-    variableRate: false,
-    interestOnly: false,
-    negativeAmortization: false,
-    monthlyPaymentAmount: 0,
-    delinquencyDaysAtFiling: null,
-    // Step 4: Borrower Details
-    borrowers: [
-      {
-        id: 1,
-        firstName: "",
-        middleName: "",
-        lastName: "",
-        suffix: "",
-        borrowerIsPrimary: true,
-        mailingStreet1: "",
-        mailingCity: "",
-        mailingState: "",
-        mailingZip: "",
-        phone: "",
-        email: "",
-      },
-    ],
-    // Step 5: Filing Entity
-    filingEntityLegalName: "",
-    filingEntityRole: "",
-    filingEntityStreet1: "",
-    filingEntityStreet2: "",
-    filingEntityCity: "",
-    filingEntityState: "",
-    filingEntityZip: "",
-    filingContactName: "",
-    filingContactEmail: "",
-    filingContactPhone: "",
-    nmlsLicenseNumber: "",
-    stateLicenseNumber: "",
-    stateLicenseState: "",
-    // Step 6: Right-to-Cure
-    noticeSent: false,
-    noticeDate: "",
-    amountInDefault: 0,
-    daysDelinquentAtNotice: 0,
-    cureExpirationDate: "",
-    noticeAddressStreet1: "",
-    noticeAddressCity: "",
-    noticeAddressState: "",
-    noticeAddressZip: "",
-    manualOverrideReason: "",
-    // Step 7: Form 35B Compliance
-    certainMortgageLoan: null,
-    form35bComplianceAffidavitPdf: "",
-    form35bNonApplicabilityAffidavitPdf: "",
-    affiantName: "",
-    affiantTitle: "",
-    affidavitExecutionDate: "",
-    // Step 8: Loan Assignees
-    loanAssignees: [
-      {
-        assigneeName: "",
-        assigneeTypeId: "",
-        assigneeRoleId: "",
-        street1: "",
-        street2: "",
-        city: "",
-        addressState: "",
-        zip: "",
-        licenseNumber: "",
-        licenseState: "",
-      },
-    ],
-    // Step 9: Petition Attestation & Signatures
-    signatures: [
-      {
-        signerFullName: "",
-        signerTitle: "",
-        signerEmail: "",
-        esignConsent: false,
-        signatureDrawnOrTyped: "",
-        signedAt: "",
-        signerIp: "",
-        otpCode: "",
-      },
-    ],
-    // Additional fields
-    documents: [],
-    certification_check: false,
-    // Signer fields (prefilled from user data)
-    signerFirstName: "",
-    signerMiddleInitial: "",
-    signerLastName: "",
-    signerEmail: "",
-    signerTitle: "",
-  };
-
-  // Load form data from localStorage on component mount
-  const loadFormDataFromStorage = () => {
-    try {
-      const savedData = localStorage.getItem("petitionFormData");
-      if (savedData) {
-        const parsedData = JSON.parse(savedData);
-        return { ...defaultFormData, ...parsedData };
-      }
-    } catch (error) {
-      console.error("Error loading form data from localStorage:", error);
-    }
-    return defaultFormData;
-  };
-
-  // Initialize formData state early so it can be used in useEffects
-  const [formData, setFormData] = useState(loadFormDataFromStorage);
 
   // Load user profile and filing entity types
 
@@ -583,137 +432,8 @@ const PetitionSteps = ({
       }
     };
 
-    // Load organization data when organizationId is available
-    // For org admins, this should load immediately when modal opens
-    if (organizationId) {
-      loadOrganizationData();
-    }
-  }, [organizationId, selectedOrganizationId]);
-
-  // Reset selected organization when opening a new petition (not when editing existing)
-  // Only reset for filers, not for org admins (they have pre-selected org)
-  useEffect(() => {
-    if (isOpen && !formData?.id && !isOrgAdmin) {
-      // Reset selected organization when opening a new petition (for filers only)
-      // Org admins keep their pre-selected organization
-      setSelectedOrganizationId(null);
-      setOrganizationData(null);
-    }
-  }, [isOpen, isOrgAdmin, formData?.id]);
-
-  // Clear organization selection when modal closes
-  useEffect(() => {
-    if (!isOpen) {
-      // Clear organization selection when modal is closed
-      setSelectedOrganizationId(null);
-      setOrganizationData(null);
-    }
-  }, [isOpen]);
-
-  // Handler for input change - handle isMinApplicable to clear minNumber when set to "no"
-  const handleInputChangeWithMinLogic = (e) => {
-    const { name, value } = e.target;
-    
-    // If isMinApplicable is set to "no", clear minNumber
-    if (name === "isMinApplicable" && value === "no") {
-      setFormData((prev) => ({
-        ...prev,
-        isMinApplicable: value,
-        minNumber: "",
-      }));
-      // Clear minNumber error if it exists
-      if (fieldErrors.minNumber) {
-        setFieldErrors((prev) => {
-          const newErrors = { ...prev };
-          delete newErrors.minNumber;
-          return newErrors;
-        });
-      }
-    } else {
-      handleInputChange(e);
-    }
-  };
-
-  // Handler for organization selection (from embedded selector or modal)
-  const handleOrganizationSelect = async (orgId, orgData) => {
-    setSelectedOrganizationId(orgId);
-    
-    // If removing selection (null), clear organization data for filers
-    if (!orgId && !isOrgAdmin) {
-      setOrganizationData(null);
-      setFormData((prev) => ({
-        ...prev,
-        organizationId: null,
-        filingEntityLegalName: "",
-        filingEntityStreet1: "",
-        filingEntityStreet2: "",
-        filingEntityCity: "",
-        filingEntityState: "",
-        filingEntityZip: "",
-        filingContactName: "",
-        filingContactEmail: "",
-        filingContactPhone: "",
-      }));
-      return;
-    }
-    
-    // Update form data with organization ID
-    setFormData((prev) => ({
-      ...prev,
-      organizationId: orgId,
-    }));
-
-    if (orgData) {
-      // Prefill filing entity fields with organization data
-      setOrganizationLoading(true);
-      try {
-        setFormData((prev) => ({
-          ...prev,
-          organizationId: orgId,
-          filingEntityLegalName: orgData.name || "",
-          filingEntityStreet1: orgData.addressStreet1 || "",
-          filingEntityStreet2: orgData.addressStreet2 || "",
-          filingEntityCity: orgData.addressCity || "",
-          filingEntityState: orgData.addressState || "",
-          filingEntityZip: orgData.addressZip || "",
-          filingContactName: orgData.primaryContactName || "",
-          filingContactEmail: orgData.primaryContactEmail || "",
-          filingContactPhone: orgData.primaryContactPhone || "",
-        }));
-        setOrganizationData(orgData);
-      } finally {
-        setOrganizationLoading(false);
-      }
-    } else if (orgId) {
-      // If only orgId is provided, fetch full organization details
-      setOrganizationLoading(true);
-      try {
-        const orgResponse = await getOrganizationById(orgId);
-        if (orgResponse.isSuccess && orgResponse.data) {
-          const org = orgResponse.data;
-          setFormData((prev) => ({
-            ...prev,
-            organizationId: orgId,
-            filingEntityLegalName: org.name || "",
-            filingEntityStreet1: org.addressStreet1 || "",
-            filingEntityStreet2: org.addressStreet2 || "",
-            filingEntityCity: org.addressCity || "",
-            filingEntityState: org.addressState || "",
-            filingEntityZip: org.addressZip || "",
-            filingContactName: org.primaryContactName || "",
-            filingContactEmail: org.primaryContactEmail || "",
-            filingContactPhone: org.primaryContactPhone || "",
-          }));
-          setOrganizationData(org);
-        }
-      } catch (error) {
-        toast.error("Failed to load organization details");
-      } finally {
-        setOrganizationLoading(false);
-      }
-    }
-  };
-
+    loadOrganizationData();
+  }, [organizationId]);
 
   // Prefill signer fields from user data
 
@@ -851,6 +571,234 @@ const PetitionSteps = ({
     }
   }, [isOpen, currentStep]);
 
+  // Default form data structure
+
+  const defaultFormData = {
+    // Step 1: Property Details
+
+    propertyStreet1: "",
+
+    propertyStreet2: "",
+
+    propertyCity: "",
+
+    propertyState: "MA",
+
+    propertyZip: "",
+
+    propertyCounty: "",
+
+    assessorParcelId: "",
+
+    // Step 2: Loan Details
+
+    minNumber: "",
+
+    loanNumber: "",
+
+    petitionLoanTypeId: "",
+
+    petitionLoanTypeName: "",
+
+    lienPosition: "",
+
+    originationDate: "",
+
+    originalPrincipalAmount: 0,
+
+    currentPrincipalBalance: 0,
+
+    interestRatePercent: null,
+
+    variableRate: false,
+
+    interestOnly: false,
+
+    negativeAmortization: false,
+
+    monthlyPaymentAmount: 0,
+
+    delinquencyDaysAtFiling: null,
+
+    // Step 3: Borrower Details
+
+    borrowers: [
+      {
+        id: 1,
+
+        firstName: "",
+
+        middleName: "",
+
+        lastName: "",
+
+        suffix: "",
+
+        borrowerIsPrimary: true,
+
+        mailingStreet1: "",
+
+        mailingCity: "",
+
+        mailingState: "",
+
+        mailingZip: "",
+
+        phone: "",
+
+        email: "",
+      },
+    ],
+
+    // Step 4: Filing Entity
+
+    filingEntityLegalName: "",
+
+    filingEntityRole: "",
+
+    filingEntityStreet1: "",
+
+    filingEntityStreet2: "",
+
+    filingEntityCity: "",
+
+    filingEntityState: "",
+
+    filingEntityZip: "",
+
+    filingContactName: "",
+
+    filingContactEmail: "",
+
+    filingContactPhone: "",
+
+    nmlsLicenseNumber: "",
+
+    stateLicenseNumber: "",
+
+    stateLicenseState: "",
+
+    // Step 5: Right-to-Cure
+
+    noticeSent: false,
+
+    noticeDate: "",
+
+    amountInDefault: 0,
+
+    daysDelinquentAtNotice: 0,
+
+    cureExpirationDate: "",
+
+    noticeAddressStreet1: "",
+
+    noticeAddressCity: "",
+
+    noticeAddressState: "",
+
+    noticeAddressZip: "",
+
+    manualOverrideReason: "",
+
+    // Step 6: Form 35B Compliance
+
+    certainMortgageLoan: null,
+
+    form35bComplianceAffidavitPdf: "",
+
+    form35bNonApplicabilityAffidavitPdf: "",
+
+    affiantName: "",
+
+    affiantTitle: "",
+
+    affidavitExecutionDate: "",
+
+    // Step 7: Loan Assignees
+
+    loanAssignees: [
+      {
+        assigneeName: "",
+
+        assigneeTypeId: "",
+
+        assigneeRoleId: "",
+
+        street1: "",
+
+        street2: "",
+
+        city: "",
+
+        addressState: "",
+
+        zip: "",
+
+        licenseNumber: "",
+
+        licenseState: "",
+      },
+    ],
+
+    // Step 8: Petition Attestation & Signatures
+
+    signatures: [
+      {
+        signerFullName: "",
+
+        signerTitle: "",
+
+        signerEmail: "",
+
+        esignConsent: false,
+
+        signatureDrawnOrTyped: "",
+
+        signedAt: "",
+
+        signerIp: "",
+
+        otpCode: "",
+      },
+    ],
+
+    // Additional fields
+
+    documents: [],
+
+    certification_check: false,
+
+    // Signer fields (prefilled from user data)
+
+    signerFirstName: "",
+
+    signerMiddleInitial: "",
+
+    signerLastName: "",
+
+    signerEmail: "",
+
+    signerTitle: "",
+  };
+
+  // Load form data from localStorage on component mount
+
+  const loadFormDataFromStorage = () => {
+    try {
+      const savedData = localStorage.getItem("petitionFormData");
+
+      if (savedData) {
+        const parsedData = JSON.parse(savedData);
+
+        return { ...defaultFormData, ...parsedData };
+      }
+    } catch (error) {
+      console.error("Error loading form data from localStorage:", error);
+    }
+
+    return defaultFormData;
+  };
+
   // Save form data to localStorage
 
   const saveFormDataToStorage = (data) => {
@@ -871,22 +819,15 @@ const PetitionSteps = ({
     }
   };
 
+  const [formData, setFormData] = useState(loadFormDataFromStorage);
+
   // Helper function to check if a step has required fields filled
   // Checks fields directly to match validation logic
   const checkStepHasRequiredFields = useCallback((stepNumber) => {
     if (!formData) return false;
     
     switch (stepNumber) {
-      case 1: // Organization Selection - check if organization is selected
-        // For org admins, organization is pre-selected, so check organizationId
-        // For filers, require explicit selection via selectedOrganizationId
-        if (isOrgAdmin) {
-          return !!(organizationId || selectedOrganizationId);
-        }
-        // For filers, only return true if they've explicitly selected an organization
-        return !!selectedOrganizationId;
-      
-      case 2: // Property Details - check if address fields are filled and validated
+      case 1: // Property Details - check if address fields are filled and validated
         return !!(formData.propertyStreet1?.trim() && 
                   formData.propertyCity?.trim() && 
                   formData.propertyState?.trim() && 
@@ -894,12 +835,8 @@ const PetitionSteps = ({
                   formData.propertyCounty?.trim() &&
                   isAddressVerified);
       
-      case 3: // Loan Details - check all required fields (matching validateLoanDetails)
-        const hasMinApplicable = formData.isMinApplicable === "yes" || formData.isMinApplicable === "no";
-        const hasMinNumberIfRequired = formData.isMinApplicable !== "yes" || (formData.isMinApplicable === "yes" && formData.minNumber?.trim());
-        return !!(hasMinApplicable &&
-                  hasMinNumberIfRequired &&
-                  formData.loanNumber?.trim() && 
+      case 2: // Loan Details - check all required fields (matching validateLoanDetails)
+        return !!(formData.loanNumber?.trim() && 
                   formData.petitionLoanTypeId && 
                   (formData.lienPosition != null && formData.lienPosition !== "") &&
                   formData.originationDate?.trim() &&
@@ -917,17 +854,17 @@ const PetitionSteps = ({
                   formData.delinquencyDaysAtFiling !== "" &&
                   formData.delinquencyDaysAtFiling >= 0);
       
-      case 4: // Borrower Details - check if at least one borrower with required fields
+      case 3: // Borrower Details - check if at least one borrower with required fields
         if (!formData.borrowers || !Array.isArray(formData.borrowers) || formData.borrowers.length === 0) {
           return false;
         }
         // Check if all borrowers have required fields (firstName and lastName)
         return formData.borrowers.every(b => b.firstName?.trim() && b.lastName?.trim());
       
-      case 5: // Filing Entity - check if filing entity type is set
+      case 4: // Filing Entity - check if filing entity type is set
         return !!userFilingEntityType;
       
-      case 6: // Right-to-Cure - check if noticeSent is set (required field)
+      case 5: // Right-to-Cure - check if noticeSent is set (required field)
         if (formData.noticeSent === null || formData.noticeSent === undefined) {
           return false;
         }
@@ -951,23 +888,23 @@ const PetitionSteps = ({
         }
         return false;
       
-      case 7: // Form 35B Compliance - check if certainMortgageLoan is selected
+      case 6: // Form 35B Compliance - check if certainMortgageLoan is selected
         return formData.certainMortgageLoan !== null && formData.certainMortgageLoan !== undefined;
       
-      case 8: // Loan Assignees - check if at least one assignee exists with required fields
+      case 7: // Loan Assignees - check if at least one assignee exists with required fields
         if (!formData.loanAssignees || !Array.isArray(formData.loanAssignees) || formData.loanAssignees.length === 0) {
           return false;
         }
         // Check if all assignees have required fields
         return formData.loanAssignees.every(a => a.assigneeName?.trim() && a.assigneeTypeId);
       
-      case 9: // Attestation & Signatures
+      case 8: // Attestation & Signatures
         return !!(userProfile?.signatureUrl && formData?.certification_check);
       
       default:
         return false;
     }
-  }, [formData, isAddressVerified, userFilingEntityType, userProfile, isOrgAdmin, organizationId, selectedOrganizationId]);
+  }, [formData, isAddressVerified, userFilingEntityType, userProfile]);
 
   // Track previous step for address validation prompt (moved here to access formData)
   useEffect(() => {
@@ -981,23 +918,14 @@ const PetitionSteps = ({
       
       switch (prev) {
         case 1:
-          // Organization Selection - for org admins, check organizationId; for filers, require explicit selection
-          if (isOrgAdmin) {
-            isStepComplete = !!(organizationId || selectedOrganizationId);
-          } else {
-            // For filers, only mark complete if they've explicitly selected an organization
-            isStepComplete = !!selectedOrganizationId;
-          }
-          break;
-        case 2:
           const addressValidation = validateAddressFields();
           isStepComplete = !addressValidation.hasErrors && isAddressVerified;
           break;
-        case 3:
+        case 2:
           const loanValidation = validateLoanDetails();
           isStepComplete = !loanValidation.hasErrors;
           break;
-        case 4:
+        case 3:
           const borrowerValidation = validateBorrowerDetails();
           if (!borrowerValidation.hasErrors) {
             const hasBorrowerAddresses = formData?.borrowers?.some(borrower => borrower.mailingStreet1?.trim());
@@ -1011,7 +939,7 @@ const PetitionSteps = ({
             }
           }
           break;
-        case 5:
+        case 4:
           if (userFilingEntityType) {
             const filingEntityValidation = validateFilingEntity();
             if (!filingEntityValidation.hasErrors) {
@@ -1023,7 +951,7 @@ const PetitionSteps = ({
             }
           }
           break;
-        case 6:
+        case 5:
           const rightToCureValidation = validateRightToCureDetails();
           if (!rightToCureValidation.hasErrors) {
             if (formData?.noticeAddressStreet1?.trim()) {
@@ -1033,11 +961,11 @@ const PetitionSteps = ({
             }
           }
           break;
-        case 7:
+        case 6:
           const form35BValidation = validateForm35BCompliance();
           isStepComplete = !form35BValidation.hasErrors;
           break;
-        case 8:
+        case 7:
           const loanAssigneesValidation = validateLoanAssignees();
           if (!loanAssigneesValidation.hasErrors) {
             const hasLoanAssigneeAddresses = formData?.loanAssignees?.some(assignee => assignee.street1?.trim());
@@ -1051,7 +979,7 @@ const PetitionSteps = ({
             }
           }
           break;
-        case 9:
+        case 8:
           isStepComplete = !!(userProfile?.signatureUrl && formData?.certification_check);
           break;
         default:
@@ -1074,43 +1002,43 @@ const PetitionSteps = ({
       }
     }
     
-    // When navigating away from Property Address step (step 2), trigger address validation
-    if (prev === 2 && next !== 2 && next > prev && formData?.propertyStreet1?.trim() && !isAddressVerified) {
+    // When navigating away from Property Address step (step 1), trigger address validation
+    if (prev === 1 && next !== 1 && next > prev && formData?.propertyStreet1?.trim() && !isAddressVerified) {
       // Store the intended step change
       setPendingStepChange(next);
-      // Revert to step 2 until validation completes
-      wizardGoToStep(2);
-      setCurrentStep(2);
-      previousStepRef.current = 2;
+      // Revert to step 1 until validation completes
+      wizardGoToStep(1);
+      setCurrentStep(1);
+      previousStepRef.current = 1;
       // Trigger validation
       setShouldValidateAddress(true);
       return;
     }
     
-    // When navigating away from Filing Entity step (step 5), trigger address validation
-    if (prev === 5 && next !== 5 && next > prev && formData?.filingEntityStreet1?.trim() && !isFilingEntityAddressVerified) {
+    // When navigating away from Filing Entity step (step 4), trigger address validation
+    if (prev === 4 && next !== 4 && next > prev && formData?.filingEntityStreet1?.trim() && !isFilingEntityAddressVerified) {
       setPendingStepChange(next);
-      wizardGoToStep(5);
-      setCurrentStep(5);
-      previousStepRef.current = 5;
+      wizardGoToStep(4);
+      setCurrentStep(4);
+      previousStepRef.current = 4;
       setShouldValidateAddress(true);
       setAddressValidationType("filingEntity");
       return;
     }
     
-    // When navigating away from Right-to-Cure step (step 6), trigger notice address validation
-    if (prev === 6 && next !== 6 && next > prev && formData?.noticeAddressStreet1?.trim() && !isNoticeAddressVerified) {
+    // When navigating away from Right-to-Cure step (step 5), trigger notice address validation
+    if (prev === 5 && next !== 5 && next > prev && formData?.noticeAddressStreet1?.trim() && !isNoticeAddressVerified) {
       setPendingStepChange(next);
-      wizardGoToStep(6);
-      setCurrentStep(6);
-      previousStepRef.current = 6;
+      wizardGoToStep(5);
+      setCurrentStep(5);
+      previousStepRef.current = 5;
       setShouldValidateAddress(true);
       setAddressValidationType("notice");
       return;
     }
     
-    // When navigating away from Borrower Details step (step 4), trigger borrower address validation
-    if (prev === 4 && next !== 4 && next > prev) {
+    // When navigating away from Borrower Details step (step 3), trigger borrower address validation
+    if (prev === 3 && next !== 3 && next > prev) {
       const hasBorrowerAddresses = formData?.borrowers?.some(borrower => borrower.mailingStreet1?.trim());
       if (hasBorrowerAddresses) {
         // Check if all borrower addresses are verified
@@ -1130,8 +1058,8 @@ const PetitionSteps = ({
       }
     }
     
-    // When navigating away from Loan Assignees step (step 8), trigger assignee address validation
-    if (prev === 8 && next !== 8 && next > prev) {
+    // When navigating away from Loan Assignees step (step 7), trigger assignee address validation
+    if (prev === 7 && next !== 7 && next > prev) {
       const hasAssigneeAddresses = formData?.loanAssignees?.some(assignee => assignee.street1?.trim());
       if (hasAssigneeAddresses) {
         // Check if all assignee addresses are verified
@@ -1154,94 +1082,33 @@ const PetitionSteps = ({
     previousStepRef.current = wizardCurrentStep;
   }, [wizardCurrentStep, isAddressVerified, isFilingEntityAddressVerified, isNoticeAddressVerified, borrowerAddressesVerified, loanAssigneeAddressesVerified, formData, completedSteps, stepsWithErrors, totalSteps, markStepCompleted, markStepIncomplete, checkStepHasRequiredFields, clearStepError, wizardGoToStep, setCurrentStep, userFilingEntityType, userProfile]);
 
-  // When organization is selected, mark step 1 as completed
-  useEffect(() => {
-    // For org admins, organization is pre-selected, so check organizationId
-    // For filers, require explicit selection via selectedOrganizationId
-    let hasOrganization = false;
-    if (isOrgAdmin) {
-      hasOrganization = !!(organizationId || selectedOrganizationId);
-    } else {
-      // For filers, only mark complete if they've explicitly selected an organization
-      hasOrganization = !!selectedOrganizationId;
-    }
-    
-    if (hasOrganization) {
-      if (!completedSteps.has(1)) {
-        markStepCompleted(1);
-      }
-      if (stepsWithErrors.has(1)) {
-        clearStepError(1);
-      }
-    } else {
-      // If organization is removed or not selected, unmark step 1
-      if (completedSteps.has(1)) {
-        markStepIncomplete(1);
-      }
-    }
-  }, [selectedOrganizationId, organizationId, isOrgAdmin, completedSteps, stepsWithErrors, markStepCompleted, markStepIncomplete, clearStepError]);
-
-  // When address is verified, mark step 2 as completed if all fields are filled
+  // When address is verified, mark step 1 as completed if all fields are filled
   useEffect(() => {
     if (isAddressVerified) {
-      clearStepError(2);
-      // Mark step 2 as completed since address is verified and all required fields are filled
+      clearStepError(1);
+      // Mark step 1 as completed since address is verified and all required fields are filled
       const hasAllAddressFields = !!(formData?.propertyStreet1?.trim() && 
                                     formData?.propertyCity?.trim() && 
                                     formData?.propertyState?.trim() && 
                                     formData?.propertyZip?.trim() && 
                                     formData?.propertyCounty?.trim());
       if (hasAllAddressFields) {
-        if (!completedSteps.has(2)) {
-          markStepCompleted(2);
+        if (!completedSteps.has(1)) {
+          markStepCompleted(1);
         }
-        if (stepsWithErrors.has(2)) {
-          clearStepError(2);
+        if (stepsWithErrors.has(1)) {
+          clearStepError(1);
         }
       }
     }
   }, [isAddressVerified, formData, stepsWithErrors, completedSteps, markStepCompleted, clearStepError]);
 
-  // When filing entity address is verified, mark step 5 as completed if all fields are filled
+  // When filing entity address is verified, mark step 4 as completed if all fields are filled
   useEffect(() => {
     if (isFilingEntityAddressVerified && formData?.filingEntityStreet1?.trim()) {
-      clearStepError(5);
+      clearStepError(4);
       const filingEntityValidation = validateFilingEntity();
       if (!filingEntityValidation.hasErrors && userFilingEntityType) {
-        if (!completedSteps.has(5)) {
-          markStepCompleted(5);
-        }
-        if (stepsWithErrors.has(5)) {
-          clearStepError(5);
-        }
-      }
-    }
-  }, [isFilingEntityAddressVerified, formData, stepsWithErrors, completedSteps, markStepCompleted, clearStepError, userFilingEntityType]);
-
-  // When all borrower addresses are verified, mark step 4 as completed if all fields are filled
-  useEffect(() => {
-    const hasBorrowerAddresses = formData?.borrowers?.some(borrower => borrower.mailingStreet1?.trim());
-    if (hasBorrowerAddresses && formData?.borrowers) {
-      const allBorrowerAddressesVerified = formData.borrowers
-        .filter(borrower => borrower.mailingStreet1?.trim())
-        .every(borrower => borrowerAddressesVerified[borrower.id] === true);
-      
-      if (allBorrowerAddressesVerified) {
-        clearStepError(4);
-        const borrowerValidation = validateBorrowerDetails();
-        if (!borrowerValidation.hasErrors) {
-          if (!completedSteps.has(4)) {
-            markStepCompleted(4);
-          }
-          if (stepsWithErrors.has(4)) {
-            clearStepError(4);
-          }
-        }
-      }
-    } else if (!hasBorrowerAddresses) {
-      // No addresses to verify, just check if validation passes
-      const borrowerValidation = validateBorrowerDetails();
-      if (!borrowerValidation.hasErrors) {
         if (!completedSteps.has(4)) {
           markStepCompleted(4);
         }
@@ -1250,9 +1117,59 @@ const PetitionSteps = ({
         }
       }
     }
+  }, [isFilingEntityAddressVerified, formData, stepsWithErrors, completedSteps, markStepCompleted, clearStepError, userFilingEntityType]);
+
+  // When notice address is verified, mark step 5 as completed if all fields are filled
+  useEffect(() => {
+    if (isNoticeAddressVerified && formData?.noticeAddressStreet1?.trim()) {
+      clearStepError(5);
+      const rightToCureValidation = validateRightToCureDetails();
+      if (!rightToCureValidation.hasErrors) {
+        if (!completedSteps.has(5)) {
+          markStepCompleted(5);
+        }
+        if (stepsWithErrors.has(5)) {
+          clearStepError(5);
+        }
+      }
+    }
+  }, [isNoticeAddressVerified, formData, stepsWithErrors, completedSteps, markStepCompleted, clearStepError]);
+
+  // When all borrower addresses are verified, mark step 3 as completed if all fields are filled
+  useEffect(() => {
+    const hasBorrowerAddresses = formData?.borrowers?.some(borrower => borrower.mailingStreet1?.trim());
+    if (hasBorrowerAddresses && formData?.borrowers) {
+      const allBorrowerAddressesVerified = formData.borrowers
+        .filter(borrower => borrower.mailingStreet1?.trim())
+        .every(borrower => borrowerAddressesVerified[borrower.id] === true);
+      
+      if (allBorrowerAddressesVerified) {
+        clearStepError(3);
+        const borrowerValidation = validateBorrowerDetails();
+        if (!borrowerValidation.hasErrors) {
+          if (!completedSteps.has(3)) {
+            markStepCompleted(3);
+          }
+          if (stepsWithErrors.has(3)) {
+            clearStepError(3);
+          }
+        }
+      }
+    } else if (!hasBorrowerAddresses) {
+      // No addresses to verify, just check if validation passes
+      const borrowerValidation = validateBorrowerDetails();
+      if (!borrowerValidation.hasErrors) {
+        if (!completedSteps.has(3)) {
+          markStepCompleted(3);
+        }
+        if (stepsWithErrors.has(3)) {
+          clearStepError(3);
+        }
+      }
+    }
   }, [borrowerAddressesVerified, formData, stepsWithErrors, completedSteps, markStepCompleted, clearStepError]);
 
-  // When all loan assignee addresses are verified, mark step 8 as completed if all fields are filled
+  // When all loan assignee addresses are verified, mark step 7 as completed if all fields are filled
   useEffect(() => {
     const hasLoanAssigneeAddresses = formData?.loanAssignees?.some(assignee => assignee.street1?.trim());
     if (hasLoanAssigneeAddresses && formData?.loanAssignees) {
@@ -1261,14 +1178,14 @@ const PetitionSteps = ({
         .every(assignee => loanAssigneeAddressesVerified[assignee.id] === true);
       
       if (allLoanAssigneeAddressesVerified) {
-        clearStepError(8);
+        clearStepError(7);
         const loanAssigneesValidation = validateLoanAssignees();
         if (!loanAssigneesValidation.hasErrors) {
-          if (!completedSteps.has(8)) {
-            markStepCompleted(8);
+          if (!completedSteps.has(7)) {
+            markStepCompleted(7);
           }
-          if (stepsWithErrors.has(8)) {
-            clearStepError(8);
+          if (stepsWithErrors.has(7)) {
+            clearStepError(7);
           }
         }
       }
@@ -1276,11 +1193,11 @@ const PetitionSteps = ({
       // No addresses to verify, just check if validation passes
       const loanAssigneesValidation = validateLoanAssignees();
       if (!loanAssigneesValidation.hasErrors) {
-        if (!completedSteps.has(8)) {
-          markStepCompleted(8);
+        if (!completedSteps.has(7)) {
+          markStepCompleted(7);
         }
-        if (stepsWithErrors.has(8)) {
-          clearStepError(8);
+        if (stepsWithErrors.has(7)) {
+          clearStepError(7);
         }
       }
     }
@@ -1288,7 +1205,7 @@ const PetitionSteps = ({
 
   // When address is verified and there's a pending step change, allow navigation
   useEffect(() => {
-    if (isAddressVerified && pendingStepChange && currentStep === 2) {
+    if (isAddressVerified && pendingStepChange && currentStep === 1) {
       const targetStep = pendingStepChange;
       setPendingStepChange(null);
       wizardGoToStep(targetStep);
@@ -1432,10 +1349,6 @@ const PetitionSteps = ({
 
       // Reset visited steps (start with step 1)
       setVisitedSteps(new Set([1]));
-
-      // Reset selected organization (for filers)
-      setSelectedOrganizationId(null);
-      setOrganizationData(null);
 
       if (typeof resetWizard === "function") {
         resetWizard();
@@ -2655,13 +2568,13 @@ const PetitionSteps = ({
   useEffect(() => {
     if (!shouldValidateAddress || !pendingStepChange) return;
 
-    // Property Details (Step 2)
-    if (currentStep === 2 && addressValidationType !== "filingEntity" && addressValidationType !== "notice" && addressValidationType !== "borrower" && addressValidationType !== "loanAssignee" && formData?.propertyStreet1?.trim() && !isAddressVerified) {
+    // Property Details (Step 1)
+    if (currentStep === 1 && addressValidationType !== "filingEntity" && addressValidationType !== "notice" && addressValidationType !== "borrower" && addressValidationType !== "loanAssignee" && formData?.propertyStreet1?.trim() && !isAddressVerified) {
       setShouldValidateAddress(false);
       validatePropertyDetailsStep().then((validation) => {
         if (validation.isValid) {
           setIsAddressVerified(true);
-          clearStepError(2);
+          clearStepError(1);
           const targetStep = pendingStepChange;
           setPendingStepChange(null);
           setAddressValidationType("");
@@ -2671,11 +2584,11 @@ const PetitionSteps = ({
                                         formData?.propertyZip?.trim() && 
                                         formData?.propertyCounty?.trim());
           if (hasAllAddressFields) {
-            if (!completedSteps.has(2)) {
-              markStepCompleted(2);
+            if (!completedSteps.has(1)) {
+              markStepCompleted(1);
             }
-            if (stepsWithErrors.has(2)) {
-              clearStepError(2);
+            if (stepsWithErrors.has(1)) {
+              clearStepError(1);
             }
           }
           wizardGoToStep(targetStep);
@@ -2693,18 +2606,18 @@ const PetitionSteps = ({
       return;
     }
 
-    // Filing Entity (Step 5)
-    if (currentStep === 5 && addressValidationType === "filingEntity" && formData?.filingEntityStreet1?.trim() && !isFilingEntityAddressVerified) {
+    // Filing Entity (Step 4)
+    if (currentStep === 4 && addressValidationType === "filingEntity" && formData?.filingEntityStreet1?.trim() && !isFilingEntityAddressVerified) {
       setShouldValidateAddress(false);
       validateFilingEntityAddressStep().then((validation) => {
         if (validation.isValid) {
           setIsFilingEntityAddressVerified(true);
-          clearStepError(5);
+          clearStepError(4);
           // Mark step as completed if all fields are valid
           const filingEntityValidation = validateFilingEntity();
           if (!filingEntityValidation.hasErrors && userFilingEntityType) {
-            if (!completedSteps.has(5)) {
-              markStepCompleted(5);
+            if (!completedSteps.has(4)) {
+              markStepCompleted(4);
             }
           }
           const targetStep = pendingStepChange;
@@ -2724,18 +2637,18 @@ const PetitionSteps = ({
       return;
     }
 
-    // Notice Address (Step 6)
-    if (currentStep === 6 && addressValidationType === "notice" && formData?.noticeAddressStreet1?.trim() && !isNoticeAddressVerified) {
+    // Notice Address (Step 5)
+    if (currentStep === 5 && addressValidationType === "notice" && formData?.noticeAddressStreet1?.trim() && !isNoticeAddressVerified) {
       setShouldValidateAddress(false);
       validateNoticeAddressStep().then((validation) => {
         if (validation.isValid) {
           setIsNoticeAddressVerified(true);
-          clearStepError(6);
+          clearStepError(5);
           // Mark step as completed if all fields are valid
           const rightToCureValidation = validateRightToCureDetails();
           if (!rightToCureValidation.hasErrors) {
-            if (!completedSteps.has(6)) {
-              markStepCompleted(6);
+            if (!completedSteps.has(5)) {
+              markStepCompleted(5);
             }
           }
           const targetStep = pendingStepChange;
@@ -2755,8 +2668,8 @@ const PetitionSteps = ({
       return;
     }
 
-    // Borrower Addresses (Step 4)
-    if (currentStep === 4 && addressValidationType === "borrower") {
+    // Borrower Addresses (Step 3)
+    if (currentStep === 3 && addressValidationType === "borrower") {
       setShouldValidateAddress(false);
       validateBorrowerAddressesStep().then((validation) => {
         if (validation.isValid) {
@@ -2767,12 +2680,12 @@ const PetitionSteps = ({
               verified[borrower.id] = true;
             });
           setBorrowerAddressesVerified(prev => ({ ...prev, ...verified }));
-          clearStepError(4);
+          clearStepError(3);
           // Mark step as completed if all fields are valid
           const borrowerValidation = validateBorrowerDetails();
           if (!borrowerValidation.hasErrors) {
-            if (!completedSteps.has(4)) {
-              markStepCompleted(4);
+            if (!completedSteps.has(3)) {
+              markStepCompleted(3);
             }
           }
           const targetStep = pendingStepChange;
@@ -2793,8 +2706,8 @@ const PetitionSteps = ({
       return;
     }
 
-    // Loan Assignee Addresses (Step 8)
-    if (currentStep === 8 && addressValidationType === "loanAssignee") {
+    // Loan Assignee Addresses (Step 7)
+    if (currentStep === 7 && addressValidationType === "loanAssignee") {
       setShouldValidateAddress(false);
       validateLoanAssigneeAddressesStep().then((validation) => {
         if (validation.isValid) {
@@ -2805,12 +2718,12 @@ const PetitionSteps = ({
               verified[index] = true;
             });
           setLoanAssigneeAddressesVerified(prev => ({ ...prev, ...verified }));
-          clearStepError(8);
+          clearStepError(7);
           // Mark step as completed if all fields are valid
           const loanAssigneesValidation = validateLoanAssignees();
           if (!loanAssigneesValidation.hasErrors) {
-            if (!completedSteps.has(8)) {
-              markStepCompleted(8);
+            if (!completedSteps.has(7)) {
+              markStepCompleted(7);
             }
           }
           const targetStep = pendingStepChange;
@@ -3260,18 +3173,6 @@ const PetitionSteps = ({
 
     let hasErrors = false;
 
-    // Is MIN Applicable is required
-    if (!formData.isMinApplicable || (formData.isMinApplicable !== "yes" && formData.isMinApplicable !== "no")) {
-      errors.isMinApplicable = "Please select if MIN is applicable";
-      hasErrors = true;
-    }
-
-    // MIN Number is required if MIN is applicable
-    if (formData.isMinApplicable === "yes" && !formData.minNumber?.trim()) {
-      errors.minNumber = "MIN Number is required when MIN is applicable";
-      hasErrors = true;
-    }
-
     // Loan Number is required
 
     if (!formData.loanNumber.trim()) {
@@ -3618,81 +3519,6 @@ const PetitionSteps = ({
 
     return { hasErrors, errors };
   };
-
-  // Track step 3 (Loan Details) completion when formData changes
-  useEffect(() => {
-    if (!formData) return;
-    const loanValidation = validateLoanDetails();
-    if (!loanValidation.hasErrors) {
-      if (!completedSteps.has(3)) {
-        markStepCompleted(3);
-      }
-      if (stepsWithErrors.has(3)) {
-        clearStepError(3);
-      }
-    } else {
-      if (completedSteps.has(3)) {
-        markStepIncomplete(3);
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formData, completedSteps, stepsWithErrors, markStepCompleted, markStepIncomplete, clearStepError]);
-
-  // Track step 6 (Right-to-Cure) completion when formData changes
-  useEffect(() => {
-    if (!formData) return;
-    const rightToCureValidation = validateRightToCureDetails();
-    if (!rightToCureValidation.hasErrors) {
-      // If there's a notice address, it must be verified
-      if (formData?.noticeAddressStreet1?.trim()) {
-        if (isNoticeAddressVerified) {
-          if (!completedSteps.has(6)) {
-            markStepCompleted(6);
-          }
-          if (stepsWithErrors.has(6)) {
-            clearStepError(6);
-          }
-        } else {
-          // Address exists but not verified - don't mark complete
-          if (completedSteps.has(6)) {
-            markStepIncomplete(6);
-          }
-        }
-      } else {
-        // No notice address required - mark complete if validation passes
-        if (!completedSteps.has(6)) {
-          markStepCompleted(6);
-        }
-        if (stepsWithErrors.has(6)) {
-          clearStepError(6);
-        }
-      }
-    } else {
-      if (completedSteps.has(6)) {
-        markStepIncomplete(6);
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isNoticeAddressVerified, formData, stepsWithErrors, completedSteps, markStepCompleted, markStepIncomplete, clearStepError]);
-
-  // Track step 7 (Form 35B Compliance) completion when formData changes
-  useEffect(() => {
-    if (!formData) return;
-    const form35BValidation = validateForm35BCompliance();
-    if (!form35BValidation.hasErrors) {
-      if (!completedSteps.has(7)) {
-        markStepCompleted(7);
-      }
-      if (stepsWithErrors.has(7)) {
-        clearStepError(7);
-      }
-    } else {
-      if (completedSteps.has(7)) {
-        markStepIncomplete(7);
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formData, completedSteps, stepsWithErrors, markStepCompleted, markStepIncomplete, clearStepError]);
 
   // Validate Filing Entity details
 
@@ -4263,14 +4089,16 @@ const PetitionSteps = ({
     setIsSaving(true);
 
     try {
-      // Validate organization selection for filers (mandatory)
-      if (!isOrgAdmin) {
-        const finalOrganizationId = selectedOrganizationId || formData.organizationId || organizationId;
-        if (!finalOrganizationId) {
-          toast.error("Please select an organization before saving.");
+      // Check organization access
+
+      if (!hasOrganizationAccess) {
+        toast.error(
+          "You must be part of an organization to save petition drafts."
+        );
+
         setIsSaving(false);
+
         return;
-        }
       }
 
       // Prepare petition data with isAllStepsCompleted: false for draft
@@ -4310,17 +4138,9 @@ const PetitionSteps = ({
         ],
       };
 
-      // Use selected organization ID if available (for filers), otherwise fall back to formData.organizationId or organizationId
-      const finalOrganizationId = selectedOrganizationId || formData.organizationId || organizationId;
-      
-      // Ensure organizationId is included in petition data for draft
-      const finalDraftData = {
-        ...petitionData,
-        organizationId: finalOrganizationId,
-      };
-
       // Submit petition as draft using API
-      await submitPetition(finalDraftData, true); // Pass isDraft: true
+
+      await submitPetition(petitionData, true); // Pass isDraft: true
 
       // Notify parent component that petition was saved as draft
 
@@ -4334,19 +4154,7 @@ const PetitionSteps = ({
       // Close the form modal
       onClose();
     } catch (error) {
-      // Check if this is a duplicate with take-over option
-      if (error.isDuplicate && error.duplicateInfo?.canTakeOver) {
-        // Show take-over modal instead of error toast
-        setDuplicateInfo(error.duplicateInfo);
-        setPendingAction('save');
-        setShowTakeOverModal(true);
-        setIsSaving(false);
-        return;
-      }
-      
-      // Error toast is already shown by submitPetition function, so we don't show another one here
-      // Only log the error for debugging
-      console.error("Error saving draft:", error);
+      toast.error("Failed to save step. Please try again.");
     } finally {
       setIsSaving(false);
     }
@@ -4355,28 +4163,8 @@ const PetitionSteps = ({
   const nextStep = async (direction) => {
     const newStep = currentStep + direction;
 
-    // When navigating away from Organization Selection step (step 1), validate organization is selected
-    if (currentStep === 1 && direction === 1) {
-      // For org admins, check organizationId; for filers, require explicit selection
-      let hasOrganization = false;
-      if (isOrgAdmin) {
-        hasOrganization = !!(organizationId || selectedOrganizationId);
-      } else {
-        hasOrganization = !!selectedOrganizationId;
-      }
-      if (!hasOrganization) {
-        setFieldErrors((prev) => ({
-          ...prev,
-          organizationId: "Please select an organization to continue",
-        }));
-        markStepWithError(1);
-        toast.error("Please select an organization to continue");
-        return;
-      }
-    }
-
-    // When navigating away from Property Address step (step 2), automatically validate address
-    if (currentStep === 2 && direction === 1 && formData?.propertyStreet1?.trim() && !isAddressVerified) {
+    // When navigating away from Property Address step (step 1), automatically validate address
+    if (currentStep === 1 && direction === 1 && formData?.propertyStreet1?.trim() && !isAddressVerified) {
       // Store the intended step change
       setPendingStepChange(newStep);
       // Automatically run address validation
@@ -4384,9 +4172,9 @@ const PetitionSteps = ({
       if (validation.isValid) {
         // Address validated successfully, proceed with navigation
         setIsAddressVerified(true);
-        clearStepError(2);
+        clearStepError(1);
         if (newStep >= 1 && newStep <= totalSteps) {
-          // Mark step 2 as completed since validation passed and all required fields are filled
+          // Mark step 1 as completed since validation passed and all required fields are filled
           // Check if all address fields are filled (validation already confirmed this)
           const hasAllAddressFields = !!(formData.propertyStreet1?.trim() && 
                                         formData.propertyCity?.trim() && 
@@ -4394,11 +4182,11 @@ const PetitionSteps = ({
                                         formData.propertyZip?.trim() && 
                                         formData.propertyCounty?.trim());
           if (hasAllAddressFields) {
-            if (!completedSteps.has(2)) {
-              markStepCompleted(2);
+            if (!completedSteps.has(1)) {
+              markStepCompleted(1);
             }
-            if (stepsWithErrors.has(2)) {
-              clearStepError(2);
+            if (stepsWithErrors.has(1)) {
+              clearStepError(1);
             }
           }
           await autoSaveCurrentStep();
@@ -4419,18 +4207,18 @@ const PetitionSteps = ({
         return;
     }
 
-    // When navigating away from Filing Entity step (step 5), automatically validate address
-    if (currentStep === 5 && direction === 1 && formData?.filingEntityStreet1?.trim() && !isFilingEntityAddressVerified) {
+    // When navigating away from Filing Entity step (step 4), automatically validate address
+    if (currentStep === 4 && direction === 1 && formData?.filingEntityStreet1?.trim() && !isFilingEntityAddressVerified) {
       setPendingStepChange(newStep);
       const validation = await validateFilingEntityAddressStep();
       if (validation.isValid) {
         setIsFilingEntityAddressVerified(true);
-        clearStepError(5);
+        clearStepError(4);
         // Mark step as completed if all fields are valid
         const filingEntityValidation = validateFilingEntity();
         if (!filingEntityValidation.hasErrors && userFilingEntityType) {
-          if (!completedSteps.has(5)) {
-            markStepCompleted(5);
+          if (!completedSteps.has(4)) {
+            markStepCompleted(4);
           }
         }
         if (newStep >= 1 && newStep <= totalSteps) {
@@ -4451,18 +4239,18 @@ const PetitionSteps = ({
       return;
     }
 
-    // When navigating away from Right-to-Cure step (step 6), automatically validate notice address
-    if (currentStep === 6 && direction === 1 && formData?.noticeAddressStreet1?.trim() && !isNoticeAddressVerified) {
+    // When navigating away from Right-to-Cure step (step 5), automatically validate notice address
+    if (currentStep === 5 && direction === 1 && formData?.noticeAddressStreet1?.trim() && !isNoticeAddressVerified) {
       setPendingStepChange(newStep);
       const validation = await validateNoticeAddressStep();
       if (validation.isValid) {
         setIsNoticeAddressVerified(true);
-        clearStepError(6);
+        clearStepError(5);
         // Mark step as completed if all fields are valid
         const rightToCureValidation = validateRightToCureDetails();
         if (!rightToCureValidation.hasErrors) {
-          if (!completedSteps.has(6)) {
-            markStepCompleted(6);
+          if (!completedSteps.has(5)) {
+            markStepCompleted(5);
           }
         }
         if (newStep >= 1 && newStep <= totalSteps) {
@@ -4483,8 +4271,8 @@ const PetitionSteps = ({
       return;
     }
 
-    // When navigating away from Borrower Details step (step 4), automatically validate borrower addresses
-    if (currentStep === 4 && direction === 1) {
+    // When navigating away from Borrower Details step (step 3), automatically validate borrower addresses
+    if (currentStep === 3 && direction === 1) {
       const hasBorrowerAddresses = formData?.borrowers?.some(borrower => borrower.mailingStreet1?.trim());
       if (hasBorrowerAddresses) {
         const allVerified = formData.borrowers
@@ -4502,12 +4290,12 @@ const PetitionSteps = ({
                 verified[borrower.id] = true;
               });
             setBorrowerAddressesVerified(prev => ({ ...prev, ...verified }));
-            clearStepError(4);
+            clearStepError(3);
             // Mark step as completed if all fields are valid
             const borrowerValidation = validateBorrowerDetails();
             if (!borrowerValidation.hasErrors) {
-              if (!completedSteps.has(4)) {
-                markStepCompleted(4);
+              if (!completedSteps.has(3)) {
+                markStepCompleted(3);
               }
             }
             if (newStep >= 1 && newStep <= totalSteps) {
@@ -4531,8 +4319,8 @@ const PetitionSteps = ({
       }
     }
 
-    // When navigating away from Loan Assignees step (step 8), automatically validate assignee addresses
-    if (currentStep === 8 && direction === 1) {
+    // When navigating away from Loan Assignees step (step 7), automatically validate assignee addresses
+    if (currentStep === 7 && direction === 1) {
       const hasAssigneeAddresses = formData?.loanAssignees?.some(assignee => assignee.street1?.trim());
       if (hasAssigneeAddresses) {
         const allVerified = formData.loanAssignees
@@ -4550,12 +4338,12 @@ const PetitionSteps = ({
                 verified[index] = true;
               });
             setLoanAssigneeAddressesVerified(prev => ({ ...prev, ...verified }));
-            clearStepError(8);
+            clearStepError(7);
             // Mark step as completed if all fields are valid
             const loanAssigneesValidation = validateLoanAssignees();
             if (!loanAssigneesValidation.hasErrors) {
-              if (!completedSteps.has(8)) {
-                markStepCompleted(8);
+              if (!completedSteps.has(7)) {
+                markStepCompleted(7);
               }
             }
             if (newStep >= 1 && newStep <= totalSteps) {
@@ -4739,27 +4527,27 @@ const PetitionSteps = ({
       let isStepComplete = false;
       
       // For property address validation, mark as verified when proceeding anyway
-      if (validationType === "property" && currentStep === 2) {
+      if (validationType === "property" && currentStep === 1) {
         setIsAddressVerified(true);
-        clearStepError(2);
+        clearStepError(1);
         // Check if all address fields are filled
         const addressValidation = validateAddressFields();
         isStepComplete = !addressValidation.hasErrors;
-      } else if (validationType === "filingEntity" && currentStep === 5) {
+      } else if (validationType === "filingEntity" && currentStep === 4) {
         setIsFilingEntityAddressVerified(true);
-        clearStepError(5);
+        clearStepError(4);
         if (userFilingEntityType) {
           const filingEntityValidation = validateFilingEntity();
           if (!filingEntityValidation.hasErrors) {
             isStepComplete = true;
           }
         }
-      } else if (validationType === "notice" && currentStep === 6) {
+      } else if (validationType === "notice" && currentStep === 5) {
         setIsNoticeAddressVerified(true);
         clearStepError(5);
         const rightToCureValidation = validateRightToCureDetails();
         isStepComplete = !rightToCureValidation.hasErrors;
-      } else if (validationType === "borrower" && currentStep === 4) {
+      } else if (validationType === "borrower" && currentStep === 3) {
         // Mark all borrower addresses as verified when proceeding anyway
         const verified = {};
         formData.borrowers.forEach((borrower) => {
@@ -4768,10 +4556,10 @@ const PetitionSteps = ({
           }
         });
         setBorrowerAddressesVerified(prev => ({ ...prev, ...verified }));
-        clearStepError(4);
+        clearStepError(3);
         const borrowerValidation = validateBorrowerDetails();
         isStepComplete = !borrowerValidation.hasErrors;
-      } else if (validationType === "loanAssignee" && currentStep === 8) {
+      } else if (validationType === "loanAssignee" && currentStep === 7) {
         // Mark all loan assignee addresses as verified when proceeding anyway
         const verified = {};
         formData.loanAssignees.forEach((assignee, index) => {
@@ -4780,7 +4568,7 @@ const PetitionSteps = ({
           }
         });
         setLoanAssigneeAddressesVerified(prev => ({ ...prev, ...verified }));
-        clearStepError(8);
+        clearStepError(7);
         const loanAssigneesValidation = validateLoanAssignees();
         isStepComplete = !loanAssigneesValidation.hasErrors;
       } else {
@@ -4810,24 +4598,15 @@ const PetitionSteps = ({
   // Helper function to check if a step has all required fields filled
   const isStepComplete = (stepNumber) => {
     switch (stepNumber) {
-      case 1: // Organization Selection
-        // For org admins, organization is pre-selected, so check organizationId
-        // For filers, require explicit selection via selectedOrganizationId
-        if (isOrgAdmin) {
-          return !!(organizationId || selectedOrganizationId);
-        }
-        // For filers, only return true if they've explicitly selected an organization
-        return !!selectedOrganizationId;
-      
-      case 2: // Property Details
+      case 1: // Property Details
         const addressValidation = validateAddressFields();
         return !addressValidation.hasErrors && isAddressVerified;
       
-      case 3: // Loan Details
+      case 2: // Loan Details
         const loanValidation = validateLoanDetails();
         return !loanValidation.hasErrors;
       
-      case 4: // Borrower Details
+      case 3: // Borrower Details
         const borrowerValidation = validateBorrowerDetails();
         if (borrowerValidation.hasErrors) return false;
         // Check if all borrower addresses are verified (if any addresses exist)
@@ -4840,7 +4619,7 @@ const PetitionSteps = ({
         }
         return true; // No addresses to verify, step is complete if validation passes
       
-      case 5: // Filing Entity
+      case 4: // Filing Entity
         if (!userFilingEntityType) return false;
         const filingEntityValidation = validateFilingEntity();
         if (filingEntityValidation.hasErrors) return false;
@@ -4850,7 +4629,7 @@ const PetitionSteps = ({
         }
         return true; // No address to verify, step is complete if validation passes
       
-      case 6: // Right-to-Cure
+      case 5: // Right-to-Cure
         const rightToCureValidation = validateRightToCureDetails();
         if (rightToCureValidation.hasErrors) return false;
         // Check if notice address is verified (if address exists)
@@ -4859,11 +4638,11 @@ const PetitionSteps = ({
         }
         return true; // No address to verify, step is complete if validation passes
       
-      case 7: // Form 35B Compliance
+      case 6: // Form 35B Compliance
         const form35BValidation = validateForm35BCompliance();
         return !form35BValidation.hasErrors;
       
-      case 8: // Loan Assignees
+      case 7: // Loan Assignees
         const loanAssigneesValidation = validateLoanAssignees();
         if (loanAssigneesValidation.hasErrors) return false;
         // Check if all loan assignee addresses are verified (if any addresses exist)
@@ -4876,7 +4655,7 @@ const PetitionSteps = ({
         }
         return true; // No addresses to verify, step is complete if validation passes
       
-      case 9: // Attestation & Signatures
+      case 8: // Attestation & Signatures
         return userProfile?.signatureUrl && formData?.certification_check;
       
       default:
@@ -4890,93 +4669,80 @@ const PetitionSteps = ({
     const stepsWithValidationErrors = new Set();
     const allFieldErrors = {}; // Accumulate all field errors from all steps
 
-    // Step 1: Organization Selection - Required for all users
-    // For org admins, check organizationId; for filers, require explicit selection
-    let hasOrganization = false;
-    if (isOrgAdmin) {
-      hasOrganization = !!(organizationId || selectedOrganizationId);
-    } else {
-      hasOrganization = !!selectedOrganizationId;
-    }
-    if (!hasOrganization) {
-      stepsWithValidationErrors.add(1);
-      allFieldErrors.organizationId = "Please select an organization";
-    }
-
-    // Step 2: Property Details
+    // Step 1: Property Details
     const addressValidation = validateAddressFields();
     if (addressValidation.hasErrors) {
-      stepsWithValidationErrors.add(2);
+      stepsWithValidationErrors.add(1);
       Object.assign(allFieldErrors, addressValidation.errors);
     } else if (formData.propertyStreet1?.trim() && !isAddressVerified) {
       // Address validation required if address is entered
       const addressGeocodingValidation = await validatePropertyDetailsStep();
       if (!addressGeocodingValidation.isValid) {
-        stepsWithValidationErrors.add(2);
+        stepsWithValidationErrors.add(1);
         if (addressGeocodingValidation.errors) {
           Object.assign(allFieldErrors, addressGeocodingValidation.errors);
         }
       }
     }
 
-    // Step 3: Loan Details
+    // Step 2: Loan Details
     const loanValidation = validateLoanDetails();
     if (loanValidation.hasErrors) {
-      stepsWithValidationErrors.add(3);
+      stepsWithValidationErrors.add(2);
       Object.assign(allFieldErrors, loanValidation.errors);
     }
 
-    // Step 4: Borrower Details
+    // Step 3: Borrower Details
     const borrowerValidation = validateBorrowerDetails();
     if (borrowerValidation.hasErrors) {
-      stepsWithValidationErrors.add(4);
+      stepsWithValidationErrors.add(3);
       Object.assign(allFieldErrors, borrowerValidation.errors);
     }
 
-    // Step 5: Filing Entity
+    // Step 4: Filing Entity
     // Check if user has visited this step at least once
-    if (!visitedSteps.has(5)) {
-      stepsWithValidationErrors.add(5);
+    if (!visitedSteps.has(4)) {
+      stepsWithValidationErrors.add(4);
       allFieldErrors.filingEntityStep = "Please visit the Filing Entity step at least once";
     } else if (!userFilingEntityType) {
-      stepsWithValidationErrors.add(5);
+      stepsWithValidationErrors.add(4);
       allFieldErrors.filingEntityType = "Filing Entity Type is required";
     } else {
       const filingEntityValidation = validateFilingEntity();
       if (filingEntityValidation.hasErrors) {
-        stepsWithValidationErrors.add(5);
+        stepsWithValidationErrors.add(4);
         Object.assign(allFieldErrors, filingEntityValidation.errors);
       }
     }
 
-    // Step 6: Right-to-Cure Details
+    // Step 5: Right-to-Cure Details
     const rightToCureValidation = validateRightToCureDetails();
     if (rightToCureValidation.hasErrors) {
-      stepsWithValidationErrors.add(6);
+      stepsWithValidationErrors.add(5);
       Object.assign(allFieldErrors, rightToCureValidation.errors);
     }
 
-    // Step 7: Form 35B Compliance
+    // Step 6: Form 35B Compliance
     const form35BValidation = validateForm35BCompliance();
     if (form35BValidation.hasErrors) {
-      stepsWithValidationErrors.add(7);
+      stepsWithValidationErrors.add(6);
       Object.assign(allFieldErrors, form35BValidation.errors);
     }
 
-    // Step 8: Loan Assignees
+    // Step 7: Loan Assignees
     const loanAssigneesValidation = validateLoanAssignees();
     if (loanAssigneesValidation.hasErrors) {
-      stepsWithValidationErrors.add(8);
+      stepsWithValidationErrors.add(7);
       Object.assign(allFieldErrors, loanAssigneesValidation.errors);
     }
 
-    // Step 9: Attestation & Signatures
+    // Step 8: Attestation & Signatures
     if (!userProfile?.signatureUrl) {
-      stepsWithValidationErrors.add(9);
+      stepsWithValidationErrors.add(8);
       allFieldErrors.signature = "Signature is required";
     }
     if (!formData.certification_check) {
-      stepsWithValidationErrors.add(9);
+      stepsWithValidationErrors.add(8);
       allFieldErrors.certification_check = "Certification checkbox must be checked";
     }
 
@@ -5002,13 +4768,10 @@ const PetitionSteps = ({
       return;
     }
 
-    // Validate organization selection for filers (mandatory)
-    if (!isOrgAdmin) {
-      const finalOrganizationId = selectedOrganizationId || formData.organizationId || organizationId;
-      if (!finalOrganizationId) {
-        toast.error("Please select an organization before submitting the petition.");
+    // Check organization access
+    if (!hasOrganizationAccess) {
+      toast.error("You must be part of an organization to submit petitions.");
       return;
-      }
     }
 
     // Run comprehensive validation
@@ -5065,17 +4828,9 @@ const PetitionSteps = ({
         ],
       };
 
-      // Use selected organization ID if available (for filers), otherwise fall back to formData.organizationId or organizationId
-      const finalOrganizationId = selectedOrganizationId || formData.organizationId || organizationId;
-      
-      // Ensure organizationId is included in petition data
-      const finalPetitionData = {
-        ...petitionData,
-        organizationId: finalOrganizationId,
-      };
-
       // Submit petition using API
-      await submitPetition(finalPetitionData);
+
+      await submitPetition(petitionData);
 
       // Notify parent component that petition was submitted successfully
 
@@ -5088,15 +4843,6 @@ const PetitionSteps = ({
 
       onClose();
     } catch (error) {
-      // Check if this is a duplicate with take-over option
-      if (error.isDuplicate && error.duplicateInfo?.canTakeOver) {
-        // Show take-over modal instead of error toast
-        setDuplicateInfo(error.duplicateInfo);
-        setPendingAction('submit');
-        setShowTakeOverModal(true);
-        return;
-      }
-      
       // Error is already handled in the submitPetition function with toast
     }
   };
@@ -5104,26 +4850,8 @@ const PetitionSteps = ({
   const renderStep = () => {
     switch (currentStep) {
       case 1:
-        // For org admins, use organizationData if available, otherwise fallback to organizationFromAuth or organizationFromContext
-        const orgAdminOrgData = isOrgAdmin && !organizationData 
-          ? (organizationFromAuth || organizationFromContext)
-          : organizationData;
         return (
-          <Step1OrganizationSelection
-            selectedOrganizationId={selectedOrganizationId || organizationId}
-            selectedOrganizationData={organizationData || (isOrgAdmin ? (organizationFromAuth || organizationFromContext) : null)}
-            onSelect={handleOrganizationSelect}
-            isOrgAdmin={isOrgAdmin}
-            organizationId={organizationId}
-            organizationData={organizationData || (isOrgAdmin ? (organizationFromAuth || organizationFromContext) : null)}
-            organizationLoading={organizationLoading}
-            fieldErrors={fieldErrors}
-          />
-        );
-
-      case 2:
-        return (
-          <Step2PropertyDetails
+          <Step1PropertyDetails
           isAddressVerified={isAddressVerified}
           loadError={loadError}
           isLoaded={isLoaded}
@@ -5144,22 +4872,22 @@ const PetitionSteps = ({
         />
         );
 
-      case 3:
+      case 2:
         return (
-          <Step3LoanDetails
+          <Step2LoanDetails
             commonDataError={commonDataError}
             commonDataLoading={commonDataLoading}
             fieldErrors={fieldErrors}
             formData={formData}
-            handleInputChange={handleInputChangeWithMinLogic}
+            handleInputChange={handleInputChange}
             getLoanTypes={getLoanTypes}
             getLienPositions={getLienPositions}
           />
         );
 
-      case 4:
+      case 3:
         return (
-          <Step4BorrowerDetails
+          <Step3BorrowerDetails
               formData={formData}
               fieldErrors={fieldErrors}
               setFieldErrors={setFieldErrors}
@@ -5179,9 +4907,9 @@ const PetitionSteps = ({
             />
         );
 
-      case 5:
+      case 4:
         return (
-          <Step5FilingEntity
+          <Step4FilingEntity
             organizationLoading={organizationLoading}
             organizationData={organizationData}
             fieldErrors={fieldErrors}
@@ -5193,9 +4921,9 @@ const PetitionSteps = ({
           />
         );
 
-      case 6:
+      case 5:
         return (
-          <Step6RightToCure
+          <Step5RightToCure
             formData={formData}
             fieldErrors={fieldErrors}
             setFormData={setFormData}
@@ -5212,18 +4940,18 @@ const PetitionSteps = ({
           />
         );
 
-      case 7:
+      case 6:
         return (
-          <Step7Form35BCompliance
+          <Step6Form35BCompliance
             formData={formData}
             setFormData={setFormData}
             fieldErrors={fieldErrors}
           />
         );
 
-      case 8:
+      case 7:
         return (
-          <Step8LoanAssignees
+          <Step7LoanAssignees
             commonDataError={commonDataError}
             commonDataLoading={commonDataLoading}
             formData={formData}
@@ -5247,9 +4975,9 @@ const PetitionSteps = ({
           />
         );
 
-      case 9:
+      case 8:
         return (
-          <Step9PetitionAttestation
+          <Step8PetitionAttestation
             formData={formData}
             handleInputChange={handleInputChange}
             userProfile={userProfile}
@@ -5257,9 +4985,9 @@ const PetitionSteps = ({
           />
         );
 
-      case 10:
+      case 9:
         return (
-          <Step10ReviewSubmit
+          <Step9ReviewSubmit
             formData={formData}
             handleEditSection={handleEditSection}
             getLoanTypes={getLoanTypes}
@@ -5278,162 +5006,8 @@ const PetitionSteps = ({
 
   if (!isOpen) return null;
 
-  // Handle take-over confirmation
-  const handleTakeOverConfirm = async () => {
-    setShowTakeOverModal(false);
-    setShouldTakeOver(true);
-    
-    // Retry the save/submit with takeOverToUserId based on pending action
-    if (pendingAction === 'save') {
-      // Retry save as draft
-      await handleRetrySaveDraft();
-    } else if (pendingAction === 'submit') {
-      // Retry final submit
-      await handleRetrySubmit();
-    }
-    
-    setPendingAction(null);
-  };
-
-  const handleTakeOverCancel = () => {
-    setShowTakeOverModal(false);
-    setDuplicateInfo(null);
-    setShouldTakeOver(false);
-    setPendingAction(null);
-  };
-
-  // Retry save draft with take-over
-  const handleRetrySaveDraft = async () => {
-    setIsSaving(true);
-    try {
-      const existingSignature = formData.signatures && formData.signatures.length > 0 
-        ? formData.signatures[0] 
-        : null;
-
-      const petitionData = {
-        isAllStepsCompleted: false,
-        ...formData,
-        id: duplicateInfo?.petitionId || null, // Set the duplicate petition ID to update it
-        signatures: [
-          {
-            signerFullName: `${formData.signerFirstName || ""} ${
-              formData.signerMiddleInitial || ""
-            } ${formData.signerLastName || ""}`.trim(),
-            signerTitle: formData.signerTitle || getUserRole(user) || "User",
-            signerEmail: formData.signerEmail || "",
-            esignConsent: formData.certification_check ?? existingSignature?.esignConsent ?? false,
-            signatureDrawnOrTyped: existingSignature?.signatureDrawnOrTyped || userProfile?.signatureUrl || "",
-            signedAt: existingSignature?.signedAt || (existingSignature ? "" : new Date().toISOString()),
-            signerIp: existingSignature?.signerIp || "",
-            otpCode: existingSignature?.otpCode || "",
-          },
-        ],
-        takeOverToUserId: user?.id || null,
-      };
-
-      const finalOrganizationId = selectedOrganizationId || formData.organizationId || organizationId;
-      
-      const finalDraftData = {
-        ...petitionData,
-        organizationId: finalOrganizationId,
-      };
-
-      // Pass the duplicate petition ID to update the existing petition (like editing)
-      await submitPetition(finalDraftData, true, duplicateInfo?.petitionId || null);
-
-      if (onPetitionSubmitted) {
-        onPetitionSubmitted();
-      }
-
-      clearFormAndWizardState();
-      onClose();
-    } catch (error) {
-      // Check if this is still a duplicate error (shouldn't happen with takeOverToUserId, but handle it)
-      if (error.isDuplicate && error.duplicateInfo?.canTakeOver) {
-        // Show error - this shouldn't happen if takeOverToUserId is set correctly
-        toast.error("Unable to take over petition. Please try again.");
-        setShowTakeOverModal(true);
-        setDuplicateInfo(error.duplicateInfo);
-      } else {
-        // Other errors are already handled by submitPetition
-        console.error("Error saving draft with take-over:", error);
-      }
-    } finally {
-      setIsSaving(false);
-      setShouldTakeOver(false);
-    }
-  };
-
-  // Retry final submit with take-over
-  const handleRetrySubmit = async () => {
-    try {
-      const existingSignature = formData.signatures && formData.signatures.length > 0 
-        ? formData.signatures[0] 
-        : null;
-
-      const petitionData = {
-        isAllStepsCompleted: true,
-        ...formData,
-        id: duplicateInfo?.petitionId || null, // Set the duplicate petition ID to update it
-        signatures: [
-          {
-            signerFullName: `${formData.signerFirstName || ""} ${
-              formData.signerMiddleInitial || ""
-            } ${formData.signerLastName || ""}`.trim(),
-            signerTitle: formData.signerTitle || getUserRole(user) || "User",
-            signerEmail: formData.signerEmail || "",
-            esignConsent: formData.certification_check || false,
-            signatureDrawnOrTyped: existingSignature?.signatureDrawnOrTyped || userProfile?.signatureUrl || "",
-            signedAt: new Date().toISOString(),
-            signerIp: "",
-            otpCode: "",
-          },
-        ],
-        takeOverToUserId: user?.id || null,
-      };
-
-      const finalOrganizationId = selectedOrganizationId || formData.organizationId || organizationId;
-      
-      const finalPetitionData = {
-        ...petitionData,
-        organizationId: finalOrganizationId,
-      };
-
-      // Pass the duplicate petition ID to update the existing petition (like editing)
-      await submitPetition(finalPetitionData, false, duplicateInfo?.petitionId || null);
-
-      if (onPetitionSubmitted) {
-        onPetitionSubmitted();
-      }
-
-      clearFormAndWizardState();
-      onClose();
-    } catch (error) {
-      // Check if this is still a duplicate error (shouldn't happen with takeOverToUserId, but handle it)
-      if (error.isDuplicate && error.duplicateInfo?.canTakeOver) {
-        // Show error - this shouldn't happen if takeOverToUserId is set correctly
-        toast.error("Unable to take over petition. Please try again.");
-        setShowTakeOverModal(true);
-        setDuplicateInfo(error.duplicateInfo);
-      } else {
-        // Other errors are already handled by submitPetition
-        console.error("Error submitting with take-over:", error);
-      }
-    } finally {
-      setShouldTakeOver(false);
-    }
-  };
-
   return (
     <React.Fragment>
-      {/* Take Over Petition Modal */}
-      <TakeOverPetitionModal
-        isOpen={showTakeOverModal}
-        duplicateInfo={duplicateInfo}
-        onConfirm={handleTakeOverConfirm}
-        onCancel={handleTakeOverCancel}
-      />
-
       {/* Address Validation Dialog */}
 
       {showAddressValidationDialog && (
@@ -5567,24 +5141,23 @@ const PetitionSteps = ({
       )}
 
       {/* Main Modal */}
+
       <div
         className="modal fade show d-block petition-steps-modal"
-        style={{ backgroundColor: "rgba(0,0,0,0.5)", zIndex: 1050 }}
+        style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
         tabIndex="-1"
       >
         <div className="modal-dialog petition-steps-modal-dialog modal-dialog-centered">
           <div className="modal-content petition-steps-modal-content">
-            <div className="modal-header text-white theme-bg petition-steps-header d-flex justify-content-between align-items-center">
-              <h5 className="modal-title mb-0">Foreclosure Petition Filing</h5>
-              
-              <div className="d-flex align-items-center gap-3">
+            <div className="modal-header text-white theme-bg petition-steps-header">
+              <h5 className="modal-title">Foreclosure Petition Filing</h5>
+
               <button
                 type="button"
                 className="btn-close btn-close-white"
                 onClick={handleCloseAttempt}
                 aria-label="Close"
               ></button>
-              </div>
             </div>
 
             <div className="modal-body petition-steps-body">
@@ -5675,7 +5248,7 @@ const PetitionSteps = ({
 
                     {/* Next Step, Review, or Submit Button */}
 
-                    {currentStep < 9 ? (
+                    {currentStep < 8 ? (
                       <button
                         type="button"
                         className="dashboard-btn-create"
@@ -5683,7 +5256,7 @@ const PetitionSteps = ({
                       >
                         Next Step
                       </button>
-                    ) : currentStep === 9 ? (
+                    ) : currentStep === 8 ? (
                       <button
                         type="button"
                         className="dashboard-btn-create"

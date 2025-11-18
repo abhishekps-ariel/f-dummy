@@ -70,6 +70,12 @@ const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
       route: ROUTES.DASHBOARD,
     },
     {
+      key: "organizations",
+      label: "Organizations",
+      icon: "fa-building",
+      route: ROUTES.ORGANIZATIONS,
+    },
+    {
       key: "petitions",
       label: "Petitions",
       icon: "fa-file-contract",
@@ -115,7 +121,7 @@ const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
     const dashboardItem = filerNavItems.find((item) => item.key === "dashboard");
     const petitionsItem = filerNavItems.find((item) => item.key === "petitions");
     const remainingItems = filerNavItems.filter(
-      (item) => item.key !== "dashboard" && item.key !== "petitions"
+      (item) => item.key !== "dashboard" && item.key !== "petitions" && item.key !== "organizations"
     );
 
     combinedNavItems = [
