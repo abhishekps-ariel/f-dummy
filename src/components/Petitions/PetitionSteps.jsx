@@ -1218,22 +1218,6 @@ const PetitionSteps = ({
     }
   }, [isFilingEntityAddressVerified, formData, stepsWithErrors, completedSteps, markStepCompleted, clearStepError, userFilingEntityType]);
 
-  // When notice address is verified, mark step 6 as completed if all fields are filled
-  useEffect(() => {
-    if (isNoticeAddressVerified && formData?.noticeAddressStreet1?.trim()) {
-      clearStepError(6);
-      const rightToCureValidation = validateRightToCureDetails();
-      if (!rightToCureValidation.hasErrors) {
-        if (!completedSteps.has(6)) {
-          markStepCompleted(6);
-        }
-        if (stepsWithErrors.has(6)) {
-          clearStepError(6);
-        }
-      }
-    }
-  }, [isNoticeAddressVerified, formData, stepsWithErrors, completedSteps, markStepCompleted, clearStepError]);
-
   // When all borrower addresses are verified, mark step 4 as completed if all fields are filled
   useEffect(() => {
     const hasBorrowerAddresses = formData?.borrowers?.some(borrower => borrower.mailingStreet1?.trim());
@@ -3635,6 +3619,81 @@ const PetitionSteps = ({
     return { hasErrors, errors };
   };
 
+  // Track step 3 (Loan Details) completion when formData changes
+  useEffect(() => {
+    if (!formData) return;
+    const loanValidation = validateLoanDetails();
+    if (!loanValidation.hasErrors) {
+      if (!completedSteps.has(3)) {
+        markStepCompleted(3);
+      }
+      if (stepsWithErrors.has(3)) {
+        clearStepError(3);
+      }
+    } else {
+      if (completedSteps.has(3)) {
+        markStepIncomplete(3);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData, completedSteps, stepsWithErrors, markStepCompleted, markStepIncomplete, clearStepError]);
+
+  // Track step 6 (Right-to-Cure) completion when formData changes
+  useEffect(() => {
+    if (!formData) return;
+    const rightToCureValidation = validateRightToCureDetails();
+    if (!rightToCureValidation.hasErrors) {
+      // If there's a notice address, it must be verified
+      if (formData?.noticeAddressStreet1?.trim()) {
+        if (isNoticeAddressVerified) {
+          if (!completedSteps.has(6)) {
+            markStepCompleted(6);
+          }
+          if (stepsWithErrors.has(6)) {
+            clearStepError(6);
+          }
+        } else {
+          // Address exists but not verified - don't mark complete
+          if (completedSteps.has(6)) {
+            markStepIncomplete(6);
+          }
+        }
+      } else {
+        // No notice address required - mark complete if validation passes
+        if (!completedSteps.has(6)) {
+          markStepCompleted(6);
+        }
+        if (stepsWithErrors.has(6)) {
+          clearStepError(6);
+        }
+      }
+    } else {
+      if (completedSteps.has(6)) {
+        markStepIncomplete(6);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isNoticeAddressVerified, formData, stepsWithErrors, completedSteps, markStepCompleted, markStepIncomplete, clearStepError]);
+
+  // Track step 7 (Form 35B Compliance) completion when formData changes
+  useEffect(() => {
+    if (!formData) return;
+    const form35BValidation = validateForm35BCompliance();
+    if (!form35BValidation.hasErrors) {
+      if (!completedSteps.has(7)) {
+        markStepCompleted(7);
+      }
+      if (stepsWithErrors.has(7)) {
+        clearStepError(7);
+      }
+    } else {
+      if (completedSteps.has(7)) {
+        markStepIncomplete(7);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData, completedSteps, stepsWithErrors, markStepCompleted, markStepIncomplete, clearStepError]);
+
   // Validate Filing Entity details
 
   const validateFilingEntity = () => {
@@ -5571,7 +5630,7 @@ const PetitionSteps = ({
                   <button
                     type="button"
                     className={`btn create-org-btn ${
-                      currentStep === 1 || currentStep === 10 ? "d-none" : ""
+                      currentStep === 1 ? "d-none" : ""
                     }`}
                     onClick={() => nextStep(-1)}
                   >
@@ -5616,7 +5675,7 @@ const PetitionSteps = ({
 
                     {/* Next Step, Review, or Submit Button */}
 
-                    {currentStep < 8 ? (
+                    {currentStep < 9 ? (
                       <button
                         type="button"
                         className="dashboard-btn-create"
