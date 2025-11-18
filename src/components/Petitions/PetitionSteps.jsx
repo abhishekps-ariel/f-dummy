@@ -294,6 +294,137 @@ const PetitionSteps = ({
 
   const geocoderRef = useRef(null);
 
+  // Default form data structure (defined early for use in formData initialization)
+  const defaultFormData = {
+    // Step 2: Property Details
+    propertyStreet1: "",
+    propertyStreet2: "",
+    propertyCity: "",
+    propertyState: "MA",
+    propertyZip: "",
+    propertyCounty: "",
+    assessorParcelId: "",
+    // Step 3: Loan Details
+    isMinApplicable: "",
+    minNumber: "",
+    loanNumber: "",
+    petitionLoanTypeId: "",
+    petitionLoanTypeName: "",
+    lienPosition: "",
+    originationDate: "",
+    originalPrincipalAmount: 0,
+    currentPrincipalBalance: 0,
+    interestRatePercent: null,
+    variableRate: false,
+    interestOnly: false,
+    negativeAmortization: false,
+    monthlyPaymentAmount: 0,
+    delinquencyDaysAtFiling: null,
+    // Step 4: Borrower Details
+    borrowers: [
+      {
+        id: 1,
+        firstName: "",
+        middleName: "",
+        lastName: "",
+        suffix: "",
+        borrowerIsPrimary: true,
+        mailingStreet1: "",
+        mailingCity: "",
+        mailingState: "",
+        mailingZip: "",
+        phone: "",
+        email: "",
+      },
+    ],
+    // Step 5: Filing Entity
+    filingEntityLegalName: "",
+    filingEntityRole: "",
+    filingEntityStreet1: "",
+    filingEntityStreet2: "",
+    filingEntityCity: "",
+    filingEntityState: "",
+    filingEntityZip: "",
+    filingContactName: "",
+    filingContactEmail: "",
+    filingContactPhone: "",
+    nmlsLicenseNumber: "",
+    stateLicenseNumber: "",
+    stateLicenseState: "",
+    // Step 6: Right-to-Cure
+    noticeSent: false,
+    noticeDate: "",
+    amountInDefault: 0,
+    daysDelinquentAtNotice: 0,
+    cureExpirationDate: "",
+    noticeAddressStreet1: "",
+    noticeAddressCity: "",
+    noticeAddressState: "",
+    noticeAddressZip: "",
+    manualOverrideReason: "",
+    // Step 7: Form 35B Compliance
+    certainMortgageLoan: null,
+    form35bComplianceAffidavitPdf: "",
+    form35bNonApplicabilityAffidavitPdf: "",
+    affiantName: "",
+    affiantTitle: "",
+    affidavitExecutionDate: "",
+    // Step 8: Loan Assignees
+    loanAssignees: [
+      {
+        assigneeName: "",
+        assigneeTypeId: "",
+        assigneeRoleId: "",
+        street1: "",
+        street2: "",
+        city: "",
+        addressState: "",
+        zip: "",
+        licenseNumber: "",
+        licenseState: "",
+      },
+    ],
+    // Step 9: Petition Attestation & Signatures
+    signatures: [
+      {
+        signerFullName: "",
+        signerTitle: "",
+        signerEmail: "",
+        esignConsent: false,
+        signatureDrawnOrTyped: "",
+        signedAt: "",
+        signerIp: "",
+        otpCode: "",
+      },
+    ],
+    // Additional fields
+    documents: [],
+    certification_check: false,
+    // Signer fields (prefilled from user data)
+    signerFirstName: "",
+    signerMiddleInitial: "",
+    signerLastName: "",
+    signerEmail: "",
+    signerTitle: "",
+  };
+
+  // Load form data from localStorage on component mount
+  const loadFormDataFromStorage = () => {
+    try {
+      const savedData = localStorage.getItem("petitionFormData");
+      if (savedData) {
+        const parsedData = JSON.parse(savedData);
+        return { ...defaultFormData, ...parsedData };
+      }
+    } catch (error) {
+      console.error("Error loading form data from localStorage:", error);
+    }
+    return defaultFormData;
+  };
+
+  // Initialize formData state early so it can be used in useEffects
+  const [formData, setFormData] = useState(loadFormDataFromStorage);
+
   // Load user profile and filing entity types
 
   useEffect(() => {
@@ -452,18 +583,23 @@ const PetitionSteps = ({
       }
     };
 
-    loadOrganizationData();
+    // Load organization data when organizationId is available
+    // For org admins, this should load immediately when modal opens
+    if (organizationId) {
+      loadOrganizationData();
+    }
   }, [organizationId, selectedOrganizationId]);
 
   // Reset selected organization when opening a new petition (not when editing existing)
+  // Only reset for filers, not for org admins (they have pre-selected org)
   useEffect(() => {
-    if (isOpen && !formData?.id) {
-      // Reset selected organization when opening a new petition (for filers)
-      // Users can select organization from the embedded selector in the header
+    if (isOpen && !formData?.id && !isOrgAdmin) {
+      // Reset selected organization when opening a new petition (for filers only)
+      // Org admins keep their pre-selected organization
       setSelectedOrganizationId(null);
       setOrganizationData(null);
     }
-  }, [isOpen]);
+  }, [isOpen, isOrgAdmin, formData?.id]);
 
   // Clear organization selection when modal closes
   useEffect(() => {
@@ -501,6 +637,25 @@ const PetitionSteps = ({
   // Handler for organization selection (from embedded selector or modal)
   const handleOrganizationSelect = async (orgId, orgData) => {
     setSelectedOrganizationId(orgId);
+    
+    // If removing selection (null), clear organization data for filers
+    if (!orgId && !isOrgAdmin) {
+      setOrganizationData(null);
+      setFormData((prev) => ({
+        ...prev,
+        organizationId: null,
+        filingEntityLegalName: "",
+        filingEntityStreet1: "",
+        filingEntityStreet2: "",
+        filingEntityCity: "",
+        filingEntityState: "",
+        filingEntityZip: "",
+        filingContactName: "",
+        filingContactEmail: "",
+        filingContactPhone: "",
+      }));
+      return;
+    }
     
     // Update form data with organization ID
     setFormData((prev) => ({
@@ -696,235 +851,6 @@ const PetitionSteps = ({
     }
   }, [isOpen, currentStep]);
 
-  // Default form data structure
-
-  const defaultFormData = {
-    // Step 2: Property Details
-
-    propertyStreet1: "",
-
-    propertyStreet2: "",
-
-    propertyCity: "",
-
-    propertyState: "MA",
-
-    propertyZip: "",
-
-    propertyCounty: "",
-
-    assessorParcelId: "",
-
-    // Step 3: Loan Details
-
-    isMinApplicable: "",
-    minNumber: "",
-
-    loanNumber: "",
-
-    petitionLoanTypeId: "",
-
-    petitionLoanTypeName: "",
-
-    lienPosition: "",
-
-    originationDate: "",
-
-    originalPrincipalAmount: 0,
-
-    currentPrincipalBalance: 0,
-
-    interestRatePercent: null,
-
-    variableRate: false,
-
-    interestOnly: false,
-
-    negativeAmortization: false,
-
-    monthlyPaymentAmount: 0,
-
-    delinquencyDaysAtFiling: null,
-
-    // Step 4: Borrower Details
-
-    borrowers: [
-      {
-        id: 1,
-
-        firstName: "",
-
-        middleName: "",
-
-        lastName: "",
-
-        suffix: "",
-
-        borrowerIsPrimary: true,
-
-        mailingStreet1: "",
-
-        mailingCity: "",
-
-        mailingState: "",
-
-        mailingZip: "",
-
-        phone: "",
-
-        email: "",
-      },
-    ],
-
-    // Step 5: Filing Entity
-
-    filingEntityLegalName: "",
-
-    filingEntityRole: "",
-
-    filingEntityStreet1: "",
-
-    filingEntityStreet2: "",
-
-    filingEntityCity: "",
-
-    filingEntityState: "",
-
-    filingEntityZip: "",
-
-    filingContactName: "",
-
-    filingContactEmail: "",
-
-    filingContactPhone: "",
-
-    nmlsLicenseNumber: "",
-
-    stateLicenseNumber: "",
-
-    stateLicenseState: "",
-
-    // Step 6: Right-to-Cure
-
-    noticeSent: false,
-
-    noticeDate: "",
-
-    amountInDefault: 0,
-
-    daysDelinquentAtNotice: 0,
-
-    cureExpirationDate: "",
-
-    noticeAddressStreet1: "",
-
-    noticeAddressCity: "",
-
-    noticeAddressState: "",
-
-    noticeAddressZip: "",
-
-    manualOverrideReason: "",
-
-    // Step 7: Form 35B Compliance
-
-    certainMortgageLoan: null,
-
-    form35bComplianceAffidavitPdf: "",
-
-    form35bNonApplicabilityAffidavitPdf: "",
-
-    affiantName: "",
-
-    affiantTitle: "",
-
-    affidavitExecutionDate: "",
-
-    // Step 8: Loan Assignees
-
-    loanAssignees: [
-      {
-        assigneeName: "",
-
-        assigneeTypeId: "",
-
-        assigneeRoleId: "",
-
-        street1: "",
-
-        street2: "",
-
-        city: "",
-
-        addressState: "",
-
-        zip: "",
-
-        licenseNumber: "",
-
-        licenseState: "",
-      },
-    ],
-
-    // Step 9: Petition Attestation & Signatures
-
-    signatures: [
-      {
-        signerFullName: "",
-
-        signerTitle: "",
-
-        signerEmail: "",
-
-        esignConsent: false,
-
-        signatureDrawnOrTyped: "",
-
-        signedAt: "",
-
-        signerIp: "",
-
-        otpCode: "",
-      },
-    ],
-
-    // Additional fields
-
-    documents: [],
-
-    certification_check: false,
-
-    // Signer fields (prefilled from user data)
-
-    signerFirstName: "",
-
-    signerMiddleInitial: "",
-
-    signerLastName: "",
-
-    signerEmail: "",
-
-    signerTitle: "",
-  };
-
-  // Load form data from localStorage on component mount
-
-  const loadFormDataFromStorage = () => {
-    try {
-      const savedData = localStorage.getItem("petitionFormData");
-
-      if (savedData) {
-        const parsedData = JSON.parse(savedData);
-
-        return { ...defaultFormData, ...parsedData };
-      }
-    } catch (error) {
-      console.error("Error loading form data from localStorage:", error);
-    }
-
-    return defaultFormData;
-  };
-
   // Save form data to localStorage
 
   const saveFormDataToStorage = (data) => {
@@ -945,8 +871,6 @@ const PetitionSteps = ({
     }
   };
 
-  const [formData, setFormData] = useState(loadFormDataFromStorage);
-
   // Helper function to check if a step has required fields filled
   // Checks fields directly to match validation logic
   const checkStepHasRequiredFields = useCallback((stepNumber) => {
@@ -954,12 +878,13 @@ const PetitionSteps = ({
     
     switch (stepNumber) {
       case 1: // Organization Selection - check if organization is selected
-        // For org admins, organization is pre-selected, so always return true
-        // For filers, check if organization is selected
+        // For org admins, organization is pre-selected, so check organizationId
+        // For filers, require explicit selection via selectedOrganizationId
         if (isOrgAdmin) {
           return !!(organizationId || selectedOrganizationId);
         }
-        return !!(selectedOrganizationId || organizationId);
+        // For filers, only return true if they've explicitly selected an organization
+        return !!selectedOrganizationId;
       
       case 2: // Property Details - check if address fields are filled and validated
         return !!(formData.propertyStreet1?.trim() && 
@@ -1056,11 +981,12 @@ const PetitionSteps = ({
       
       switch (prev) {
         case 1:
-          // Organization Selection - for org admins, always complete; for filers, check if selected
+          // Organization Selection - for org admins, check organizationId; for filers, require explicit selection
           if (isOrgAdmin) {
             isStepComplete = !!(organizationId || selectedOrganizationId);
           } else {
-            isStepComplete = !!(selectedOrganizationId || organizationId);
+            // For filers, only mark complete if they've explicitly selected an organization
+            isStepComplete = !!selectedOrganizationId;
           }
           break;
         case 2:
@@ -1227,6 +1153,33 @@ const PetitionSteps = ({
     
     previousStepRef.current = wizardCurrentStep;
   }, [wizardCurrentStep, isAddressVerified, isFilingEntityAddressVerified, isNoticeAddressVerified, borrowerAddressesVerified, loanAssigneeAddressesVerified, formData, completedSteps, stepsWithErrors, totalSteps, markStepCompleted, markStepIncomplete, checkStepHasRequiredFields, clearStepError, wizardGoToStep, setCurrentStep, userFilingEntityType, userProfile]);
+
+  // When organization is selected, mark step 1 as completed
+  useEffect(() => {
+    // For org admins, organization is pre-selected, so check organizationId
+    // For filers, require explicit selection via selectedOrganizationId
+    let hasOrganization = false;
+    if (isOrgAdmin) {
+      hasOrganization = !!(organizationId || selectedOrganizationId);
+    } else {
+      // For filers, only mark complete if they've explicitly selected an organization
+      hasOrganization = !!selectedOrganizationId;
+    }
+    
+    if (hasOrganization) {
+      if (!completedSteps.has(1)) {
+        markStepCompleted(1);
+      }
+      if (stepsWithErrors.has(1)) {
+        clearStepError(1);
+      }
+    } else {
+      // If organization is removed or not selected, unmark step 1
+      if (completedSteps.has(1)) {
+        markStepIncomplete(1);
+      }
+    }
+  }, [selectedOrganizationId, organizationId, isOrgAdmin, completedSteps, stepsWithErrors, markStepCompleted, markStepIncomplete, clearStepError]);
 
   // When address is verified, mark step 2 as completed if all fields are filled
   useEffect(() => {
@@ -4343,6 +4296,26 @@ const PetitionSteps = ({
   const nextStep = async (direction) => {
     const newStep = currentStep + direction;
 
+    // When navigating away from Organization Selection step (step 1), validate organization is selected
+    if (currentStep === 1 && direction === 1) {
+      // For org admins, check organizationId; for filers, require explicit selection
+      let hasOrganization = false;
+      if (isOrgAdmin) {
+        hasOrganization = !!(organizationId || selectedOrganizationId);
+      } else {
+        hasOrganization = !!selectedOrganizationId;
+      }
+      if (!hasOrganization) {
+        setFieldErrors((prev) => ({
+          ...prev,
+          organizationId: "Please select an organization to continue",
+        }));
+        markStepWithError(1);
+        toast.error("Please select an organization to continue");
+        return;
+      }
+    }
+
     // When navigating away from Property Address step (step 2), automatically validate address
     if (currentStep === 2 && direction === 1 && formData?.propertyStreet1?.trim() && !isAddressVerified) {
       // Store the intended step change
@@ -4779,12 +4752,13 @@ const PetitionSteps = ({
   const isStepComplete = (stepNumber) => {
     switch (stepNumber) {
       case 1: // Organization Selection
-        // For org admins, organization is pre-selected, so always return true
-        // For filers, check if organization is selected
+        // For org admins, organization is pre-selected, so check organizationId
+        // For filers, require explicit selection via selectedOrganizationId
         if (isOrgAdmin) {
           return !!(organizationId || selectedOrganizationId);
         }
-        return !!(selectedOrganizationId || organizationId);
+        // For filers, only return true if they've explicitly selected an organization
+        return !!selectedOrganizationId;
       
       case 2: // Property Details
         const addressValidation = validateAddressFields();
@@ -4857,8 +4831,15 @@ const PetitionSteps = ({
     const stepsWithValidationErrors = new Set();
     const allFieldErrors = {}; // Accumulate all field errors from all steps
 
-    // Step 1: Organization Selection
-    if (!isOrgAdmin && !selectedOrganizationId && !organizationId) {
+    // Step 1: Organization Selection - Required for all users
+    // For org admins, check organizationId; for filers, require explicit selection
+    let hasOrganization = false;
+    if (isOrgAdmin) {
+      hasOrganization = !!(organizationId || selectedOrganizationId);
+    } else {
+      hasOrganization = !!selectedOrganizationId;
+    }
+    if (!hasOrganization) {
       stepsWithValidationErrors.add(1);
       allFieldErrors.organizationId = "Please select an organization";
     }
@@ -5064,14 +5045,20 @@ const PetitionSteps = ({
   const renderStep = () => {
     switch (currentStep) {
       case 1:
+        // For org admins, use organizationData if available, otherwise fallback to organizationFromAuth or organizationFromContext
+        const orgAdminOrgData = isOrgAdmin && !organizationData 
+          ? (organizationFromAuth || organizationFromContext)
+          : organizationData;
         return (
           <Step1OrganizationSelection
             selectedOrganizationId={selectedOrganizationId || organizationId}
-            selectedOrganizationData={organizationData}
+            selectedOrganizationData={organizationData || (isOrgAdmin ? (organizationFromAuth || organizationFromContext) : null)}
             onSelect={handleOrganizationSelect}
             isOrgAdmin={isOrgAdmin}
             organizationId={organizationId}
-            organizationData={organizationData}
+            organizationData={organizationData || (isOrgAdmin ? (organizationFromAuth || organizationFromContext) : null)}
+            organizationLoading={organizationLoading}
+            fieldErrors={fieldErrors}
           />
         );
 

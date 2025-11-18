@@ -9,6 +9,8 @@ const Step1OrganizationSelection = ({
   isOrgAdmin,
   organizationId,
   organizationData,
+  organizationLoading,
+  fieldErrors,
 }) => {
   const [organizations, setOrganizations] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -94,8 +96,13 @@ const Step1OrganizationSelection = ({
   };
 
   // For org admins, show the pre-selected organization
-  const displayOrganizationId = selectedOrganizationId || organizationId;
-  const displayOrganizationData = selectedOrganizationData || organizationData;
+  // For filers, only show explicitly selected organization (not from context/auth)
+  const displayOrganizationId = isOrgAdmin 
+    ? (selectedOrganizationId || organizationId)
+    : selectedOrganizationId;
+  const displayOrganizationData = isOrgAdmin
+    ? (selectedOrganizationData || organizationData)
+    : selectedOrganizationData;
 
   return (
     <div>
@@ -109,134 +116,212 @@ const Step1OrganizationSelection = ({
 
       {isOrgAdmin ? (
         // For org admins, show the pre-selected organization as read-only
-        <div className="card border">
-          <div className="card-body">
-            {displayOrganizationData ? (
-              <div>
-                <h5 className="mb-2">
-                  <i className="fa-solid fa-building me-2 text-primary"></i>
+        <div className="selected-org-container">
+          {organizationLoading && !displayOrganizationData ? (
+            <div className="d-flex align-items-center text-muted">
+              <div className="spinner-border spinner-border-sm me-2" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </div>
+              <span>Loading organization details...</span>
+            </div>
+          ) : displayOrganizationData ? (
+            <div className="selected-org-badge">
+              <div className="selected-org-icon">
+                <i className="fa-solid fa-building"></i>
+              </div>
+              <div className="selected-org-info">
+                <div className="selected-org-name">
                   {displayOrganizationData.name}
-                </h5>
-                {displayOrganizationData.addressCity && displayOrganizationData.addressState && (
-                  <p className="text-muted mb-0">
-                    <i className="fa-solid fa-location-dot me-2"></i>
-                    {displayOrganizationData.addressCity}, {displayOrganizationData.addressState}
-                  </p>
-                )}
-                <div className="mt-2">
-                  <span className="badge bg-success">
-                    <i className="fa-solid fa-check-circle me-1"></i>
-                    Pre-selected
-                  </span>
+                </div>
+                <div className="selected-org-details">
+                  {displayOrganizationData.type && (
+                    <span className="selected-org-type">
+                      {displayOrganizationData.type}
+                    </span>
+                  )}
+                  {(displayOrganizationData.addressStreet1 ||
+                    displayOrganizationData.addressCity ||
+                    displayOrganizationData.addressState ||
+                    displayOrganizationData.addressZip) && (
+                    <span className="selected-org-address">
+                      {" "}
+                      •{" "}
+                      {`${displayOrganizationData.addressStreet1 || ""}${
+                        displayOrganizationData.addressStreet2
+                          ? ", " + displayOrganizationData.addressStreet2
+                          : ""
+                      }, ${displayOrganizationData.addressCity || ""}, ${
+                        displayOrganizationData.addressState || ""
+                      } ${displayOrganizationData.addressZip || ""}`
+                        .replace(/^,\s*/, "")
+                        .replace(/,\s*$/, "")}
+                    </span>
+                  )}
                 </div>
               </div>
-            ) : (
-              <p className="text-muted mb-0">Loading organization details...</p>
-            )}
-          </div>
-        </div>
-      ) : (
-        // For filers, show the organization selector
-        <div className="embedded-org-selector" ref={searchRef} style={{ maxWidth: "600px" }}>
-          {displayOrganizationData ? (
-            <div className="card border">
-              <div className="card-body">
-                <div className="d-flex justify-content-between align-items-center">
-                  <div>
-                    <h5 className="mb-1">
-                      <i className="fa-solid fa-building me-2 text-primary"></i>
-                      {displayOrganizationData.name}
-                    </h5>
-                    {displayOrganizationData.addressCity && displayOrganizationData.addressState && (
-                      <p className="text-muted mb-0 small">
-                        <i className="fa-solid fa-location-dot me-2"></i>
-                        {displayOrganizationData.addressCity}, {displayOrganizationData.addressState}
-                      </p>
-                    )}
-                  </div>
-                  <button
-                    type="button"
-                    className="btn btn-outline-secondary btn-sm"
-                    onClick={() => {
-                      setShowDropdown(!showDropdown);
-                      setSearchTerm("");
-                    }}
-                  >
-                    <i className="fa-solid fa-pencil me-1"></i>
-                    Change
-                  </button>
-                </div>
-              </div>
+              <span className="badge bg-success ms-2">
+                <i className="fa-solid fa-check-circle me-1"></i>
+                Pre-selected
+              </span>
             </div>
           ) : (
-            <div className="card border">
-              <div className="card-body">
+            <div className="text-muted">Unable to load organization details</div>
+          )}
+        </div>
+      ) : (
+        // For filers, show the organization selector matching OrganizationActions styling
+        <div className="search-form-wrapper" ref={searchRef}>
+          {displayOrganizationData ? (
+            <div className="selected-org-container">
+              <div className="selected-org-badge">
+                <div className="selected-org-icon">
+                  <i className="fa-solid fa-building"></i>
+                </div>
+                <div className="selected-org-info">
+                  <div className="selected-org-name">
+                    {displayOrganizationData.name}
+                  </div>
+                  <div className="selected-org-details">
+                    {displayOrganizationData.type && (
+                      <span className="selected-org-type">
+                        {displayOrganizationData.type}
+                      </span>
+                    )}
+                    {(displayOrganizationData.addressStreet1 ||
+                      displayOrganizationData.addressCity ||
+                      displayOrganizationData.addressState ||
+                      displayOrganizationData.addressZip) && (
+                      <span className="selected-org-address">
+                        {" "}
+                        •{" "}
+                        {`${displayOrganizationData.addressStreet1 || ""}${
+                          displayOrganizationData.addressStreet2
+                            ? ", " + displayOrganizationData.addressStreet2
+                            : ""
+                        }, ${displayOrganizationData.addressCity || ""}, ${
+                          displayOrganizationData.addressState || ""
+                        } ${displayOrganizationData.addressZip || ""}`
+                          .replace(/^,\s*/, "")
+                          .replace(/,\s*$/, "")}
+                      </span>
+                    )}
+                  </div>
+                </div>
                 <button
                   type="button"
-                  className="btn btn-outline-primary w-100"
+                  className="selected-org-remove"
                   onClick={() => {
-                    setShowDropdown(!showDropdown);
-                    if (!showDropdown) {
-                      loadAllOrganizations();
+                    if (onSelect) {
+                      onSelect(null, null);
                     }
+                    setShowDropdown(false);
+                    setSearchTerm("");
                   }}
+                  title="Remove selection"
                 >
-                  <i className="fa-solid fa-building me-2"></i>
-                  Select Organization
+                  <i className="fa-solid fa-times"></i>
                 </button>
               </div>
             </div>
+          ) : (
+            <div className="search-input-container">
+              <input
+                className={`form-control ${fieldErrors?.organizationId ? "is-invalid" : ""}`}
+                type="search"
+                placeholder="Search by organization name or EIN"
+                aria-label="Search"
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                }}
+                onFocus={handleSearchFocus}
+              />
+              {fieldErrors?.organizationId && (
+                <div className="text-danger small mt-1">
+                  {fieldErrors.organizationId}
+                </div>
+              )}
+            </div>
           )}
 
+          {/* Search Dropdown */}
           {showDropdown && (
-            <div className="embedded-org-dropdown" style={{ position: "relative", marginTop: "8px" }}>
-              <div className="embedded-org-search">
-                <input
-                  className="form-control form-control-sm"
-                  type="search"
-                  placeholder="Search organizations..."
-                  value={searchTerm}
-                  onChange={(e) => {
-                    setSearchTerm(e.target.value);
-                  }}
-                  onFocus={handleSearchFocus}
-                  autoFocus
-                />
-              </div>
-              <div className="embedded-org-results">
-                {isLoading ? (
-                  <div className="embedded-org-loading">
-                    <div className="spinner-border spinner-border-sm text-primary" role="status">
-                      <span className="visually-hidden">Loading...</span>
-                    </div>
-                    <span className="ms-2">Loading...</span>
+            <div className="org-search-dropdown">
+              {isLoading ? (
+                <div className="org-search-loading">
+                  <div
+                    className="spinner-border spinner-border-sm text-primary me-2"
+                    role="status"
+                  >
+                    <span className="visually-hidden">Loading...</span>
                   </div>
-                ) : organizations.length > 0 ? (
-                  organizations.map((org) => {
+                  <span>Loading organizations...</span>
+                </div>
+              ) : organizations.length > 0 ? (
+                <div className="org-search-results">
+                  {organizations.map((org) => {
                     const orgId = org.id || org.organizationId;
                     const isSelected = orgId === displayOrganizationId;
                     return (
                       <div
                         key={orgId}
-                        className={`embedded-org-item ${isSelected ? "selected" : ""}`}
+                        className={`org-search-item ${isSelected ? "bg-light" : ""}`}
                         onClick={() => handleOrganizationSelect(org)}
-                        style={{ cursor: "pointer" }}
                       >
-                        <div className="embedded-org-item-name">{org.name}</div>
-                        {org.addressCity && org.addressState && (
-                          <div className="embedded-org-item-location">
-                            {org.addressCity}, {org.addressState}
+                        <div className="org-item-name">{org.name}</div>
+                        <div className="org-item-details">
+                          <span className="org-item-type">
+                            <i className="fa-solid fa-building me-1"></i>
+                            {org.type || "N/A"}
+                          </span>
+                          {(org.addressStreet1 ||
+                            org.addressCity ||
+                            org.addressState ||
+                            org.addressZip) && (
+                            <span className="org-item-address ms-3">
+                              <i className="fa-solid fa-location-dot me-1"></i>
+                              {`${org.addressStreet1 || ""}${
+                                org.addressStreet2
+                                  ? ", " + org.addressStreet2
+                                  : ""
+                              }, ${org.addressCity || ""}, ${
+                                org.addressState || ""
+                              } ${org.addressZip || ""}`
+                                .replace(/^,\s*/, "")
+                                .replace(/,\s*$/, "")}
+                            </span>
+                          )}
+                        </div>
+                        {(org.primaryContactName ||
+                          org.primaryContactEmail ||
+                          org.primaryContactPhone) && (
+                          <div className="org-item-contact">
+                            <i className="fa-solid fa-user me-1"></i>
+                            {org.primaryContactName && (
+                              <span>{org.primaryContactName}</span>
+                            )}
+                            {org.primaryContactEmail && (
+                              <span className="ms-2">
+                                {org.primaryContactEmail}
+                              </span>
+                            )}
+                            {org.primaryContactPhone && (
+                              <span className="ms-2">
+                                {org.primaryContactPhone}
+                              </span>
+                            )}
                           </div>
                         )}
                       </div>
                     );
-                  })
-                ) : (
-                  <div className="embedded-org-no-results">
-                    No organizations found
-                  </div>
-                )}
-              </div>
+                  })}
+                </div>
+              ) : (
+                <div className="org-search-no-results">
+                  <i className="fa-solid fa-search me-2"></i>
+                  No organizations found.
+                </div>
+              )}
             </div>
           )}
         </div>
