@@ -10,7 +10,8 @@ const MessagesLayout = ({
   messages,
   messageText,
   setMessageText,
-  onSendMessage
+  onSendMessage,
+  sendingMessage
 }) => {
   return (
     <div className="messages-container">
@@ -27,6 +28,7 @@ const MessagesLayout = ({
             messageText={messageText}
             setMessageText={setMessageText}
             onSendMessage={onSendMessage}
+            sendingMessage={sendingMessage}
           />
         </div>
       </div>

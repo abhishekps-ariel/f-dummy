@@ -3,7 +3,7 @@ import ChatHeader from './ChatHeader';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
 
-const ChatArea = ({ selectedConversation, messages, messageText, setMessageText, onSendMessage }) => {
+const ChatArea = ({ selectedConversation, messages, messageText, setMessageText, onSendMessage, sendingMessage }) => {
   if (!selectedConversation) {
     return (
       <div className="chat-placeholder">
@@ -25,6 +25,7 @@ const ChatArea = ({ selectedConversation, messages, messageText, setMessageText,
         messageText={messageText}
         setMessageText={setMessageText}
         onSendMessage={onSendMessage}
+        sendingMessage={sendingMessage}
       />
     </>
   );

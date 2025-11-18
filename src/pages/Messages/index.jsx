@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { logout as logoutApi } from '../../services/authService';
@@ -8,6 +8,16 @@ import Sidebar from '../../components/shared/Sidebar';
 import Header from '../../components/shared/Header';
 import NoOrganizationAccess from '../../components/Petitions/NoOrganizationAccess';
 import MessagesLayout from '../../components/Messages/MessagesLayout';
+import {
+  getChatList,
+  getMessages,
+  sendMessage,
+  initializeSignalRConnection,
+  startSignalRConnection,
+  stopSignalRConnection,
+  getSignalRConnection,
+} from '../../services/chatService';
+import * as signalR from '@microsoft/signalr';
 
 const Messages = () => {
   const { user, logout, hasOrganizationAccess, organizationCheckComplete } = useAuth();
@@ -15,116 +25,225 @@ const Messages = () => {
   const [activeSection, setActiveSection] = useState('messages');
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [messageText, setMessageText] = useState('');
+  const [conversations, setConversations] = useState([]);
+  const [messages, setMessages] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [sendingMessage, setSendingMessage] = useState(false);
+  const [currentChatId, setCurrentChatId] = useState(null);
+  const signalRConnectionRef = useRef(null);
+  const messagesMapRef = useRef({}); // Store messages by chatId
 
-  // Static conversation data
-  const [conversations] = useState([
-    {
-      id: 1,
-      name: 'John Smith',
-      lastMessage: 'Thanks for the update on the petition.',
-      timestamp: '2:30 PM',
-      unread: 2,
-      avatar: 'JS'
-    },
-    {
-      id: 2,
-      name: 'Sarah Johnson',
-      lastMessage: 'Can you review the filing entity details?',
-      timestamp: '1:15 PM',
-      unread: 0,
-      avatar: 'SJ'
-    },
-    {
-      id: 3,
-      name: 'Michael Chen',
-      lastMessage: 'The borrower information looks good.',
-      timestamp: 'Yesterday',
-      unread: 1,
-      avatar: 'MC'
-    },
-    {
-      id: 4,
-      name: 'Legal Team',
-      lastMessage: 'Meeting scheduled for tomorrow at 3 PM',
-      timestamp: 'Yesterday',
-      unread: 0,
-      avatar: 'LT'
-    },
-    {
-      id: 5,
-      name: 'Emily Davis',
-      lastMessage: 'Please confirm the loan details.',
-      timestamp: '2 days ago',
-      unread: 0,
-      avatar: 'ED'
+  // Hardcoded receiver ID for testing
+  const TEST_RECEIVER_ID = '1c490bd3-e968-4a36-b915-78b64815ba6c';
+
+  // Format timestamp for display
+  const formatTimestamp = (timestamp) => {
+    if (!timestamp) return '';
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffInHours = (now - date) / (1000 * 60 * 60);
+    
+    if (diffInHours < 24) {
+      return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    } else if (diffInHours < 48) {
+      return 'Yesterday';
+    } else {
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     }
-  ]);
+  };
 
-  // Static messages data
-  const [messages] = useState({
-    1: [
-      {
-        id: 1,
-        sender: 'John Smith',
-        text: 'Hi, I need to discuss the foreclosure petition filing.',
-        timestamp: '2:15 PM',
-        isOwn: false
-      },
-      {
-        id: 2,
-        sender: 'You',
-        text: 'Sure, what would you like to know?',
-        timestamp: '2:20 PM',
-        isOwn: true
-      },
-      {
-        id: 3,
-        sender: 'John Smith',
-        text: 'Thanks for the update on the petition.',
-        timestamp: '2:30 PM',
-        isOwn: false
+  // Load chat list
+  const loadChatList = async () => {
+    if (!user?.id) return;
+    
+    try {
+      setLoading(true);
+      const response = await getChatList(user.id);
+      if (response.isSuccess && response.data) {
+        const formattedConversations = response.data.map((chat) => ({
+          id: chat.chatId,
+          chatId: chat.chatId,
+          name: chat.userName || 'Unknown User',
+          lastMessage: chat.lastMessage || '',
+          timestamp: formatTimestamp(chat.lastMessageTime),
+          unread: chat.unreadCount || 0,
+          userId: chat.userId,
+          avatar: chat.userName ? chat.userName.charAt(0).toUpperCase() : 'U',
+        }));
+        setConversations(formattedConversations);
       }
-    ],
-    2: [
-      {
-        id: 1,
-        sender: 'Sarah Johnson',
-        text: 'Can you review the filing entity details?',
-        timestamp: '1:15 PM',
-        isOwn: false
+    } catch (error) {
+      console.error('Error loading chat list:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load messages for a chat
+  const loadMessages = async (chatId) => {
+    if (!chatId || !user?.id) return;
+    
+    try {
+      setLoading(true);
+      const response = await getMessages(chatId, user.id, 1, 15);
+      if (response.isSuccess && response.data?.messages?.messages) {
+        const formattedMessages = response.data.messages.messages.map((msg) => ({
+          id: msg.id,
+          chatId: msg.chatId,
+          sender: msg.author?.user || 'Unknown',
+          text: msg.message || '',
+          timestamp: formatTimestamp(msg.timeStamp),
+          isOwn: msg.sendbyYou || false,
+          messageSeen: msg.messageSeen || false,
+          status: msg.status?.text || '',
+          author: msg.author,
+        }));
+        
+        // Reverse the array so oldest messages are at top and latest at bottom
+        const reversedMessages = formattedMessages.reverse();
+        
+        // Store messages in map
+        messagesMapRef.current[chatId] = reversedMessages;
+        setMessages(reversedMessages);
+        setCurrentChatId(chatId);
       }
-    ],
-    3: [
-      {
-        id: 1,
-        sender: 'Michael Chen',
-        text: 'The borrower information looks good.',
-        timestamp: 'Yesterday',
-        isOwn: false
+    } catch (error) {
+      console.error('Error loading messages:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Initialize SignalR connection
+  useEffect(() => {
+    const setupSignalR = async () => {
+      if (!user?.id) return;
+      
+      try {
+        const { token } = getAuthData();
+        if (!token) return;
+
+        const connection = initializeSignalRConnection(token);
+        signalRConnectionRef.current = connection;
+
+        // Set up message handler
+        connection.on('ReceiveMessage', (message) => {
+          console.log('Received message via SignalR:', message);
+          
+          // Add message to the appropriate chat
+          const chatId = message.chatId;
+          const formattedMessage = {
+            id: message.id,
+            chatId: message.chatId,
+            sender: message.author?.user || 'Unknown',
+            text: message.message || '',
+            timestamp: formatTimestamp(message.timeStamp),
+            isOwn: message.sendbyYou || false,
+            messageSeen: message.messageSeen || false,
+            status: message.status?.text || '',
+            author: message.author,
+          };
+          
+          // Initialize chat messages array if it doesn't exist
+          if (!messagesMapRef.current[chatId]) {
+            messagesMapRef.current[chatId] = [];
+          }
+          
+          // Check if message already exists (avoid duplicates)
+          const messageExists = messagesMapRef.current[chatId].some(
+            (msg) => msg.id === message.id
+          );
+          
+          if (!messageExists) {
+            // Append new message to the end (latest at bottom)
+            messagesMapRef.current[chatId] = [
+              ...messagesMapRef.current[chatId],
+              formattedMessage,
+            ];
+            
+            // Update current messages if this is the active chat
+            if (currentChatId === chatId) {
+              setMessages(messagesMapRef.current[chatId]);
+            }
+          }
+          
+          // Update conversation list with new last message
+          setConversations((prev) => {
+            const existingConv = prev.find((conv) => conv.chatId === chatId);
+            if (existingConv) {
+              return prev.map((conv) =>
+                conv.chatId === chatId
+                  ? {
+                      ...conv,
+                      lastMessage: message.message || '',
+                      timestamp: formatTimestamp(message.timeStamp),
+                      unread: conv.unread + (message.sendbyYou ? 0 : 1),
+                    }
+                  : conv
+              );
+            } else {
+              // New conversation - add it to the list
+              return [
+                {
+                  id: chatId,
+                  chatId: chatId,
+                  name: message.author?.user || 'Unknown User',
+                  lastMessage: message.message || '',
+                  timestamp: formatTimestamp(message.timeStamp),
+                  unread: message.sendbyYou ? 0 : 1,
+                  userId: message.sendbyYou ? message.receiverId : message.senderId,
+                  avatar: message.author?.user
+                    ? message.author.user.charAt(0).toUpperCase()
+                    : 'U',
+                },
+                ...prev,
+              ];
+            }
+          });
+        });
+
+        await startSignalRConnection(connection);
+      } catch (error) {
+        console.error('Error setting up SignalR:', error);
       }
-    ],
-    4: [
-      {
-        id: 1,
-        sender: 'Legal Team',
-        text: 'Meeting scheduled for tomorrow at 3 PM',
-        timestamp: 'Yesterday',
-        isOwn: false
+    };
+
+    if (hasOrganizationAccess && organizationCheckComplete) {
+      setupSignalR();
+    }
+
+    return () => {
+      if (signalRConnectionRef.current) {
+        stopSignalRConnection();
       }
-    ],
-    5: [
-      {
-        id: 1,
-        sender: 'Emily Davis',
-        text: 'Please confirm the loan details.',
-        timestamp: '2 days ago',
-        isOwn: false
+    };
+  }, [user?.id, hasOrganizationAccess, organizationCheckComplete, currentChatId]);
+
+  // Load chat list on mount
+  useEffect(() => {
+    if (hasOrganizationAccess && organizationCheckComplete && user?.id) {
+      loadChatList();
+    }
+  }, [hasOrganizationAccess, organizationCheckComplete, user?.id]);
+
+  // Load messages when conversation is selected
+  useEffect(() => {
+    if (selectedConversation?.chatId) {
+      // Check if we already have messages for this chat
+      if (messagesMapRef.current[selectedConversation.chatId]) {
+        setMessages(messagesMapRef.current[selectedConversation.chatId]);
+        setCurrentChatId(selectedConversation.chatId);
+      } else {
+        loadMessages(selectedConversation.chatId);
       }
-    ]
-  });
+    }
+  }, [selectedConversation]);
 
   const handleLogout = async () => {
     try {
+      if (signalRConnectionRef.current) {
+        await stopSignalRConnection();
+      }
       const { refreshToken } = getAuthData();
       if (refreshToken) {
         await logoutApi(refreshToken);
@@ -138,12 +257,69 @@ const Messages = () => {
     }
   };
 
-  const handleSendMessage = (e) => {
+  const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (messageText.trim() && selectedConversation) {
-      // In a real implementation, this would send to API
-      // For now, just clear the input
+    if (!messageText.trim() || !user?.id || sendingMessage) return;
+
+    // For testing, use hardcoded receiver ID if no conversation is selected
+    const receiverId = selectedConversation?.userId || TEST_RECEIVER_ID;
+    const chatId = selectedConversation?.chatId || null;
+
+    try {
+      setSendingMessage(true);
+      const response = await sendMessage({
+        senderId: user.id,
+        receiverId: receiverId,
+        message: messageText.trim(),
+        chatId: chatId,
+        replyToMessageId: null,
+      });
+
+      if (response.isSuccess && response.data) {
+        // Message sent successfully
       setMessageText('');
+        
+        // If this is a new chat, reload chat list to get the new chatId
+        if (!chatId) {
+          await loadChatList();
+        } else {
+          // Add sent message to current messages (append to end for latest at bottom)
+          const formattedMessage = {
+            id: response.data.id,
+            chatId: response.data.chatId,
+            sender: response.data.author?.user || 'You',
+            text: response.data.message || '',
+            timestamp: formatTimestamp(response.data.timeStamp),
+            isOwn: true,
+            messageSeen: response.data.messageSeen || false,
+            status: response.data.status?.text || '',
+            author: response.data.author,
+          };
+          
+          // Append new message to the end (latest at bottom)
+          const updatedMessages = [...messages, formattedMessage];
+          messagesMapRef.current[response.data.chatId] = updatedMessages;
+          setMessages(updatedMessages);
+          setCurrentChatId(response.data.chatId);
+          
+          // Update conversation list
+          setConversations((prev) =>
+            prev.map((conv) =>
+              conv.chatId === response.data.chatId
+                ? {
+                    ...conv,
+                    lastMessage: response.data.message || '',
+                    timestamp: formatTimestamp(response.data.timeStamp),
+                  }
+                : conv
+            )
+          );
+        }
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+    } finally {
+      setSendingMessage(false);
     }
   };
 
@@ -157,8 +333,6 @@ const Messages = () => {
       setSelectedConversation(conversations[0]);
     }
   }, [conversations, selectedConversation]);
-
-  const currentMessages = selectedConversation ? messages[selectedConversation.id] || [] : [];
 
   return (
     <div className="dashboard-wrapper">
@@ -197,15 +371,23 @@ const Messages = () => {
             </div>
           ) : !hasOrganizationAccess ? (
             <NoOrganizationAccess />
+          ) : loading && conversations.length === 0 ? (
+            <div className="text-center py-5">
+              <div className="spinner-border text-primary" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </div>
+              <p className="mt-2 text-muted">Loading conversations...</p>
+            </div>
           ) : (
             <MessagesLayout
               conversations={conversations}
               selectedConversation={selectedConversation}
               onConversationClick={handleConversationClick}
-              messages={currentMessages}
+              messages={messages}
               messageText={messageText}
               setMessageText={setMessageText}
               onSendMessage={handleSendMessage}
+              sendingMessage={sendingMessage}
             />
           )}
         </div>

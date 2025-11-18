@@ -58,3 +58,10 @@ export const PETITION_ENDPOINTS = {
     DELETE_PETITION_BY_ID: (petitionId) => `/api/Petition/${petitionId}`,
 };
 
+export const CHAT_ENDPOINTS = {
+  SEND_MESSAGE: "/send-message",
+  GET_MESSAGES: "/get-messages",
+  GET_CHAT_LIST: (userId) => `/get-chat-list/${userId}`,
+  SIGNALR_HUB_URL: "http://dev.filir.arielsoftwares.in/hubs/realtime-chat",
+};
+
