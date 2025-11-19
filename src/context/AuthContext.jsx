@@ -31,13 +31,13 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem('petitionTabs');
       localStorage.removeItem('activePetitionTab');
     } catch (error) {
-      console.error('Failed to clear petition tabs from storage on organization switch:', error);
+      // Failed to clear petition tabs from storage
     }
 
     try {
       window.dispatchEvent(new Event('filir:petition-tabs-reset'));
     } catch (error) {
-      console.error('Failed to dispatch petition tabs reset event:', error);
+      // Failed to dispatch petition tabs reset event
     }
   };
 
@@ -85,7 +85,6 @@ export const AuthProvider = ({ children }) => {
   };
 
   const persistActiveOrganizationSelection = (organizationId) => {
-    console.log('[AuthContext] Persisting active organization id:', organizationId);
     setActiveOrganizationIdState(organizationId ?? null);
     persistActiveOrganizationId(organizationId ?? null);
   };
@@ -100,18 +99,12 @@ export const AuthProvider = ({ children }) => {
 
   const initializeOrganizationsState = (userData, { preferStoredSelection = true } = {}) => {
     const storedActiveId = preferStoredSelection ? getStoredActiveOrganizationId() : null;
-    console.log('[AuthContext] initializeOrganizationsState', {
-      userOrganizations: userData?.organizations,
-      storedActiveId,
-      userOrganizationId: userData?.organizationId,
-    });
 
     let baseList = Array.isArray(userData?.organizations)
       ? userData.organizations.filter((org) => Boolean(org?.organizationId))
       : [];
 
     if (baseList.length === 0 && storedActiveId) {
-      console.log('[AuthContext] Rebuilding org list from stored active id');
       baseList = [buildFallbackOrganization(storedActiveId)];
     }
 
@@ -126,7 +119,6 @@ export const AuthProvider = ({ children }) => {
         : [];
 
     const organizationList = [...baseList, ...fallbackList];
-    console.log('[AuthContext] Final organization list after initialization', organizationList);
     setOrganizations(organizationList);
 
     const fallbackId = userData?.organizationId ?? null;
@@ -136,7 +128,6 @@ export const AuthProvider = ({ children }) => {
       fallbackId
     );
 
-    console.log('[AuthContext] Resolved active organization id:', resolvedActiveId);
     if (resolvedActiveId) {
       persistActiveOrganizationSelection(resolvedActiveId);
     }
@@ -188,12 +179,6 @@ export const AuthProvider = ({ children }) => {
         const userOrgId = userToCheck?.organizationId;
         const approvedOrgId = approvedRequest?.organizationId;
 
-        console.log('[AuthContext] Join request fallback result', {
-          approvedRequest,
-          approvedOrgId,
-          userOrgId,
-        });
-
         if (approvedRequest && approvedOrgId) {
           const orgDetail = approvedRequest.organizationDetail || {};
           const fallbackOrganization = {
@@ -221,7 +206,6 @@ export const AuthProvider = ({ children }) => {
               userOrgId === approvedOrgId);
 
           if (orgIdMatches) {
-            console.log('[AuthContext] Join request fallback succeeded');
             setHasOrganizationAccess(true);
             persistActiveOrganizationSelection(approvedOrgId);
             return true;
@@ -229,10 +213,9 @@ export const AuthProvider = ({ children }) => {
         }
       }
     } catch (error) {
-      console.error('Error checking join requests:', error);
+      // Error checking join requests
     }
 
-    console.log('[AuthContext] Join request fallback failed');
     return false;
   };
 
@@ -241,11 +224,6 @@ export const AuthProvider = ({ children }) => {
     const checkAuthStatus = async () => {
       try {
         const { token, user: userData, activeOrganizationId: storedActiveOrgId } = getAuthData();
-
-        console.log('[AuthContext] checkAuthStatus', {
-          tokenPresent: Boolean(token),
-          storedActiveOrgId,
-        });
 
         if (token && userData) {
           setIsAuthenticated(true);
@@ -261,7 +239,6 @@ export const AuthProvider = ({ children }) => {
           setActiveOrganizationIdState(null);
         }
       } catch (error) {
-        console.error('[AuthContext] Error during auth status check', error);
         setIsAuthenticated(false);
         setUser(null);
         setOrganization(null);
@@ -310,7 +287,7 @@ export const AuthProvider = ({ children }) => {
     try {
       localStorage.removeItem('petitionFormData');
     } catch (error) {
-      console.error('Error clearing petition form data on logout:', error);
+      // Error clearing petition form data on logout
     }
   };
 
@@ -355,7 +332,6 @@ export const AuthProvider = ({ children }) => {
             : prevUser?.organizations || [],
       };
 
-      console.log('[AuthContext] syncUserData merged result', mergedUser);
       updateStoredUser(mergedUser);
       initializeOrganizationsState(mergedUser, { preferStoredSelection: true });
       return mergedUser;
