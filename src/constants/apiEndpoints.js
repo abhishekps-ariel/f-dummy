@@ -60,3 +60,10 @@ export const PETITION_ENDPOINTS = {
   GET_PUBLIC_PETITIONS_PAGED: "/api/Petition/public/petitions/paged",
 };
 
+export const CHAT_ENDPOINTS = {
+  SEND_MESSAGE: "/send-message",
+  GET_MESSAGES: "/get-messages",
+  GET_CHAT_LIST: (userId) => `/get-chat-list/${userId}`,
+  SIGNALR_HUB_URL: "http://dev.filir.arielsoftwares.in/hubs/realtime-chat",
+};
+
