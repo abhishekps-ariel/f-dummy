@@ -61,9 +61,9 @@ export const PETITION_ENDPOINTS = {
 };
 
 export const CHAT_ENDPOINTS = {
-  SEND_MESSAGE: "/send-message",
-  GET_MESSAGES: "/get-messages",
-  GET_CHAT_LIST: (userId) => `/get-chat-list/${userId}`,
+  SEND_MESSAGE: "/api/Chat/send-message",
+  GET_MESSAGES: "/api/Chat/get-messages",
+  GET_CHAT_LIST: (userId) => `/api/Chat/get-chat-list/${userId}`,
   SIGNALR_HUB_URL: "http://dev.filir.arielsoftwares.in/hubs/realtime-chat",
 };
 
