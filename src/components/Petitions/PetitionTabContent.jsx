@@ -19,6 +19,9 @@ import ForeclosureSaleSection from "./Sections/ForeclosureSaleSection";
 import StepForm35BCompliance from "./Sections/StepForm35BCompliance";
 import StepLoanAssignees from "./Sections/StepLoanAssignees";
 import StepSignaturesSection from "./Sections/StepSignaturesSection";
+import JudgmentDisplaySection from "./Sections/JudgmentDisplaySection";
+import ForeclosureSaleDisplaySection from "./Sections/ForeclosureSaleDisplaySection";
+import NotesDisplaySection from "./Sections/NotesDisplaySection";
 import EditJudgementModal from "./EditJudgementModal";
 import EditForeclosureModal from "./EditForeclosureModal";
 import NotesModal from "./NotesModal";
@@ -51,6 +54,8 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
   const [showForeclosureModal, setShowForeclosureModal] = useState(false);
   const [showEditDropdown, setShowEditDropdown] = useState(false);
   const [showNotesModal, setShowNotesModal] = useState(false);
+  const [showNotesDropdown, setShowNotesDropdown] = useState(false);
+  const [showNotesSection, setShowNotesSection] = useState(false);
   
   const { user } = useAuth();
 
@@ -676,20 +681,25 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
     setShowEditDropdown(false);
     setShowJudgementModal(false);
     setShowForeclosureModal(false);
+    setShowNotesDropdown(false);
+    setShowNotesSection(false);
   }, [petition?.id]);
 
-  // Close dropdown when clicking outside
+  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (showEditDropdown && !event.target.closest('.dropdown')) {
+      if (showEditDropdown && !event.target.closest('.edit-options-dropdown')) {
         setShowEditDropdown(false);
+      }
+      if (showNotesDropdown && !event.target.closest('.notes-options-dropdown')) {
+        setShowNotesDropdown(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showEditDropdown]);
+  }, [showEditDropdown, showNotesDropdown]);
 
   // Removed status check - now all petitions (draft and submitted) can be edited
 
@@ -1308,6 +1318,9 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
       
       // Update local formData state
       setFormData(dataToSave);
+      
+      // If notes section is open, keep it open to show the new note
+      // The section will automatically update with the new formData
       
       if (onPetitionUpdated) {
         setTimeout(() => {
@@ -1970,15 +1983,42 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
                           </div>
                         )}
                       </div>
-                      <button
-                        type="button"
-                        className="dashboard-btn-refresh"
-                        onClick={() => setShowNotesModal(true)}
-                        title="View and Add Notes"
-                      >
-                        <i className="fas fa-sticky-note me-1"></i>
-                        Notes
-                      </button>
+                      <div className="dropdown notes-options-dropdown" style={{ position: "relative" }}>
+                        <button
+                          type="button"
+                          className={`dashboard-btn-refresh ${showNotesDropdown ? 'active' : ''}`}
+                          onClick={() => setShowNotesDropdown(!showNotesDropdown)}
+                          title="Notes options"
+                        >
+                          <i className="fas fa-sticky-note me-1"></i>
+                          Notes
+                          <i className={`fas fa-chevron-down ms-1 transition-icon ${showNotesDropdown ? 'rotate' : ''}`} style={{ fontSize: "0.7rem" }}></i>
+                        </button>
+                        {showNotesDropdown && (
+                          <div className="edit-options-menu">
+                            <button
+                              className="edit-option-item"
+                              onClick={() => {
+                                setShowNotesModal(true);
+                                setShowNotesDropdown(false);
+                              }}
+                            >
+                              <i className="fas fa-plus edit-option-icon"></i>
+                              <span>Add Note</span>
+                            </button>
+                            <button
+                              className="edit-option-item"
+                              onClick={() => {
+                                setShowNotesSection(true);
+                                setShowNotesDropdown(false);
+                              }}
+                            >
+                              <i className="fas fa-eye edit-option-icon"></i>
+                              <span>View Notes</span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
                       <button
                         type="button"
                         className="dashboard-btn-refresh"
@@ -2077,6 +2117,14 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
 
         {/* Form Layout */}
         <form className="petition-form">
+          {/* Notes Display Section - Shows above Property Details when toggled */}
+          {showNotesSection && (
+            <NotesDisplaySection
+              formData={formData}
+              onClose={() => setShowNotesSection(false)}
+            />
+          )}
+
           {/* Property Details Section */}
           <PropertyDetailsCard
             SectionHeader={SectionHeader}
@@ -2142,9 +2190,6 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
             handleNoticeAddressSelect={handleNoticeAddressSelect}
           />
 
-          {/* Foreclosure Sale Section removed - now handled in modal */}
-
-
           {/* Form 35B Compliance Section */}
           <StepForm35BCompliance
             SectionHeader={SectionHeader}
@@ -2183,6 +2228,25 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
             setFormData={setFormData}
             setFieldErrors={setFieldErrors}
             petition={petition}
+            formatDate={formatDate}
+          />
+
+          {/* Judgment Display Section - Read-only, only shows if data exists */}
+          <JudgmentDisplaySection
+            SectionHeader={SectionHeader}
+            formData={formData}
+            getJudgmentTypes={getJudgmentTypes}
+            findOptionByValue={findOptionByValue}
+            formatDate={formatDate}
+            formatCurrency={formatCurrency}
+          />
+
+          {/* Foreclosure Sale Display Section - Read-only, only shows if data exists */}
+          <ForeclosureSaleDisplaySection
+            SectionHeader={SectionHeader}
+            formData={formData}
+            getBuyerTypes={getBuyerTypes}
+            findOptionByValue={findOptionByValue}
             formatDate={formatDate}
           />
         </form>
