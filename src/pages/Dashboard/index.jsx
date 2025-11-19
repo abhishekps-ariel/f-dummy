@@ -275,8 +275,14 @@ function Dashboard() {
                 {/* Organization Details Card */}
                 <div className="col-md-4 mb-3">
                   <div className="stat-card h-100">
-                    <h5 className="stat-count mb-3" style={{ fontSize: '1.2rem' }}>Organization Details</h5>
-                    {isLoadingOrgData ? (
+                    {getUserRole(user)?.toLowerCase() === 'filer' ? (
+                      <div className="d-flex align-items-center justify-content-center h-100" style={{ minHeight: '150px' }}>
+                        <p className="text-muted small mb-0 text-center">Will be implemented later</p>
+                      </div>
+                    ) : (
+                      <>
+                        <h5 className="stat-count mb-3" style={{ fontSize: '1.2rem' }}>Organization Details</h5>
+                        {isLoadingOrgData ? (
                       <div className="text-center py-3">
                         <div className="spinner-border spinner-border-sm text-primary" role="status">
                           <span className="visually-hidden">Loading...</span>
@@ -309,10 +315,12 @@ function Dashboard() {
                           Active Member
                             </span>
                           </div>
-                    ) : (
-                      <div className="text-center">
-                        <p className="text-muted small mb-0">Organization details not available</p>
-                      </div>
+                        ) : (
+                          <div className="text-center">
+                            <p className="text-muted small mb-0">Organization details not available</p>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
