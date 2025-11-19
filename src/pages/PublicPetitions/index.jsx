@@ -5,6 +5,8 @@ import HomeFooter from "../../components/Home/HomeFooter";
 import { ROUTES } from "../../constants/routerConstants";
 import petitionApiService from "../../services/petitionApiService";
 import { toast } from "react-toastify";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 function PublicPetitions() {
   const navigate = useNavigate();
@@ -17,6 +19,8 @@ function PublicPetitions() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
   const [pageSize] = useState(10);
+  const [exporting, setExporting] = useState(false);
+  const [showExportDropdown, setShowExportDropdown] = useState(false);
 
   // Fetch petitions from API
   const fetchPetitions = async () => {
@@ -55,6 +59,19 @@ function PublicPetitions() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, searchCity, searchZipCode]);
 
+  // Close export dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showExportDropdown && !event.target.closest('.dropdown')) {
+        setShowExportDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showExportDropdown]);
+
   // Calculate total pages
   const totalPages = Math.ceil(totalRecords / pageSize);
 
@@ -88,6 +105,140 @@ function PublicPetitions() {
     }).format(amount);
   };
 
+  // Handle export functionality
+  const handleExport = async (format) => {
+    setExporting(true);
+    try {
+      // Fetch all petitions for export (not just current page)
+      const response = await petitionApiService.getPublicPetitionsPaged({
+        city: searchCity,
+        zipCode: searchZipCode,
+        pageNumber: 1,
+        pageSize: totalRecords || 1000, // Get all records
+        sortColumn: "",
+        sortDirection: "",
+      });
+
+      const allPetitions = response.success && response.data ? response.data : petitions;
+
+      if (format === "csv") {
+        await exportToCSV(allPetitions);
+      } else if (format === "pdf") {
+        await exportToPDF(allPetitions);
+      }
+      toast.success(
+        `Petitions exported as ${format.toUpperCase()} successfully!`
+      );
+    } catch (error) {
+      toast.error("Failed to export petitions. Please try again.");
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  // Export to CSV
+  const exportToCSV = async (allPetitions) => {
+    try {
+      const headers = [
+        "City",
+        "Zip Code",
+        "Sale Amount",
+        "Sale Date",
+      ];
+      const csvContent = [
+        headers.join(","),
+        ...allPetitions.map((petition) =>
+          [
+            `"${petition.city || "N/A"}"`,
+            `"${petition.zipCode || "N/A"}"`,
+            formatCurrency(petition.saleAmount),
+            formatDate(petition.saleDate),
+          ].join(",")
+        ),
+      ].join("\n");
+
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute(
+        "download",
+        `public_petitions_${new Date().toISOString().split("T")[0]}.csv`
+      );
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      toast.error("Failed to export CSV. Please try again.");
+    }
+  };
+
+  // Export to PDF
+  const exportToPDF = async (allPetitions) => {
+    try {
+      const doc = new jsPDF();
+
+      // Add title
+      doc.setFontSize(18);
+      doc.text("Public Petitions Report", 14, 22);
+
+      // Add date
+      doc.setFontSize(10);
+      doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 32);
+
+      // Prepare table data
+      const headers = [
+        "City",
+        "Zip Code",
+        "Sale Amount",
+        "Sale Date",
+      ];
+      const tableData = allPetitions.map((petition) => [
+        petition.city || "N/A",
+        petition.zipCode || "N/A",
+        formatCurrency(petition.saleAmount),
+        formatDate(petition.saleDate),
+      ]);
+
+      // Add table using autoTable plugin
+      autoTable(doc, {
+        head: [headers],
+        body: tableData,
+        startY: 40,
+        styles: {
+          fontSize: 8,
+          cellPadding: 3,
+        },
+        headStyles: {
+          fillColor: [52, 73, 94],
+          textColor: 255,
+          fontStyle: "bold",
+        },
+        alternateRowStyles: {
+          fillColor: [245, 245, 245],
+        },
+        margin: { top: 40 },
+        columnStyles: {
+          0: { cellWidth: 50 },
+          1: { cellWidth: 30 },
+          2: { cellWidth: 40 },
+          3: { cellWidth: 40 },
+        },
+      });
+
+      // Add summary at the bottom
+      const finalY = doc.lastAutoTable.finalY + 10;
+      doc.setFontSize(10);
+      doc.text(`Total Petitions: ${allPetitions.length}`, 14, finalY);
+
+      // Save the PDF
+      doc.save(`public_petitions_${new Date().toISOString().split("T")[0]}.pdf`);
+    } catch (error) {
+      toast.error("Failed to export PDF. Please try again.");
+    }
+  };
+
   return (
     <div>
       <HomeHeader
@@ -97,6 +248,7 @@ function PublicPetitions() {
         actionsRef={null}
         newsRef={null}
         eventsRef={null}
+        hideNavigation={true}
       />
 
       {/* Page Header */}
@@ -109,13 +261,66 @@ function PublicPetitions() {
                 View publicly filed foreclosure petitions in Massachusetts
               </p>
             </div>
-            <button
-              className="dashboard-btn-create"
-              onClick={() => navigate(ROUTES.HOME)}
-            >
-              <i className="fas fa-arrow-left me-2"></i>
-              Back to Home
-            </button>
+            <div className="d-flex gap-2">
+              <div className="dropdown" style={{ position: "relative" }}>
+                <button
+                  className={`dashboard-btn-create ${exporting ? 'disabled' : ''} ${showExportDropdown ? 'active' : ''}`}
+                  onClick={() => setShowExportDropdown(!showExportDropdown)}
+                  disabled={exporting}
+                  title="Export petitions"
+                >
+                  {exporting ? (
+                    <>
+                      <span
+                        className="spinner-border spinner-border-sm me-2"
+                        role="status"
+                        aria-hidden="true"
+                      ></span>
+                      Exporting...
+                    </>
+                  ) : (
+                    <>
+                      <i className="fa-solid fa-download me-2"></i>
+                      Export
+                      <i className={`fas fa-chevron-down ms-2 transition-icon ${showExportDropdown ? 'rotate' : ''}`} style={{ fontSize: "0.7rem" }}></i>
+                    </>
+                  )}
+                </button>
+                {showExportDropdown && (
+                  <div className="edit-options-menu" style={{ right: 0, left: 'auto' }}>
+                    <button
+                      className="edit-option-item"
+                      onClick={() => {
+                        handleExport("csv");
+                        setShowExportDropdown(false);
+                      }}
+                      disabled={exporting}
+                    >
+                      <i className="fas fa-file-csv edit-option-icon"></i>
+                      <span>Export as CSV</span>
+                    </button>
+                    <button
+                      className="edit-option-item"
+                      onClick={() => {
+                        handleExport("pdf");
+                        setShowExportDropdown(false);
+                      }}
+                      disabled={exporting}
+                    >
+                      <i className="fas fa-file-pdf edit-option-icon"></i>
+                      <span>Export as PDF</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+              <button
+                className="dashboard-btn-refresh"
+                onClick={() => navigate(ROUTES.HOME)}
+              >
+                <i className="fas fa-arrow-left me-2"></i>
+                Back to Home
+              </button>
+            </div>
           </div>
         </div>
       </section>

@@ -27,6 +27,7 @@ const ViewAllPetitions = ({ onBack }) => {
   const [sortBy, setSortBy] = useState("lastUpdated");
   const [sortOrder, setSortOrder] = useState("desc");
   const [exporting, setExporting] = useState(false);
+  const [showExportDropdown, setShowExportDropdown] = useState(false);
   const [pagination, setPagination] = useState({
     currentPage: 1, // API uses 1-based indexing
     totalPages: 1,
@@ -532,6 +533,10 @@ const ViewAllPetitions = ({ onBack }) => {
   // Handle click outside to close dropdown
   useEffect(() => {
     const handleClickOutside = (event) => {
+      // Close export dropdown when clicking outside
+      if (showExportDropdown && !event.target.closest('.dropdown')) {
+        setShowExportDropdown(false);
+      }
       if (
         openDropdownId &&
         !event.target.closest(".petition-action-expansion")
@@ -544,7 +549,7 @@ const ViewAllPetitions = ({ onBack }) => {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [openDropdownId]);
+  }, [openDropdownId, showExportDropdown]);
 
   const getStatusBadgeClass = (status, statusClass) => {
     // Use the statusClass from API if available, otherwise fallback to status text
@@ -661,12 +666,11 @@ const ViewAllPetitions = ({ onBack }) => {
                       </button>
 
                       {/* Export Dropdown */}
-                      <div className="dropdown">
+                      <div className="dropdown" style={{ position: "relative" }}>
                         <button
-                          className="dashboard-btn-refresh"
+                          className={`dashboard-btn-refresh ${showExportDropdown ? 'active' : ''}`}
                           type="button"
-                          data-bs-toggle="dropdown"
-                          aria-expanded="false"
+                          onClick={() => setShowExportDropdown(!showExportDropdown)}
                           title="Export petitions"
                           disabled={exporting}
                         >
@@ -683,31 +687,36 @@ const ViewAllPetitions = ({ onBack }) => {
                             <>
                               <i className="fa-solid fa-download me-2"></i>
                               Export
+                              <i className={`fas fa-chevron-down ms-2 transition-icon ${showExportDropdown ? 'rotate' : ''}`} style={{ fontSize: "0.7rem" }}></i>
                             </>
                           )}
                         </button>
-                        <ul className="dropdown-menu dropdown-menu-end">
-                          <li>
+                        {showExportDropdown && (
+                          <div className="edit-options-menu" style={{ right: 0, left: 'auto' }}>
                             <button
-                              className="dropdown-item"
-                              onClick={() => handleExport("csv")}
+                              className="edit-option-item"
+                              onClick={() => {
+                                handleExport("csv");
+                                setShowExportDropdown(false);
+                              }}
                               disabled={exporting}
                             >
-                              <i className="fa-solid fa-file-csv me-2"></i>
-                              Export as CSV
+                              <i className="fas fa-file-csv edit-option-icon"></i>
+                              <span>Export as CSV</span>
                             </button>
-                          </li>
-                          <li>
                             <button
-                              className="dropdown-item"
-                              onClick={() => handleExport("pdf")}
+                              className="edit-option-item"
+                              onClick={() => {
+                                handleExport("pdf");
+                                setShowExportDropdown(false);
+                              }}
                               disabled={exporting}
                             >
-                              <i className="fa-solid fa-file-pdf me-2"></i>
-                              Export as PDF
+                              <i className="fas fa-file-pdf edit-option-icon"></i>
+                              <span>Export as PDF</span>
                             </button>
-                          </li>
-                        </ul>
+                          </div>
+                        )}
                       </div>
 
                       {/* Refresh Button */}
@@ -746,12 +755,11 @@ const ViewAllPetitions = ({ onBack }) => {
                         </button>
                       </div>
                       <div className="col-4">
-                        <div className="dropdown w-100">
+                        <div className="dropdown w-100" style={{ position: "relative" }}>
                           <button
-                            className="dashboard-btn-refresh w-100"
+                            className={`dashboard-btn-refresh w-100 ${showExportDropdown ? 'active' : ''}`}
                             type="button"
-                            data-bs-toggle="dropdown"
-                            aria-expanded="false"
+                            onClick={() => setShowExportDropdown(!showExportDropdown)}
                             title="Export petitions"
                             disabled={exporting}
                           >
@@ -772,31 +780,36 @@ const ViewAllPetitions = ({ onBack }) => {
                                 <span className="d-none d-sm-inline">
                                   Export
                                 </span>
+                                <i className={`fas fa-chevron-down ms-1 transition-icon ${showExportDropdown ? 'rotate' : ''}`} style={{ fontSize: "0.7rem" }}></i>
                               </>
                             )}
                           </button>
-                          <ul className="dropdown-menu dropdown-menu-end">
-                            <li>
+                          {showExportDropdown && (
+                            <div className="edit-options-menu" style={{ right: 0, left: 'auto' }}>
                               <button
-                                className="dropdown-item"
-                                onClick={() => handleExport("csv")}
+                                className="edit-option-item"
+                                onClick={() => {
+                                  handleExport("csv");
+                                  setShowExportDropdown(false);
+                                }}
                                 disabled={exporting}
                               >
-                                <i className="fa-solid fa-file-csv me-2"></i>
-                                Export as CSV
+                                <i className="fas fa-file-csv edit-option-icon"></i>
+                                <span>Export as CSV</span>
                               </button>
-                            </li>
-                            <li>
                               <button
-                                className="dropdown-item"
-                                onClick={() => handleExport("pdf")}
+                                className="edit-option-item"
+                                onClick={() => {
+                                  handleExport("pdf");
+                                  setShowExportDropdown(false);
+                                }}
                                 disabled={exporting}
                               >
-                                <i className="fa-solid fa-file-pdf me-2"></i>
-                                Export as PDF
+                                <i className="fas fa-file-pdf edit-option-icon"></i>
+                                <span>Export as PDF</span>
                               </button>
-                            </li>
-                          </ul>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>

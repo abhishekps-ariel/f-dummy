@@ -28,7 +28,7 @@ import NotesModal from "./NotesModal";
 import { useAuth } from "../../context/AuthContext";
 import { getUserRole } from "../../utils/storage";
 
-const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
+const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) => {
   const { loadingTabs, activeTabId, refreshTab, tabs } = useTabs();
   const {
     getLoanTypes,
@@ -1983,42 +1983,44 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
                           </div>
                         )}
                       </div>
-                      <div className="dropdown notes-options-dropdown" style={{ position: "relative" }}>
-                        <button
-                          type="button"
-                          className={`dashboard-btn-refresh ${showNotesDropdown ? 'active' : ''}`}
-                          onClick={() => setShowNotesDropdown(!showNotesDropdown)}
-                          title="Notes options"
-                        >
-                          <i className="fas fa-sticky-note me-1"></i>
-                          Notes
-                          <i className={`fas fa-chevron-down ms-1 transition-icon ${showNotesDropdown ? 'rotate' : ''}`} style={{ fontSize: "0.7rem" }}></i>
-                        </button>
-                        {showNotesDropdown && (
-                          <div className="edit-options-menu">
-                            <button
-                              className="edit-option-item"
-                              onClick={() => {
-                                setShowNotesModal(true);
-                                setShowNotesDropdown(false);
-                              }}
-                            >
-                              <i className="fas fa-plus edit-option-icon"></i>
-                              <span>Add Note</span>
-                            </button>
-                            <button
-                              className="edit-option-item"
-                              onClick={() => {
-                                setShowNotesSection(true);
-                                setShowNotesDropdown(false);
-                              }}
-                            >
-                              <i className="fas fa-eye edit-option-icon"></i>
-                              <span>View Notes</span>
-                            </button>
-                          </div>
-                        )}
-                      </div>
+                      {!isPublic && (
+                        <div className="dropdown notes-options-dropdown" style={{ position: "relative" }}>
+                          <button
+                            type="button"
+                            className={`dashboard-btn-refresh ${showNotesDropdown ? 'active' : ''}`}
+                            onClick={() => setShowNotesDropdown(!showNotesDropdown)}
+                            title="Notes options"
+                          >
+                            <i className="fas fa-sticky-note me-1"></i>
+                            Notes
+                            <i className={`fas fa-chevron-down ms-1 transition-icon ${showNotesDropdown ? 'rotate' : ''}`} style={{ fontSize: "0.7rem" }}></i>
+                          </button>
+                          {showNotesDropdown && (
+                            <div className="edit-options-menu">
+                              <button
+                                className="edit-option-item"
+                                onClick={() => {
+                                  setShowNotesModal(true);
+                                  setShowNotesDropdown(false);
+                                }}
+                              >
+                                <i className="fas fa-plus edit-option-icon"></i>
+                                <span>Add Note</span>
+                              </button>
+                              <button
+                                className="edit-option-item"
+                                onClick={() => {
+                                  setShowNotesSection(true);
+                                  setShowNotesDropdown(false);
+                                }}
+                              >
+                                <i className="fas fa-eye edit-option-icon"></i>
+                                <span>View Notes</span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
                       <button
                         type="button"
                         className="dashboard-btn-refresh"
@@ -2117,8 +2119,8 @@ const PetitionTabContent = ({ petition, onPetitionUpdated }) => {
 
         {/* Form Layout */}
         <form className="petition-form">
-          {/* Notes Display Section - Shows above Property Details when toggled */}
-          {showNotesSection && (
+          {/* Notes Display Section - Shows above Property Details when toggled (only for non-public pages) */}
+          {!isPublic && showNotesSection && (
             <NotesDisplaySection
               formData={formData}
               onClose={() => setShowNotesSection(false)}

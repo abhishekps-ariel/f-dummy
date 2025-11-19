@@ -1,5 +1,6 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import logo from "../../assets/logo-index.png";
+import { ROUTES } from "../../constants/routerConstants";
 
 function HomeHeader({
   featureRef,
@@ -8,7 +9,10 @@ function HomeHeader({
   actionsRef,
   newsRef,
   eventsRef,
+  hideNavigation = false,
 }) {
+  const navigate = useNavigate();
+  
   return (
     <>
       {/* Official Banner */}
@@ -171,6 +175,11 @@ function HomeHeader({
             <a
               href="#!"
               className="gov-logo font-lg fw-medium text-decoration-none"
+              onClick={(e) => {
+                e.preventDefault();
+                navigate(ROUTES.HOME);
+              }}
+              style={{ cursor: "pointer" }}
             >
               <img
                 src={logo}
@@ -188,8 +197,9 @@ function HomeHeader({
         </div>
       </header>
 
-      {/* Sticky Tabs (Featured links) */}
-      <div className="tabs-link-featured navbar navbar-expand-lg positive-sticky top-0">
+      {/* Sticky Tabs (Featured links) - Hidden on public petition page */}
+      {!hideNavigation && (
+        <div className="tabs-link-featured navbar navbar-expand-lg positive-sticky top-0">
         <div className="container">
           <div className="d-lg-none"></div>
           <div className="d-flex align-items-center me-auto d-lg-none">
@@ -360,6 +370,7 @@ function HomeHeader({
           </div>
         </div>
       </div>
+      )}
     </>
   );
 }
