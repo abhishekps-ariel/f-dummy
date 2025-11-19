@@ -11,10 +11,7 @@ import {
   getChatList,
   getMessages,
   sendMessage,
-  initializeSignalRConnection,
-  startSignalRConnection,
-  stopSignalRConnection,
-  getSignalRConnection,
+  createSignalRConnection,
 } from '../../services/chatService';
 
 const Messages = () => {
@@ -28,8 +25,9 @@ const Messages = () => {
   const [loading, setLoading] = useState(true);
   const [sendingMessage, setSendingMessage] = useState(false);
   const [currentChatId, setCurrentChatId] = useState(null);
+  const currentChatIdRef = useRef(null);
   const signalRConnectionRef = useRef(null);
-  const messagesMapRef = useRef({}); // Store messages by chatId
+  const messagesMapRef = useRef({});
 
   // Hardcoded receiver ID for testing
   const TEST_RECEIVER_ID = '1c490bd3-e968-4a36-b915-78b64815ba6c';
@@ -103,6 +101,7 @@ const Messages = () => {
         messagesMapRef.current[chatId] = reversedMessages;
         setMessages(reversedMessages);
         setCurrentChatId(chatId);
+        currentChatIdRef.current = chatId;
       }
     } catch (error) {
       console.error('Error loading messages:', error);
@@ -111,115 +110,122 @@ const Messages = () => {
     }
   };
 
-  // Initialize SignalR connection for real-time message listening
   useEffect(() => {
-    const setupSignalR = async () => {
-      if (!user?.id) return;
-      
-      try {
-        const { token } = getAuthData();
-        if (!token) return;
-
-        // Initialize SignalR connection with token
-        const connection = initializeSignalRConnection(token);
-        signalRConnectionRef.current = connection;
-
-        // Listen for 'chatmessages' event (matching backend pattern)
-        connection.on('chatmessages', (msg) => {
-          console.log('Received message via SignalR:', msg);
-          
-          // Format message to match our UI structure
-          const chatId = msg.chatId;
-          const formattedMessage = {
-            id: msg.id,
-            chatId: msg.chatId,
-            sender: msg.author?.user || 'Unknown',
-            text: msg.message || '',
-            timestamp: formatTimestamp(msg.timeStamp),
-            isOwn: msg.sendbyYou || false,
-            messageSeen: msg.messageSeen || false,
-            status: msg.status?.text || '',
-            author: msg.author,
-          };
-          
-          // Initialize chat messages array if it doesn't exist
-          if (!messagesMapRef.current[chatId]) {
-            messagesMapRef.current[chatId] = [];
-          }
-          
-          // Check if message already exists (avoid duplicates)
-          const messageExists = messagesMapRef.current[chatId].some(
-            (existingMsg) => existingMsg.id === msg.id
-          );
-          
-          if (!messageExists) {
-            // Append new message to the end (latest at bottom)
-            messagesMapRef.current[chatId] = [
-              ...messagesMapRef.current[chatId],
-              formattedMessage,
-            ];
-            
-            // Update current messages if this is the active chat
-            if (currentChatId === chatId) {
-              setMessages(messagesMapRef.current[chatId]);
-            }
-            
-            // Update conversation list with new last message
-            setConversations((prev) => {
-              const existingConv = prev.find((conv) => conv.chatId === chatId);
-              if (existingConv) {
-                return prev.map((conv) =>
-                  conv.chatId === chatId
-                    ? {
-                        ...conv,
-                        lastMessage: msg.message || '',
-                        timestamp: formatTimestamp(msg.timeStamp),
-                      }
-                    : conv
-                );
-              } else {
-                // New conversation - add it to the list
-                return [
-                  {
-                    id: chatId,
-                    chatId: chatId,
-                    name: msg.author?.user || 'Unknown User',
-                    lastMessage: msg.message || '',
-                    timestamp: formatTimestamp(msg.timeStamp),
-                    userId: msg.sendbyYou ? msg.receiverId : msg.senderId,
-                    avatar: msg.author?.user
-                      ? msg.author.user.charAt(0).toUpperCase()
-                      : 'U',
-                  },
-                  ...prev,
-                ];
-              }
-            });
-          }
-        });
-
-        // Start the SignalR connection
-        await startSignalRConnection(connection);
-        console.log('SignalR connection established for real-time messages');
-      } catch (error) {
-        console.error('Error setting up SignalR:', error);
-        console.warn('Real-time messaging unavailable. Messages can still be sent/received via REST API.');
-        console.warn('CORS Issue: Backend needs to set Access-Control-Allow-Origin to specific origin (not "*") when credentials are used.');
-        // Don't throw - allow the app to continue without SignalR
-        // Messages can still be sent/received via REST API
-      }
-    };
-
-    if (user?.id) {
-      setupSignalR();
+    if (!user?.id) return;
+    
+    if (signalRConnectionRef.current) {
+      return;
     }
 
+    const conn = createSignalRConnection(user.id);
+    signalRConnectionRef.current = conn;
+    
+    let isMounted = true;
+
+    conn.on('chatmessages', (msg) => {
+      if (!isMounted) return;
+      
+      console.log('SignalR message received:', msg);
+      
+      const chatId = msg.ChatId || msg.chatId;
+      const messageId = msg.Id || msg.id;
+      const formattedMessage = {
+        id: messageId,
+        chatId: chatId,
+        sender: msg.Author?.User || msg.author?.user || 'Unknown',
+        text: msg.Message || msg.message || '',
+        timestamp: formatTimestamp(msg.TimeStamp || msg.timeStamp),
+        isOwn: msg.SendbyYou !== undefined ? msg.SendbyYou : (msg.sendbyYou || false),
+        messageSeen: msg.MessageSeen !== undefined ? msg.MessageSeen : (msg.messageSeen || false),
+        status: msg.Status?.Text || msg.status?.text || '',
+        author: msg.Author || msg.author,
+      };
+      
+      if (!messagesMapRef.current[chatId]) {
+        messagesMapRef.current[chatId] = [];
+      }
+      
+      const messageExists = messagesMapRef.current[chatId].some(
+        (existingMsg) => existingMsg.id === messageId
+      );
+      
+      if (!messageExists) {
+        messagesMapRef.current[chatId] = [
+          ...messagesMapRef.current[chatId],
+          formattedMessage,
+        ];
+        
+        if (currentChatIdRef.current === chatId) {
+          setMessages([...messagesMapRef.current[chatId]]);
+        }
+        
+        setConversations((prev) => {
+          const msgText = msg.Message || msg.message || '';
+          const msgTime = msg.TimeStamp || msg.timeStamp;
+          const msgAuthor = msg.Author || msg.author;
+          const msgSenderId = msg.SenderId || msg.senderId;
+          const msgReceiverId = msg.ReceiverId || msg.receiverId;
+          const isOwn = msg.SendbyYou !== undefined ? msg.SendbyYou : (msg.sendbyYou || false);
+          
+          const existingConv = prev.find((conv) => {
+            const convChatId = conv.chatId?.toString();
+            const msgChatId = chatId?.toString();
+            return convChatId === msgChatId;
+          });
+          
+          if (existingConv) {
+            return prev.map((conv) => {
+              const convChatId = conv.chatId?.toString();
+              const msgChatId = chatId?.toString();
+              return convChatId === msgChatId
+                ? {
+                    ...conv,
+                    lastMessage: msgText,
+                    timestamp: formatTimestamp(msgTime),
+                  }
+                : conv;
+            });
+          } else {
+            return [
+              {
+                id: chatId,
+                chatId: chatId,
+                name: msgAuthor?.User || msgAuthor?.user || 'Unknown User',
+                lastMessage: msgText,
+                timestamp: formatTimestamp(msgTime),
+                userId: isOwn ? msgReceiverId : msgSenderId,
+                avatar: (msgAuthor?.User || msgAuthor?.user)
+                  ? (msgAuthor.User || msgAuthor.user).charAt(0).toUpperCase()
+                  : 'U',
+              },
+              ...prev,
+            ];
+          }
+        });
+      }
+    });
+
+    conn.start()
+      .then(() => {
+        console.log('SignalR connected successfully');
+        if (!isMounted) {
+          conn.stop().catch(() => {});
+        }
+      })
+      .catch((err) => {
+        console.error('SignalR connection error:', err);
+      });
+
     return () => {
-      if (signalRConnectionRef.current) {
-        stopSignalRConnection();
+      isMounted = false;
+      if (signalRConnectionRef.current === conn) {
+        conn.off('chatmessages');
+        conn.stop().catch(() => {});
+        signalRConnectionRef.current = null;
       }
     };
-  }, [user?.id, currentChatId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   // Load chat list on mount
   useEffect(() => {
@@ -235,6 +241,7 @@ const Messages = () => {
       if (messagesMapRef.current[selectedConversation.chatId]) {
         setMessages(messagesMapRef.current[selectedConversation.chatId]);
         setCurrentChatId(selectedConversation.chatId);
+        currentChatIdRef.current = selectedConversation.chatId;
       } else {
         loadMessages(selectedConversation.chatId);
       }
@@ -243,9 +250,9 @@ const Messages = () => {
 
   const handleLogout = async () => {
     try {
-      // Clean up SignalR connection on logout
       if (signalRConnectionRef.current) {
-        await stopSignalRConnection();
+        signalRConnectionRef.current.stop().catch(() => {});
+        signalRConnectionRef.current = null;
       }
       const { refreshToken } = getAuthData();
       if (refreshToken) {
@@ -280,7 +287,7 @@ const Messages = () => {
 
       if (response.isSuccess && response.data) {
         // Message sent successfully
-        setMessageText('');
+      setMessageText('');
         
         // If this is a new chat, reload chat list to get the new chatId
         if (!chatId) {
@@ -304,6 +311,7 @@ const Messages = () => {
           messagesMapRef.current[response.data.chatId] = updatedMessages;
           setMessages(updatedMessages);
           setCurrentChatId(response.data.chatId);
+          currentChatIdRef.current = response.data.chatId;
           
           // Update conversation list
           setConversations((prev) =>
@@ -373,16 +381,16 @@ const Messages = () => {
               <p className="mt-2 text-muted">Loading conversations...</p>
             </div>
           ) : (
-            <MessagesLayout
-              conversations={conversations}
-              selectedConversation={selectedConversation}
-              onConversationClick={handleConversationClick}
+          <MessagesLayout
+            conversations={conversations}
+            selectedConversation={selectedConversation}
+            onConversationClick={handleConversationClick}
               messages={messages}
-              messageText={messageText}
-              setMessageText={setMessageText}
-              onSendMessage={handleSendMessage}
+            messageText={messageText}
+            setMessageText={setMessageText}
+            onSendMessage={handleSendMessage}
               sendingMessage={sendingMessage}
-            />
+          />
           )}
         </div>
       </main>

@@ -2,54 +2,16 @@ import client from "../api/axiosInstance";
 import { CHAT_ENDPOINTS } from "../constants/apiEndpoints";
 import * as signalR from "@microsoft/signalr";
 
-let connection = null;
-
-// Initialize SignalR connection
-export const initializeSignalRConnection = (token) => {
-  if (connection) {
-    return connection;
-  }
-
-  connection = new signalR.HubConnectionBuilder()
-    .withUrl(CHAT_ENDPOINTS.SIGNALR_HUB_URL, {
-      accessTokenFactory: () => token,
-    })
+export const createSignalRConnection = (userId) => {
+  const url = `${CHAT_ENDPOINTS.SIGNALR_HUB_URL}?userId=${encodeURIComponent(userId)}`;
+  const conn = new signalR.HubConnectionBuilder()
+    .withUrl(url)
     .withAutomaticReconnect()
     .build();
 
-  return connection;
+  return conn;
 };
 
-// Start SignalR connection
-export const startSignalRConnection = async (connection) => {
-  try {
-    if (connection.state === signalR.HubConnectionState.Disconnected) {
-      await connection.start();
-      console.log("SignalR Connected");
-    }
-  } catch (error) {
-    console.error("Error starting SignalR connection:", error);
-    throw error;
-  }
-};
-
-// Stop SignalR connection
-export const stopSignalRConnection = async () => {
-  if (connection) {
-    try {
-      await connection.stop();
-      connection = null;
-      console.log("SignalR Disconnected");
-    } catch (error) {
-      console.error("Error stopping SignalR connection:", error);
-    }
-  }
-};
-
-// Get SignalR connection instance
-export const getSignalRConnection = () => {
-  return connection;
-};
 
 // Send message API
 export const sendMessage = async (messageData) => {

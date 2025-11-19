@@ -64,6 +64,6 @@ export const CHAT_ENDPOINTS = {
   SEND_MESSAGE: "/send-message",
   GET_MESSAGES: "/get-messages",
   GET_CHAT_LIST: (userId) => `/get-chat-list/${userId}`,
-  SIGNALR_HUB_URL: "http://dev.filir.arielsoftwares.in/hubs/realtime-chat",
+  SIGNALR_HUB_URL: "https://localhost:61482/hubs/realtime-chat",
 };
 
