@@ -4,7 +4,20 @@ const Step7Form35BCompliance = ({
   formData,
   setFormData,
   fieldErrors,
+  isCertainMortgageLoanReadOnly = false,
 }) => {
+  // Get the list of selected checkboxes for the message
+  const getSelectedCheckboxesMessage = () => {
+    const selected = [];
+    if (formData.variableRate) selected.push("Variable Rate");
+    if (formData.interestOnly) selected.push("Interest Only");
+    if (formData.negativeAmortization) selected.push("Negative Amortization");
+    
+    if (selected.length === 0) return "";
+    if (selected.length === 1) return `${selected[0]} is selected on loan detail step.`;
+    if (selected.length === 2) return `${selected[0]} and ${selected[1]} are selected on loan detail step.`;
+    return `${selected[0]}, ${selected[1]}, and ${selected[2]} are selected on loan detail step.`;
+  };
   return (
           <div>
             <h2 className="theme-color font-med mb-1">
@@ -44,6 +57,7 @@ const Step7Form35BCompliance = ({
                           certainMortgageLoan: true,
                         }))
                       }
+                      disabled={isCertainMortgageLoanReadOnly}
                     />
 
                     <label
@@ -68,6 +82,7 @@ const Step7Form35BCompliance = ({
                           certainMortgageLoan: false,
                         }))
                       }
+                      disabled={isCertainMortgageLoanReadOnly}
                     />
 
                     <label
@@ -78,6 +93,12 @@ const Step7Form35BCompliance = ({
                     </label>
                   </div>
                 </div>
+                {isCertainMortgageLoanReadOnly && (
+                  <div className="text-muted small mt-2">
+                    <i className="fas fa-info-circle me-1"></i>
+                    This field is set to "Yes" because {getSelectedCheckboxesMessage()}
+                  </div>
+                )}
 
                 {fieldErrors.certainMortgageLoan && (
                   <div className="text-danger small mt-1">

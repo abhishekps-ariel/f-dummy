@@ -1012,10 +1012,32 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
       processedValue = isNaN(intValue) ? "" : intValue.toString();
     }
 
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : processedValue,
-    }));
+    setFormData((prev) => {
+      const newFormData = {
+        ...prev,
+        [name]: type === "checkbox" ? checked : processedValue,
+      };
+
+      // Check if any of the three checkboxes (variableRate, interestOnly, negativeAmortization) are checked
+      // If so, automatically set certainMortgageLoan to true and make it read-only
+      if (name === "variableRate" || name === "interestOnly" || name === "negativeAmortization") {
+        const variableRateChecked = name === "variableRate" ? checked : prev.variableRate;
+        const interestOnlyChecked = name === "interestOnly" ? checked : prev.interestOnly;
+        const negativeAmortizationChecked = name === "negativeAmortization" ? checked : prev.negativeAmortization;
+        
+        const hasAnyChecked = variableRateChecked || interestOnlyChecked || negativeAmortizationChecked;
+
+        if (hasAnyChecked) {
+          // Automatically set to Yes when any checkbox is checked
+          newFormData.certainMortgageLoan = true;
+        } else {
+          // When all checkboxes are unchecked, allow user to change it again
+          // Don't reset the value, just allow editing
+        }
+      }
+
+      return newFormData;
+    });
 
     // Trigger Google predictions for property address while editing
     if (isEditing && isLoaded && name === "propertyStreet1") {
@@ -2338,6 +2360,9 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
             formData={formData}
             setFormData={setFormData}
             fieldErrors={fieldErrors}
+            isCertainMortgageLoanReadOnly={
+              formData.variableRate || formData.interestOnly || formData.negativeAmortization
+            }
           />
 
 
