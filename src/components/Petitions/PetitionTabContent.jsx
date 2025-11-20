@@ -56,6 +56,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
   const [showNotesModal, setShowNotesModal] = useState(false);
   const [showNotesDropdown, setShowNotesDropdown] = useState(false);
   const [showNotesSection, setShowNotesSection] = useState(false);
+  const [showForeclosureWarningModal, setShowForeclosureWarningModal] = useState(false);
   
   const { user } = useAuth();
 
@@ -1233,6 +1234,52 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
     setShowEditDropdown(false);
   };
 
+  // Helper function to check if judgment has been submitted (has meaningful data)
+  const hasJudgmentBeenSubmitted = () => {
+    const judgment = formData?.judgment;
+    if (!judgment) return false;
+    
+    // Check if at least one field has a meaningful value
+    const hasDate = judgment.judgmentDate !== null && 
+                    judgment.judgmentDate !== undefined &&
+                    ((typeof judgment.judgmentDate === 'string' && judgment.judgmentDate.trim() !== '') ||
+                     (typeof judgment.judgmentDate !== 'string'));
+    
+    const hasAmount = judgment.judgmentAmount !== null && 
+                      judgment.judgmentAmount !== undefined && 
+                      judgment.judgmentAmount !== 0;
+    
+    const hasType = judgment.judgmentType !== null && 
+                    judgment.judgmentType !== undefined && 
+                    judgment.judgmentType !== 0 &&
+                    judgment.judgmentType !== '';
+    
+    const hasCourtInfo = judgment.courtInformation !== null &&
+                         judgment.courtInformation !== undefined &&
+                         typeof judgment.courtInformation === 'string' && 
+                         judgment.courtInformation.trim() !== '';
+    
+    const hasDocket = judgment.docketNumbers !== null &&
+                      judgment.docketNumbers !== undefined &&
+                      typeof judgment.docketNumbers === 'string' && 
+                      judgment.docketNumbers.trim() !== '';
+    
+    return hasDate || hasAmount || hasType || hasCourtInfo || hasDocket;
+  };
+
+  // Helper function to check if foreclosure editing is allowed
+  const canEditForeclosure = () => {
+    // Right to cure must be yes
+    if (formData.noticeSent !== true) {
+      return false;
+    }
+    // Judgment must be submitted
+    if (!hasJudgmentBeenSubmitted()) {
+      return false;
+    }
+    return true;
+  };
+
   // Handle edit dropdown selection
   const handleEditOptionSelect = (option) => {
     setShowEditDropdown(false);
@@ -1241,7 +1288,13 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
     } else if (option === "judgement") {
       setShowJudgementModal(true);
     } else if (option === "foreclosure") {
-      setShowForeclosureModal(true);
+      // Check if conditions are met before allowing foreclosure editing
+      if (canEditForeclosure()) {
+        setShowForeclosureModal(true);
+      } else {
+        // Show warning dialog
+        setShowForeclosureWarningModal(true);
+      }
     }
   };
 
@@ -1950,8 +2003,6 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
                             <button
                               className="edit-option-item"
                               onClick={() => handleEditOptionSelect("foreclosure")}
-                              disabled={formData.noticeSent !== true}
-                              title={formData.noticeSent !== true ? "Right to Cure notice must be sent first" : ""}
                             >
                               <i className="fas fa-edit edit-option-icon"></i>
                               <span>Edit Foreclosure</span>
@@ -2083,8 +2134,9 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
           </div>
         </div>
 
-        {/* Warning message for foreclosure sale info - show at top when noticeSent is true and info is missing, but not for Draft petitions */}
+        {/* Warning message for foreclosure sale info - show at top when noticeSent is true, judgment is submitted, and info is missing, but not for Draft petitions */}
         {formData.noticeSent === true && 
+         hasJudgmentBeenSubmitted() &&
          petition.status?.toLowerCase() !== "draft" && 
          petition.statusClass?.toLowerCase() !== "draft" &&
          (!formData.foreclosureSale?.saleDate || !formData.foreclosureSale?.soldToId) && (
@@ -2263,6 +2315,57 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
         setFormData={setFormData}
         onSave={handleSaveNotes}
       />
+
+      {/* Foreclosure Edit Warning Modal */}
+      {showForeclosureWarningModal && (() => {
+        const rightToCureMet = formData.noticeSent === true;
+        const judgmentSubmitted = hasJudgmentBeenSubmitted();
+        
+        // Determine which conditions are not met
+        const missingConditions = [];
+        if (!rightToCureMet) {
+          missingConditions.push('Right to Cure notice must be sent (set to "Yes")');
+        }
+        if (!judgmentSubmitted) {
+          missingConditions.push('Judgment must be submitted first');
+        }
+        
+        return (
+          <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <div className="modal-dialog modal-dialog-centered">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">Cannot Edit Foreclosure Sale</h5>
+                  <button
+                    type="button"
+                    className="btn-close"
+                    onClick={() => setShowForeclosureWarningModal(false)}
+                    aria-label="Close"
+                  ></button>
+                </div>
+                <div className="modal-body">
+                  <p>You cannot edit foreclosure sale information until the following condition{missingConditions.length > 1 ? 's are' : ' is'} met:</p>
+                  <ul>
+                    {missingConditions.map((condition, index) => (
+                      <li key={index}>{condition}</li>
+                    ))}
+                  </ul>
+                  <p className="mb-0">Please ensure {missingConditions.length > 1 ? 'all conditions are' : 'this condition is'} met before attempting to edit foreclosure sale information.</p>
+                </div>
+                <div className="modal-footer">
+                  <button
+                    type="button"
+                    className="dashboard-btn-refresh"
+                    onClick={() => setShowForeclosureWarningModal(false)}
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 };

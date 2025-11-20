@@ -276,9 +276,12 @@ function Dashboard() {
                 <div className="col-md-4 mb-3">
                   <div className="stat-card h-100">
                     {getUserRole(user)?.toLowerCase() === 'filer' ? (
-                      <div className="d-flex align-items-center justify-content-center h-100" style={{ minHeight: '150px' }}>
-                        <p className="text-muted small mb-0 text-center">Will be implemented later</p>
-                      </div>
+                      <>
+                        <h5 className="stat-count mb-3" style={{ fontSize: '1.2rem' }}>Form 35B Compliance</h5>
+                        <div className="d-flex align-items-center justify-content-center h-100" style={{ minHeight: '150px' }}>
+                          <p className="text-muted small mb-0 text-center">Will be implemented later</p>
+                        </div>
+                      </>
                     ) : (
                       <>
                         <h5 className="stat-count mb-3" style={{ fontSize: '1.2rem' }}>Organization Details</h5>

@@ -3203,26 +3203,31 @@ body.high-contrast .text-size-dropdown-item.selected {
 }
 
 /* Custom scrollbar for notes list */
-.custom-scrollbar::-webkit-scrollbar {
+.custom-scrollbar::-webkit-scrollbar,
+.notes-list::-webkit-scrollbar {
     width: 8px;
 }
 
-.custom-scrollbar::-webkit-scrollbar-track {
+.custom-scrollbar::-webkit-scrollbar-track,
+.notes-list::-webkit-scrollbar-track {
     background: #f1f1f1;
     border-radius: 10px;
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb {
+.custom-scrollbar::-webkit-scrollbar-thumb,
+.notes-list::-webkit-scrollbar-thumb {
     background: #c1c1c1;
     border-radius: 10px;
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+.custom-scrollbar::-webkit-scrollbar-thumb:hover,
+.notes-list::-webkit-scrollbar-thumb:hover {
     background: #a8a8a8;
 }
 
 /* Firefox scrollbar for notes list */
-.custom-scrollbar {
+.custom-scrollbar,
+.notes-list {
     scrollbar-width: thin;
     scrollbar-color: #c1c1c1 #f1f1f1;
 }

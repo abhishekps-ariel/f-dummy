@@ -28,16 +28,24 @@ const NotesDisplaySection = ({ formData, onClose }) => {
           <i className="fas fa-times"></i>
         </button>
       </div>
-      <div className="card-body">
+      <div className="card-body" style={{ padding: 0 }}>
         {notes.length === 0 ? (
-          <div className="text-muted text-center py-4">
+          <div className="text-muted text-center py-4 px-3">
             <div>
               <i className="fas fa-sticky-note me-2"></i>
               No notes yet.
             </div>
           </div>
         ) : (
-          <div className="notes-list" style={{ maxHeight: "400px", overflowY: "auto" }}>
+          <div 
+            className="notes-list px-3 pb-3" 
+            style={{ 
+              maxHeight: "350px", 
+              overflowY: "auto",
+              overflowX: "hidden",
+              paddingTop: "1rem"
+            }}
+          >
             {notes.map((note, index) => (
               <div key={note.id || index} className="note-item mb-3 p-3 border rounded bg-light">
                 <div>

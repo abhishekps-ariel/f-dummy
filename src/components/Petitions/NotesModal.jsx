@@ -20,25 +20,27 @@ const NotesModal = ({ isOpen, onClose, petition, formData, setFormData, onSave }
         petitionId: petition?.id || null,
       };
 
-      // Only send notes that don't have IDs (new notes) to avoid duplicates
-      // Filter out existing notes that already have IDs
-      const existingNotesWithIds = (formData.notes || []).filter(note => note.id);
-      const newNotesWithoutIds = (formData.notes || []).filter(note => !note.id);
+      // Include ALL existing notes (both with IDs and without IDs) when submitting
+      // This ensures we don't lose any existing notes
+      const existingNotes = formData.notes || [];
       
-      // Combine existing new notes (without IDs) with the new note we're adding
+      // Combine ALL existing notes with the new note we're adding
       const updatedFormData = {
         ...formData,
-        notes: [...newNotesWithoutIds, newNoteData],
+        notes: [...existingNotes, newNoteData],
         // Preserve judgment if it exists
         judgment: formData.judgment || null,
       };
 
-      // Save to backend - only new notes (without IDs) will be sent
+      // Save to backend - all notes (existing + new) will be sent
       await onSave(updatedFormData);
 
       // Clear the input
       setNewNote("");
       toast.success("Note added successfully.");
+      
+      // Close the modal after successful save
+      onClose();
     } catch (error) {
       console.error("Error adding note:", error);
       toast.error("Failed to add note. Please try again.");
