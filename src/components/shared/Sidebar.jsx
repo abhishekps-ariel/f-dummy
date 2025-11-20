@@ -1,66 +1,10 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
-import { getUserRole, getImpersonationState } from "../../utils/storage";
 import { ROUTES } from "../../constants/routerConstants";
 import loginImg from "../../assets/logo-sample.png";
-
-// Helper function to check if user is org admin (matches Login.jsx logic)
-// When impersonating, we strictly check the impersonated user's role only
-const isOrgAdminUser = (userData, isImpersonating = false) => {
-  if (!userData) return false;
-  
-  // When impersonating, we need to be extra strict about role checking
-  // Only check actual role fields, not isManager (which might be inherited from admin session)
-  if (isImpersonating) {
-    // When impersonating, only check roles array or role field
-    // Do NOT check isManager during impersonation as it might be from the admin's session
-    if (userData.roles && Array.isArray(userData.roles)) {
-      return userData.roles.some(
-        (role) =>
-          role === "Organisation Admin" ||
-          role === "Organization Admin" ||
-          role === "orgAdmin"
-      );
-    }
-    
-    // Check single role field
-    const userRole = getUserRole(userData);
-    return userRole === "orgAdmin" || userRole === "Organisation Admin" || userRole === "Organization Admin";
-  }
-  
-  // Normal check (not impersonating)
-  // Check if isManager is true
-  if (userData.isManager === true) {
-    return true;
-  }
-  
-  // Check roles array for "Organisation Admin"
-  if (userData.roles && Array.isArray(userData.roles)) {
-    return userData.roles.some(
-      (role) =>
-        role === "Organisation Admin" ||
-        role === "Organization Admin" ||
-        role === "orgAdmin"
-    );
-  }
-  
-  // Check single role field
-  const userRole = getUserRole(userData);
-  if (userRole === "orgAdmin" || userRole === "Organisation Admin" || userRole === "Organization Admin") {
-    return true;
-  }
-  
-  return false;
-};
 
 const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
-  const { isImpersonating } = getImpersonationState();
-  
-  // Check if user is org admin (pass impersonation state for stricter checking)
-  const isOrgAdmin = isOrgAdminUser(user, isImpersonating);
   
   const filerNavItems = [
     {
@@ -94,39 +38,9 @@ const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
       route: ROUTES.TRAINING,
     },
   ];
-
-  const adminNavItems = [
-    {
-      key: "organization-join-requests",
-      label: "Join Requests",
-      icon: "fa-user-plus",
-      route: ROUTES.ORGANIZATION_JOIN_REQUESTS,
-    },
-    {
-      key: "organisationUsers",
-      label: "Organisation Users",
-      icon: "fa-users",
-      route: ROUTES.ORGANISATION_USERS,
-    },
-  ];
   
-  let combinedNavItems;
-  if (isOrgAdmin) {
-    const dashboardItem = filerNavItems.find((item) => item.key === "dashboard");
-    const petitionsItem = filerNavItems.find((item) => item.key === "petitions");
-    const remainingItems = filerNavItems.filter(
-      (item) => item.key !== "dashboard" && item.key !== "petitions"
-    );
-
-    combinedNavItems = [
-      dashboardItem,
-      petitionsItem,
-      ...adminNavItems,
-      ...remainingItems,
-    ].filter(Boolean);
-  } else {
-    combinedNavItems = filerNavItems;
-  }
+  // Org admin uses the same navigation as regular filers
+  const combinedNavItems = filerNavItems;
 
   const handleNavigation = (item) => {
     if (item.route) {
