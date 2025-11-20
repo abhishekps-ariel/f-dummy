@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 
 const PetitionWizardContext = createContext();
@@ -25,52 +25,53 @@ export const PetitionWizardProvider = ({ children }) => {
     }
   }, [user]);
 
-  const markStepCompleted = (step) => {
+  const markStepCompleted = useCallback((step) => {
     setCompletedSteps(prev => new Set([...prev, step]));
-  };
+  }, []);
 
-  const markStepIncomplete = (step) => {
+  const markStepIncomplete = useCallback((step) => {
     setCompletedSteps(prev => {
       const newSet = new Set(prev);
       newSet.delete(step);
       return newSet;
     });
-  };
+  }, []);
 
-  const goToStep = (step) => {
+  const goToStep = useCallback((step) => {
     if (step >= 1 && step <= 10) {
       setCurrentStep(step);
     }
-  };
+  }, []);
 
-  const canAccessStep = (step) => {
+  const canAccessStep = useCallback((step) => {
     // Allow free navigation between all steps
     return true;
-  };
+  }, []);
 
-  const markStepWithError = (step) => {
+  const markStepWithError = useCallback((step) => {
     setStepsWithErrors(prev => new Set([...prev, step]));
-  };
+  }, []);
 
-  const clearStepError = (step) => {
+  const clearStepError = useCallback((step) => {
     setStepsWithErrors(prev => {
       const newSet = new Set(prev);
       newSet.delete(step);
       return newSet;
     });
-  };
+  }, []);
 
-  const clearAllStepErrors = () => {
+  const clearAllStepErrors = useCallback(() => {
     setStepsWithErrors(new Set());
-  };
+  }, []);
 
-  const resetWizard = () => {
+  const resetWizard = useCallback(() => {
     setCurrentStep(1);
     setCompletedSteps(new Set());
     setStepsWithErrors(new Set());
-  };
+  }, []);
 
-  const value = {
+  // Memoize the value object to prevent infinite re-renders
+  const value = useMemo(() => ({
     currentStep,
     completedSteps,
     stepsWithErrors,
@@ -83,7 +84,19 @@ export const PetitionWizardProvider = ({ children }) => {
     canAccessStep,
     resetWizard,
     isLoading: false
-  };
+  }), [
+    currentStep, 
+    completedSteps, 
+    stepsWithErrors,
+    goToStep,
+    markStepCompleted,
+    markStepIncomplete,
+    markStepWithError,
+    clearStepError,
+    clearAllStepErrors,
+    canAccessStep,
+    resetWizard
+  ]);
 
   return (
     <PetitionWizardContext.Provider value={value}>

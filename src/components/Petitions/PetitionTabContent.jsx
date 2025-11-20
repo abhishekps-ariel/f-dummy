@@ -794,25 +794,25 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
     const errors = {};
 
     // Property
-    if (!formData.propertyStreet1) errors.propertyStreet1 = "Required";
-    if (!formData.propertyCity) errors.propertyCity = "Required";
-    if (!formData.propertyState) errors.propertyState = "Required";
-    if (!formData.propertyZip) errors.propertyZip = "Required";
+    if (!formData.propertyStreet1 || formData.propertyStreet1.trim() === "") errors.propertyStreet1 = "Required";
+    if (!formData.propertyCity || formData.propertyCity.trim() === "") errors.propertyCity = "Required";
+    if (!formData.propertyState || formData.propertyState.trim() === "") errors.propertyState = "Required";
+    if (!formData.propertyZip || formData.propertyZip.trim() === "") errors.propertyZip = "Required";
 
     // Loan basics
     if (!formData.isMinApplicable || (formData.isMinApplicable !== "yes" && formData.isMinApplicable !== "no")) {
       errors.isMinApplicable = "Please select if MIN is applicable";
     }
-    if (formData.isMinApplicable === "yes" && !formData.minNumber?.trim()) {
+    if (formData.isMinApplicable === "yes" && (!formData.minNumber || !formData.minNumber.trim())) {
       errors.minNumber = "MIN Number is required when MIN is applicable";
     }
-    if (!formData.loanNumber) errors.loanNumber = "Required";
-    if (!formData.petitionLoanTypeId) errors.petitionLoanTypeId = "Required";
+    if (!formData.loanNumber || formData.loanNumber.trim() === "") errors.loanNumber = "Required";
+    if (!formData.petitionLoanTypeId || formData.petitionLoanTypeId === "") errors.petitionLoanTypeId = "Required";
     // Note: lienPosition can be 0 (for "First"), so we check for null/undefined/empty string specifically
     if (formData.lienPosition == null || formData.lienPosition === "")
       errors.lienPosition = "Required";
 
-    // Borrowers: require at least one primary with name and address
+    // Borrowers: require at least one primary with name
     const primaryBorrower = (formData.borrowers || []).find(
       (b) => b.borrowerIsPrimary
     );
@@ -820,40 +820,47 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
       errors.borrowers = "Primary borrower is required";
     } else {
       const pbKey = primaryBorrower.id || "primary";
-      if (!primaryBorrower.firstName)
+      if (!primaryBorrower.firstName || primaryBorrower.firstName.trim() === "")
         errors[`borrower_${pbKey}_firstName`] = "Required";
-      if (!primaryBorrower.lastName)
+      if (!primaryBorrower.lastName || primaryBorrower.lastName.trim() === "")
         errors[`borrower_${pbKey}_lastName`] = "Required";
       // Borrower mailing address is optional in wizard; do not require here.
     }
 
     // Loan Assignees: if present, validate required fields for each
+    // Only validate if the assignee has at least one field filled (to avoid validating empty/partial entries)
     (formData.loanAssignees || []).forEach((a, idx) => {
-      if (!a.assigneeName)
-        errors[`loanAssignees.${idx}.assigneeName`] = "Required";
-      if (!a.assigneeTypeId)
-        errors[`loanAssignees.${idx}.assigneeTypeId`] = "Required";
-      if (!a.assigneeRoleId)
-        errors[`loanAssignees.${idx}.assigneeRoleId`] = "Required";
-      if (!a.street1) errors[`loanAssignees.${idx}.street1`] = "Required";
-      if (!a.city) errors[`loanAssignees.${idx}.city`] = "Required";
-      if (!a.addressState)
-        errors[`loanAssignees.${idx}.addressState`] = "Required";
-      if (!a.zip) errors[`loanAssignees.${idx}.zip`] = "Required";
+      // Check if this assignee has any data - if it's completely empty, skip validation
+      const hasAnyData = a.assigneeName || a.assigneeTypeId || a.assigneeRoleId || a.street1 || a.city || a.addressState || a.zip;
+      
+      if (hasAnyData) {
+        // If assignee has any data, validate all required fields
+        if (!a.assigneeName || a.assigneeName.trim() === "")
+          errors[`loanAssignees.${idx}.assigneeName`] = "Required";
+        if (!a.assigneeTypeId || a.assigneeTypeId === "")
+          errors[`loanAssignees.${idx}.assigneeTypeId`] = "Required";
+        if (!a.assigneeRoleId || a.assigneeRoleId === "")
+          errors[`loanAssignees.${idx}.assigneeRoleId`] = "Required";
+        if (!a.street1 || a.street1.trim() === "") errors[`loanAssignees.${idx}.street1`] = "Required";
+        if (!a.city || a.city.trim() === "") errors[`loanAssignees.${idx}.city`] = "Required";
+        if (!a.addressState || a.addressState.trim() === "")
+          errors[`loanAssignees.${idx}.addressState`] = "Required";
+        if (!a.zip || a.zip.trim() === "") errors[`loanAssignees.${idx}.zip`] = "Required";
+      }
     });
 
     // Filing entity core fields
-    if (!formData.filingEntityLegalName)
+    if (!formData.filingEntityLegalName || formData.filingEntityLegalName.trim() === "")
       errors.filingEntityLegalName = "Required";
-    if (!formData.filingEntityStreet1) errors.filingEntityStreet1 = "Required";
-    if (!formData.filingEntityCity) errors.filingEntityCity = "Required";
-    if (!formData.filingEntityState) errors.filingEntityState = "Required";
-    if (!formData.filingEntityZip) errors.filingEntityZip = "Required";
-    if (!formData.filingContactName) errors.filingContactName = "Required";
-    if (!formData.filingContactEmail) {
+    if (!formData.filingEntityStreet1 || formData.filingEntityStreet1.trim() === "") errors.filingEntityStreet1 = "Required";
+    if (!formData.filingEntityCity || formData.filingEntityCity.trim() === "") errors.filingEntityCity = "Required";
+    if (!formData.filingEntityState || formData.filingEntityState.trim() === "") errors.filingEntityState = "Required";
+    if (!formData.filingEntityZip || formData.filingEntityZip.trim() === "") errors.filingEntityZip = "Required";
+    if (!formData.filingContactName || formData.filingContactName.trim() === "") errors.filingContactName = "Required";
+    if (!formData.filingContactEmail || formData.filingContactEmail.trim() === "") {
       errors.filingContactEmail = "Required";
     } else {
-      const emailOk = /.+@.+\..+/.test(formData.filingContactEmail);
+      const emailOk = /.+@.+\..+/.test(formData.filingContactEmail.trim());
       if (!emailOk) errors.filingContactEmail = "Invalid email";
     }
 
@@ -869,69 +876,38 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
       errors.signatures = "At least one signature is required";
     }
 
-    // Foreclosure Sale validation - only if noticeSent is true AND petition is not Draft
-    if (formData.noticeSent === true && 
-        petition.status?.toLowerCase() !== "draft" && 
-        petition.statusClass?.toLowerCase() !== "draft") {
-      const foreclosureSale = formData.foreclosureSale || {};
-      
-      // Sale Date is required
-      if (!foreclosureSale.saleDate || foreclosureSale.saleDate.trim() === "") {
-        errors["foreclosureSale.saleDate"] = "Sale Date must be entered before committing the petition sale";
-      }
-      
-      // Sold To (soldToId) is required
-      if (!foreclosureSale.soldToId || foreclosureSale.soldToId === "") {
-        errors["foreclosureSale.soldToId"] = "Buyer Type must be selected before committing the petition sale";
-      } else {
-        // If soldToId is selected, check if it's Mortgagee/Investor
-        const buyerTypes = getBuyerTypes();
-        const selectedBuyerType = findOptionByValue(buyerTypes, foreclosureSale.soldToId);
-        const isMortgageeInvestor = selectedBuyerType && (
-          selectedBuyerType.name?.toLowerCase().includes("mortgagee") ||
-          selectedBuyerType.name?.toLowerCase().includes("investor") ||
-          selectedBuyerType.value?.toLowerCase().includes("mortgagee") ||
-          selectedBuyerType.value?.toLowerCase().includes("investor")
-        );
-        
-        // If Mortgagee/Investor, validate required fields
-        if (isMortgageeInvestor) {
-          if (!foreclosureSale.vestingEntityName || foreclosureSale.vestingEntityName.trim() === "") {
-            errors["foreclosureSale.vestingEntityName"] = "Must be entered if buyer is Mortgagee/Investor";
-          }
-          if (!foreclosureSale.reoContactFirstName || foreclosureSale.reoContactFirstName.trim() === "") {
-            errors["foreclosureSale.reoContactFirstName"] = "Must be entered if buyer is Mortgagee/Investor";
-          }
-          if (!foreclosureSale.reoContactLastName || foreclosureSale.reoContactLastName.trim() === "") {
-            errors["foreclosureSale.reoContactLastName"] = "Must be entered if buyer is Mortgagee/Investor";
-          }
-          if (!foreclosureSale.reoBusinessPhone || foreclosureSale.reoBusinessPhone.trim() === "") {
-            errors["foreclosureSale.reoBusinessPhone"] = "Must be entered if buyer is Mortgagee/Investor";
-          }
-        }
-      }
-    }
+    // Foreclosure Sale validation removed - it's now handled separately in the Foreclosure Sale modal
+    // Users can edit foreclosure sale independently without blocking main form submission
 
     if (Object.keys(errors).length) {
-      setFieldErrors((prev) => ({ ...prev, ...errors }));
+      // Log validation errors for debugging
+      console.log("Validation errors found:", errors);
+      console.log("Form data state:", {
+        propertyStreet1: formData.propertyStreet1,
+        propertyCity: formData.propertyCity,
+        propertyState: formData.propertyState,
+        propertyZip: formData.propertyZip,
+        loanNumber: formData.loanNumber,
+        petitionLoanTypeId: formData.petitionLoanTypeId,
+        lienPosition: formData.lienPosition,
+        filingEntityLegalName: formData.filingEntityLegalName,
+        filingEntityStreet1: formData.filingEntityStreet1,
+        filingEntityCity: formData.filingEntityCity,
+        filingEntityState: formData.filingEntityState,
+        filingEntityZip: formData.filingEntityZip,
+        filingContactName: formData.filingContactName,
+        filingContactEmail: formData.filingContactEmail,
+        borrowers: formData.borrowers,
+        loanAssignees: formData.loanAssignees,
+        signatures: formData.signatures,
+      });
       
-      // Check for foreclosure sale errors
-      const hasForeclosureSaleErrors = Object.keys(errors).some(key => 
-        key.startsWith("foreclosureSale.")
-      );
+      setFieldErrors((prev) => ({ ...prev, ...errors }));
       
       // Special handling for e-consent error - scroll to signature section if it's present
       if (errors.esignConsent && signatureSectionRef.current) {
         setTimeout(() => {
           signatureSectionRef.current?.scrollIntoView({ 
-            behavior: "smooth", 
-            block: "center" 
-          });
-        }, 100);
-      } else if (hasForeclosureSaleErrors && foreclosureSaleSectionRef.current) {
-        // Special handling for foreclosure sale errors - scroll to foreclosure sale section
-        setTimeout(() => {
-          foreclosureSaleSectionRef.current?.scrollIntoView({ 
             behavior: "smooth", 
             block: "center" 
           });

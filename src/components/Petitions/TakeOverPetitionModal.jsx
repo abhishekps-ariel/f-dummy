@@ -4,6 +4,7 @@ import { formatDate } from "../../utils/dateUtils";
 
 const TakeOverPetitionModal = ({ isOpen, duplicateInfo, onConfirm, onCancel }) => {
   const [petitionDetails, setPetitionDetails] = useState(null);
+  const [petitionRawData, setPetitionRawData] = useState(null); // Store raw API response
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -19,6 +20,9 @@ const TakeOverPetitionModal = ({ isOpen, duplicateInfo, onConfirm, onCancel }) =
       try {
         const response = await petitionApiService.getPetitionById(duplicateInfo.petitionId);
         if (response.success && response.data) {
+          // Store raw data for pre-filling
+          setPetitionRawData(response.data);
+          
           // Transform the response to get readable status
           const transformed = petitionApiService.transformSinglePetitionResponse(response);
           if (transformed) {
@@ -52,7 +56,7 @@ const TakeOverPetitionModal = ({ isOpen, duplicateInfo, onConfirm, onCancel }) =
       style={{ backgroundColor: "rgba(0,0,0,0.5)", zIndex: 1100 }}
       tabIndex="-1"
     >
-      <div className="modal-dialog modal-dialog-centered">
+      <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: "700px" }}>
         <div className="modal-content">
           <div className="modal-header">
             <h5 className="modal-title">Take Over Petition</h5>
@@ -64,7 +68,7 @@ const TakeOverPetitionModal = ({ isOpen, duplicateInfo, onConfirm, onCancel }) =
             ></button>
           </div>
           <div className="modal-body">
-            <p className="mb-3">
+            <p className="mb-2 small">
               A petition with the same property already exists.
             </p>
             
@@ -85,13 +89,13 @@ const TakeOverPetitionModal = ({ isOpen, duplicateInfo, onConfirm, onCancel }) =
             )}
 
             {petitionDetails && !isLoading && (
-              <div className="mb-3 p-3 border rounded bg-light">
-                <h6 className="mb-3">
+              <div className="mb-3 p-2 border rounded bg-light">
+                <h6 className="mb-2">
                   <i className="fas fa-file-alt me-2"></i>
                   Existing Petition Details
                 </h6>
                 
-                <div className="row g-2 mb-2">
+                <div className="row g-2 mb-1">
                   {petitionDetails.petitionNumber && (
                     <div className="col-12">
                       <span className="text-muted small">Petition Number:</span>
@@ -118,41 +122,55 @@ const TakeOverPetitionModal = ({ isOpen, duplicateInfo, onConfirm, onCancel }) =
                   )}
                 </div>
 
-                {petitionDetails.property && (
-                  <div className="mt-3 pt-3 border-top">
-                    <span className="text-muted small">Property Address:</span>
-                    <p className="mb-0 fw-medium">
-                      {[
-                        petitionDetails.property.propertyStreet1,
-                        petitionDetails.property.propertyStreet2,
-                        petitionDetails.property.propertyCity,
-                        petitionDetails.property.propertyState,
-                        petitionDetails.property.propertyZip
-                      ].filter(Boolean).join(", ")}
-                    </p>
-                  </div>
-                )}
+                <div className="row g-2 mt-2 pt-2 border-top">
+                  {petitionDetails.property && (
+                    <div className="col-md-6">
+                      <span className="text-muted small">Property Address:</span>
+                      <p className="mb-0 fw-medium small">
+                        {[
+                          petitionDetails.property.propertyStreet1,
+                          petitionDetails.property.propertyStreet2,
+                          petitionDetails.property.propertyCity,
+                          petitionDetails.property.propertyState,
+                          petitionDetails.property.propertyZip
+                        ].filter(Boolean).join(", ")}
+                      </p>
+                    </div>
+                  )}
 
-                {petitionDetails.filingEntity && (
-                  <div className="mt-2">
-                    <span className="text-muted small">Filing Entity:</span>
-                    <p className="mb-0 fw-medium">{petitionDetails.filingEntity.filingEntityLegalName}</p>
-                  </div>
-                )}
+                  {petitionDetails.filingEntity && (
+                    <div className="col-md-6">
+                      <span className="text-muted small">Filing Entity:</span>
+                      <p className="mb-0 fw-medium small">{petitionDetails.filingEntity.filingEntityLegalName}</p>
+                    </div>
+                  )}
+                </div>
 
-                {duplicateInfo?.userName && (
-                  <div className="mt-2">
-                    <span className="text-muted small">Current Owner:</span>
-                    <p className="mb-0 fw-medium">{duplicateInfo.userName}</p>
-                  </div>
-                )}
+                <div className="row g-2 mt-2">
+                  {duplicateInfo?.userName && (
+                    <div className="col-md-6">
+                      <span className="text-muted small">Current Owner:</span>
+                      <p className="mb-0 fw-medium small">{duplicateInfo.userName}</p>
+                    </div>
+                  )}
+
+                  {duplicateInfo?.userEmail && (
+                    <div className="col-md-6">
+                      <span className="text-muted small">Current Owner Email:</span>
+                      <p className="mb-0 fw-medium small">{duplicateInfo.userEmail}</p>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
             {!isLoading && !error && (
-              <p className="mb-0">
-                Do you want to take over this petition? This will transfer ownership to you.
-              </p>
+              <div className="alert alert-info mb-0 py-2">
+                <i className="fas fa-info-circle me-2"></i>
+                <span className="small">
+                  Clicking "Take Over Petition" will make you the new owner of this petition.
+                </span>
+              </div>
             )}
           </div>
           <div className="modal-footer">
@@ -167,8 +185,8 @@ const TakeOverPetitionModal = ({ isOpen, duplicateInfo, onConfirm, onCancel }) =
             <button
               type="button"
               className="dashboard-btn-create"
-              onClick={onConfirm}
-              disabled={isLoading}
+              onClick={() => onConfirm(petitionRawData, duplicateInfo)}
+              disabled={isLoading || !petitionRawData}
             >
               Take Over Petition
             </button>

@@ -151,6 +151,8 @@ const PetitionSteps = ({
   const [duplicateInfo, setDuplicateInfo] = useState(null);
   const [shouldTakeOver, setShouldTakeOver] = useState(false);
   const [pendingAction, setPendingAction] = useState(null); // 'save' or 'submit'
+  const [isTakenOverPetition, setIsTakenOverPetition] = useState(false);
+  const [takenOverPetitionId, setTakenOverPetitionId] = useState(null);
 
   // Load petition common data
 
@@ -886,13 +888,14 @@ const PetitionSteps = ({
         // For filers, only return true if they've explicitly selected an organization
         return !!selectedOrganizationId;
       
-      case 2: // Property Details - check if address fields are filled and validated
+      case 2: // Property Details - check if address fields are filled
+        // Address verification will be handled when user navigates away from the step
+        // For pre-filled data, mark complete if all required fields are present
         return !!(formData.propertyStreet1?.trim() && 
                   formData.propertyCity?.trim() && 
                   formData.propertyState?.trim() && 
                   formData.propertyZip?.trim() && 
-                  formData.propertyCounty?.trim() &&
-                  isAddressVerified);
+                  formData.propertyCounty?.trim());
       
       case 3: // Loan Details - check all required fields (matching validateLoanDetails)
         const hasMinApplicable = formData.isMinApplicable === "yes" || formData.isMinApplicable === "no";
@@ -933,7 +936,7 @@ const PetitionSteps = ({
         }
         // If notice was sent, check required fields
         if (formData.noticeSent === true) {
-          return !!(formData.noticeDate?.trim() &&
+          const hasRequiredFields = !!(formData.noticeDate?.trim() &&
                     formData.amountInDefault &&
                     formData.amountInDefault > 0 &&
                     formData.daysDelinquentAtNotice != null &&
@@ -944,6 +947,11 @@ const PetitionSteps = ({
                     formData.noticeAddressCity?.trim() &&
                     formData.noticeAddressState?.trim() &&
                     formData.noticeAddressZip?.trim());
+          
+          // If all required fields are present, check address verification
+          // If address exists but not verified, still return true if fields are filled (for pre-filled data)
+          // Address verification will be handled when user navigates away from the step
+          return hasRequiredFields;
         }
         // If notice was not sent, check for acceleration date (manualOverrideReason)
         if (formData.noticeSent === false) {
@@ -958,8 +966,13 @@ const PetitionSteps = ({
         if (!formData.loanAssignees || !Array.isArray(formData.loanAssignees) || formData.loanAssignees.length === 0) {
           return false;
         }
-        // Check if all assignees have required fields
-        return formData.loanAssignees.every(a => a.assigneeName?.trim() && a.assigneeTypeId);
+        // Check if all assignees have required fields (assigneeName, assigneeTypeId, and assigneeRoleId)
+        // Address verification will be handled when user navigates away from the step
+        return formData.loanAssignees.every(a => 
+          a.assigneeName?.trim() && 
+          a.assigneeTypeId && 
+          a.assigneeRoleId
+        );
       
       case 9: // Attestation & Signatures
         return !!(userProfile?.signatureUrl && formData?.certification_check);
@@ -967,7 +980,7 @@ const PetitionSteps = ({
       default:
         return false;
     }
-  }, [formData, isAddressVerified, userFilingEntityType, userProfile, isOrgAdmin, organizationId, selectedOrganizationId]);
+  }, [formData, userFilingEntityType, userProfile, isOrgAdmin, organizationId, selectedOrganizationId]);
 
   // Track previous step for address validation prompt (moved here to access formData)
   useEffect(() => {
@@ -991,7 +1004,14 @@ const PetitionSteps = ({
           break;
         case 2:
           const addressValidation = validateAddressFields();
-          isStepComplete = !addressValidation.hasErrors && isAddressVerified;
+          // Mark complete if validation passes and all required fields are filled
+          // Address verification will be handled when navigating away
+          const hasAllAddressFields = !!(formData?.propertyStreet1?.trim() && 
+                                        formData?.propertyCity?.trim() && 
+                                        formData?.propertyState?.trim() && 
+                                        formData?.propertyZip?.trim() && 
+                                        formData?.propertyCounty?.trim());
+          isStepComplete = !addressValidation.hasErrors && hasAllAddressFields;
           break;
         case 3:
           const loanValidation = validateLoanDetails();
@@ -1181,26 +1201,38 @@ const PetitionSteps = ({
     }
   }, [selectedOrganizationId, organizationId, isOrgAdmin, completedSteps, stepsWithErrors, markStepCompleted, markStepIncomplete, clearStepError]);
 
-  // When address is verified, mark step 2 as completed if all fields are filled
+  // Track step 2 (Property Details) completion when formData changes
   useEffect(() => {
-    if (isAddressVerified) {
-      clearStepError(2);
-      // Mark step 2 as completed since address is verified and all required fields are filled
+    if (!formData) return;
+    const addressValidation = validateAddressFields();
+    if (!addressValidation.hasErrors) {
+      // Check if all required address fields are filled
       const hasAllAddressFields = !!(formData?.propertyStreet1?.trim() && 
                                     formData?.propertyCity?.trim() && 
                                     formData?.propertyState?.trim() && 
                                     formData?.propertyZip?.trim() && 
                                     formData?.propertyCounty?.trim());
       if (hasAllAddressFields) {
+        // Mark complete if all fields are filled, even if address isn't verified yet
+        // Address verification will be handled when user navigates away from the step
         if (!completedSteps.has(2)) {
           markStepCompleted(2);
         }
         if (stepsWithErrors.has(2)) {
           clearStepError(2);
         }
+      } else {
+        if (completedSteps.has(2)) {
+          markStepIncomplete(2);
+        }
+      }
+    } else {
+      // Validation has errors - mark incomplete
+      if (completedSteps.has(2)) {
+        markStepIncomplete(2);
       }
     }
-  }, [isAddressVerified, formData, stepsWithErrors, completedSteps, markStepCompleted, clearStepError]);
+  }, [formData, stepsWithErrors, completedSteps, markStepCompleted, markStepIncomplete, clearStepError]);
 
   // When filing entity address is verified, mark step 5 as completed if all fields are filled
   useEffect(() => {
@@ -1250,41 +1282,66 @@ const PetitionSteps = ({
         }
       }
     }
-  }, [borrowerAddressesVerified, formData, stepsWithErrors, completedSteps, markStepCompleted, clearStepError]);
+  }, [borrowerAddressesVerified, formData, stepsWithErrors, completedSteps, markStepCompleted, markStepIncomplete, clearStepError]);
 
-  // When all loan assignee addresses are verified, mark step 8 as completed if all fields are filled
+  // Track step 8 (Loan Assignees) completion when formData changes
   useEffect(() => {
-    const hasLoanAssigneeAddresses = formData?.loanAssignees?.some(assignee => assignee.street1?.trim());
-    if (hasLoanAssigneeAddresses && formData?.loanAssignees) {
-      const allLoanAssigneeAddressesVerified = formData.loanAssignees
-        .filter(assignee => assignee.street1?.trim())
-        .every(assignee => loanAssigneeAddressesVerified[assignee.id] === true);
-      
-      if (allLoanAssigneeAddressesVerified) {
-        clearStepError(8);
-        const loanAssigneesValidation = validateLoanAssignees();
-        if (!loanAssigneesValidation.hasErrors) {
+    if (!formData) return;
+    const loanAssigneesValidation = validateLoanAssignees();
+    if (!loanAssigneesValidation.hasErrors) {
+      const hasLoanAssigneeAddresses = formData?.loanAssignees?.some(assignee => assignee.street1?.trim());
+      if (hasLoanAssigneeAddresses && formData?.loanAssignees) {
+        const allLoanAssigneeAddressesVerified = formData.loanAssignees
+          .filter(assignee => assignee.street1?.trim())
+          .every((assignee, index) => loanAssigneeAddressesVerified[index] === true);
+        
+        if (allLoanAssigneeAddressesVerified) {
           if (!completedSteps.has(8)) {
             markStepCompleted(8);
           }
           if (stepsWithErrors.has(8)) {
             clearStepError(8);
           }
+        } else {
+          // Addresses exist but not verified - still mark complete if all required fields are filled
+          // Address verification will be handled when user navigates away from the step
+          const hasAllRequiredFields = checkStepHasRequiredFields(8);
+          if (hasAllRequiredFields) {
+            if (!completedSteps.has(8)) {
+              markStepCompleted(8);
+            }
+            if (stepsWithErrors.has(8)) {
+              clearStepError(8);
+            }
+          } else {
+            if (completedSteps.has(8)) {
+              markStepIncomplete(8);
+            }
+          }
+        }
+      } else if (!hasLoanAssigneeAddresses) {
+        // No addresses to verify, just check if validation passes
+        const hasAllRequiredFields = checkStepHasRequiredFields(8);
+        if (hasAllRequiredFields) {
+          if (!completedSteps.has(8)) {
+            markStepCompleted(8);
+          }
+          if (stepsWithErrors.has(8)) {
+            clearStepError(8);
+          }
+        } else {
+          if (completedSteps.has(8)) {
+            markStepIncomplete(8);
+          }
         }
       }
-    } else if (!hasLoanAssigneeAddresses) {
-      // No addresses to verify, just check if validation passes
-      const loanAssigneesValidation = validateLoanAssignees();
-      if (!loanAssigneesValidation.hasErrors) {
-        if (!completedSteps.has(8)) {
-          markStepCompleted(8);
-        }
-        if (stepsWithErrors.has(8)) {
-          clearStepError(8);
-        }
+    } else {
+      // Validation has errors - mark incomplete
+      if (completedSteps.has(8)) {
+        markStepIncomplete(8);
       }
     }
-  }, [loanAssigneeAddressesVerified, formData, stepsWithErrors, completedSteps, markStepCompleted, clearStepError]);
+  }, [loanAssigneeAddressesVerified, formData, stepsWithErrors, completedSteps, markStepCompleted, markStepIncomplete, clearStepError, checkStepHasRequiredFields]);
 
   // When address is verified and there's a pending step change, allow navigation
   useEffect(() => {
@@ -1322,6 +1379,9 @@ const PetitionSteps = ({
 
   // Helper function to clear form data and wizard state (reusable for submit/save/close)
   const clearFormAndWizardState = () => {
+    // Reset takeover flags
+    setIsTakenOverPetition(false);
+    setTakenOverPetitionId(null);
     try {
       // Reapply organization prefilled info while clearing user-entered values
       const orgPrefill = (() => {
@@ -3643,7 +3703,7 @@ const PetitionSteps = ({
     if (!formData) return;
     const rightToCureValidation = validateRightToCureDetails();
     if (!rightToCureValidation.hasErrors) {
-      // If there's a notice address, it must be verified
+      // If there's a notice address, check if it's verified
       if (formData?.noticeAddressStreet1?.trim()) {
         if (isNoticeAddressVerified) {
           if (!completedSteps.has(6)) {
@@ -3653,9 +3713,20 @@ const PetitionSteps = ({
             clearStepError(6);
           }
         } else {
-          // Address exists but not verified - don't mark complete
-          if (completedSteps.has(6)) {
-            markStepIncomplete(6);
+          // Address exists but not verified - still mark complete if all required fields are filled
+          // Address verification will be handled when user navigates away from the step
+          const hasAllRequiredFields = checkStepHasRequiredFields(6);
+          if (hasAllRequiredFields) {
+            if (!completedSteps.has(6)) {
+              markStepCompleted(6);
+            }
+            if (stepsWithErrors.has(6)) {
+              clearStepError(6);
+            }
+          } else {
+            if (completedSteps.has(6)) {
+              markStepIncomplete(6);
+            }
           }
         }
       } else {
@@ -3673,7 +3744,7 @@ const PetitionSteps = ({
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isNoticeAddressVerified, formData, stepsWithErrors, completedSteps, markStepCompleted, markStepIncomplete, clearStepError]);
+  }, [isNoticeAddressVerified, formData, stepsWithErrors, completedSteps, markStepCompleted, markStepIncomplete, clearStepError, checkStepHasRequiredFields]);
 
   // Track step 7 (Form 35B Compliance) completion when formData changes
   useEffect(() => {
@@ -4319,8 +4390,14 @@ const PetitionSteps = ({
         organizationId: finalOrganizationId,
       };
 
+      // Add takeOverToUserId if this is a taken over petition
+      if (isTakenOverPetition && user?.id) {
+        finalDraftData.takeOverToUserId = user.id;
+        finalDraftData.id = takenOverPetitionId; // Include the original petition ID
+      }
+
       // Submit petition as draft using API
-      await submitPetition(finalDraftData, true); // Pass isDraft: true
+      await submitPetition(finalDraftData, true, isTakenOverPetition ? takenOverPetitionId : null); // Pass isDraft: true
 
       // Notify parent component that petition was saved as draft
 
@@ -5036,10 +5113,11 @@ const PetitionSteps = ({
         ? formData.signatures[0] 
         : null;
 
+      // Prepare petition data for FINAL SUBMISSION (not draft)
+      // Note: isAllStepsCompleted must be set to true AFTER spreading formData to ensure it overrides any false value
       const petitionData = {
-        isAllStepsCompleted: true,
-
         ...formData,
+        isAllStepsCompleted: true, // Explicitly set to true for final submission
 
         signatures: [
           {
@@ -5072,10 +5150,18 @@ const PetitionSteps = ({
       const finalPetitionData = {
         ...petitionData,
         organizationId: finalOrganizationId,
+        isAllStepsCompleted: true, // Ensure it's still true after adding organizationId
       };
 
-      // Submit petition using API
-      await submitPetition(finalPetitionData);
+      // Add takeOverToUserId if this is a taken over petition
+      if (isTakenOverPetition && user?.id) {
+        finalPetitionData.takeOverToUserId = user.id;
+        finalPetitionData.id = takenOverPetitionId; // Include the original petition ID
+        finalPetitionData.isAllStepsCompleted = true; // Ensure it's still true for taken over petitions
+      }
+
+      // Submit petition using API - false means NOT a draft (final submission)
+      await submitPetition(finalPetitionData, false, isTakenOverPetition ? takenOverPetitionId : null);
 
       // Notify parent component that petition was submitted successfully
 
@@ -5276,23 +5362,218 @@ const PetitionSteps = ({
     }
   };
 
+  // Transform takeover petition API response to formData format
+  const transformTakeOverPetitionData = (apiData) => {
+    if (!apiData) return null;
+
+    const details = apiData;
+    const mappedBorrowers = [];
+
+    (details.borrowers || []).forEach((b, idx) => {
+      const isPrimary = b.borrowerIsPrimary === true;
+      mappedBorrowers.push({
+        id: b.id || idx + 1,
+        firstName: b.firstName || "",
+        middleName: b.middleName || "",
+        lastName: b.lastName || "",
+        suffix: b.suffix || "",
+        borrowerIsPrimary: isPrimary,
+        mailingStreet1: b.mailingStreet1 || "",
+        mailingCity: b.mailingCity || "",
+        mailingState: b.mailingState || "",
+        mailingZip: b.mailingZip || "",
+        phone: b.phone || "",
+        email: b.email || "",
+      });
+    });
+
+    // Ensure at least one primary borrower
+    if (mappedBorrowers.length > 0 && !mappedBorrowers.some(b => b.borrowerIsPrimary)) {
+      mappedBorrowers[0].borrowerIsPrimary = true;
+    }
+
+    return {
+      // Property Details
+      propertyStreet1: details.property?.propertyStreet1 || "",
+      propertyStreet2: details.property?.propertyStreet2 || "",
+      propertyCity: details.property?.propertyCity || "",
+      propertyState: details.property?.propertyState || "MA",
+      propertyZip: details.property?.propertyZip || "",
+      propertyCounty: details.property?.propertyCounty || "",
+      assessorParcelId: details.property?.assessorParcelId || "",
+
+      // Loan Details
+      isMinApplicable: details.loan?.minNumber ? "yes" : "no",
+      minNumber: details.loan?.minNumber || "",
+      loanNumber: details.loan?.loanNumber || "",
+      petitionLoanTypeId: details.loan?.petitionLoanTypeId || "",
+      petitionLoanTypeName: details.loan?.petitionLoanTypeName || "",
+      lienPosition: details.loan?.lienPosition ?? "",
+      originationDate: details.loan?.originationDate
+        ? details.loan.originationDate.split("T")[0]
+        : "",
+      originalPrincipalAmount: details.loan?.originalPrincipalAmount || 0,
+      currentPrincipalBalance: details.loan?.currentPrincipalBalance || 0,
+      interestRatePercent: details.loan?.interestRatePercent || null,
+      variableRate: details.loan?.variableRate || false,
+      interestOnly: details.loan?.interestOnly || false,
+      negativeAmortization: details.loan?.negativeAmortization || false,
+      monthlyPaymentAmount: details.loan?.monthlyPaymentAmount || 0,
+      delinquencyDaysAtFiling: details.loan?.delinquencyDaysAtFiling || null,
+
+      // Borrowers
+      borrowers: mappedBorrowers.length > 0 ? mappedBorrowers : defaultFormData.borrowers,
+
+      // Filing Entity - DO NOT pre-fill, user must select organization and fill this themselves
+      filingEntityLegalName: "",
+      filingEntityTypeId: null,
+      filingEntityStreet1: "",
+      filingEntityStreet2: "",
+      filingEntityCity: "",
+      filingEntityState: "",
+      filingEntityZip: "",
+      filingContactName: "",
+      filingContactEmail: "",
+      filingContactPhone: "",
+      nmlsLicenseNumber: "",
+      stateLicenseNumber: "",
+      stateLicenseState: "",
+
+      // Right-to-Cure
+      noticeSent: details.rightToCure?.noticeSent || false,
+      noticeDate: details.rightToCure?.noticeDate
+        ? details.rightToCure.noticeDate.split("T")[0]
+        : "",
+      amountInDefault: details.rightToCure?.amountInDefault || 0,
+      daysDelinquentAtNotice: details.rightToCure?.daysDelinquentAtNotice || 0,
+      cureExpirationDate: details.rightToCure?.cureExpirationDate
+        ? details.rightToCure.cureExpirationDate.split("T")[0]
+        : "",
+      noticeAddressStreet1: details.rightToCure?.noticeAddressStreet1 || "",
+      noticeAddressCity: details.rightToCure?.noticeAddressCity || "",
+      noticeAddressState: details.rightToCure?.noticeAddressState || "",
+      noticeAddressZip: details.rightToCure?.noticeAddressZip || "",
+      manualOverrideReason: details.rightToCure?.manualOverrideReason || "",
+
+      // Form 35B Compliance
+      certainMortgageLoan: details.affidavit?.certainMortgageLoan ?? null,
+      form35bComplianceAffidavitPdf: details.affidavit?.form35bComplianceAffidavitPdf || "",
+      form35bNonApplicabilityAffidavitPdf: details.affidavit?.form35bNonApplicabilityAffidavitPdf || "",
+      affiantName: details.affidavit?.affiantName || "",
+      affiantTitle: details.affidavit?.affiantTitle || "",
+      affidavitExecutionDate: details.affidavit?.affidavitExecutionDate
+        ? details.affidavit.affidavitExecutionDate.split("T")[0]
+        : "",
+
+      // Loan Assignees
+      loanAssignees: details.loanAssignees?.map((a, idx) => ({
+        assigneeName: a.assigneeName || "",
+        assigneeTypeId: a.assigneeTypeId || "",
+        assigneeRoleId: a.assigneeRoleId || "",
+        street1: a.street1 || "",
+        street2: a.street2 || "",
+        city: a.city || "",
+        addressState: a.addressState || "",
+        zip: a.zip || "",
+        licenseNumber: a.licenseNumber || "",
+        licenseState: a.licenseState || "",
+      })) || [],
+
+      // Additional
+      documents: details.documents || [],
+      isAllStepsCompleted: false,
+      organizationId: null, // DO NOT pre-fill, user must select organization on step 1
+      
+      // Signer fields - will be filled with current user's details in handleTakeOverConfirm
+      signerFirstName: "",
+      signerMiddleInitial: "",
+      signerLastName: "",
+      signerEmail: "",
+      signerTitle: "",
+      certification_check: false,
+      
+      // Signatures - will be pre-filled with current user's details in handleTakeOverConfirm
+      signatures: defaultFormData.signatures,
+    };
+  };
+
   if (!isOpen) return null;
 
-  // Handle take-over confirmation
-  const handleTakeOverConfirm = async () => {
-    setShowTakeOverModal(false);
-    setShouldTakeOver(true);
-    
-    // Retry the save/submit with takeOverToUserId based on pending action
-    if (pendingAction === 'save') {
-      // Retry save as draft
-      await handleRetrySaveDraft();
-    } else if (pendingAction === 'submit') {
-      // Retry final submit
-      await handleRetrySubmit();
+  // Handle take-over confirmation - pre-fill form instead of submitting
+  const handleTakeOverConfirm = async (petitionData, duplicateInfoData) => {
+    if (!petitionData) {
+      toast.error("Failed to load petition data for takeover");
+      return;
     }
+
+    setShowTakeOverModal(false);
     
-    setPendingAction(null);
+    // Transform the API data to formData format
+    const transformedData = transformTakeOverPetitionData(petitionData);
+    
+    if (transformedData && user) {
+      // Pre-fill signature section with current user's details (person taking over)
+      const signerFirstName = user.firstName || "";
+      const signerMiddleInitial = user.middleName
+        ? user.middleName.charAt(0).toUpperCase()
+        : "";
+      const signerLastName = user.lastName || "";
+      const signerEmail = user.email || "";
+      const signerTitle = getUserRole(user) || "User";
+      const signerFullName = [
+        signerFirstName,
+        signerMiddleInitial,
+        signerLastName,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .replace(/\s+/g, " ")
+        .trim();
+
+      // Merge user signature data with transformed data
+      const finalFormData = {
+        ...transformedData,
+        signerFirstName,
+        signerMiddleInitial,
+        signerLastName,
+        signerEmail,
+        signerTitle,
+        signatures: [
+          {
+            signerFullName,
+            signerTitle,
+            signerEmail,
+            esignConsent: false,
+            signatureDrawnOrTyped: userProfile?.signatureUrl || "",
+            signedAt: "",
+            signerIp: "",
+            otpCode: "",
+          },
+        ],
+      };
+      
+      // Set the form data with the transformed petition data and user signature
+      setFormData(finalFormData);
+      
+      // Mark as taken over petition
+      setIsTakenOverPetition(true);
+      setTakenOverPetitionId(duplicateInfoData?.petitionId || petitionData.id);
+      
+      // Clear any pending actions since we're not submitting
+      setPendingAction(null);
+      setShouldTakeOver(false);
+      
+      // Reset selected organization so user must select on step 1
+      setSelectedOrganizationId(null);
+      
+      // Show success message
+      toast.success("Petition data loaded. Please select an organization and review all steps before submitting.");
+      
+      // Navigate to step 1 to start reviewing (user must select organization)
+      wizardGoToStep(1);
+    } else {
+      toast.error("Failed to process petition data");
+    }
   };
 
   const handleTakeOverCancel = () => {
@@ -5575,7 +5856,15 @@ const PetitionSteps = ({
         <div className="modal-dialog petition-steps-modal-dialog modal-dialog-centered">
           <div className="modal-content petition-steps-modal-content">
             <div className="modal-header text-white theme-bg petition-steps-header d-flex justify-content-between align-items-center">
-              <h5 className="modal-title mb-0">Foreclosure Petition Filing</h5>
+              <div className="d-flex align-items-center gap-2">
+                <h5 className="modal-title mb-0">Foreclosure Petition Filing</h5>
+                {isTakenOverPetition && (
+                  <span className="badge bg-warning text-dark ms-2" title="This petition was taken over from another user">
+                    <i className="fas fa-exchange-alt me-1"></i>
+                    Taken Over
+                  </span>
+                )}
+              </div>
               
               <div className="d-flex align-items-center gap-3">
               <button
