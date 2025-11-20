@@ -17,6 +17,7 @@ const Step4BorrowerDetails = ({
   borrowerAddressValidationErrors,
   selectedBorrowerPredictionIndex,
   setSelectedBorrowerPredictionIndex,
+  borrowerAddressesVerified,
 }) => {
           return (
           <div>
@@ -269,7 +270,12 @@ const Step4BorrowerDetails = ({
 
                 <div className="row g-3 mt-2">
                   <div className="col-md-6">
-                    <label className="form-label">Mailing Address</label>
+                    <label className="form-label">
+                      Mailing Address
+                      {borrowerAddressesVerified?.[borrower.id] && borrower.mailingStreet1?.trim() && (
+                        <span className="text-success ms-2">✓ Verified</span>
+                      )}
+                    </label>
 
                     <div className="position-relative">
                       <input

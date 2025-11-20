@@ -11,6 +11,7 @@ const CustomDropdown = ({
   error = false,
   id,
   name,
+  maxMenuHeight,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0, width: 0 });
@@ -92,6 +93,7 @@ const CustomDropdown = ({
         left: `${position.left}px`,
         width: `${position.width}px`,
         zIndex: 10000,
+        ...(maxMenuHeight && { maxHeight: `${maxMenuHeight}px` }),
       }}
       onClick={(e) => e.stopPropagation()}
     >

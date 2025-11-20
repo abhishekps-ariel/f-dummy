@@ -2,6 +2,26 @@ import React, { useState, useEffect } from "react";
 import CustomDropdown from "../shared/CustomDropdown";
 import { toast } from "react-toastify";
 
+// Helper function to format currency with commas for display
+const formatCurrencyDisplay = (value) => {
+  if (!value && value !== 0) return "";
+  const str = String(value);
+  // Split by decimal point if it exists
+  const parts = str.split(".");
+  // Format the integer part with commas
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  // Join back with decimal if it exists
+  return parts.length > 1 ? parts.join(".") : parts[0];
+};
+
+// Helper function to parse currency input (remove commas and non-digits except decimal)
+const parseCurrencyInput = (value) => {
+  if (!value) return "";
+  // Remove all non-digit characters except decimal point
+  const numericValue = String(value).replace(/[^\d.]/g, "");
+  return numericValue;
+};
+
 const EditJudgementModal = ({ isOpen, onClose, petition, onSave, formData, setFormData, getJudgmentTypes, findOptionByValue }) => {
   const [judgmentData, setJudgmentData] = useState({
     judgmentDate: formData?.judgment?.judgmentDate || "",
@@ -21,11 +41,11 @@ const EditJudgementModal = ({ isOpen, onClose, petition, onSave, formData, setFo
           ? String(formData.judgment.judgmentType)
           : "";
         
-        // Format judgment amount - handle both number and string
+        // Format judgment amount for display - handle both number and string
         const judgmentAmountValue = formData.judgment.judgmentAmount !== null && formData.judgment.judgmentAmount !== undefined
           ? (typeof formData.judgment.judgmentAmount === 'number' 
-              ? formData.judgment.judgmentAmount.toString() 
-              : formData.judgment.judgmentAmount)
+              ? formatCurrencyDisplay(formData.judgment.judgmentAmount)
+              : formatCurrencyDisplay(formData.judgment.judgmentAmount))
           : "";
         
         setJudgmentData({
@@ -53,22 +73,33 @@ const EditJudgementModal = ({ isOpen, onClose, petition, onSave, formData, setFo
     }
   }, [isOpen, formData]);
 
-  // Get judgment types from API
+  // Get judgment types from API - remove placeholder option
   const judgmentTypesFromApi = getJudgmentTypes ? getJudgmentTypes() : [];
-  const judgmentTypes = [
-    { value: "", label: "Select Judgment Type" },
-    ...judgmentTypesFromApi.map((jt) => ({
-      value: jt.value || jt.id,
-      label: jt.description || jt.name,
-    })),
-  ];
+  const judgmentTypes = judgmentTypesFromApi.map((jt) => ({
+    value: jt.value || jt.id,
+    label: jt.description || jt.name,
+  }));
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setJudgmentData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    
+    // Handle currency formatting for judgmentAmount
+    if (name === "judgmentAmount") {
+      // Parse the input to remove commas and non-digit characters (except decimal)
+      const parsedValue = parseCurrencyInput(value);
+      // Format for display with commas
+      const formattedValue = formatCurrencyDisplay(parsedValue);
+      setJudgmentData((prev) => ({
+        ...prev,
+        [name]: formattedValue,
+      }));
+    } else {
+      setJudgmentData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
+    
     // Clear error for this field
     if (fieldErrors[name]) {
       setFieldErrors((prev) => {
@@ -100,8 +131,12 @@ const EditJudgementModal = ({ isOpen, onClose, petition, onSave, formData, setFo
     if (!judgmentData.judgmentDate || (typeof judgmentData.judgmentDate === 'string' && !judgmentData.judgmentDate.trim())) {
       errors.judgmentDate = "Judgment date is required";
     }
-    if (!judgmentData.judgmentAmount || (typeof judgmentData.judgmentAmount === 'string' && !judgmentData.judgmentAmount.trim())) {
+    // Parse judgment amount to check if it's valid (handle formatted currency with commas)
+    const parsedAmount = parseCurrencyInput(judgmentData.judgmentAmount);
+    if (!parsedAmount || !parsedAmount.trim()) {
       errors.judgmentAmount = "Judgment amount is required";
+    } else if (isNaN(parseFloat(parsedAmount)) || parseFloat(parsedAmount) <= 0) {
+      errors.judgmentAmount = "Judgment amount must be a valid positive number";
     }
     // judgmentType can be a number (0 is valid) or string, so check for empty string or null/undefined
     if (judgmentData.judgmentType === "" || judgmentData.judgmentType === null || judgmentData.judgmentType === undefined) {
@@ -139,6 +174,10 @@ const EditJudgementModal = ({ isOpen, onClose, petition, onSave, formData, setFo
         return;
       }
       
+      // Parse judgment amount (remove commas) before saving
+      const parsedAmount = parseCurrencyInput(judgmentData.judgmentAmount);
+      const judgmentAmountNumber = parsedAmount ? parseFloat(parsedAmount) : 0;
+      
       // Update formData with judgment data
       const updatedFormData = {
         ...formData,
@@ -146,7 +185,7 @@ const EditJudgementModal = ({ isOpen, onClose, petition, onSave, formData, setFo
           id: formData?.judgment?.id || null,
           petitionId: petition?.id || null,
           judgmentDate: judgmentData.judgmentDate,
-          judgmentAmount: parseFloat(judgmentData.judgmentAmount) || 0,
+          judgmentAmount: judgmentAmountNumber,
           judgmentType: judgmentTypeNumber,
           courtInformation: judgmentData.courtInformation,
           docketNumbers: judgmentData.docketNumbers,
@@ -195,7 +234,9 @@ const EditJudgementModal = ({ isOpen, onClose, petition, onSave, formData, setFo
               ? formData.judgment.judgmentDate.split("T")[0] 
               : formData.judgment.judgmentDate)
           : "",
-        judgmentAmount: formData.judgment.judgmentAmount || "",
+        judgmentAmount: formData.judgment.judgmentAmount !== null && formData.judgment.judgmentAmount !== undefined
+          ? formatCurrencyDisplay(formData.judgment.judgmentAmount)
+          : "",
         judgmentType: judgmentTypeValue,
         courtInformation: formData.judgment.courtInformation || "",
         docketNumbers: formData.judgment.docketNumbers || "",
@@ -290,6 +331,7 @@ const EditJudgementModal = ({ isOpen, onClose, petition, onSave, formData, setFo
                   placeholder="Select Judgment Type"
                   error={!!fieldErrors.judgmentType}
                   options={judgmentTypes}
+                  maxMenuHeight={180}
                 />
                 {fieldErrors.judgmentType && (
                   <div className="text-danger small mt-1">

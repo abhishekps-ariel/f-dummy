@@ -251,7 +251,8 @@ class PetitionApiService {
         noticeAddressZip: formData.noticeAddressZip || "",
         manualOverrideReason: formData.manualOverrideReason || ""
       },
-      foreclosureSale: formData.noticeSent === true && formData.foreclosureSale ? {
+      // For taken-over petitions, don't send judgment and foreclosure sale data as they need to be redone
+      foreclosureSale: (formData.takeOverToUserId) ? null : (formData.noticeSent === true && formData.foreclosureSale ? {
         saleDate: safeDateConversion(formData.foreclosureSale.saleDate),
         soldToId: formData.foreclosureSale.soldToId && formData.foreclosureSale.soldToId.trim() !== '' ? formData.foreclosureSale.soldToId : null,
         vestingEntityName: formData.foreclosureSale.vestingEntityName || null,
@@ -260,9 +261,18 @@ class PetitionApiService {
         reoContactLastName: formData.foreclosureSale.reoContactLastName || null,
         reoBusinessPhone: formData.foreclosureSale.reoBusinessPhone || null,
         reoEmergencyPhone: formData.foreclosureSale.reoEmergencyPhone || null
-      } : null,
+      } : null),
       // Include judgment object - send empty object if no data, or full object if data exists
-      judgment: formData.judgment ? {
+      // For taken-over petitions, don't send judgment data as it needs to be redone
+      judgment: (formData.takeOverToUserId) ? {
+        id: null,
+        petitionId: petitionId || null,
+        judgmentDate: null,
+        judgmentAmount: 0,
+        judgmentType: 0,
+        courtInformation: "",
+        docketNumbers: ""
+      } : (formData.judgment ? {
         id: formData.judgment.id || null,
         petitionId: petitionId || null,
         judgmentDate: safeDateConversion(formData.judgment.judgmentDate),
@@ -284,7 +294,7 @@ class PetitionApiService {
         judgmentType: 0,
         courtInformation: "",
         docketNumbers: ""
-      },
+      }),
       affidavit: {
         certainMortgageLoan: formData.certainMortgageLoan || false,
         form35bComplianceAffidavitPdf: await fileToBase64(formData.form35bComplianceAffidavitPdf),

@@ -11,7 +11,7 @@ import { usePetitionCommonData } from "../../hooks/usePetitionCommonData";
 import { usePetitions } from "../../hooks/usePetitions";
 
 import { useAuth } from "../../context/AuthContext";
-import { getActiveOrganizationId } from "../../utils/storage";
+import { getActiveOrganizationId, setActiveOrganizationId } from "../../utils/storage";
 
 import { usePetitionWizard } from "../../context/PetitionWizardContext";
 
@@ -193,6 +193,7 @@ const PetitionSteps = ({
   const [pendingAction, setPendingAction] = useState(null); // 'save' or 'submit'
   const [isTakenOverPetition, setIsTakenOverPetition] = useState(false);
   const [takenOverPetitionId, setTakenOverPetitionId] = useState(null);
+  const [takenOverPetitionNumber, setTakenOverPetitionNumber] = useState(null);
 
   // Load petition common data
 
@@ -1424,6 +1425,7 @@ const PetitionSteps = ({
     // Reset takeover flags
     setIsTakenOverPetition(false);
     setTakenOverPetitionId(null);
+    setTakenOverPetitionNumber(null);
     try {
       // Reapply organization prefilled info while clearing user-entered values
       const orgPrefill = (() => {
@@ -5415,6 +5417,7 @@ const PetitionSteps = ({
               borrowerAddressValidationErrors={borrowerAddressValidationErrors}
               selectedBorrowerPredictionIndex={selectedBorrowerPredictionIndex}
               setSelectedBorrowerPredictionIndex={setSelectedBorrowerPredictionIndex}
+              borrowerAddressesVerified={borrowerAddressesVerified}
             />
         );
 
@@ -5713,19 +5716,67 @@ const PetitionSteps = ({
       // Set the form data with the transformed petition data and user signature
       setFormData(finalFormData);
       
+      // Mark borrower addresses as verified if they have addresses filled
+      if (finalFormData.borrowers && finalFormData.borrowers.length > 0) {
+        const verifiedAddresses = {};
+        finalFormData.borrowers.forEach((borrower) => {
+          // Mark as verified if borrower has a street address
+          if (borrower.mailingStreet1 && borrower.mailingStreet1.trim()) {
+            verifiedAddresses[borrower.id] = true;
+          }
+        });
+        if (Object.keys(verifiedAddresses).length > 0) {
+          setBorrowerAddressesVerified(verifiedAddresses);
+        }
+      }
+      
       // Mark as taken over petition
       setIsTakenOverPetition(true);
       setTakenOverPetitionId(duplicateInfoData?.petitionId || petitionData.id);
+      // Extract and store petition number for display
+      // petitionData is the raw API response, which should have petitionNumber at root level
+      const petitionNumber = petitionData?.petitionNumber || null;
+      setTakenOverPetitionNumber(petitionNumber);
       
       // Clear any pending actions since we're not submitting
       setPendingAction(null);
       setShouldTakeOver(false);
       
-      // Reset selected organization so user must select on step 1
-      setSelectedOrganizationId(null);
+      // Reset organization selection - only for filers, not for org admins
+      // Org admins should keep their pre-selected organization
+      if (!isOrgAdmin) {
+        // For filers: Only clear organization selection if it wasn't already selected on step 1
+        // If the user already selected an organization on step 1, keep that selection
+        if (!selectedOrganizationId) {
+          // No organization was selected, clear everything to prevent pre-selection
+          setSelectedOrganizationId(null);
+          setOrganizationData(null);
+          // Clear stored organization ID to prevent pre-selection from browser storage
+          setActiveOrganizationId(null);
+          // Also reset organizationId in formData to null for filers
+          finalFormData.organizationId = null;
+        } else {
+          // Organization was already selected on step 1, keep it
+          // Keep selectedOrganizationId and organizationData as they are
+          finalFormData.organizationId = selectedOrganizationId;
+        }
+      } else {
+        // For org admins, keep the organization from user/auth context
+        // Don't clear selectedOrganizationId or organizationData if they're already set
+        // The organizationId will be derived from user.organizationId or organizationFromAuth/Context
+        if (organizationId) {
+          finalFormData.organizationId = organizationId;
+        }
+      }
+      setFormData(finalFormData);
       
       // Show success message
-      toast.success("Petition data loaded. Please select an organization and review all steps before submitting.");
+      const successMessage = isOrgAdmin 
+        ? "Petition data loaded. Please review all steps before submitting."
+        : (selectedOrganizationId 
+            ? "Petition data loaded. Please review all steps before submitting."
+            : "Petition data loaded. Please select an organization and review all steps before submitting.");
+      toast.success(successMessage);
       
       // Navigate to step 1 to start reviewing (user must select organization)
       wizardGoToStep(1);
@@ -6014,13 +6065,15 @@ const PetitionSteps = ({
         <div className="modal-dialog petition-steps-modal-dialog modal-dialog-centered">
           <div className="modal-content petition-steps-modal-content">
             <div className="modal-header text-white theme-bg petition-steps-header d-flex justify-content-between align-items-center">
-              <div className="d-flex align-items-center gap-2">
-                <h5 className="modal-title mb-0">Foreclosure Petition Filing</h5>
+              <div className="d-flex flex-column">
+                <div className="d-flex align-items-center gap-2">
+                  <h5 className="modal-title mb-0">Foreclosure Petition Filing</h5>
+                </div>
                 {isTakenOverPetition && (
-                  <span className="badge bg-warning text-dark ms-2" title="This petition was taken over from another user">
-                    <i className="fas fa-exchange-alt me-1"></i>
-                    Taken Over
-                  </span>
+                  <div className="mt-1" style={{ fontSize: "0.8rem", opacity: "0.9", display: "flex", alignItems: "center", gap: "6px" }}>
+                    <i className="fas fa-exchange-alt" style={{ fontSize: "0.75rem" }}></i>
+                    <span>Petition taken over{takenOverPetitionNumber ? `: ${takenOverPetitionNumber}` : ''}</span>
+                  </div>
                 )}
               </div>
               
