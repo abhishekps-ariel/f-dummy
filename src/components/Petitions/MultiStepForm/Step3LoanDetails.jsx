@@ -354,6 +354,52 @@ const Step3LoanDetails = ({
                 )}
               </div>
 
+              <div className="col-md-6">
+                <label htmlFor="mortgageBrokerLicenseNumber" className="form-label">
+                  Mortgage Broker License Number
+                </label>
+
+                <input
+                  type="text"
+                  id="mortgageBrokerLicenseNumber"
+                  name="mortgageBrokerLicenseNumber"
+                  className={`form-control ${
+                    fieldErrors.mortgageBrokerLicenseNumber ? "is-invalid" : ""
+                  }`}
+                  value={formData.mortgageBrokerLicenseNumber || ""}
+                  onChange={handleInputChange}
+                />
+
+                {fieldErrors.mortgageBrokerLicenseNumber && (
+                  <div className="text-danger small mt-1">
+                    {fieldErrors.mortgageBrokerLicenseNumber}
+                  </div>
+                )}
+              </div>
+
+              <div className="col-md-6">
+                <label htmlFor="mortgageLoanOriginatorLicenseNumber" className="form-label">
+                  Mortgage Loan Originator License Number
+                </label>
+
+                <input
+                  type="text"
+                  id="mortgageLoanOriginatorLicenseNumber"
+                  name="mortgageLoanOriginatorLicenseNumber"
+                  className={`form-control ${
+                    fieldErrors.mortgageLoanOriginatorLicenseNumber ? "is-invalid" : ""
+                  }`}
+                  value={formData.mortgageLoanOriginatorLicenseNumber || ""}
+                  onChange={handleInputChange}
+                />
+
+                {fieldErrors.mortgageLoanOriginatorLicenseNumber && (
+                  <div className="text-danger small mt-1">
+                    {fieldErrors.mortgageLoanOriginatorLicenseNumber}
+                  </div>
+                )}
+              </div>
+
               <div className="col-12">
                 <div className="row">
                   <div className="col-md-4">

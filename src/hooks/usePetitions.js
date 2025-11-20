@@ -125,7 +125,7 @@ export const usePetitions = () => {
   };
 
   // Submit a new petition or update existing petition
-  const submitPetition = async (formData, isDraft = false, petitionId = null, suppressToast = false) => {
+  const submitPetition = async (formData, isDraft = false, petitionId = null, suppressToast = false, statusString = null) => {
     setLoading(true);
     setError(null);
     let errorAlreadyShown = false; // Track if we've already shown the error toast
@@ -138,7 +138,7 @@ export const usePetitions = () => {
         throw new Error('Organization ID not found. Please select an organization or ensure you are part of an organization.');
       }
       
-      const apiData = await petitionApiService.transformFormDataToApiFormat(formData, organizationId, petitionId);
+      const apiData = await petitionApiService.transformFormDataToApiFormat(formData, organizationId, petitionId, statusString);
       
       const response = await petitionApiService.submitPetition(apiData);
       

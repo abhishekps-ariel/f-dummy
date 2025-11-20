@@ -147,7 +147,7 @@ class PetitionApiService {
   }
 
   // Transform form data to API format
-  async transformFormDataToApiFormat(formData, organizationId, petitionId = null) {
+  async transformFormDataToApiFormat(formData, organizationId, petitionId = null, statusString = null) {
     // Helper function to safely convert dates
     const safeDateConversion = (dateString) => {
       if (!dateString) return null;
@@ -181,7 +181,8 @@ class PetitionApiService {
 
     
     const petitionData = {
-      id: petitionId, 
+      id: petitionId,
+      status: statusString || null, // Send status string for judgment/foreclosure saves, null for others
       isAllStepsCompleted: formData.isAllStepsCompleted || false,
       organizationId: organizationId,
       duplicateHash: "",
@@ -212,7 +213,9 @@ class PetitionApiService {
         interestOnly: formData.interestOnly || false,
         negativeAmortization: formData.negativeAmortization || false,
         monthlyPaymentAmount: parseFloat(formData.monthlyPaymentAmount) || 0,
-        delinquencyDaysAtFiling: parseInt(formData.delinquencyDaysAtFiling) || 0
+        delinquencyDaysAtFiling: parseInt(formData.delinquencyDaysAtFiling) || 0,
+        mortgageBrokerLicenseNumber: formData.mortgageBrokerLicenseNumber || null,
+        mortgageLoanOriginatorLicenseNumber: formData.mortgageLoanOriginatorLicenseNumber || null
       },
       rightToCure: {
         noticeSent: formData.noticeSent || false,

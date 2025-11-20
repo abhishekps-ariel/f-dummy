@@ -37,6 +37,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
     getLienPositions,
     getBuyerTypes,
     getJudgmentTypes,
+    getPetitionStatuses,
     getOptionName,
     findOptionByValue,
     loading: commonDataLoading,
@@ -562,6 +563,8 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
       negativeAmortization: details.loan?.negativeAmortization || false,
       monthlyPaymentAmount: details.loan?.monthlyPaymentAmount || 0,
       delinquencyDaysAtFiling: details.loan?.delinquencyDaysAtFiling || 0,
+      mortgageBrokerLicenseNumber: details.loan?.mortgageBrokerLicenseNumber || "",
+      mortgageLoanOriginatorLicenseNumber: details.loan?.mortgageLoanOriginatorLicenseNumber || "",
 
       // Borrowers
       borrowers: mappedBorrowers,
@@ -1307,8 +1310,13 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
         organizationId: updatedFormData.organizationId || petition.organizationId || formData.organizationId,
       };
       
-      // Suppress the default toast and show custom message
-      await submitPetition(dataToSave, true, petition.id, true); // true = suppressToast, true = isDraft
+      // Get status string "JudgmentSubmitted" (value 3) from petition enums
+      const petitionStatuses = getPetitionStatuses();
+      const judgmentSubmittedStatus = petitionStatuses.find(status => status.value === 3);
+      const statusString = judgmentSubmittedStatus ? judgmentSubmittedStatus.name : null;
+      
+      // Suppress the default toast and show custom message, pass status string
+      await submitPetition(dataToSave, true, petition.id, true, statusString); // true = suppressToast, true = isDraft, statusString
       
       toast.success("Judgment saved successfully.");
       
@@ -1375,8 +1383,14 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
         ...updatedFormData,
         organizationId: updatedFormData.organizationId || petition.organizationId || formData.organizationId,
       };
-      // Suppress the default toast and show custom message
-      await submitPetition(dataToSave, true, petition.id, true); // true = suppressToast
+      
+      // Get status string "ForeclosureSaleInitiated" (value 2) from petition enums
+      const petitionStatuses = getPetitionStatuses();
+      const foreclosureSaleInitiatedStatus = petitionStatuses.find(status => status.value === 2);
+      const statusString = foreclosureSaleInitiatedStatus ? foreclosureSaleInitiatedStatus.name : null;
+      
+      // Suppress the default toast and show custom message, pass status string
+      await submitPetition(dataToSave, true, petition.id, true, statusString); // true = suppressToast, true = isDraft, statusString
       toast.success("Foreclosure saved successfully.");
       if (onPetitionUpdated) {
         setTimeout(() => {

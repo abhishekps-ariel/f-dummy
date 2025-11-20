@@ -322,6 +322,8 @@ const PetitionSteps = ({
     negativeAmortization: false,
     monthlyPaymentAmount: 0,
     delinquencyDaysAtFiling: null,
+    mortgageBrokerLicenseNumber: "",
+    mortgageLoanOriginatorLicenseNumber: "",
     // Step 4: Borrower Details
     borrowers: [
       {
@@ -5420,6 +5422,8 @@ const PetitionSteps = ({
       negativeAmortization: details.loan?.negativeAmortization || false,
       monthlyPaymentAmount: details.loan?.monthlyPaymentAmount || 0,
       delinquencyDaysAtFiling: details.loan?.delinquencyDaysAtFiling || null,
+      mortgageBrokerLicenseNumber: details.loan?.mortgageBrokerLicenseNumber || "",
+      mortgageLoanOriginatorLicenseNumber: details.loan?.mortgageLoanOriginatorLicenseNumber || "",
 
       // Borrowers
       borrowers: mappedBorrowers.length > 0 ? mappedBorrowers : defaultFormData.borrowers,

@@ -296,6 +296,46 @@ const LoanDetails = ({
                 </div>
                 <div className="col-md-6">
                   <div className="form-group mb-3">
+                    <label className="form-label">Mortgage Broker License Number</label>
+                    <input
+                      type="text"
+                      name="mortgageBrokerLicenseNumber"
+                      className={`form-control ${
+                        fieldErrors.mortgageBrokerLicenseNumber ? "is-invalid" : ""
+                      }`}
+                      value={formData.mortgageBrokerLicenseNumber || ""}
+                      readOnly={!isEditing}
+                      onChange={handleInputChange}
+                    />
+                    {fieldErrors.mortgageBrokerLicenseNumber && (
+                      <div className="text-danger small mt-1">
+                        {fieldErrors.mortgageBrokerLicenseNumber}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="col-md-6">
+                  <div className="form-group mb-3">
+                    <label className="form-label">Mortgage Loan Originator License Number</label>
+                    <input
+                      type="text"
+                      name="mortgageLoanOriginatorLicenseNumber"
+                      className={`form-control ${
+                        fieldErrors.mortgageLoanOriginatorLicenseNumber ? "is-invalid" : ""
+                      }`}
+                      value={formData.mortgageLoanOriginatorLicenseNumber || ""}
+                      readOnly={!isEditing}
+                      onChange={handleInputChange}
+                    />
+                    {fieldErrors.mortgageLoanOriginatorLicenseNumber && (
+                      <div className="text-danger small mt-1">
+                        {fieldErrors.mortgageLoanOriginatorLicenseNumber}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="col-md-6">
+                  <div className="form-group mb-3">
                     <label className="form-label">Variable Rate</label>
                     <div className="form-check">
                       <input
