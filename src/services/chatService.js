@@ -1,9 +1,10 @@
 import client from "../api/axiosInstance";
 import { CHAT_ENDPOINTS } from "../constants/apiEndpoints";
+import Config from "../config/index";
 import * as signalR from "@microsoft/signalr";
 
 export const createSignalRConnection = (userId) => {
-  const url = `${CHAT_ENDPOINTS.SIGNALR_HUB_URL}?userId=${encodeURIComponent(userId)}`;
+  const url = `${Config.API_URL}${CHAT_ENDPOINTS.SIGNALR_HUB_URL}?userId=${encodeURIComponent(userId)}`;
   const conn = new signalR.HubConnectionBuilder()
     .withUrl(url)
     .withAutomaticReconnect()
