@@ -1482,12 +1482,12 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
     }
   };
 
-  // Handle editing a note
-  const handleEditNote = (note) => {
-    setNoteToEdit(note);
-    setShowNotesModal(true);
-    setShowNotesDropdown(false);
-  };
+  // Handle editing a note - COMMENTED OUT: only allowing adding notes for now
+  // const handleEditNote = (note) => {
+  //   setNoteToEdit(note);
+  //   setShowNotesModal(true);
+  //   setShowNotesDropdown(false);
+  // };
 
   // Handle opening add note modal
   const handleAddNote = () => {
@@ -2284,9 +2284,10 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
             <NotesDisplaySection
               formData={formData}
               onClose={() => setShowNotesSection(false)}
-              onEditNote={handleEditNote}
+              onEditNote={null}
             />
           )}
+          {/* onEditNote={handleEditNote} - COMMENTED OUT: only allowing adding notes for now */}
 
           {/* Property Details Section */}
           <PropertyDetailsCard
@@ -2450,7 +2451,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
           setNoteToEdit(null);
         }}
         petition={petition}
-        noteToEdit={noteToEdit}
+        noteToEdit={null}
         onNoteSaved={handleNoteSaved}
       />
 

@@ -1,5 +1,5 @@
 html {
-    scroll-behavior: smooth;
+    scroll-behavior: auto; /* Changed to auto to allow instant programmatic scrolling */
     scroll-padding-top: 100px;
 }
 
@@ -60,7 +60,7 @@ html {
 }
 
 body {
-    scroll-behavior: smooth;
+    scroll-behavior: auto; /* Changed to auto to allow instant programmatic scrolling */
 }
 
 /* Auth: right-side background image */

@@ -107,10 +107,50 @@ const PetitionSteps = ({
   const [borrowerAddressesVerified, setBorrowerAddressesVerified] = useState({}); // { borrowerId: true/false }
   const [loanAssigneeAddressesVerified, setLoanAssigneeAddressesVerified] = useState({}); // { assigneeIndex: true/false }
 
+  // Refs for scrollable containers
+  const modalBodyRef = useRef(null);
+  const formContainerRef = useRef(null);
+
   // Sync wizard state with component state
   useEffect(() => {
     setCurrentStep(wizardCurrentStep);
   }, [wizardCurrentStep]);
+
+  // Scroll to top when step changes
+  useEffect(() => {
+    if (isOpen && currentStep) {
+      // Function to scroll the form container (which is the scrollable element)
+      const scrollToTop = () => {
+        // The form container (.petition-steps-form) is the scrollable element
+        if (formContainerRef.current) {
+          formContainerRef.current.scrollTop = 0;
+        }
+        // Also try modal body just in case
+        if (modalBodyRef.current) {
+          modalBodyRef.current.scrollTop = 0;
+        }
+        // Scroll window as fallback
+        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      };
+
+      // Multiple attempts to ensure scroll works after DOM updates
+      requestAnimationFrame(() => {
+        scrollToTop();
+      });
+      
+      const timer1 = setTimeout(scrollToTop, 0);
+      const timer2 = setTimeout(scrollToTop, 50);
+      const timer3 = setTimeout(scrollToTop, 150);
+      const timer4 = setTimeout(scrollToTop, 300);
+
+      return () => {
+        clearTimeout(timer1);
+        clearTimeout(timer2);
+        clearTimeout(timer3);
+        clearTimeout(timer4);
+      };
+    }
+  }, [currentStep, isOpen]);
 
   // Track visited steps
   useEffect(() => {
@@ -3000,13 +3040,13 @@ const PetitionSteps = ({
 
     setFormData((prev) => {
       const newFormData = {
-        ...prev,
-        [name]:
-          type === "checkbox"
-            ? checked
-            : type === "file"
-            ? files[0]
-            : processedValue,
+      ...prev,
+      [name]:
+        type === "checkbox"
+          ? checked
+          : type === "file"
+          ? files[0]
+          : processedValue,
       };
 
       // Check if any of the three checkboxes (variableRate, interestOnly, negativeAmortization) are checked
@@ -3049,12 +3089,12 @@ const PetitionSteps = ({
     ) {
       // Use processedValue for currency fields (after parsing commas)
       const currentOriginalAmount =
-        name === "originalPrincipalAmount"
+          name === "originalPrincipalAmount"
           ? (currencyFields.includes(name) ? parseCurrencyInput(value) : value)
           : formData.originalPrincipalAmount;
-      
+
       const currentBalanceValue =
-        name === "currentPrincipalBalance"
+          name === "currentPrincipalBalance"
           ? (currencyFields.includes(name) ? parseCurrencyInput(value) : value)
           : formData.currentPrincipalBalance;
 
@@ -5994,7 +6034,7 @@ const PetitionSteps = ({
               </div>
             </div>
 
-            <div className="modal-body petition-steps-body">
+            <div className="modal-body petition-steps-body" ref={modalBodyRef}>
               {/* Desktop Sidebar */}
 
               <div className="petition-steps-sidebar d-none d-lg-block">
@@ -6003,7 +6043,7 @@ const PetitionSteps = ({
 
               {/* Form Content */}
 
-              <div className="petition-steps-form">
+              <div className="petition-steps-form" ref={formContainerRef}>
                 <div className="container-fluid">
                   {/* Mobile Stepper */}
 

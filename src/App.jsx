@@ -1,7 +1,7 @@
 import './App.css';
 import { RouterProvider } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
-import { Suspense } from 'react';
+import { Suspense, useEffect } from 'react';
 import { AuthProvider } from './context/AuthContext';
 import { PetitionWizardProvider } from './context/PetitionWizardContext';
 import { router } from './routes/routes';
@@ -9,6 +9,13 @@ import LoadingFallback from './components/shared/LoadingFallback';
 import ErrorBoundary from './components/shared/ErrorBoundary';
 
 function App() {
+  // Disable browser scroll restoration globally
+  useEffect(() => {
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+  }, []);
+
   return (
     <ErrorBoundary>
       <AuthProvider>

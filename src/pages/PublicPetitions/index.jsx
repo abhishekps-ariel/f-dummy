@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import HomeHeader from "../../components/Home/HomeHeader";
 import HomeFooter from "../../components/Home/HomeFooter";
 import { ROUTES } from "../../constants/routerConstants";
@@ -7,9 +7,11 @@ import petitionApiService from "../../services/petitionApiService";
 import { toast } from "react-toastify";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import ScrollToTop from "../../components/shared/ScrollToTop";
 
 function PublicPetitions() {
   const navigate = useNavigate();
+  const location = useLocation();
   
   const [petitions, setPetitions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -52,6 +54,88 @@ function PublicPetitions() {
       setLoading(false);
     }
   };
+
+  // Disable browser scroll restoration
+  useEffect(() => {
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+  }, []);
+
+  // Scroll to top when component mounts or location changes
+  useEffect(() => {
+    // Function to scroll all possible containers to top
+    const scrollToTop = () => {
+      // Try multiple approaches to ensure scroll works
+      if (window) {
+        window.scrollTo(0, 0);
+        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      }
+      if (document.documentElement) {
+        document.documentElement.scrollTop = 0;
+        document.documentElement.scrollLeft = 0;
+      }
+      if (document.body) {
+        document.body.scrollTop = 0;
+        document.body.scrollLeft = 0;
+      }
+      // Try scrolling the main content container if it exists
+      const mainContent = document.querySelector('.main-content');
+      if (mainContent) {
+        mainContent.scrollTop = 0;
+        mainContent.scrollLeft = 0;
+      }
+    };
+
+    // Scroll immediately
+    scrollToTop();
+    
+    // Use requestAnimationFrame for immediate DOM-aware scroll
+    requestAnimationFrame(() => {
+      scrollToTop();
+      requestAnimationFrame(scrollToTop);
+    });
+    
+    // Multiple delays to catch async content loading
+    const timer1 = setTimeout(scrollToTop, 0);
+    const timer2 = setTimeout(scrollToTop, 50);
+    const timer3 = setTimeout(scrollToTop, 100);
+    const timer4 = setTimeout(scrollToTop, 200);
+    const timer5 = setTimeout(scrollToTop, 300);
+    const timer6 = setTimeout(scrollToTop, 500);
+    const timer7 = setTimeout(scrollToTop, 750);
+    const timer8 = setTimeout(scrollToTop, 1000);
+    
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      clearTimeout(timer3);
+      clearTimeout(timer4);
+      clearTimeout(timer5);
+      clearTimeout(timer6);
+      clearTimeout(timer7);
+      clearTimeout(timer8);
+    };
+  }, [location.pathname]);
+
+  // Also scroll to top after data loads
+  useEffect(() => {
+    if (!loading) {
+      // Data has finished loading, ensure scroll to top
+      const scrollToTop = () => {
+        window.scrollTo(0, 0);
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      };
+      
+      // Scroll after data loads
+      requestAnimationFrame(() => {
+        scrollToTop();
+        setTimeout(scrollToTop, 100);
+        setTimeout(scrollToTop, 300);
+      });
+    }
+  }, [loading]);
 
   // Fetch petitions on mount and when filters/page change
   useEffect(() => {
@@ -241,6 +325,7 @@ function PublicPetitions() {
 
   return (
     <div>
+      <ScrollToTop />
       <HomeHeader
         featureRef={null}
         contactRef={null}

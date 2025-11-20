@@ -414,7 +414,7 @@ const ViewAllPetitions = ({ onBack }) => {
         headers.join(","),
         ...allPetitions.map((petition) =>
           [
-            petition.id,
+            petition.petitionNumber || petition.id,
             `"${petition.propertyAddress}"`,
             `"${petition.borrower}"`,
             petition.status,
@@ -465,7 +465,7 @@ const ViewAllPetitions = ({ onBack }) => {
         "Last Updated",
       ];
       const tableData = allPetitions.map((petition) => [
-        petition.id,
+        petition.petitionNumber || petition.id,
         petition.propertyAddress,
         petition.borrower,
         petition.status,

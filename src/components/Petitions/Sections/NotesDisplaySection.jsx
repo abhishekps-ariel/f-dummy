@@ -67,7 +67,8 @@ const NotesDisplaySection = ({ formData, onClose, onEditNote }) => {
                       {note.noteText || note.content}
                     </div>
                   </div>
-                  {onEditNote && note.id && (
+                  {/* Edit note functionality commented out - only allowing adding notes for now */}
+                  {/* {onEditNote && note.id && (
                     <button
                       type="button"
                       className="btn btn-link p-0 ms-2 border-0"
@@ -85,7 +86,7 @@ const NotesDisplaySection = ({ formData, onClose, onEditNote }) => {
                     >
                       <i className="fas fa-edit"></i>
                     </button>
-                  )}
+                  )} */}
                 </div>
               </div>
             ))}

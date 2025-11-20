@@ -1,5 +1,5 @@
-import { useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRef, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import img1 from "../../assets/loan.jpg";
 import img2 from "../../assets/moneytab.jpg";
 import img3 from "../../assets/flag.jpg";
@@ -10,6 +10,24 @@ import { ROUTES } from "../../constants/routerConstants";
 
 function Home() {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Scroll to top when component mounts or location changes
+  useEffect(() => {
+    // Scroll immediately and after a delay to ensure it works
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    
+    // Also try after a small delay in case content loads asynchronously
+    const timer = setTimeout(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, [location.pathname]);
   // Create refs for each section
   const featureRef = useRef(null);
   const contactRef = useRef(null);
