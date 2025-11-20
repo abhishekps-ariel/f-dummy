@@ -3021,24 +3021,23 @@ const PetitionSteps = ({
     }
 
     // Real-time validation for principal amount comparison
-
     if (
       name === "originalPrincipalAmount" ||
       name === "currentPrincipalBalance"
     ) {
-      const originalAmount =
-        parseFloat(
-          name === "originalPrincipalAmount"
-            ? value
-            : formData.originalPrincipalAmount
-        ) || 0;
+      // Use processedValue for currency fields (after parsing commas)
+      const currentOriginalAmount =
+        name === "originalPrincipalAmount"
+          ? (currencyFields.includes(name) ? parseCurrencyInput(value) : value)
+          : formData.originalPrincipalAmount;
+      
+      const currentBalanceValue =
+        name === "currentPrincipalBalance"
+          ? (currencyFields.includes(name) ? parseCurrencyInput(value) : value)
+          : formData.currentPrincipalBalance;
 
-      const currentBalance =
-        parseFloat(
-          name === "currentPrincipalBalance"
-            ? value
-            : formData.currentPrincipalBalance
-        ) || 0;
+      const originalAmount = parseFloat(currentOriginalAmount) || 0;
+      const currentBalance = parseFloat(currentBalanceValue) || 0;
 
       if (
         originalAmount > 0 &&
@@ -3047,7 +3046,6 @@ const PetitionSteps = ({
       ) {
         setFieldErrors((prev) => ({
           ...prev,
-
           currentPrincipalBalance:
             "Current Principal Balance cannot exceed the Original Principal Amount",
         }));
@@ -3057,9 +3055,100 @@ const PetitionSteps = ({
       ) {
         setFieldErrors((prev) => {
           const newErrors = { ...prev };
-
           delete newErrors.currentPrincipalBalance;
+          return newErrors;
+        });
+      }
+    }
 
+    // Real-time validation for origination date - must be in the past
+    if (name === "originationDate" && value.trim()) {
+      const originationDate = new Date(value);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      if (!isNaN(originationDate.getTime())) {
+        if (originationDate >= today) {
+          setFieldErrors((prev) => ({
+            ...prev,
+            originationDate: "Origination Date must be in the past",
+          }));
+        } else if (
+          fieldErrors.originationDate === "Origination Date must be in the past"
+        ) {
+          setFieldErrors((prev) => {
+            const newErrors = { ...prev };
+            delete newErrors.originationDate;
+            return newErrors;
+          });
+        }
+      }
+    }
+
+    // Real-time validation for interest rate - must be 0-100%
+    if (name === "interestRatePercent" && value !== "" && value !== null && value !== undefined) {
+      const interestRate = parseFloat(value) || 0;
+      
+      if (interestRate < 0 || interestRate > 100) {
+        setFieldErrors((prev) => ({
+          ...prev,
+          interestRatePercent: "Interest Rate must be between 0% and 100%",
+        }));
+      } else if (
+        fieldErrors.interestRatePercent === "Interest Rate must be between 0% and 100%"
+      ) {
+        setFieldErrors((prev) => {
+          const newErrors = { ...prev };
+          delete newErrors.interestRatePercent;
+          return newErrors;
+        });
+      }
+    }
+
+    // Real-time validation for cure expiration date - must be after notice date
+    if (
+      (name === "cureExpirationDate" || name === "noticeDate") &&
+      formData.noticeDate &&
+      formData.cureExpirationDate
+    ) {
+      const noticeDate = new Date(formData.noticeDate);
+      const cureExpirationDate = new Date(formData.cureExpirationDate);
+      
+      if (!isNaN(noticeDate.getTime()) && !isNaN(cureExpirationDate.getTime())) {
+        if (cureExpirationDate <= noticeDate) {
+          setFieldErrors((prev) => ({
+            ...prev,
+            cureExpirationDate:
+              "Cure Expiration Date must be after Notice Date",
+          }));
+        } else if (
+          fieldErrors.cureExpirationDate ===
+          "Cure Expiration Date must be after Notice Date"
+        ) {
+          setFieldErrors((prev) => {
+            const newErrors = { ...prev };
+            delete newErrors.cureExpirationDate;
+            return newErrors;
+          });
+        }
+      }
+    }
+
+    // Real-time validation for amount in default - must be positive if notice sent
+    if (name === "amountInDefault" && formData.noticeSent === true && value !== "" && value !== null && value !== undefined) {
+      const amount = parseFloat(value) || 0;
+      
+      if (amount <= 0) {
+        setFieldErrors((prev) => ({
+          ...prev,
+          amountInDefault: "Amount in Default must be greater than 0",
+        }));
+      } else if (
+        fieldErrors.amountInDefault === "Amount in Default must be greater than 0"
+      ) {
+        setFieldErrors((prev) => {
+          const newErrors = { ...prev };
+          delete newErrors.amountInDefault;
           return newErrors;
         });
       }
