@@ -4,9 +4,9 @@ import "./FAQ.css";
 const FAQcomponent = () => {
   const categories = [
     "Petitions",
-    "Organization Users",
-    "Adding Petitions",
-    "Join Requests",
+    "Notes",
+    "Profile & Signatures",
+    "Messages",
   ];
 
   // Static FAQ data (category-wise)
@@ -15,114 +15,121 @@ const FAQcomponent = () => {
     {
       question: "What is a petition?",
       answer:
-        "A petition is a formal request created within the platform to raise awareness or gather support for a particular cause, issue, or organizational concern.",
+        "A petition is a formal document created within the platform to file and manage legal foreclosure proceedings. It contains all necessary information about the property, loan details, borrowers, and legal requirements.",
     },
     {
-      question: "Who can create a petition?",
+      question: "How do I create a new petition?",
       answer:
-        "Only verified organization users or members with appropriate permissions can create new petitions under their organization.",
+        "Click the 'Create Petition' button on your dashboard or go to the Petitions section and select 'New Petition'. Fill in all required information across the multiple steps including property details, loan information, borrower details, and compliance forms.",
     },
     {
-      question: "How can I view all petitions of my organization?",
+      question: "Can I save a petition as a draft?",
       answer:
-        "Go to the 'Petitions' tab on your dashboard. There, you can view all active, pending, and closed petitions created under your organization.",
+        "Yes, you can save your petition as a draft at any time during the creation process. Drafts can be edited and completed later before final submission.",
     },
     {
-      question: "Can I edit a petition after publishing it?",
+      question: "What happens after I submit a petition?",
       answer:
-        "Petitions can only be edited while they are in draft mode. Once published, only administrators can make minor corrections like title or description updates.",
-    },
-  ],
-
-  "Organizations": [
-    {
-      question: "What is an organization in the petition system?",
-      answer:
-        "An organization represents a verified group or institution that manages petitions, users, and approval workflows within the platform.",
+        "Once submitted, the petition is processed and moves through various status stages including Submitted, Judgment Submitted, Foreclosure Sale Initiated, and eventually Accepted or Closed based on the legal process.",
     },
     {
-      question: "How do I create a new organization?",
+      question: "Can I edit a petition after submission?",
       answer:
-        "Navigate to the 'Organizations' section and click 'Create Organization'. Fill in the details such as name, description, and contact information, then submit for admin approval.",
-    },
-    {
-      question: "Can an organization have multiple admins?",
-      answer:
-        "Yes. Each organization can have multiple admins who can manage petitions, users, and incoming join requests.",
-    },
-    {
-      question: "How can I deactivate an organization?",
-      answer:
-        "Only super admins can deactivate an organization. Once deactivated, all petitions and users under that organization become inactive until reactivated.",
+        "Petitions can be edited depending on their current status. Draft petitions can be fully edited, while submitted petitions may have limited editing capabilities based on the workflow stage.",
     },
   ],
 
-  "Organization Users": [
+  "Notes": [
     {
-      question: "Who are organization users?",
+      question: "What are notes in a petition?",
       answer:
-        "Organization users are members who belong to a specific organization. They can have roles such as Admin, Editor, or Viewer with different permission levels.",
+        "Notes allow you to add comments, reminders, or additional information to a petition. They are useful for tracking important details, internal communications, or documenting key events related to the petition.",
     },
     {
-      question: "How can an admin add users to their organization?",
+      question: "How do I add a note to a petition?",
       answer:
-        "Admins can invite users by navigating to 'Organization Users' → 'Add User', entering their email address, and assigning a role. Invited users receive an email link to join.",
+        "Open the petition and click on the 'Notes' dropdown in the options menu. Select 'Add Note' and enter your note text. Notes are saved immediately and are visible to all users with access to the petition.",
     },
     {
-      question: "Can I change a user's role later?",
+      question: "Can I edit or delete notes?",
       answer:
-        "Yes, organization admins can modify user roles anytime from the 'Manage Users' section in the organization's dashboard.",
+        "Yes, you can edit your own notes by clicking the edit icon next to any note you created. Notes can be modified to update information or correct any errors.",
     },
     {
-      question: "What happens if a user leaves an organization?",
+      question: "Who can see the notes I add?",
       answer:
-        "When a user leaves or is removed, their access to petitions and organization data is revoked immediately, but their past contributions remain logged for recordkeeping.",
-    },
-  ],
-
-  "Adding Petitions": [
-    {
-      question: "How do I add a new petition?",
-      answer:
-        "Click the 'Add Petition' button on your dashboard, fill in the required fields (title, description, category, and goal), attach relevant media if needed, and save or publish.",
+        "Notes are visible to all users who have access to view the petition. Each note shows the creator's name and timestamp, allowing for clear tracking of who added which information.",
     },
     {
-      question: "Can I assign petitions to specific teams?",
+      question: "Are notes required for petition submission?",
       answer:
-        "Yes. While creating a petition, you can assign it to a specific team or department under your organization to track progress and manage updates more efficiently.",
-    },
-    {
-      question: "Are there any restrictions on petition titles or content?",
-      answer:
-        "Petition titles must be unique within your organization and should not contain any inappropriate or offensive content. All petitions are subject to review by moderators.",
-    },
-    {
-      question: "What happens after a petition is submitted?",
-      answer:
-        "Once a petition is submitted, it moves into the review phase where admins verify the content. After approval, it becomes visible to other organization users and supporters.",
+        "No, notes are optional. They are provided as a convenience feature to help you document important information, but they are not required to complete or submit a petition.",
     },
   ],
 
-  "Join Requests": [
+  "Profile & Signatures": [
     {
-      question: "What is a join request?",
+      question: "How do I set up my filing entity information?",
       answer:
-        "A join request is a formal request sent by a user to join an existing organization on the platform.",
+        "Go to your profile settings and navigate to the 'Filing Entity' section. Enter your legal entity name, type, address, and contact information. This information is pre-filled when creating new petitions to save time.",
     },
     {
-      question: "How can I send a join request?",
+      question: "What is a filing entity type?",
       answer:
-        "Visit the 'Organizations' page, find the organization you want to join, and click 'Send Join Request'. You can include a short note explaining your purpose.",
+        "A filing entity type categorizes your organization (e.g., Corporation, LLC, Partnership, Individual). Select the type that matches your legal entity structure as this information is required for petition submissions.",
     },
     {
-      question: "Who approves join requests?",
+      question: "How do I upload my signature?",
       answer:
-        "Join requests are reviewed and approved by organization admins. Once approved, you will receive an email confirmation and gain access to the organization's dashboard.",
+        "Navigate to your profile settings and find the 'Signature' section. You can upload a signature image file or draw your signature using the provided tools. The signature will be used for electronic signing of petitions.",
     },
     {
-      question: "Can I cancel my join request?",
+      question: "What is e-signature consent?",
       answer:
-        "Yes, you can cancel your join request anytime before it’s approved by navigating to your ‘Pending Requests’ section and clicking ‘Cancel’.",
+        "E-signature consent confirms that you agree to use electronic signatures for legal documents. You must provide consent before signatures can be applied to petitions. This is a standard requirement for electronic document execution.",
+    },
+    {
+      question: "Can I use different signatures for different petitions?",
+      answer:
+        "Your profile signature is your default signature that can be used across all petitions. If you need to use a different signature, you can update your profile signature before signing a petition.",
+    },
+    {
+      question: "Do I need to verify my signature?",
+      answer:
+        "Yes, signature verification helps ensure security. You may be asked to verify your signature using a one-time password (OTP) sent to your registered email or phone number before it can be used for important documents.",
+    },
+  ],
+
+  "Messages": [
+    {
+      question: "How do I send a message?",
+      answer:
+        "Navigate to the Messages section from your dashboard or navigation menu. Select a recipient or start a new conversation, type your message in the text box, and click send. You can also attach files if needed.",
+    },
+    {
+      question: "Can I send messages to multiple recipients?",
+      answer:
+        "Yes, you can send messages to multiple recipients by selecting multiple users or organization members when composing a new message. Group conversations help coordinate with teams or multiple stakeholders.",
+    },
+    {
+      question: "Are messages real-time?",
+      answer:
+        "Yes, the messaging system uses real-time communication technology, so you receive messages instantly when they are sent. You'll see notifications for new messages even when you're on other pages of the application.",
+    },
+    {
+      question: "Can I search my message history?",
+      answer:
+        "Yes, you can search through your message history using the search function in the Messages section. You can search by sender name, message content, or date range to find specific conversations.",
+    },
+    {
+      question: "How do I know if someone has read my message?",
+      answer:
+        "The messaging system shows read receipts when your message has been viewed by the recipient. Look for read indicators next to your sent messages to confirm delivery and reading status.",
+    },
+    {
+      question: "Can I delete messages or conversations?",
+      answer:
+        "Yes, you can delete individual messages or entire conversations from your message list. Deleted messages are removed from your view, but may be retained in the system for record-keeping purposes as required by law.",
     },
   ],
 };
