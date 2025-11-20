@@ -1,7 +1,7 @@
 import React from "react";
 import { formatDateTime } from "../../../utils/dateUtils";
 
-const NotesDisplaySection = ({ formData, onClose }) => {
+const NotesDisplaySection = ({ formData, onClose, onEditNote }) => {
   // Get notes from formData, sorted by most recent first
   const notes = (formData?.notes || []).sort((a, b) => {
     const dateA = new Date(a.createdAt || a.createdDate || 0);
@@ -40,7 +40,7 @@ const NotesDisplaySection = ({ formData, onClose }) => {
           <div 
             className="notes-list px-3 pb-3" 
             style={{ 
-              maxHeight: "350px", 
+              maxHeight: "450px", 
               overflowY: "auto",
               overflowX: "hidden",
               paddingTop: "1rem"
@@ -48,16 +48,44 @@ const NotesDisplaySection = ({ formData, onClose }) => {
           >
             {notes.map((note, index) => (
               <div key={note.id || index} className="note-item mb-3 p-3 border rounded bg-light">
-                <div>
-                  <div className="d-flex align-items-center gap-2 mb-2">
-                    <i className="fas fa-sticky-note text-muted"></i>
-                    <span className="text-muted small">
-                      {formatDateTime(note.createdAt || note.createdDate)}
-                    </span>
+                <div className="d-flex justify-content-between align-items-start">
+                  <div className="flex-grow-1">
+                    <div className="d-flex align-items-center gap-2 mb-2 flex-wrap">
+                      {note.createdBy ? (
+                        <>
+                          <span className="fw-semibold" style={{ color: "#0d6efd", fontSize: "0.875rem" }}>
+                            {note.createdBy}
+                          </span>
+                          <span className="text-muted small">•</span>
+                        </>
+                      ) : null}
+                      <span className="text-muted small">
+                        {formatDateTime(note.createdAt || note.createdDate)}
+                      </span>
+                    </div>
+                    <div className="note-content" style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+                      {note.noteText || note.content}
+                    </div>
                   </div>
-                  <div className="note-content" style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
-                    {note.noteText || note.content}
-                  </div>
+                  {onEditNote && note.id && (
+                    <button
+                      type="button"
+                      className="btn btn-link p-0 ms-2 border-0"
+                      onClick={() => onEditNote(note)}
+                      title="Edit Note"
+                      style={{ 
+                        padding: "0.125rem",
+                        minWidth: "auto",
+                        fontSize: "0.8rem",
+                        color: "#6c757d",
+                        textDecoration: "none",
+                        background: "transparent",
+                        lineHeight: "1"
+                      }}
+                    >
+                      <i className="fas fa-edit"></i>
+                    </button>
+                  )}
                 </div>
               </div>
             ))}

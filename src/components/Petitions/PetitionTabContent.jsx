@@ -58,6 +58,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
   const [showNotesDropdown, setShowNotesDropdown] = useState(false);
   const [showNotesSection, setShowNotesSection] = useState(false);
   const [showForeclosureWarningModal, setShowForeclosureWarningModal] = useState(false);
+  const [noteToEdit, setNoteToEdit] = useState(null);
   
   const { user } = useAuth();
 
@@ -687,6 +688,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
     setShowForeclosureModal(false);
     setShowNotesDropdown(false);
     setShowNotesSection(false);
+    setNoteToEdit(null);
   }, [petition?.id]);
 
   // Close dropdowns when clicking outside
@@ -1441,26 +1443,10 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
     }
   };
 
-  // Handle saving notes
-  const handleSaveNotes = async (updatedFormData) => {
+  // Handle note saved - refetch petition to get updated notes
+  const handleNoteSaved = async () => {
     try {
-      // Ensure organizationId is set from petition if not in formData
-      // Also ensure judgment is preserved from current formData if not in updatedFormData
-      const dataToSave = {
-        ...updatedFormData,
-        organizationId: updatedFormData.organizationId || petition.organizationId || formData.organizationId,
-        // Preserve judgment from current formData if it exists and is not in updatedFormData
-        judgment: updatedFormData.judgment !== undefined ? updatedFormData.judgment : formData.judgment,
-      };
-      // Suppress the default toast
-      await submitPetition(dataToSave, true, petition.id, true); // true = suppressToast
-      
-      // Update local formData state
-      setFormData(dataToSave);
-      
-      // If notes section is open, keep it open to show the new note
-      // The section will automatically update with the new formData
-      
+      // Refetch petition to get updated notes
       if (onPetitionUpdated) {
         setTimeout(() => {
           onPetitionUpdated();
@@ -1470,11 +1456,22 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
         await refreshTab(activeTabId);
       }
     } catch (error) {
-      console.error("Error saving notes:", error);
-      const errorMessage = error?.response?.data?.message || error?.message || "Failed to save notes. Please try again.";
-      toast.error(errorMessage);
-      throw error;
+      console.error("Error refreshing petition after note save:", error);
     }
+  };
+
+  // Handle editing a note
+  const handleEditNote = (note) => {
+    setNoteToEdit(note);
+    setShowNotesModal(true);
+    setShowNotesDropdown(false);
+  };
+
+  // Handle opening add note modal
+  const handleAddNote = () => {
+    setNoteToEdit(null);
+    setShowNotesModal(true);
+    setShowNotesDropdown(false);
   };
 
   // Handle saving foreclosure data
@@ -2142,10 +2139,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
                             <div className="edit-options-menu">
                               <button
                                 className="edit-option-item"
-                                onClick={() => {
-                                  setShowNotesModal(true);
-                                  setShowNotesDropdown(false);
-                                }}
+                                onClick={handleAddNote}
                               >
                                 <i className="fas fa-plus edit-option-icon"></i>
                                 <span>Add Note</span>
@@ -2268,6 +2262,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
             <NotesDisplaySection
               formData={formData}
               onClose={() => setShowNotesSection(false)}
+              onEditNote={handleEditNote}
             />
           )}
 
@@ -2425,11 +2420,13 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
       {/* Notes Modal */}
       <NotesModal
         isOpen={showNotesModal}
-        onClose={() => setShowNotesModal(false)}
+        onClose={() => {
+          setShowNotesModal(false);
+          setNoteToEdit(null);
+        }}
         petition={petition}
-        formData={formData}
-        setFormData={setFormData}
-        onSave={handleSaveNotes}
+        noteToEdit={noteToEdit}
+        onNoteSaved={handleNoteSaved}
       />
 
       {/* Foreclosure Edit Warning Modal */}

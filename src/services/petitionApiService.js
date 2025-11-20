@@ -58,6 +58,28 @@ class PetitionApiService {
     return response.data;
   }
 
+  // Submit note (add or update)
+  async submitNote(petitionId, noteId, noteText) {
+    const requestBody = {
+      petitionId: petitionId,
+      noteText: noteText
+    };
+    
+    // Only include noteId when updating (not when adding a new note)
+    if (noteId) {
+      requestBody.noteId = noteId;
+    }
+    
+    const response = await axiosInstance.post(PETITION_ENDPOINTS.SUBMIT_NOTE, requestBody, {
+      headers: {
+        'Accept': 'text/plain',
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    return response.data;
+  }
+
   /**
    * Get paginated petitions by organization ID or user ID with filters, search, and sorting
    * @param {Object} paginationParams - The pagination and filter parameters
@@ -325,11 +347,8 @@ class PetitionApiService {
       documents: (formData.documents || []).map(document => ({
         ...document,
         uploadedOn: safeDateConversion(document.uploadedOn)
-      })),
-      notes: (formData.notes || []).map(note => ({
-        id: note.id || null,
-        noteText: note.noteText || note.content || ""
       }))
+      // Notes are now handled via a separate API endpoint - removed from submit petition
     };
 
     // Send data directly as dto parameter (not wrapped in object)

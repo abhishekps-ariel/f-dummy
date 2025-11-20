@@ -1,49 +1,59 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
+import petitionApiService from "../../services/petitionApiService";
 
-const NotesModal = ({ isOpen, onClose, petition, formData, setFormData, onSave }) => {
-  const [newNote, setNewNote] = useState("");
+const NotesModal = ({ isOpen, onClose, petition, noteToEdit = null, onNoteSaved }) => {
+  const [noteText, setNoteText] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const isEditMode = !!noteToEdit;
 
-  const handleAddNote = async () => {
-    if (!newNote.trim()) {
+  // Initialize note text when editing or modal opens
+  useEffect(() => {
+    if (isOpen) {
+      if (noteToEdit) {
+        setNoteText(noteToEdit.noteText || noteToEdit.content || "");
+      } else {
+        setNoteText("");
+      }
+    }
+  }, [isOpen, noteToEdit]);
+
+  const handleSaveNote = async () => {
+    if (!noteText.trim()) {
       toast.error("Please enter a note.");
+      return;
+    }
+
+    if (!petition?.id) {
+      toast.error("Petition ID is required.");
       return;
     }
 
     setIsSaving(true);
     try {
-      // Create the new note object
-      const newNoteData = {
-        id: null, // Will be set by backend
-        noteText: newNote.trim(),
-        petitionId: petition?.id || null,
-      };
-
-      // Include ALL existing notes (both with IDs and without IDs) when submitting
-      // This ensures we don't lose any existing notes
-      const existingNotes = formData.notes || [];
-      
-      // Combine ALL existing notes with the new note we're adding
-      const updatedFormData = {
-        ...formData,
-        notes: [...existingNotes, newNoteData],
-        // Preserve judgment if it exists
-        judgment: formData.judgment || null,
-      };
-
-      // Save to backend - all notes (existing + new) will be sent
-      await onSave(updatedFormData);
+      // Call the notes API directly
+      await petitionApiService.submitNote(
+        petition.id,
+        noteToEdit?.id || null, // null for new notes, actual ID for updates
+        noteText.trim()
+      );
 
       // Clear the input
-      setNewNote("");
-      toast.success("Note added successfully.");
+      setNoteText("");
+      toast.success(isEditMode ? "Note updated successfully." : "Note added successfully.");
+      
+      // Call the callback to refetch petition data
+      if (onNoteSaved) {
+        await onNoteSaved();
+      }
       
       // Close the modal after successful save
       onClose();
     } catch (error) {
-      console.error("Error adding note:", error);
-      toast.error("Failed to add note. Please try again.");
+      console.error("Error saving note:", error);
+      const errorMessage = error?.response?.data?.message || error?.message || 
+        (isEditMode ? "Failed to update note. Please try again." : "Failed to add note. Please try again.");
+      toast.error(errorMessage);
     } finally {
       setIsSaving(false);
     }
@@ -61,7 +71,7 @@ const NotesModal = ({ isOpen, onClose, petition, formData, setFormData, onSave }
       <div className="modal-dialog modal-dialog-centered modal-lg">
         <div className="modal-content">
           <div className="modal-header">
-            <h5 className="modal-title">Add Note</h5>
+            <h5 className="modal-title">{isEditMode ? "Edit Note" : "Add Note"}</h5>
             <button
               type="button"
               className="btn-close"
@@ -70,17 +80,17 @@ const NotesModal = ({ isOpen, onClose, petition, formData, setFormData, onSave }
             ></button>
           </div>
           <div className="modal-body">
-            {/* Add Note Form */}
+            {/* Note Form */}
             <div className="mb-3">
-              <label htmlFor="newNote" className="form-label fw-semibold">
+              <label htmlFor="noteText" className="form-label fw-semibold">
                 Note
               </label>
               <textarea
-                id="newNote"
+                id="noteText"
                 className="form-control"
                 rows="5"
-                value={newNote}
-                onChange={(e) => setNewNote(e.target.value)}
+                value={noteText}
+                onChange={(e) => setNoteText(e.target.value)}
                 placeholder="Enter your note here..."
                 disabled={isSaving}
               />
@@ -98,8 +108,8 @@ const NotesModal = ({ isOpen, onClose, petition, formData, setFormData, onSave }
             <button
               type="button"
               className="dashboard-btn-create"
-              onClick={handleAddNote}
-              disabled={!newNote.trim() || isSaving}
+              onClick={handleSaveNote}
+              disabled={!noteText.trim() || isSaving}
             >
               {isSaving ? (
                 <>
@@ -108,12 +118,12 @@ const NotesModal = ({ isOpen, onClose, petition, formData, setFormData, onSave }
                     role="status"
                     aria-hidden="true"
                   ></span>
-                  Adding...
+                  {isEditMode ? "Updating..." : "Adding..."}
                 </>
               ) : (
                 <>
-                  <i className="fas fa-plus me-1"></i>
-                  Add Note
+                  <i className={`fas ${isEditMode ? "fa-save" : "fa-plus"} me-1`}></i>
+                  {isEditMode ? "Update Note" : "Add Note"}
                 </>
               )}
             </button>

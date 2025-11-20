@@ -58,6 +58,7 @@ export const PETITION_ENDPOINTS = {
   GET_PETITION_BY_ID: (petitionId) => `/api/Petition/${petitionId}`,
   DELETE_PETITION_BY_ID: (petitionId) => `/api/Petition/${petitionId}`,
   GET_PUBLIC_PETITIONS_PAGED: "/api/Petition/public/petitions/paged",
+  SUBMIT_NOTE: "/api/Petition/add-update-note",
 };
 
 export const CHAT_ENDPOINTS = {

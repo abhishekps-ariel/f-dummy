@@ -350,10 +350,43 @@ const ViewAllPetitions = ({ onBack }) => {
   const handleExport = async (format) => {
     setExporting(true);
     try {
+      // Fetch all petitions for export (not just current page) - use totalCount
+      const paginationParams = {
+        pageNumber: 1,
+        pageSize: pagination.totalCount || 1000, // Get all records by passing totalCount
+        searchText: searchQuery.trim() || "",
+        status: getStatusValue(statusFilter),
+        fromDate: getFromDate(),
+        toDate: getToDate(),
+        sortColumn: getSortColumn(sortBy),
+        sortDirection: sortOrder,
+      };
+
+      // For filers, send userId; for org admins, send organizationId
+      if (isOrgAdmin && organizationId) {
+        paginationParams.organizationId = organizationId;
+      } else if (!isOrgAdmin && userId) {
+        paginationParams.userId = userId;
+      }
+
+      const response = await petitionApiService.getPetitionsPaged(
+        paginationParams
+      );
+
+      let allPetitions = [];
+      if (response.success) {
+        const transformedPetitions =
+          petitionApiService.transformApiResponseToDisplayFormat(response);
+        allPetitions = transformedPetitions || petitions;
+      } else {
+        // Fallback to current petitions if fetch fails
+        allPetitions = petitions;
+      }
+
       if (format === "csv") {
-        await exportToCSV();
+        await exportToCSV(allPetitions);
       } else if (format === "pdf") {
-        await exportToPDF();
+        await exportToPDF(allPetitions);
       }
       toast.success(
         `Petitions exported as ${format.toUpperCase()} successfully!`
@@ -366,10 +399,9 @@ const ViewAllPetitions = ({ onBack }) => {
   };
 
   // Export to CSV
-  const exportToCSV = async () => {
+  const exportToCSV = async (allPetitions) => {
     try {
-      // Use current petitions from server
-      const allPetitions = petitions;
+      // Use all petitions passed from handleExport
       const headers = [
         "Petition Number",
         "Property Address",
@@ -410,10 +442,9 @@ const ViewAllPetitions = ({ onBack }) => {
   };
 
   // Export to PDF
-  const exportToPDF = async () => {
+  const exportToPDF = async (allPetitions) => {
     try {
-      // Use current petitions from server
-      const allPetitions = petitions;
+      // Use all petitions passed from handleExport
       const doc = new jsPDF();
 
       // Add title
