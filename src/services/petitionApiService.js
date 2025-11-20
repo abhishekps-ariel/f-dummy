@@ -368,10 +368,12 @@ class PetitionApiService {
       switch (status) {
         case "0": return { text: "Draft", class: "Draft" };
         case "1": return { text: "Submitted", class: "Submitted" };
-        case "2": return { text: "Returned", class: "Returned" };
-        case "3": return { text: "Resubmitted", class: "Resubmitted" };
-        case "4": return { text: "Accepted", class: "Accepted" };
-        case "5": return { text: "Closed", class: "Closed" };
+        case "2": return { text: "Foreclosure Sale Initiated", class: "ForeclosureSaleInitiated" };
+        case "3": return { text: "Judgment Submitted", class: "JudgmentSubmitted" };
+        case "4": return { text: "Returned", class: "Returned" };
+        case "5": return { text: "Resubmitted", class: "Resubmitted" };
+        case "6": return { text: "Accepted", class: "Accepted" };
+        case "7": return { text: "Closed", class: "Closed" };
         default: return { text: "Unknown", class: "Unknown" };
       }
     };
@@ -422,10 +424,12 @@ class PetitionApiService {
         switch (status) {
           case "0": return { text: "Draft", class: "Draft" };
           case "1": return { text: "Submitted", class: "Submitted" };
-          case "2": return { text: "Returned", class: "Returned" };
-          case "3": return { text: "Resubmitted", class: "Resubmitted" };
-          case "4": return { text: "Accepted", class: "Accepted" };
-          case "5": return { text: "Closed", class: "Closed" };
+          case "2": return { text: "Foreclosure Sale Initiated", class: "ForeclosureSaleInitiated" };
+          case "3": return { text: "Judgment Submitted", class: "JudgmentSubmitted" };
+          case "4": return { text: "Returned", class: "Returned" };
+          case "5": return { text: "Resubmitted", class: "Resubmitted" };
+          case "6": return { text: "Accepted", class: "Accepted" };
+          case "7": return { text: "Closed", class: "Closed" };
           default: return { text: "Unknown", class: "Unknown" };
         }
       };

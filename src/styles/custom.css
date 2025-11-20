@@ -1962,70 +1962,120 @@ input, textarea, select {
 }
 /* Draft: Gray */
 .status-Draft {
-    background-color: #f8f9fa;
-    color: #6c757d;
+    background-color: #E0E0E0;
+    color: #9E9E9E;
+    white-space: nowrap;
 }
 /* Submitted: Blue */
 .status-Submitted {
-    background-color: #cfe2ff;
-    color: #0d6efd;
+    background-color: #BBDEFB;
+    color: #2196F3;
+    white-space: nowrap;
+}
+/* ForeclosureSaleInitiated: Purple */
+.status-ForeclosureSaleInitiated {
+    background-color: #D1C4E9;
+    color: #6f42c1;
+    white-space: normal;
+    word-break: break-word;
+    line-height: 1.3;
+    min-width: 100px;
+}
+/* JudgmentSubmitted: Teal */
+.status-JudgmentSubmitted {
+    background-color: #B2DFDB;
+    color: #00897B;
+    white-space: normal;
+    word-break: break-word;
+    line-height: 1.3;
+    min-width: 100px;
 }
 /* Returned: Orange */
 .status-Returned {
-    background-color: #ffeaa7;
-    color: #e67e22;
+    background-color: #FFE0B2;
+    color: #FF9800;
+    white-space: nowrap;
 }
-/* Resubmitted: Purple */
+/* Resubmitted: Dark Blue */
 .status-Resubmitted {
-    background-color: #e2d9ff;
-    color: #8e44ad;
+    background-color: #B3E5FC;
+    color: #0d63a8;
+    white-space: nowrap;
 }
 /* Accepted: Green */
 .status-Accepted {
-    background-color: #d1e7dd;
-    color: #198754;
+    background-color: #C8E6C9;
+    color: #4CAF50;
+    white-space: nowrap;
 }
-/* Closed: Dark Gray */
+/* Closed: Red */
 .status-Closed {
-    background-color: #495057;
-    color: #ffffff;
+    background-color: #FFCDD2;
+    color: #ea3a21;
+    white-space: nowrap;
 }
 
 /* Lowercase status classes (used in ViewAllPetitions) */
 .status-draft {
-    background-color: #6c757d;
-    color: #ffffff;
+    background-color: #E0E0E0;
+    color: #9E9E9E;
     font-weight: 600;
+    white-space: nowrap;
 }
 
 .status-submitted {
-    background-color: #0d6efd;
-    color: #ffffff;
+    background-color: #BBDEFB;
+    color: #2196F3;
     font-weight: 600;
+    white-space: nowrap;
+}
+
+.status-foreclosuresaleinitiated {
+    background-color: #D1C4E9;
+    color: #6f42c1;
+    font-weight: 600;
+    white-space: normal;
+    word-break: break-word;
+    line-height: 1.3;
+    min-width: 100px;
+}
+
+.status-judgmentsubmitted {
+    background-color: #B2DFDB;
+    color: #00897B;
+    font-weight: 600;
+    white-space: normal;
+    word-break: break-word;
+    line-height: 1.3;
+    min-width: 100px;
 }
 
 .status-returned {
-    background-color: #ffc107;
-    color: #212529;
+    background-color: #FFE0B2;
+    color: #FF9800;
     font-weight: 600;
+    white-space: nowrap;
 }
 
 .status-resubmitted {
-    background-color: #8e44ad;
-    color: #ffffff;
+    background-color: #B3E5FC;
+    color: #0d63a8;
     font-weight: 600;
+    white-space: nowrap;
 }
 
 .status-accepted {
-    background-color: #198754;
-    color: #ffffff;
+    background-color: #C8E6C9;
+    color: #4CAF50;
     font-weight: 600;
+    white-space: nowrap;
 }
 
 .status-closed {
-    background-color: #495057;
-    color: #ffffff;
+    background-color: #FFCDD2;
+    color: #ea3a21;
     font-weight: 600;
+    white-space: nowrap;
 }
 
 .status-under-review {
