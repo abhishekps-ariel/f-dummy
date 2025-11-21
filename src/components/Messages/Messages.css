@@ -508,6 +508,15 @@
   background: #adb5bd;
 }
 
+/* Smooth scrolling for messages list */
+.messages-list {
+  scroll-behavior: smooth;
+}
+
+.conversations-list {
+  scroll-behavior: smooth;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .messages-container {

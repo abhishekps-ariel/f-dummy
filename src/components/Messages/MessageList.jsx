@@ -110,7 +110,7 @@ const MessageList = ({
     if (previousLength === 0 && messagesLength > 0) {
       setTimeout(() => {
         if (messagesEndRef.current) {
-          messagesEndRef.current.scrollIntoView({ behavior: 'auto' });
+          messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
         }
       }, 100);
     }
@@ -151,7 +151,11 @@ const MessageList = ({
       requestAnimationFrame(() => {
         const newScrollHeight = container.scrollHeight;
         const scrollDifference = newScrollHeight - savedPosition.scrollHeight;
-        container.scrollTop = savedPosition.scrollTop + scrollDifference;
+        // Use smooth scroll for better UX
+        container.scrollTo({
+          top: savedPosition.scrollTop + scrollDifference,
+          behavior: 'smooth'
+        });
         scrollPositionRef.current = null;
       });
     }
@@ -172,10 +176,13 @@ const MessageList = ({
         requestAnimationFrame(() => {
           setTimeout(() => {
             if (messagesEndRef.current) {
-              messagesEndRef.current.scrollIntoView({ behavior: 'auto' });
+              messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
             } else if (messagesListRef.current) {
-              // Fallback: scroll container to bottom
-              messagesListRef.current.scrollTop = messagesListRef.current.scrollHeight;
+              // Fallback: scroll container to bottom with smooth behavior
+              messagesListRef.current.scrollTo({
+                top: messagesListRef.current.scrollHeight,
+                behavior: 'smooth'
+              });
             }
           }, 100);
         });
