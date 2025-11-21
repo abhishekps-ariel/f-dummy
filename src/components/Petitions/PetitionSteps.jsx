@@ -3230,6 +3230,30 @@ const PetitionSteps = ({
       }
     }
 
+    // Real-time validation for acceleration date (manualOverrideReason) - must be in the past
+    if (name === "manualOverrideReason" && value.trim()) {
+      const accelerationDate = new Date(value);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      if (!isNaN(accelerationDate.getTime())) {
+        if (accelerationDate >= today) {
+          setFieldErrors((prev) => ({
+            ...prev,
+            manualOverrideReason: "Acceleration date must be in the past",
+          }));
+        } else if (
+          fieldErrors.manualOverrideReason === "Acceleration date must be in the past"
+        ) {
+          setFieldErrors((prev) => {
+            const newErrors = { ...prev };
+            delete newErrors.manualOverrideReason;
+            return newErrors;
+          });
+        }
+      }
+    }
+
     // Real-time validation for amount in default - must be positive if notice sent
     if (name === "amountInDefault" && formData.noticeSent === true && value !== "" && value !== null && value !== undefined) {
       const amount = parseFloat(value) || 0;

@@ -1172,6 +1172,30 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
       }
     }
 
+    // Real-time validation for acceleration date (manualOverrideReason) - must be in the past
+    if (name === "manualOverrideReason" && processedValue.trim()) {
+      const accelerationDate = new Date(processedValue);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      if (!isNaN(accelerationDate.getTime())) {
+        if (accelerationDate >= today) {
+          setFieldErrors((prev) => ({
+            ...prev,
+            manualOverrideReason: "Acceleration date must be in the past",
+          }));
+        } else if (
+          fieldErrors.manualOverrideReason === "Acceleration date must be in the past"
+        ) {
+          setFieldErrors((prev) => {
+            const newErrors = { ...prev };
+            delete newErrors.manualOverrideReason;
+            return newErrors;
+          });
+        }
+      }
+    }
+
     // Real-time validation for amount in default - must be positive if notice sent
     if (name === "amountInDefault" && formData.noticeSent === true && processedValue !== "" && processedValue !== null && processedValue !== undefined) {
       const amount = parseFloat(processedValue) || 0;
