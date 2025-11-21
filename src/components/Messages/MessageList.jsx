@@ -20,8 +20,7 @@ const MessageList = ({
     const messagesLength = messages.length;
     const previousLength = previousMessagesLengthRef.current;
     
-    // If messages increased and we were at bottom, scroll to bottom
-    // This handles new messages arriving via SignalR
+    //scroll to bottom when new messages arriving via SignalR
     if (messagesLength > previousLength && shouldScrollToBottom) {
       setTimeout(() => {
         if (messagesEndRef.current) {
@@ -49,7 +48,6 @@ const MessageList = ({
     
     // If user scrolls to top and there are more messages, load them
     if (scrollTop < 100 && hasMoreMessages && !loadingMoreMessages && onLoadMoreMessages) {
-      // Save current scroll position and height before loading
       scrollPositionRef.current = {
         scrollTop: container.scrollTop,
         scrollHeight: container.scrollHeight,
