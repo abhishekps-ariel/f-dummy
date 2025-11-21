@@ -5770,23 +5770,27 @@ const PetitionSteps = ({
       setShouldTakeOver(false);
       
       // Reset organization selection - only for filers, not for org admins
+      // For filers: Always clear organization selection when taking over so they can reselect
       // Org admins should keep their pre-selected organization
       if (!isOrgAdmin) {
-        // For filers: Only clear organization selection if it wasn't already selected on step 1
-        // If the user already selected an organization on step 1, keep that selection
-        if (!selectedOrganizationId) {
-          // No organization was selected, clear everything to prevent pre-selection
-          setSelectedOrganizationId(null);
-          setOrganizationData(null);
-          // Clear stored organization ID to prevent pre-selection from browser storage
-          setActiveOrganizationId(null);
-          // Also reset organizationId in formData to null for filers
-          finalFormData.organizationId = null;
-        } else {
-          // Organization was already selected on step 1, keep it
-          // Keep selectedOrganizationId and organizationData as they are
-          finalFormData.organizationId = selectedOrganizationId;
-        }
+        // For filers: Always clear organization selection when taking over a petition
+        // This ensures they can reselect and have filing entity prefilled correctly
+        setSelectedOrganizationId(null);
+        setOrganizationData(null);
+        // Clear stored organization ID to prevent pre-selection from browser storage
+        setActiveOrganizationId(null);
+        // Also reset organizationId in formData to null for filers
+        finalFormData.organizationId = null;
+        // Clear filing entity fields since organization is cleared
+        finalFormData.filingEntityLegalName = "";
+        finalFormData.filingEntityStreet1 = "";
+        finalFormData.filingEntityStreet2 = "";
+        finalFormData.filingEntityCity = "";
+        finalFormData.filingEntityState = "";
+        finalFormData.filingEntityZip = "";
+        finalFormData.filingContactName = "";
+        finalFormData.filingContactEmail = "";
+        finalFormData.filingContactPhone = "";
       } else {
         // For org admins, keep the organization from user/auth context
         // Don't clear selectedOrganizationId or organizationData if they're already set
