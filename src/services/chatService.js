@@ -80,3 +80,23 @@ export const getChatList = async (userId) => {
   };
 };
 
+// Mark messages as read API
+export const markAsRead = async (chatId, userId) => {
+  const response = await client.post(
+    CHAT_ENDPOINTS.MARK_AS_READ(chatId, userId),
+    {},
+    {
+      headers: {
+        Accept: "*/*",
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  return {
+    isSuccess: response.data?.success !== false,
+    msg: response.data?.message || "Messages marked as read",
+    data: response.data?.data,
+  };
+};
+

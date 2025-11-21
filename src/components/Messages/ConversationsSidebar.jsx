@@ -36,6 +36,8 @@ const ConversationsSidebar = ({ conversations, selectedConversation, onConversat
               key={conversation.id}
               className={`conversation-item ${
                 selectedConversation?.id === conversation.id ? 'active' : ''
+              } ${
+                conversation.unread > 0 ? 'unread' : ''
               }`}
               onClick={() => onConversationClick(conversation)}
             >

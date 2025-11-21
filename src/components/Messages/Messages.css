@@ -132,6 +132,23 @@
   font-weight: 600;
 }
 
+.conversation-item.unread {
+  background-color: #f0f8ff;
+}
+
+.conversation-item.unread:not(.active) {
+  background-color: #f0f8ff;
+}
+
+.conversation-item.unread .conversation-name {
+  font-weight: 600;
+  color: #212529;
+}
+
+.conversation-item.unread.active {
+  background-color: #e3f2fd;
+}
+
 .conversation-avatar {
   width: 40px;
   height: 40px;

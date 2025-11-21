@@ -12,6 +12,7 @@ import {
   getMessages,
   sendMessage,
   createSignalRConnection,
+  markAsRead,
 } from '../../services/chatService';
 
 const Messages = () => {
@@ -162,20 +163,29 @@ const Messages = () => {
           [chatId]: hasMore,
         }));
         
-        // Reset unread count when messages are loaded (conversation is opened)
-        if (!appendToTop && unreadCounts[chatId] > 0) {
-          setUnreadCounts((prev) => ({
-            ...prev,
-            [chatId]: 0,
-          }));
-          // Update conversation unread count in conversations list
-          setConversations((prev) =>
-            prev.map((conv) =>
-              conv.chatId === chatId
-                ? { ...conv, unread: 0 }
-                : conv
-            )
-          );
+        // Mark as read when conversation is opened (initial load, not pagination)
+        if (!appendToTop) {
+          try {
+            await markAsRead(chatId, user.id);
+          } catch (error) {
+            console.error('Error marking messages as read:', error);
+          }
+          
+          // Reset unread count when messages are loaded (conversation is opened)
+          if (unreadCounts[chatId] > 0) {
+            setUnreadCounts((prev) => ({
+              ...prev,
+              [chatId]: 0,
+            }));
+            // Update conversation unread count in conversations list
+            setConversations((prev) =>
+              prev.map((conv) =>
+                conv.chatId === chatId
+                  ? { ...conv, unread: 0 }
+                  : conv
+              )
+            );
+          }
         }
         
         return { hasMore: loadedMessages < totalMessages, scrollToBottom: !appendToTop };
@@ -361,6 +371,13 @@ const Messages = () => {
         
         if (currentChatIdRef.current === chatId) {
           setMessages([...messagesMapRef.current[chatId]]);
+          
+          // Mark as read when receiving a new message while chat is open
+          if (!isOwn && user?.id) {
+            markAsRead(chatId, user.id).catch((error) => {
+              console.error('Error marking messages as read:', error);
+            });
+          }
         }
       }
     });
@@ -403,8 +420,14 @@ const Messages = () => {
         setMessages(messagesMapRef.current[chatId]);
         setCurrentChatId(chatId);
         currentChatIdRef.current = chatId;
+        // Mark as read when opening a conversation (even if messages are cached)
+        if (user?.id) {
+          markAsRead(chatId, user.id).catch((error) => {
+            console.error('Error marking messages as read:', error);
+          });
+        }
       } else {
-        // Load initial page (page 1)
+        // Load initial page (page 1) - markAsRead will be called in loadMessages
         loadMessages(chatId, 1, false);
       }
     }
