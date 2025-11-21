@@ -12,7 +12,8 @@ const ChatArea = ({
   sendingMessage,
   onLoadMoreMessages,
   hasMoreMessages,
-  loadingMoreMessages
+  loadingMoreMessages,
+  onBack
 }) => {
   if (!selectedConversation) {
     return (
@@ -26,7 +27,7 @@ const ChatArea = ({
 
   return (
     <>
-      <ChatHeader conversation={selectedConversation} />
+      <ChatHeader conversation={selectedConversation} onBack={onBack} />
       <MessageList 
         messages={messages} 
         conversationAvatar={selectedConversation.avatar}

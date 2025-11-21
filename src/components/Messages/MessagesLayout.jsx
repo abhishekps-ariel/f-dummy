@@ -16,15 +16,22 @@ const MessagesLayout = ({
   hasMoreMessages,
   loadingMoreMessages
 }) => {
+  const handleBack = () => {
+    // Close the conversation by clicking it again (toggles it closed)
+    if (selectedConversation) {
+      onConversationClick(selectedConversation);
+    }
+  };
+
   return (
     <div className="messages-container">
-      <div className="messages-layout">
+      <div className={`messages-layout ${selectedConversation ? 'mobile-chat-open' : ''}`}>
         <ConversationsSidebar
           conversations={conversations}
           selectedConversation={selectedConversation}
           onConversationClick={onConversationClick}
         />
-        <div className="chat-area">
+        <div className={`chat-area ${selectedConversation ? 'chat-area-open' : ''}`}>
           <ChatArea
             selectedConversation={selectedConversation}
             messages={messages}
@@ -35,6 +42,7 @@ const MessagesLayout = ({
             onLoadMoreMessages={onLoadMoreMessages}
             hasMoreMessages={hasMoreMessages}
             loadingMoreMessages={loadingMoreMessages}
+            onBack={handleBack}
           />
         </div>
       </div>

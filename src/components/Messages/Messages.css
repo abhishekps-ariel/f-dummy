@@ -239,6 +239,31 @@
   align-items: center;
 }
 
+/* Chat Header Back Button (Mobile) */
+.chat-back-btn {
+  background: transparent;
+  border: none;
+  padding: 0.5rem;
+  margin-right: 0.75rem;
+  color: #212529;
+  font-size: 1.125rem;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.chat-back-btn:hover {
+  background-color: #f8f9fa;
+}
+
+.chat-back-btn:active {
+  background-color: #e9ecef;
+}
+
 .chat-avatar {
   width: 40px;
   height: 40px;
@@ -523,15 +548,63 @@
     height: calc(100vh - 150px);
   }
 
+  .messages-layout {
+    position: relative;
+    overflow: hidden;
+  }
+
   .conversations-sidebar {
     width: 100%;
     position: absolute;
     z-index: 10;
     height: 100%;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    transform: translateX(0);
+    opacity: 1;
+  }
+
+  /* Hide sidebar when chat is open - using class on parent */
+  .messages-layout.mobile-chat-open .conversations-sidebar {
+    transform: translateX(-100%);
+    opacity: 0;
+    pointer-events: none;
   }
 
   .chat-area {
     width: 100%;
+    position: absolute;
+    z-index: 11;
+    height: 100%;
+    transform: translateX(100%);
+    opacity: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    pointer-events: none;
+  }
+
+  /* Show chat area when conversation is selected */
+  .chat-area.chat-area-open {
+    transform: translateX(0);
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  /* Show back button on mobile */
+  .chat-back-btn {
+    display: flex;
+  }
+
+  /* Ensure header doesn't move on mobile */
+  .conversations-header {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: white;
+    flex-shrink: 0;
+  }
+
+  .chat-header {
+    margin-top: 0;
+    flex-shrink: 0;
   }
 
   .message-content {
