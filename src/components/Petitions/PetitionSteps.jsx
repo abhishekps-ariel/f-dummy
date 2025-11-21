@@ -534,17 +534,25 @@ const PetitionSteps = ({
   }, [user?.id]);
 
   // Load organization details and prefill filing entity fields
-
+  // Only prefill for org admins or when filer explicitly selects an organization
   useEffect(() => {
     const loadOrganizationData = async () => {
-      if (!organizationId) return;
+      // For filers, only load if they explicitly selected an organization
+      // For org admins, load if organizationId is available
+      const shouldLoad = isOrgAdmin 
+        ? organizationId 
+        : selectedOrganizationId; // Filers must explicitly select
+      
+      if (!shouldLoad) return;
+
+      const orgIdToLoad = isOrgAdmin ? organizationId : selectedOrganizationId;
 
       setOrganizationLoading(true);
 
       try {
         // Fetch full organization details using the new API structure
 
-        const orgResponse = await getOrganizationById(organizationId);
+        const orgResponse = await getOrganizationById(orgIdToLoad);
 
         if (orgResponse.isSuccess && orgResponse.data) {
           const orgData = orgResponse.data;
@@ -628,12 +636,15 @@ const PetitionSteps = ({
       }
     };
 
-    // Load organization data when organizationId is available
-    // For org admins, this should load immediately when modal opens
-    if (organizationId) {
+    // Load organization data when appropriate
+    // For org admins: when organizationId is available
+    // For filers: only when they explicitly select an organization
+    if (isOrgAdmin && organizationId) {
+      loadOrganizationData();
+    } else if (!isOrgAdmin && selectedOrganizationId) {
       loadOrganizationData();
     }
-  }, [organizationId, selectedOrganizationId]);
+  }, [organizationId, selectedOrganizationId, isOrgAdmin]);
 
   // Reset selected organization when opening a new petition (not when editing existing)
   // Only reset for filers, not for org admins (they have pre-selected org)
@@ -643,6 +654,22 @@ const PetitionSteps = ({
       // Org admins keep their pre-selected organization
       setSelectedOrganizationId(null);
       setOrganizationData(null);
+      // Also clear filing entity fields for filers when opening a new petition
+      setFormData((prev) => ({
+        ...prev,
+        filingEntityLegalName: "",
+        filingEntityStreet1: "",
+        filingEntityStreet2: "",
+        filingEntityCity: "",
+        filingEntityState: "",
+        filingEntityZip: "",
+        filingContactName: "",
+        filingContactEmail: "",
+        filingContactPhone: "",
+        nmlsLicenseNumber: "",
+        stateLicenseNumber: "",
+        stateLicenseState: "",
+      }));
     }
   }, [isOpen, isOrgAdmin, formData?.id]);
 
@@ -5769,6 +5796,38 @@ const PetitionSteps = ({
         }
       }
       setFormData(finalFormData);
+      
+      // For org admins, load organization data and prefill filing entity fields
+      if (isOrgAdmin && organizationId) {
+        // Load organization data to prefill filing entity fields
+        try {
+          setOrganizationLoading(true);
+          const orgResponse = await getOrganizationById(organizationId);
+          if (orgResponse.isSuccess && orgResponse.data) {
+            const orgData = orgResponse.data;
+            // Prefill filing entity fields with organization data
+            setFormData((prev) => ({
+              ...prev,
+              filingEntityLegalName: orgData.name || "",
+              filingEntityStreet1: orgData.addressStreet1 || "",
+              filingEntityStreet2: orgData.addressStreet2 || "",
+              filingEntityCity: orgData.addressCity || "",
+              filingEntityState: orgData.addressState || "",
+              filingEntityZip: orgData.addressZip || "",
+              filingContactName: orgData.primaryContactName || "",
+              filingContactEmail: orgData.primaryContactEmail || "",
+              filingContactPhone: orgData.primaryContactPhone || "",
+            }));
+            setOrganizationData(orgData);
+            // Also set selectedOrganizationId so it shows as selected in step 1
+            setSelectedOrganizationId(organizationId);
+          }
+        } catch (error) {
+          console.error("Failed to load organization data for filing entity:", error);
+        } finally {
+          setOrganizationLoading(false);
+        }
+      }
       
       // Show success message
       const successMessage = isOrgAdmin 
