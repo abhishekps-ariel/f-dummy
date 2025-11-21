@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { getAllOrganizations, searchOrganizations } from "../../../services/organizationService";
 import { useDebounce } from "../../../hooks/useDebounce";
 
@@ -12,6 +13,7 @@ const Step1OrganizationSelection = ({
   organizationLoading,
   fieldErrors,
 }) => {
+  const { t } = useTranslation();
   const [organizations, setOrganizations] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -106,12 +108,12 @@ const Step1OrganizationSelection = ({
 
   return (
     <div>
-      <h2 className="theme-color font-med mb-1">1. Select Organization</h2>
+      <h2 className="theme-color font-med mb-1">{t("petitionSteps.step1.title")}</h2>
 
       <p className="text-muted small mb-3">
         {isOrgAdmin
-          ? "You are associated with the following organization. This organization will be used for filing the petition."
-          : "Please select the organization that will be filing this petition. The organization details will be used to pre-fill the filing entity information."}
+          ? t("petitionSteps.step1.descriptionOrgAdmin")
+          : t("petitionSteps.step1.description")}
       </p>
 
       {isOrgAdmin ? (
@@ -120,9 +122,9 @@ const Step1OrganizationSelection = ({
           {organizationLoading && !displayOrganizationData ? (
             <div className="d-flex align-items-center text-muted">
               <div className="spinner-border spinner-border-sm me-2" role="status">
-                <span className="visually-hidden">Loading...</span>
+                <span className="visually-hidden">{t("common.loading")}</span>
               </div>
-              <span>Loading organization details...</span>
+              <span>{t("petitionSteps.step1.loadingOrganization")}</span>
             </div>
           ) : displayOrganizationData ? (
             <div className="selected-org-badge">
@@ -161,11 +163,11 @@ const Step1OrganizationSelection = ({
               </div>
               <span className="badge bg-success ms-2">
                 <i className="fa-solid fa-check-circle me-1"></i>
-                Pre-selected
+                {t("petitionSteps.step1.preSelected")}
               </span>
             </div>
           ) : (
-            <div className="text-muted">Unable to load organization details</div>
+            <div className="text-muted">{t("petitionSteps.step1.unableToLoad")}</div>
           )}
         </div>
       ) : (
@@ -217,7 +219,7 @@ const Step1OrganizationSelection = ({
                     setShowDropdown(false);
                     setSearchTerm("");
                   }}
-                  title="Remove selection"
+                  title={t("petitionSteps.step1.removeSelection")}
                 >
                   <i className="fa-solid fa-times"></i>
                 </button>
@@ -228,8 +230,8 @@ const Step1OrganizationSelection = ({
               <input
                 className={`form-control ${fieldErrors?.organizationId ? "is-invalid" : ""}`}
                 type="search"
-                placeholder="Search by organization name or EIN"
-                aria-label="Search"
+                placeholder={t("petitionSteps.step1.searchPlaceholder")}
+                aria-label={t("common.search")}
                 value={searchTerm}
                 onChange={(e) => {
                   setSearchTerm(e.target.value);
@@ -253,9 +255,9 @@ const Step1OrganizationSelection = ({
                     className="spinner-border spinner-border-sm text-primary me-2"
                     role="status"
                   >
-                    <span className="visually-hidden">Loading...</span>
+                    <span className="visually-hidden">{t("common.loading")}</span>
                   </div>
-                  <span>Loading organizations...</span>
+                  <span>{t("petitionSteps.step1.loadingOrganizations")}</span>
                 </div>
               ) : organizations.length > 0 ? (
                 <div className="org-search-results">
@@ -272,7 +274,7 @@ const Step1OrganizationSelection = ({
                         <div className="org-item-details">
                           <span className="org-item-type">
                             <i className="fa-solid fa-building me-1"></i>
-                            {org.type || "N/A"}
+                            {org.type || t("common.nA")}
                           </span>
                           {(org.addressStreet1 ||
                             org.addressCity ||
@@ -319,7 +321,7 @@ const Step1OrganizationSelection = ({
               ) : (
                 <div className="org-search-no-results">
                   <i className="fa-solid fa-search me-2"></i>
-                  No organizations found.
+                  {t("petitionSteps.step1.noOrganizationsFound")}
                 </div>
               )}
             </div>

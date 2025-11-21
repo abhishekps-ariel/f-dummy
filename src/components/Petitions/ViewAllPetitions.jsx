@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import jsPDF from "jspdf";
@@ -18,6 +19,7 @@ import { ROUTES } from "../../constants/routerConstants";
 import { getActiveOrganizationId, getUserRole } from "../../utils/storage";
 
 const ViewAllPetitions = ({ onBack }) => {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("all");
@@ -65,7 +67,7 @@ const ViewAllPetitions = ({ onBack }) => {
   // Validate user profile before opening petition creation modal
   const validateUserProfileBeforeCreate = async () => {
     if (!user?.id) {
-      toast.error("User information not found. Please log in again.");
+      toast.error(t("viewAllPetitions.userInfoNotFound"));
       return false;
     }
 
@@ -75,7 +77,7 @@ const ViewAllPetitions = ({ onBack }) => {
       const profileResponse = await getUserById(user.id);
 
       if (!profileResponse.isSuccess) {
-        toast.error("Failed to load user profile. Please try again.");
+        toast.error(t("viewAllPetitions.failedLoadProfile"));
         setIsValidatingProfile(false);
         return false;
       }
@@ -116,7 +118,7 @@ const ViewAllPetitions = ({ onBack }) => {
       return true;
     } catch (error) {
       console.error("Error validating user profile:", error);
-      toast.error("Failed to validate user profile. Please try again.");
+      toast.error(t("viewAllPetitions.failedValidateProfile"));
       setIsValidatingProfile(false);
       return false;
     }
@@ -136,7 +138,7 @@ const ViewAllPetitions = ({ onBack }) => {
       setShowDeleteModal(false);
       setPetitionToDelete(null);
 
-      toast.success("Petition deleted successfully!");
+      toast.success(t("viewAllPetitions.petitionDeletedSuccess"));
       setTabs((prevTabs) =>
         prevTabs.filter((tab) => tab.id !== `petition-${petitionToDelete}`)
       );
@@ -153,7 +155,7 @@ const ViewAllPetitions = ({ onBack }) => {
       }
     } catch (error) {
       console.error("Error deleting petition:", error);
-      toast.error("Failed to delete petition. Please try again.");
+      toast.error(t("viewAllPetitions.failedDeletePetition"));
     }
   };
 
@@ -258,11 +260,11 @@ const ViewAllPetitions = ({ onBack }) => {
           totalCount: response.totalRecords || response.data?.length || 0,
         }));
       } else {
-        toast.error(response.message || "Failed to fetch petitions");
+        toast.error(response.message || t("viewAllPetitions.failedFetchPetitions"));
         setPetitions([]);
       }
     } catch (error) {
-      toast.error("Failed to fetch petitions. Please try again.");
+      toast.error(t("viewAllPetitions.failedFetchPetitions"));
       setPetitions([]);
     } finally {
       setLoading(false);
@@ -389,10 +391,10 @@ const ViewAllPetitions = ({ onBack }) => {
         await exportToPDF(allPetitions);
       }
       toast.success(
-        `Petitions exported as ${format.toUpperCase()} successfully!`
+        t("viewAllPetitions.exportSuccess", { format: format.toUpperCase() })
       );
     } catch (error) {
-      toast.error("Failed to export petitions. Please try again.");
+      toast.error(t("viewAllPetitions.failedExport"));
     } finally {
       setExporting(false);
     }
@@ -403,12 +405,12 @@ const ViewAllPetitions = ({ onBack }) => {
     try {
       // Use all petitions passed from handleExport
       const headers = [
-        "Petition Number",
-        "Property Address",
-        "Borrower",
-        "Status",
-        "Filing Date",
-        "Last Updated",
+        t("viewAllPetitions.petitionNumber"),
+        t("viewAllPetitions.propertyAddress"),
+        t("viewAllPetitions.borrower"),
+        t("viewAllPetitions.status"),
+        t("viewAllPetitions.filingDate"),
+        t("viewAllPetitions.lastUpdated"),
       ];
       const csvContent = [
         headers.join(","),
@@ -437,7 +439,7 @@ const ViewAllPetitions = ({ onBack }) => {
       link.click();
       document.body.removeChild(link);
     } catch (error) {
-      toast.error("Failed to export CSV. Please try again.");
+      toast.error(t("viewAllPetitions.failedExportCSV"));
     }
   };
 
@@ -449,7 +451,7 @@ const ViewAllPetitions = ({ onBack }) => {
 
       // Add title
       doc.setFontSize(18);
-      doc.text("Petitions Report", 14, 22);
+      doc.text(t("viewAllPetitions.title") + " Report", 14, 22);
 
       // Add date
       doc.setFontSize(10);
@@ -457,12 +459,12 @@ const ViewAllPetitions = ({ onBack }) => {
 
       // Prepare table data
       const headers = [
-        "Petition Number",
-        "Property Address",
-        "Borrower",
-        "Status",
-        "Filing Date",
-        "Last Updated",
+        t("viewAllPetitions.petitionNumber"),
+        t("viewAllPetitions.propertyAddress"),
+        t("viewAllPetitions.borrower"),
+        t("viewAllPetitions.status"),
+        t("viewAllPetitions.filingDate"),
+        t("viewAllPetitions.lastUpdated"),
       ];
       const tableData = allPetitions.map((petition) => [
         petition.petitionNumber || petition.id,
@@ -504,12 +506,12 @@ const ViewAllPetitions = ({ onBack }) => {
       // Add summary at the bottom
       const finalY = doc.lastAutoTable.finalY + 10;
       doc.setFontSize(10);
-      doc.text(`Total Petitions: ${allPetitions.length}`, 14, finalY);
+      doc.text(t("viewAllPetitions.totalPetitions", { count: allPetitions.length }), 14, finalY);
 
       // Save the PDF
       doc.save(`petitions_${new Date().toISOString().split("T")[0]}.pdf`);
     } catch (error) {
-      toast.error("Failed to export PDF. Please try again.");
+      toast.error(t("viewAllPetitions.failedExportPDF"));
     }
   };
 
@@ -616,19 +618,19 @@ const ViewAllPetitions = ({ onBack }) => {
 
     try {
       const confirmDelete = window.confirm(
-        "Are you sure you want to delete this petition?"
+        t("viewAllPetitions.areYouSureDelete")
       );
       if (!confirmDelete) return;
 
       await petitionApiService.deletePetitionById(petitionId);
-      toast.success("Petition deleted successfully!");
+      toast.success(t("viewAllPetitions.petitionDeletedSuccess"));
 
       if (typeof fetchPetitions === "function") {
         fetchPetitions();
       }
     } catch (error) {
       console.error("Error deleting petition:", error);
-      toast.error("Failed to delete petition. Please try again.");
+      toast.error(t("viewAllPetitions.failedDeletePetition"));
     }
   };
 
@@ -684,7 +686,7 @@ const ViewAllPetitions = ({ onBack }) => {
                 <div className="petitions-header-section mb-4">
                   {/* Desktop Layout */}
                   <div className="d-none d-md-flex align-items-center justify-content-between">
-                    <h2 className="font-med mb-0">  Petitions</h2>
+                    <h2 className="font-med mb-0">{t("viewAllPetitions.title")}</h2>
 
                     <div className="d-flex gap-3 align-items-center">
                       {/* Create New Petition Button */}
@@ -692,8 +694,7 @@ const ViewAllPetitions = ({ onBack }) => {
                         className="dashboard-btn-create"
                         onClick={handleCreateNewPetition}
                       >
-                        <i className="fa-solid fa-plus me-1"></i> Create New
-                        Petition
+                        <i className="fa-solid fa-plus me-1"></i> {t("viewAllPetitions.createNewPetition")}
                       </button>
 
                       {/* Export Dropdown */}
@@ -702,7 +703,7 @@ const ViewAllPetitions = ({ onBack }) => {
                           className={`dashboard-btn-refresh ${showExportDropdown ? 'active' : ''}`}
                           type="button"
                           onClick={() => setShowExportDropdown(!showExportDropdown)}
-                          title="Export petitions"
+                          title={t("viewAllPetitions.exportPetitions")}
                           disabled={exporting}
                         >
                           {exporting ? (
@@ -712,12 +713,12 @@ const ViewAllPetitions = ({ onBack }) => {
                                 role="status"
                                 aria-hidden="true"
                               ></span>
-                              Exporting...
+                              {t("viewAllPetitions.exporting")}
                             </>
                           ) : (
                             <>
                               <i className="fa-solid fa-download me-2"></i>
-                              Export
+                              {t("viewAllPetitions.export")}
                               <i className={`fas fa-chevron-down ms-2 transition-icon ${showExportDropdown ? 'rotate' : ''}`} style={{ fontSize: "0.7rem" }}></i>
                             </>
                           )}
@@ -733,7 +734,7 @@ const ViewAllPetitions = ({ onBack }) => {
                               disabled={exporting}
                             >
                               <i className="fas fa-file-csv edit-option-icon"></i>
-                              <span>Export as CSV</span>
+                              <span>{t("viewAllPetitions.exportCSV")}</span>
                             </button>
                             <button
                               className="edit-option-item"
@@ -744,7 +745,7 @@ const ViewAllPetitions = ({ onBack }) => {
                               disabled={exporting}
                             >
                               <i className="fas fa-file-pdf edit-option-icon"></i>
-                              <span>Export as PDF</span>
+                              <span>{t("viewAllPetitions.exportPDF")}</span>
                             </button>
                           </div>
                         )}
@@ -754,10 +755,10 @@ const ViewAllPetitions = ({ onBack }) => {
                       <button
                         className="dashboard-btn-refresh"
                         onClick={handleRefresh}
-                        title="Refresh petitions"
+                        title={t("viewAllPetitions.refreshPetitions")}
                       >
                         <i className="fa-solid fa-sync-alt me-2"></i>
-                        Refresh
+                        {t("viewAllPetitions.refresh")}
                       </button>
                     </div>
                   </div>
@@ -765,11 +766,11 @@ const ViewAllPetitions = ({ onBack }) => {
                   {/* Mobile Layout */}
                   <div className="d-md-none">
                     <div className="d-flex align-items-center justify-content-between mb-3">
-                      <h2 className="font-med mb-0">Petitions</h2>
+                      <h2 className="font-med mb-0">{t("viewAllPetitions.title")}</h2>
                       <button
                         className="dashboard-btn-refresh"
                         onClick={handleRefresh}
-                        title="Refresh petitions"
+                        title={t("viewAllPetitions.refreshPetitions")}
                       >
                         <i className="fa-solid fa-sync-alt"></i>
                       </button>
@@ -781,8 +782,7 @@ const ViewAllPetitions = ({ onBack }) => {
                           className="dashboard-btn-create w-100"
                           onClick={handleCreateNewPetition}
                         >
-                          <i className="fa-solid fa-plus me-1"></i> Create New
-                          Petition
+                          <i className="fa-solid fa-plus me-1"></i> {t("viewAllPetitions.createNewPetition")}
                         </button>
                       </div>
                       <div className="col-4">
@@ -791,7 +791,7 @@ const ViewAllPetitions = ({ onBack }) => {
                             className={`dashboard-btn-refresh w-100 ${showExportDropdown ? 'active' : ''}`}
                             type="button"
                             onClick={() => setShowExportDropdown(!showExportDropdown)}
-                            title="Export petitions"
+                            title={t("viewAllPetitions.exportPetitions")}
                             disabled={exporting}
                           >
                             {exporting ? (
@@ -802,14 +802,14 @@ const ViewAllPetitions = ({ onBack }) => {
                                   aria-hidden="true"
                                 ></span>
                                 <span className="d-none d-sm-inline">
-                                  Exporting...
+                                  {t("viewAllPetitions.exporting")}
                                 </span>
                               </>
                             ) : (
                               <>
                                 <i className="fa-solid fa-download me-1"></i>
                                 <span className="d-none d-sm-inline">
-                                  Export
+                                  {t("viewAllPetitions.export")}
                                 </span>
                                 <i className={`fas fa-chevron-down ms-1 transition-icon ${showExportDropdown ? 'rotate' : ''}`} style={{ fontSize: "0.7rem" }}></i>
                               </>
@@ -826,7 +826,7 @@ const ViewAllPetitions = ({ onBack }) => {
                                 disabled={exporting}
                               >
                                 <i className="fas fa-file-csv edit-option-icon"></i>
-                                <span>Export as CSV</span>
+                                <span>{t("viewAllPetitions.exportCSV")}</span>
                               </button>
                               <button
                                 className="edit-option-item"
@@ -837,7 +837,7 @@ const ViewAllPetitions = ({ onBack }) => {
                                 disabled={exporting}
                               >
                                 <i className="fas fa-file-pdf edit-option-icon"></i>
-                                <span>Export as PDF</span>
+                                <span>{t("viewAllPetitions.exportPDF")}</span>
                               </button>
                             </div>
                           )}
@@ -856,7 +856,7 @@ const ViewAllPetitions = ({ onBack }) => {
                       <input
                         type="text"
                         className="form-control border-start-0 shadow-none"
-                        placeholder="Search petitions..."
+                        placeholder={t("viewAllPetitions.searchPlaceholder")}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                       />
@@ -867,15 +867,15 @@ const ViewAllPetitions = ({ onBack }) => {
                       name="statusFilter"
                       value={statusFilter}
                       onChange={(e) => setStatusFilter(e.target.value)}
-                      placeholder="All Statuses"
+                      placeholder={t("viewAllPetitions.allStatuses")}
                       options={[
-                        { value: "all", label: "All Statuses" },
-                        { value: "draft", label: "Draft" },
-                        { value: "submitted", label: "Submitted" },
-                        { value: "resubmitted", label: "Resubmitted" },
-                        { value: "accepted", label: "Accepted" },
-                        { value: "returned", label: "Returned" },
-                        { value: "closed", label: "Closed" },
+                        { value: "all", label: t("viewAllPetitions.allStatuses") },
+                        { value: "draft", label: t("viewAllPetitions.draft") },
+                        { value: "submitted", label: t("viewAllPetitions.submitted") },
+                        { value: "resubmitted", label: t("viewAllPetitions.resubmitted") },
+                        { value: "accepted", label: t("viewAllPetitions.accepted") },
+                        { value: "returned", label: t("viewAllPetitions.returned") },
+                        { value: "closed", label: t("viewAllPetitions.closed") },
                       ]}
                     />
                   </div>
@@ -884,15 +884,15 @@ const ViewAllPetitions = ({ onBack }) => {
                       name="dateFilter"
                       value={dateFilter}
                       onChange={(e) => handleDateFilterChange(e.target.value)}
-                      placeholder="All Dates"
+                      placeholder={t("viewAllPetitions.allDates")}
                       options={[
-                        { value: "all", label: "All Dates" },
-                        { value: "today", label: "Today" },
-                        { value: "week", label: "Last 7 Days" },
-                        { value: "month", label: "Last Month" },
-                        { value: "quarter", label: "Last 3 Months" },
-                        { value: "year", label: "Last Year" },
-                        { value: "custom", label: "Custom Range" },
+                        { value: "all", label: t("viewAllPetitions.allDates") },
+                        { value: "today", label: t("viewAllPetitions.today") },
+                        { value: "week", label: t("viewAllPetitions.last7Days") },
+                        { value: "month", label: t("viewAllPetitions.lastMonth") },
+                        { value: "quarter", label: t("viewAllPetitions.last3Months") },
+                        { value: "year", label: t("viewAllPetitions.lastYear") },
+                        { value: "custom", label: t("viewAllPetitions.customRange") },
                       ]}
                     />
                   </div>
@@ -905,14 +905,14 @@ const ViewAllPetitions = ({ onBack }) => {
                         setSortBy(field);
                         setSortOrder(order);
                       }}
-                      placeholder="Sort By"
+                      placeholder={t("viewAllPetitions.sortBy")}
                       options={[
-                        { value: "filingDate-desc", label: "Filing Date (Newest First)" },
-                        { value: "filingDate-asc", label: "Filing Date (Oldest First)" },
-                        { value: "lastUpdated-desc", label: "Last Updated (Most Recent)" },
-                        { value: "lastUpdated-asc", label: "Last Updated (Least Recent)" },
-                        { value: "petitionNumber-asc", label: "Petition Number (A-Z)" },
-                        { value: "petitionNumber-desc", label: "Petition Number (Z-A)" },
+                        { value: "filingDate-desc", label: t("viewAllPetitions.filingDateNewestFirst") },
+                        { value: "filingDate-asc", label: t("viewAllPetitions.filingDateOldestFirst") },
+                        { value: "lastUpdated-desc", label: t("viewAllPetitions.lastUpdatedMostRecent") },
+                        { value: "lastUpdated-asc", label: t("viewAllPetitions.lastUpdatedLeastRecent") },
+                        { value: "petitionNumber-asc", label: t("viewAllPetitions.petitionNumberAZ") },
+                        { value: "petitionNumber-desc", label: t("viewAllPetitions.petitionNumberZA") },
                       ]}
                     />
                   </div>
@@ -922,7 +922,7 @@ const ViewAllPetitions = ({ onBack }) => {
                 {showCustomDateRange && (
                   <div className="row mb-4">
                     <div className="col-md-3">
-                      <label className="form-label">From Date</label>
+                      <label className="form-label">{t("viewAllPetitions.fromDate")}</label>
                       <input
                         type="date"
                         className="form-control"
@@ -931,7 +931,7 @@ const ViewAllPetitions = ({ onBack }) => {
                       />
                     </div>
                     <div className="col-md-3">
-                      <label className="form-label">To Date</label>
+                      <label className="form-label">{t("viewAllPetitions.toDate")}</label>
                       <input
                         type="date"
                         className="form-control"
@@ -951,7 +951,7 @@ const ViewAllPetitions = ({ onBack }) => {
                         }}
                         disabled={!customDateFrom || !customDateTo}
                       >
-                        Apply Filter
+                        {t("viewAllPetitions.applyFilter")}
                       </button>
                       <button
                         className="dashboard-btn-refresh"
@@ -967,7 +967,7 @@ const ViewAllPetitions = ({ onBack }) => {
                           fetchPetitions(1);
                         }}
                       >
-                        Clear
+                        {t("viewAllPetitions.clear")}
                       </button>
                     </div>
                   </div>
@@ -985,9 +985,9 @@ const ViewAllPetitions = ({ onBack }) => {
                           pagination.currentPage * pagination.pageSize,
                           pagination.totalCount
                         );
-                        return `Showing ${startIndex}-${endIndex} of ${pagination.totalCount} petitions`;
+                        return t("viewAllPetitions.showingResults", { startIndex, endIndex, totalCount: pagination.totalCount });
                       })()}
-                      {loading && <span className="ms-2">(Loading...)</span>}
+                      {loading && <span className="ms-2">({t("viewAllPetitions.loading")})</span>}
                     </span>
                   </div>
                 </div>
@@ -1002,7 +1002,7 @@ const ViewAllPetitions = ({ onBack }) => {
                           className="sortable-header"
                           onClick={() => handleSort("id")}
                         >
-                          Petition Number
+                          {t("viewAllPetitions.petitionNumber")}
                           {sortBy === "id" && (
                             <i
                               className={`fas fa-sort-${
@@ -1012,14 +1012,14 @@ const ViewAllPetitions = ({ onBack }) => {
                           )}
                         </th>
                         <th style={{ width: "25%", minWidth: "200px" }}>
-                          Property Address
+                          {t("viewAllPetitions.propertyAddress")}
                         </th>
                         <th
                           style={{ width: "16%", minWidth: "110px" }}
                           className="sortable-header"
                           onClick={() => handleSort("borrower")}
                         >
-                          Borrower
+                          {t("viewAllPetitions.borrower")}
                           {sortBy === "borrower" && (
                             <i
                               className={`fas fa-sort-${
@@ -1033,7 +1033,7 @@ const ViewAllPetitions = ({ onBack }) => {
                           className="sortable-header"
                           onClick={() => handleSort("status")}
                         >
-                          Status
+                          {t("viewAllPetitions.status")}
                           {sortBy === "status" && (
                             <i
                               className={`fas fa-sort-${
@@ -1047,7 +1047,7 @@ const ViewAllPetitions = ({ onBack }) => {
                           className="sortable-header"
                           onClick={() => handleSort("filingDate")}
                         >
-                          Filing Date
+                          {t("viewAllPetitions.filingDate")}
                           {sortBy === "filingDate" && (
                             <i
                               className={`fas fa-sort-${
@@ -1061,7 +1061,7 @@ const ViewAllPetitions = ({ onBack }) => {
                           className="sortable-header"
                           onClick={() => handleSort("lastUpdated")}
                         >
-                          Last Updated
+                          {t("viewAllPetitions.lastUpdated")}
                           {sortBy === "lastUpdated" && (
                             <i
                               className={`fas fa-sort-${
@@ -1082,11 +1082,11 @@ const ViewAllPetitions = ({ onBack }) => {
                               role="status"
                             >
                               <span className="visually-hidden">
-                                Loading...
+                                {t("viewAllPetitions.loading")}
                               </span>
                             </div>
                             <p className="mt-2 text-muted">
-                              Loading petitions...
+                              {t("viewAllPetitions.loadingPetitions")}
                             </p>
                           </td>
                         </tr>
@@ -1177,10 +1177,10 @@ const ViewAllPetitions = ({ onBack }) => {
                               style={{ fontSize: "2rem" }}
                             ></i>
                             <p className="text-muted mb-0">
-                              No petitions found matching your criteria
+                              {t("viewAllPetitions.noPetitionsFound")}
                             </p>
                             <small className="text-muted">
-                              Try adjusting your search or filter settings
+                              {t("viewAllPetitions.tryAdjustingFilters")}
                             </small>
                           </td>
                         </tr>
@@ -1197,9 +1197,9 @@ const ViewAllPetitions = ({ onBack }) => {
                         className="spinner-border text-primary"
                         role="status"
                       >
-                        <span className="visually-hidden">Loading...</span>
+                        <span className="visually-hidden">{t("viewAllPetitions.loading")}</span>
                       </div>
-                      <p className="mt-2 text-muted">Loading petitions...</p>
+                      <p className="mt-2 text-muted">{t("viewAllPetitions.loadingPetitions")}</p>
                     </div>
                   ) : petitions.length > 0 ? (
                     <div className="row g-3">
@@ -1298,10 +1298,10 @@ const ViewAllPetitions = ({ onBack }) => {
                         style={{ fontSize: "2rem" }}
                       ></i>
                       <p className="text-muted mb-0">
-                        No petitions found matching your criteria
+                        {t("viewAllPetitions.noPetitionsFound")}
                       </p>
                       <small className="text-muted">
-                        Try adjusting your search or filter settings
+                        {t("viewAllPetitions.tryAdjustingFilters")}
                       </small>
                     </div>
                   )}
@@ -1316,18 +1316,18 @@ const ViewAllPetitions = ({ onBack }) => {
                     <div className="modal-dialog modal-dialog-centered">
                       <div className="modal-content">
                         <div className="modal-header">
-                          <h5 className="modal-title">Delete Petition</h5>
+                          <h5 className="modal-title">{t("viewAllPetitions.deletePetition")}</h5>
                           <button
                             type="button"
                             className="btn-close"
                             onClick={() => setShowDeleteModal(false)}
-                            aria-label="Close"
+                            aria-label={t("common.close")}
                           ></button>
                         </div>
 
                         <div className="modal-body">
                           <p className="mb-4">
-                            Are you sure you want to delete this petition?
+                            {t("viewAllPetitions.areYouSureDelete")}
                           </p>
                           <div className="d-flex justify-content-end gap-2">
                             <button
@@ -1335,7 +1335,7 @@ const ViewAllPetitions = ({ onBack }) => {
                               className="dashboard-btn-refresh"
                               onClick={() => setShowDeleteModal(false)}
                             >
-                              Cancel
+                              {t("viewAllPetitions.cancelButton")}
                             </button>
 
                             <button
@@ -1343,7 +1343,7 @@ const ViewAllPetitions = ({ onBack }) => {
                               className="dashboard-btn-refresh text-danger"
                               onClick={handleConfirmDelete}
                             >
-                              Delete
+                              {t("viewAllPetitions.deleteButton")}
                             </button>
                           </div>
                         </div>
@@ -1382,7 +1382,7 @@ const ViewAllPetitions = ({ onBack }) => {
                             strokeLinejoin="round"
                           />
                         </svg>
-                        Previous
+                        {t("viewAllPetitions.previous")}
                       </button>
 
                       <div className="pagination-pages">
@@ -1422,7 +1422,7 @@ const ViewAllPetitions = ({ onBack }) => {
                           pagination.currentPage >= pagination.totalPages
                         }
                       >
-                        Next
+                        {t("viewAllPetitions.next")}
                         <svg
                           width="16"
                           height="16"
@@ -1469,12 +1469,12 @@ const ViewAllPetitions = ({ onBack }) => {
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">Profile Information Required</h5>
+                <h5 className="modal-title">{t("viewAllPetitions.profileInformationRequired")}</h5>
                 <button
                   type="button"
                   className="btn-close"
                   onClick={() => setShowProfileValidationDialog(false)}
-                  aria-label="Close"
+                  aria-label={t("common.close")}
                 ></button>
               </div>
               <div className="modal-body">
@@ -1484,10 +1484,10 @@ const ViewAllPetitions = ({ onBack }) => {
                       className="fas fa-exclamation-triangle text-danger me-3"
                       style={{ fontSize: "24px" }}
                     ></i>
-                    <h5 className="fw-bold mb-0">Complete Your Profile</h5>
+                    <h5 className="fw-bold mb-0">{t("viewAllPetitions.completeYourProfile")}</h5>
                   </div>
                   <p className="mb-4">
-                    You need to complete your profile information before creating a petition:
+                    {t("viewAllPetitions.completeProfileBeforeCreate")}
                   </p>
 
                   {/* Filing Entity Type Alert */}
@@ -1497,10 +1497,10 @@ const ViewAllPetitions = ({ onBack }) => {
                         <i className="fas fa-building text-danger me-2"></i>
                         <div className="flex-grow-1">
                           <h6 className="fw-bold text-danger mb-1">
-                            Filing Entity Type Required
+                            {t("viewAllPetitions.missingFilingEntityType")}
                           </h6>
                           <p className="mb-0 small">
-                            You must set your filing entity type in your profile.
+                            {t("viewAllPetitions.missingFilingEntityTypeDesc")}
                           </p>
                         </div>
                       </div>
@@ -1514,10 +1514,10 @@ const ViewAllPetitions = ({ onBack }) => {
                         <i className="fas fa-signature text-danger me-2"></i>
                         <div className="flex-grow-1">
                           <h6 className="fw-bold text-danger mb-1">
-                            Digital Signature Required
+                            {t("viewAllPetitions.missingSignature")}
                           </h6>
                           <p className="mb-0 small">
-                            You must upload a digital signature in your profile.
+                            {t("viewAllPetitions.missingSignatureDesc")}
                           </p>
                         </div>
                       </div>
@@ -1531,7 +1531,7 @@ const ViewAllPetitions = ({ onBack }) => {
                   className="dashboard-btn-refresh"
                   onClick={() => setShowProfileValidationDialog(false)}
                 >
-                  Cancel
+                  {t("viewAllPetitions.cancelButton")}
                 </button>
                 <button
                   type="button"
@@ -1542,7 +1542,7 @@ const ViewAllPetitions = ({ onBack }) => {
                   }}
                 >
                   <i className="fas fa-user me-2"></i>
-                  Go to Profile
+                  {t("viewAllPetitions.goToProfile")}
                 </button>
               </div>
             </div>

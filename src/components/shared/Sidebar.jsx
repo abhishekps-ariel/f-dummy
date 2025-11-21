@@ -1,39 +1,41 @@
 import { useNavigate, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { ROUTES } from "../../constants/routerConstants";
 import loginImg from "../../assets/logo-sample.png";
 
 const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   
   const filerNavItems = [
     {
       key: "dashboard",
-      label: "Dashboard",
+      label: t("sidebar.dashboard"),
       icon: "fa-box",
       route: ROUTES.DASHBOARD,
     },
     {
       key: "petitions",
-      label: "Petitions",
+      label: t("sidebar.petitions"),
       icon: "fa-file-contract",
       route: ROUTES.PETITIONS,
     },
     {
       key: "messages",
-      label: "Messages",
+      label: t("sidebar.messages"),
       icon: "fa-envelope",
       route: ROUTES.MESSAGES,
     },
     {
       key: "faq",
-      label: "FAQ",
+      label: t("sidebar.faq"),
       icon: "fa-question-circle",
       route: ROUTES.FAQ,
     },
     {
       key: "training",
-      label: "Training",
+      label: t("sidebar.training"),
       icon: "fa-graduation-cap",
       route: ROUTES.TRAINING,
     },
@@ -116,7 +118,7 @@ const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
             }}
           >
             <i className="fas fa-sign-out-alt me-2"></i>
-            <span>Sign Out</span>
+            <span>{t("sidebar.signOut")}</span>
           </a>
         </div>
       </aside>
@@ -139,7 +141,7 @@ const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
             type="button"
             className="btn-close"
             data-bs-dismiss="offcanvas"
-            aria-label="Close"
+            aria-label={t("common.close")}
           ></button>
         </div>
         <div className="offcanvas-body">
@@ -185,7 +187,7 @@ const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
               }}
             >
               <i className="fas fa-sign-out-alt me-2"></i>
-              <span>Sign Out</span>
+              <span>{t("sidebar.signOut")}</span>
             </a>
           </div>
         </div>

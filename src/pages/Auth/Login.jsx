@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { checkMfa, sendOtp } from "../../services/authService";
 import { getMfaTypesEnum } from "../../services/commonService";
 import { useNavigate, Link, useLocation } from "react-router-dom";
@@ -22,6 +23,7 @@ function Login() {
 
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
 
   // Load MFA types enum on mount
   useEffect(() => {
@@ -51,15 +53,15 @@ function Login() {
     const newErrors = {};
 
     if (!formData.email.trim()) {
-      newErrors.email = "This field can't be empty";
+      newErrors.email = t("auth.thisFieldEmpty");
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = "Please enter a valid email address";
+      newErrors.email = t("auth.enterValidEmail");
     } else if (formData.email.toLowerCase().endsWith("@gmail.com")) {
-      newErrors.email = "Gmail addresses are not accepted. Please use a different email domain.";
+      newErrors.email = t("auth.gmailNotAccepted");
     }
 
     if (!formData.password.trim()) {
-      newErrors.password = "This field can't be empty";
+      newErrors.password = t("auth.thisFieldEmpty");
     }
 
     setErrors(newErrors);
@@ -77,9 +79,9 @@ function Login() {
     // Real-time email validation to block @gmail.com
     if (name === "email" && value.trim()) {
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-        setErrors({ ...errors, email: "Please enter a valid email address" });
+        setErrors({ ...errors, email: t("auth.enterValidEmail") });
       } else if (value.toLowerCase().endsWith("@gmail.com")) {
-        setErrors({ ...errors, email: "Gmail addresses are not accepted. Please use a different email domain." });
+        setErrors({ ...errors, email: t("auth.gmailNotAccepted") });
       }
     }
   };
@@ -112,14 +114,14 @@ function Login() {
           mfaResponse.msg &&
           mfaResponse.msg.toLowerCase().includes("user not found")
         ) {
-          toast.error("User not found");
+          toast.error(t("auth.userNotFound"));
         } else if (
           mfaResponse.msg &&
           mfaResponse.msg.toLowerCase().includes("invalid email or password")
         ) {
-          toast.error("Incorrect password");
+          toast.error(t("auth.incorrectPassword"));
         } else {
-          toast.error(mfaResponse.msg || "Login failed");
+          toast.error(mfaResponse.msg || t("auth.loginFailed"));
         }
         return;
       }
@@ -144,14 +146,14 @@ function Login() {
       if (error.response?.data?.message) {
         const errorMessage = error.response.data.message.toLowerCase();
         if (errorMessage.includes("user not found")) {
-          toast.error("User not found");
+          toast.error(t("auth.userNotFound"));
         } else if (errorMessage.includes("invalid email or password")) {
-          toast.error("Incorrect password");
+          toast.error(t("auth.incorrectPassword"));
         } else {
           toast.error(error.response.data.message);
         }
       } else {
-        toast.error("Login failed. Please try again.");
+        toast.error(t("auth.loginFailedTryAgain"));
       }
     } finally {
       setIsSubmitting(false);
@@ -162,7 +164,7 @@ function Login() {
   // MFA Setup - send OTP and navigate to TwoFactorAuth page
   const handleMfaProceed = async () => {
     if (!selectedMfaMethod) {
-      toast.error("Please select an MFA method to proceed");
+      toast.error(t("auth.selectMfaMethod"));
       return;
     }
 
@@ -171,7 +173,7 @@ function Login() {
       const response = await sendOtp(formData.email, formData.password, selectedMfaMethod);
 
       if (response.isSuccess) {
-        toast.success(response.msg || "OTP sent successfully!");
+        toast.success(response.msg || t("auth.otpSentSuccess"));
         // Navigate to TwoFactorAuth page with email, password, mfaType, and masked values
         navigate(ROUTES.TWO_FACTOR_AUTH, {
           state: {
@@ -189,14 +191,14 @@ function Login() {
           response.msg &&
           response.msg.toLowerCase().includes("user not found")
         ) {
-          toast.error("User not found");
+          toast.error(t("auth.userNotFound"));
         } else if (
           response.msg &&
           response.msg.toLowerCase().includes("invalid email or password")
         ) {
-          toast.error("Incorrect password");
+          toast.error(t("auth.incorrectPassword"));
         } else {
-          toast.error(response.msg || "Failed to send OTP");
+          toast.error(response.msg || t("auth.failedSendOTP"));
         }
       }
     } catch (error) {
@@ -204,14 +206,14 @@ function Login() {
       if (error.response?.data?.message) {
         const errorMessage = error.response.data.message.toLowerCase();
         if (errorMessage.includes("user not found")) {
-          toast.error("User not found");
+          toast.error(t("auth.userNotFound"));
         } else if (errorMessage.includes("invalid email or password")) {
-          toast.error("Incorrect password");
+          toast.error(t("auth.incorrectPassword"));
         } else {
           toast.error(error.response.data.message);
         }
       } else {
-        toast.error("Failed to send OTP. Please try again.");
+        toast.error(t("auth.failedSendOTPTryAgain"));
       }
     } finally {
       setIsSubmitting(false);
@@ -242,22 +244,22 @@ function Login() {
                   {showMfaSelection ? (
                     <>
                       <h2 className="font-xl-med fw-bold">
-                        Two-Factor Authentication Setup
+                        {t("auth.twoFactorAuthSetup")}
                       </h2>
                       <p className="font-base text-muted">
-                        Please select your preferred authentication method
+                        {t("auth.selectPreferredMethod")}
                       </p>
                     </>
                   ) : (
                     <>
-                      <h2 className="font-xl-med fw-bold">Login</h2>
+                      <h2 className="font-xl-med fw-bold">{t("auth.login")}</h2>
                       <p className="font-base">
-                        Don't have an account?{" "}
+                        {t("auth.dontHaveAccount")}{" "}
                         <Link
                           to="/register"
                           className="text-dark-black fw-semibold"
                         >
-                          Register{" "}
+                          {t("common.register")}{" "}
                         </Link>
                       </p>
                     </>
@@ -269,7 +271,7 @@ function Login() {
                     <div className="mb-4">
                       <p className="font-base text-center mb-4">
                         <i className="fa-solid fa-shield-halved me-2 text-primary"></i>
-                        Two-Factor Authentication is required for your account
+                        {t("auth.twoFactorRequired")}
                       </p>
 
                       <div className="mfa-card-area row g-3 justify-content-center">
@@ -298,8 +300,8 @@ function Login() {
                               <h5 className="fw-bold mb-2">{mfaType.name}</h5>
                               <p className="font-sm text-muted mb-0">
                                 {mfaType.name === "SMS"
-                                  ? "Receive verification codes via sms"
-                                  : "Receive verification codes via email"}
+                                  ? t("auth.receiveCodeSMS")
+                                  : t("auth.receiveCodeEmail")}
                               </p>
                             </div>
                           </div>
@@ -320,12 +322,12 @@ function Login() {
                             role="status"
                             aria-hidden="true"
                           ></span>
-                          Sending OTP...
+                          {t("auth.sendingOTP")}
                         </>
                       ) : (
                         <>
                           <i className="fa-solid fa-arrow-right me-2"></i>
-                          Proceed
+                          {t("auth.proceed")}
                         </>
                       )}
                     </button>
@@ -333,7 +335,7 @@ function Login() {
                 ) : (
                   <>
                     <div className="form-group">
-                      <label className="label-text">Email</label>
+                      <label className="label-text">{t("auth.email")}</label>
                       <div className="input-group">
                         <div className="user-icon">
                           <i className="fa-solid fa-envelope"></i>
@@ -344,7 +346,7 @@ function Login() {
                           className={`form-control ${
                             errors.email ? "is-invalid" : ""
                           }`}
-                          placeholder="Email"
+                          placeholder={t("auth.email")}
                           value={formData.email}
                           onChange={handleChange}
                         />
@@ -357,7 +359,7 @@ function Login() {
                     </div>
 
                     <div className="form-group">
-                      <label className="label-text">Password</label>
+                      <label className="label-text">{t("auth.password")}</label>
                       <div className="input-group position-relative">
                         <div className="user-icon">
                           <i className="fa-solid fa-lock"></i>
@@ -368,7 +370,7 @@ function Login() {
                           className={`form-control ${
                             errors.password ? "is-invalid" : ""
                           }`}
-                          placeholder="Password"
+                          placeholder={t("auth.password")}
                           value={formData.password}
                           onChange={handleChange}
                         />
@@ -377,7 +379,7 @@ function Login() {
                           onClick={togglePasswordVisibility}
                           style={{ cursor: "pointer" }}
                           title={
-                            showPassword ? "Hide password" : "Show password"
+                            showPassword ? t("auth.hidePassword") : t("auth.showPassword")
                           }
                         >
                           <i
@@ -401,7 +403,7 @@ function Login() {
                         onClick={handleForgetPassword}
                         className="btn btn-link font-base text-dark-black fw-medium p-0"
                       >
-                        Forgot Password ?
+                        {t("auth.forgotPassword")}
                       </button>
                     </div>
 
@@ -417,19 +419,19 @@ function Login() {
                             role="status"
                             aria-hidden="true"
                           ></span>
-                          Logging in...
+                          {t("auth.loggingIn")}
                         </>
                       ) : (
-                        "Login"
+                        t("auth.login")
                       )}
                     </button>
 
                     <div className="loginwith w-100 text-center position-relative my-4">
-                      <p className="orlogin-text mb-0">Or</p>
+                      <p className="orlogin-text mb-0">{t("common.or")}</p>
                     </div>
                     <div className="d-flex flex-column align-items-center gap-2">
                       <a href="#!" className="font-base fw-medium">
-                        Login with MyMass.Gov
+                        {t("auth.loginWithMyMassGov")}
                       </a>
                     </div>
 
@@ -456,7 +458,7 @@ function Login() {
                           className="fa-solid fa-file-lines"
                           style={{ fontSize: "1rem" }}
                         ></i>
-                        <span>View Filed Petitions</span>
+                        <span>{t("auth.viewFiledPetitions")}</span>
                         <i 
                           className="fa-solid fa-arrow-right"
                           style={{ 
@@ -468,14 +470,8 @@ function Login() {
                     </div>
 
                     <div className="d-flex flex-column important-notice mt-5">
-                      <strong>Important Notice:</strong>
-                      The filer/mortgagee/loan holder can only initiate the
-                      Division's online registration filing process after a
-                      foreclosure petition (or action) has been brought by the
-                      mortgagee under the Soldiers' and Sailors' Civil Relief
-                      Act. Foreclosure petition information must be entered in
-                      this Online Foreclosure Database within five business days
-                      after being filed with the Land Court.
+                      <strong>{t("auth.importantNotice")}</strong>
+                      {t("auth.importantNoticeDesc")}
                     </div>
                   </>
                 )}

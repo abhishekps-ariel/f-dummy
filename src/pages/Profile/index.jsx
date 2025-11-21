@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate, Link } from "react-router-dom";
 import { getAuthData, clearAuthData, getUserRole } from "../../utils/storage";
 import { useAuth } from "../../context/AuthContext";
@@ -15,6 +16,7 @@ import "../../styles/custom.css";
 import "../../components/shared/CustomDropdown.css";
 
 function Profile() {
+  const { t } = useTranslation();
   const [user, setUser] = useState(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [filingEntityTypes, setFilingEntityTypes] = useState([]);
@@ -198,7 +200,7 @@ function Profile() {
 
   const handleSave = async () => {
     if (!user?.id) {
-      toast.error("User information not found");
+      toast.error(t("profile.userInfoNotFound"));
       return;
     }
 
@@ -212,7 +214,7 @@ function Profile() {
       );
 
       if (response.isSuccess) {
-        toast.success(response.msg || "Profile updated successfully");
+        toast.success(response.msg || t("profile.profileUpdatedSuccess"));
         
         // Fetch the updated user data from the API to ensure we have the latest information
         try {
@@ -270,10 +272,10 @@ function Profile() {
         
         setIsEditMode(false);
       } else {
-        toast.error(response.msg || "Failed to update profile");
+        toast.error(response.msg || t("profile.failedUpdateProfile"));
       }
     } catch (error) {
-      toast.error("Failed to update profile. Please try again.");
+      toast.error(t("profile.failedUpdateProfileRetry"));
     } finally {
       setIsSaving(false);
     }
@@ -297,7 +299,7 @@ function Profile() {
 
   const handleSignatureSave = async (signatureDataUrl) => {
     if (!user?.id) {
-      toast.error("User information not found");
+      toast.error(t("profile.userInfoNotFound"));
       return;
     }
 
@@ -333,13 +335,13 @@ function Profile() {
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(updatedUser));
         
-        toast.success('Signature uploaded successfully!');
+        toast.success(t("profile.signatureUploadedSuccess"));
         setShowSignatureModal(false);
       } else {
-        toast.error(uploadResponse.msg || 'Failed to upload signature');
+        toast.error(uploadResponse.msg || t("profile.failedUploadSignature"));
       }
     } catch (error) {
-      toast.error('Failed to upload signature. Please try again.');
+      toast.error(t("profile.failedUploadSignatureRetry"));
     } finally {
       setIsUploadingSignature(false);
     }
@@ -353,7 +355,7 @@ function Profile() {
     return (
       <div className="d-flex justify-content-center align-items-center" style={{ height: "100vh" }}>
         <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
+          <span className="visually-hidden">{t("common.loading")}</span>
         </div>
       </div>
     );
@@ -383,7 +385,7 @@ function Profile() {
         <div className="dashboard-content-section">
           {/* Profile Dashboard Section */}
           <div className="shadow-custom bg-white org-search-box">
-            <h2 className="font-med mb-4 fw-medium">My Profile</h2>
+            <h2 className="font-med mb-4 fw-medium">{t("profile.title")}</h2>
             
 
             {/* Profile Header Card */}
@@ -409,7 +411,7 @@ function Profile() {
                       </p>
                       <p className="text-muted mb-0">
                         <i className="fas fa-user-tag me-2"></i>
-                        {getUserRole(user) || "N/A"}
+                        {getUserRole(user) || t("header.nA")}
                       </p>
                     </div>
                     <div className="d-flex gap-2">
@@ -424,11 +426,11 @@ function Profile() {
                             {isSaving ? (
                               <>
                                 <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                Saving...
+                                {t("profile.saving")}
                               </>
                             ) : (
                               <>
-                                <i className="fa-solid fa-save me-1"></i> Save
+                                <i className="fa-solid fa-save me-1"></i> {t("common.save")}
                               </>
                             )}
                           </button>
@@ -437,7 +439,7 @@ function Profile() {
                             onClick={handleCancel}
                             style={{ minWidth: '80px' }}
                           >
-                            Cancel
+                            {t("common.cancel")}
                           </button>
                         </>
                       ) : (
@@ -446,7 +448,7 @@ function Profile() {
                           onClick={handleEditProfile}
                           style={{ minHeight: '40px', padding: '10px 20px' }}
                         >
-                          <i className="fa-solid fa-edit me-1"></i> Edit Profile
+                          <i className="fa-solid fa-edit me-1"></i> {t("profile.editProfile")}
                         </button>
                       )}
                     </div>
@@ -462,25 +464,25 @@ function Profile() {
                 <div className="stat-card p-4">
                   <h4 className="fw-medium mb-4">
                     <i className="fas fa-building me-2 text-secondary"></i>
-                    Filing Entity Type
+                    {t("profile.filingEntityType")}
                   </h4>
                   <div className="row g-3">
                     <div className="col-12">
-                      <label className="form-label text-muted small">Entity Type</label>
+                      <label className="form-label text-muted small">{t("profile.entityType")}</label>
                       {isEditMode ? (
                         isLoadingEntityTypes ? (
                           <div className="d-flex align-items-center">
                             <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                            <span className="text-muted">Loading entity types...</span>
+                            <span className="text-muted">{t("profile.loadingEntityTypes")}</span>
                           </div>
                         ) : (
                           <CustomDropdown
                             name="filingEntityTypeId"
                             value={selectedFilingEntityType}
                             onChange={handleFilingEntityTypeChange}
-                            placeholder="Select Filing Entity Type"
+                            placeholder={t("profile.selectFilingEntityType")}
                             options={[
-                              { value: "", label: "Select Filing Entity Type" },
+                              { value: "", label: t("profile.selectFilingEntityType") },
                               ...filingEntityTypes.map((entityType) => ({
                                 value: entityType.id,
                                 label: entityType.name,
@@ -491,11 +493,11 @@ function Profile() {
                       ) : (
                         <p className="fw-medium mb-0">
                           {isLoadingEntityTypes ? (
-                            <span className="text-muted">Loading...</span>
+                            <span className="text-muted">{t("common.loading")}</span>
                           ) : selectedFilingEntityType ? (
-                            filingEntityTypes.find(et => et.id === selectedFilingEntityType)?.name || "Not Set"
+                            filingEntityTypes.find(et => et.id === selectedFilingEntityType)?.name || t("profile.notSet")
                           ) : (
-                            "Not Set"
+                            t("profile.notSet")
                           )}
                         </p>
                       )}
@@ -508,11 +510,11 @@ function Profile() {
                 <div className="stat-card p-4">
                   <h4 className="fw-medium mb-4">
                     <i className="fas fa-user me-2 text-secondary"></i>
-                    Personal Information
+                    {t("profile.personalInformation")}
                   </h4>
                   <div className="row g-3">
                     <div className="col-sm-6">
-                      <label className="form-label text-muted small">First Name</label>
+                      <label className="form-label text-muted small">{t("profile.firstName")}</label>
                       {isEditMode ? (
                         <input
                           type="text"
@@ -520,14 +522,14 @@ function Profile() {
                           className="form-control"
                           value={editFormData.firstName}
                           onChange={handleFormInputChange}
-                          placeholder="Enter first name"
+                          placeholder={t("profile.enterFirstName")}
                         />
                       ) : (
                         <p className="fw-medium mb-0">{user.firstName}</p>
                       )}
                     </div>
                     <div className="col-sm-6">
-                      <label className="form-label text-muted small">Last Name</label>
+                      <label className="form-label text-muted small">{t("profile.lastName")}</label>
                       {isEditMode ? (
                         <input
                           type="text"
@@ -535,19 +537,19 @@ function Profile() {
                           className="form-control"
                           value={editFormData.lastName}
                           onChange={handleFormInputChange}
-                          placeholder="Enter last name"
+                          placeholder={t("profile.enterLastName")}
                         />
                       ) : (
                         <p className="fw-medium mb-0">{user.lastName}</p>
                       )}
                     </div>
                     <div className="col-12">
-                      <label className="form-label text-muted small">Email Address</label>
+                      <label className="form-label text-muted small">{t("profile.emailAddress")}</label>
                       <p className="fw-medium mb-0">{user.email}</p>
                     </div>
                     {user.phone && (
                       <div className="col-12">
-                        <label className="form-label text-muted small">Phone Number</label>
+                        <label className="form-label text-muted small">{t("profile.phoneNumber")}</label>
                         <p className="fw-medium mb-0">{user.phone}</p>
                       </div>
                     )}
@@ -559,19 +561,19 @@ function Profile() {
                 <div className="stat-card p-4">
                   <h4 className="fw-medium mb-4">
                     <i className="fas fa-id-card me-2 text-secondary"></i>
-                    Account Details
+                    {t("profile.accountDetails")}
                   </h4>
                   <div className="row g-3">
                     <div className="col-sm-6">
-                      <label className="form-label text-muted small">Role</label>
+                      <label className="form-label text-muted small">{t("profile.role")}</label>
                       <p className="fw-medium mb-0">
-                        <span className="badge bg-primary fs-6">{getUserRole(user) || "N/A"}</span>
+                        <span className="badge bg-primary fs-6">{getUserRole(user) || t("header.nA")}</span>
                       </p>
                     </div>
                     <div className="col-sm-6">
-                      <label className="form-label text-muted small">Account Status</label>
+                      <label className="form-label text-muted small">{t("profile.accountStatus")}</label>
                       <p className="fw-medium mb-0">
-                        <span className="badge bg-success fs-6">Active</span>
+                        <span className="badge bg-success fs-6">{t("profile.active")}</span>
                       </p>
                     </div>
                   </div>
@@ -583,21 +585,21 @@ function Profile() {
                 <div className="stat-card p-4">
                   <h4 className="fw-medium mb-4">
                     <i className="fas fa-signature me-2 text-secondary"></i>
-                     Signature
+                     {t("profile.signature")}
                   </h4>
                   <div className="row g-3">
                     <div className="col-12">
-                      <label className="form-label text-muted small">Signature Status</label>
+                      <label className="form-label text-muted small">{t("profile.signatureStatus")}</label>
                       <p className="fw-medium mb-0">
                         {signatureStatus === 'saved' ? (
                           <span className="badge bg-success fs-6">
                             <i className="fa-solid fa-check-circle me-1"></i>
-                            Captured
+                            {t("profile.captured")}
                           </span>
                         ) : (
                           <span className="badge bg-warning fs-6">
                             <i className="fa-solid fa-clock me-1"></i>
-                            Pending
+                            {t("profile.pending")}
                           </span>
                         )}
                       </p>
@@ -606,11 +608,11 @@ function Profile() {
                     {/* Signature Preview */}
                     {signatureStatus === 'saved' && signatureData && (
                       <div className="col-12">
-                        <label className="form-label text-muted small">Signature Preview</label>
+                        <label className="form-label text-muted small">{t("profile.signaturePreview")}</label>
                         <div className="signature-preview-container p-3 border rounded bg-light">
                           <img 
                             src={signatureData} 
-                            alt="Digital Signature" 
+                            alt={t("profile.digitalSignature")} 
                             className="signature-preview-img"
                             style={{
                               maxWidth: '100%',
@@ -630,7 +632,7 @@ function Profile() {
                               <div className="spinner-border spinner-border-sm text-primary" role="status">
                                 <span className="visually-hidden">Loading signature...</span>
                               </div>
-                              <p className="mt-1 text-muted small">Loading signature...</p>
+                              <p className="mt-1 text-muted small">{t("profile.loadingSignature")}</p>
                             </div>
                           )}
                         </div>
@@ -652,12 +654,12 @@ function Profile() {
                         {isUploadingSignature ? (
                           <>
                             <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                            Uploading...
+                            {t("profile.uploadingSignature")}
                           </>
                         ) : (
                           <>
                             <i className="fa-solid fa-pen-to-square me-1"></i>
-                            {signatureStatus === 'saved' ? 'Update Digital Signature' : 'Capture Digital Signature'}
+                            {signatureStatus === 'saved' ? t("profile.updateDigitalSignature") : t("profile.captureDigitalSignature")}
                           </>
                         )}
                       </button>

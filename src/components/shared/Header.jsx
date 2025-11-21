@@ -1,10 +1,13 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import NotificationDropdown from "./NotificationDropdown";
 import ImpersonationBanner from "./ImpersonationBanner";
 import AccessibilityControls from "./AccessibilityControls";
+import LanguageSwitcher from "./LanguageSwitcher";
 import { getUserRole } from "../../utils/storage";
 
 const Header = ({ user, pageTitle, showMobileMenu = true, onLogout }) => {
+  const { t } = useTranslation();
   return (
     <div className="dashboard-header-wrapper">
       <div className="d-flex align-items-center justify-content-between dashboard-header">
@@ -22,8 +25,8 @@ const Header = ({ user, pageTitle, showMobileMenu = true, onLogout }) => {
           </button>
         )}
         <div>
-          <h1 className="h4 mb-0 fw-bold theme-color">FILIR</h1>
-          <p className="small text-muted mb-0 d-none d-md-block">Foreclosure Intake & Loan Information Resource</p>
+          <h1 className="h4 mb-0 fw-bold theme-color">{t("home.filir")}</h1>
+          <p className="small text-muted mb-0 d-none d-md-block">{t("header.foreclosureIntakeLoanInfo")}</p>
         </div>
       </div>
 
@@ -32,34 +35,8 @@ const Header = ({ user, pageTitle, showMobileMenu = true, onLogout }) => {
         <AccessibilityControls />
 
         {/* Language Dropdown (Hidden on small screens) */}
-        <div className="dropdown d-none d-lg-block">
-          <button
-            className="btn btn-sm dropdown-toggle text-secondary border-0 font-xs"
-            type="button"
-            data-bs-toggle="dropdown"
-            aria-expanded="false"
-          >
-            <i className="fa-solid fa-globe me-1"></i>
-            <span>Eng (US)</span>
-          </button>
-          {/* Dropdown Menu */}
-          <ul className="dropdown-menu dropdown-menu-end theme-dropdown">
-            <li>
-              <a className="dropdown-item" href="#">
-                English (US)
-              </a>
-            </li>
-            <li>
-              <a className="dropdown-item" href="#">
-                Español (ES)
-              </a>
-            </li>
-            <li>
-              <a className="dropdown-item" href="#">
-                Français (FR)
-              </a>
-            </li>
-          </ul>
+        <div className="d-none d-lg-block">
+          <LanguageSwitcher variant="dropdown" className="text-secondary" />
         </div>
 
         {/* Notification Dropdown */}
@@ -84,7 +61,7 @@ const Header = ({ user, pageTitle, showMobileMenu = true, onLogout }) => {
                 {user?.firstName} {user?.lastName}
               </p>
               <p className="font-sm mb-0 text-gray-dark">
-                {getUserRole(user) || "N/A"}
+                {getUserRole(user) || t("header.nA")}
               </p>
             </div>
             <i className="fas fa-chevron-down small ms-2 text-secondary d-none d-lg-block"></i>
@@ -94,12 +71,12 @@ const Header = ({ user, pageTitle, showMobileMenu = true, onLogout }) => {
           <ul className="dropdown-menu dropdown-menu-end">
             <li>
               <Link className="dropdown-item" to="/profile">
-                <i className="fas fa-user me-2"></i> Profile
+                <i className="fas fa-user me-2"></i> {t("common.profile")}
               </Link>
             </li>
             <li>
               <a className="dropdown-item" href="#">
-                <i className="fas fa-cog me-2"></i> Settings
+                <i className="fas fa-cog me-2"></i> {t("common.settings")}
               </a>
             </li>
             <li>
@@ -116,7 +93,7 @@ const Header = ({ user, pageTitle, showMobileMenu = true, onLogout }) => {
                   }
                 }}
               >
-                <i className="fas fa-sign-out-alt me-2"></i> Sign out
+                <i className="fas fa-sign-out-alt me-2"></i> {t("common.logout")}
               </a>
             </li>
           </ul>

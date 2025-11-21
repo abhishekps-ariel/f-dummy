@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { sendSignatureOtp, verifySignatureOtp } from '../../services/authService';
 import { useAuth } from '../../context/AuthContext';
 
 const SignatureOtpModal = ({ show, onHide, onOtpVerified, signatureData }) => {
+  const { t } = useTranslation();
   const [otpCode, setOtpCode] = useState('');   
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -14,7 +16,7 @@ const SignatureOtpModal = ({ show, onHide, onOtpVerified, signatureData }) => {
 
   const handleSendOtp = async () => {
     if (!user?.id) {
-      setError('User information not available');
+      setError(t("signature.userInfoNotAvailable"));
       return;
     }
 
@@ -28,12 +30,12 @@ const SignatureOtpModal = ({ show, onHide, onOtpVerified, signatureData }) => {
       if (response.isSuccess) {
         setPhoneNumberMasked(response.data.phoneNumberMasked);
         setOtpSent(true);
-        setSuccess('OTP sent successfully to your registered phone number');
+        setSuccess(t("signature.otpSentSuccess"));
       } else {
-        setError(response.msg || 'Failed to send OTP');
+        setError(response.msg || t("signature.failedSendOtp"));
       }
     } catch (err) {
-      setError('Failed to send OTP. Please try again.');
+      setError(t("signature.failedSendOtpRetry"));
     } finally {
       setIsLoading(false);
     }
@@ -41,12 +43,12 @@ const SignatureOtpModal = ({ show, onHide, onOtpVerified, signatureData }) => {
 
   const handleVerifyOtp = async () => {
     if (!otpCode.trim()) {
-      setError('Please enter the OTP');
+      setError(t("signature.enterOtpError"));
       return;
     }
 
     if (!user?.id) {
-      setError('User information not available');
+      setError(t("signature.userInfoNotAvailable"));
       return;
     }
 
@@ -59,15 +61,15 @@ const SignatureOtpModal = ({ show, onHide, onOtpVerified, signatureData }) => {
       if (response.isSuccess) {
         // Proceed with signature upload regardless of data value
         // The API might return data: false but we still continue with upload
-        setSuccess('OTP verified successfully! Uploading signature...');
+        setSuccess(t("signature.otpVerifiedSuccess"));
         // Call the callback to proceed with signature upload
         onOtpVerified(signatureData);
         handleClose();
       } else {
-        setError(response.msg || 'Invalid OTP. Please try again.');
+        setError(response.msg || t("signature.invalidOtp"));
       }
     } catch (err) {
-      setError('Failed to verify OTP. Please try again.');
+      setError(t("signature.failedVerifyOtp"));
     } finally {
       setIsVerifying(false);
     }
@@ -99,19 +101,19 @@ const SignatureOtpModal = ({ show, onHide, onOtpVerified, signatureData }) => {
       <div className="modal-dialog modal-dialog-centered">
         <div className="modal-content">
           <div className="modal-header">
-            <h5 className="modal-title">Verify Your Identity</h5>
+            <h5 className="modal-title">{t("signature.verifyIdentity")}</h5>
             <button 
               type="button" 
               className="btn-close" 
               onClick={handleClose}
-              aria-label="Close"
+              aria-label={t("common.close")}
             ></button>
           </div>
           <div className="modal-body">
             {!otpSent ? (
               <div className="text-center">
                 <p className="mb-4">
-                  To upload your signature, we need to verify your identity with an OTP sent to your registered phone number.
+                  {t("signature.verifyIdentityDesc")}
                 </p>
                 <button 
                   className="dashboard-btn-create px-4" 
@@ -121,10 +123,10 @@ const SignatureOtpModal = ({ show, onHide, onOtpVerified, signatureData }) => {
                   {isLoading ? (
                     <>
                       <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                      Sending OTP...
+                      {t("signature.sendingOtp")}
                     </>
                   ) : (
-                    'Send OTP'
+                    t("signature.sendOtp")
                   )}
                 </button>
               </div>
@@ -132,19 +134,19 @@ const SignatureOtpModal = ({ show, onHide, onOtpVerified, signatureData }) => {
               <div>
                 <div className="text-center mb-4">
                   <p className="mb-2">
-                    OTP has been sent to: <strong>{phoneNumberMasked}</strong>
+                    {t("signature.otpSent")} <strong>{phoneNumberMasked}</strong>
                   </p>
                   <p className="text-muted small">
-                    Please enter the 6-digit OTP to verify your identity.
+                    {t("signature.enterOtpDesc")}
                   </p>
                 </div>
                 
                 <div className="mb-3">
-                  <label className="form-label">Enter OTP</label>
+                  <label className="form-label">{t("signature.enterOtp")}</label>
                   <input
                     type="text"
                     className="form-control text-center"
-                    placeholder="Enter 6-digit OTP"
+                    placeholder={t("signature.enterOtpPlaceholder")}
                     value={otpCode}
                     onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                     maxLength={6}
@@ -158,7 +160,7 @@ const SignatureOtpModal = ({ show, onHide, onOtpVerified, signatureData }) => {
                     onClick={handleResendOtp}
                     disabled={isLoading || isVerifying}
                   >
-                    Resend OTP
+                    {t("signature.resendOtp")}
                   </button>
                   <button 
                     className="dashboard-btn-create" 
@@ -168,10 +170,10 @@ const SignatureOtpModal = ({ show, onHide, onOtpVerified, signatureData }) => {
                     {isVerifying ? (
                       <>
                         <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                        Verifying...
+                        {t("signature.verifying")}
                       </>
                     ) : (
-                      'Verify OTP'
+                      t("signature.verifyOtp")
                     )}
                   </button>
                 </div>

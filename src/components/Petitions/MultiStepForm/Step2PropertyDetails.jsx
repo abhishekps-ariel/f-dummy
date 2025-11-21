@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 const Step1PropertyDetails = ({
   isAddressVerified,
@@ -19,21 +20,21 @@ const Step1PropertyDetails = ({
   isValidatingAddress,
   isLoadingPredictions,
 }) => {
+  const { t } = useTranslation();
   return (
           <div>
-            <h2 className="theme-color font-med mb-1">1. Property Details</h2>
+            <h2 className="theme-color font-med mb-1">{t("petitionSteps.step2.title")}</h2>
 
             <p className="text-muted small mb-3">
-              Enter the full address and location details of the property
-              subject to foreclosure.
+              {t("petitionSteps.step2.description")}
             </p>
 
             <div className="row g-3">
               <div className="col-12">
                 <label htmlFor="propertyStreet1" className="form-label">
-                  Street Address Line 1 *
+                  {t("petitionSteps.step2.streetAddress")} *
                   {isAddressVerified && (
-                    <span className="text-success ms-2">✓ Verified</span>
+                    <span className="text-success ms-2">✓ {t("petitionSteps.step2.verified")}</span>
                   )}
                 </label>
 
@@ -48,7 +49,7 @@ const Step1PropertyDetails = ({
                       }`}
                       value={formData.propertyStreet1}
                       onChange={handleInputChange}
-                      placeholder="Enter address manually (Google Maps unavailable)"
+                      placeholder={t("petitionSteps.step2.placeholderManual")}
                       autoComplete="off"
                     />
 
@@ -59,8 +60,7 @@ const Step1PropertyDetails = ({
                     )}
 
                     <div className="text-danger small mt-1">
-                      ⚠️ Google Maps API failed to load. Please enter address
-                      manually.
+                      ⚠️ {t("petitionSteps.step2.googleMapsFailed")}
                     </div>
                   </div>
                 ) : isLoaded ? (
@@ -90,7 +90,7 @@ const Step1PropertyDetails = ({
                           setShowPredictions(true);
                         }
                       }}
-                      placeholder="Start typing an address..."
+                      placeholder={t("petitionSteps.step2.placeholder")}
                       autoComplete="off"
                     />
 
@@ -102,7 +102,7 @@ const Step1PropertyDetails = ({
                           className="spinner-border spinner-border-sm text-muted"
                           role="status"
                         >
-                          <span className="visually-hidden">Loading...</span>
+                          <span className="visually-hidden">{t("common.loading")}</span>
                         </div>
                       </div>
                     )}
@@ -163,7 +163,7 @@ const Step1PropertyDetails = ({
 
                     {isValidatingAddress && (
                       <div className="text-muted small mt-2">
-                        Validating address...
+                        {t("petitionSteps.step2.validatingAddress")}
                       </div>
                     )}
                   </div>
@@ -176,17 +176,17 @@ const Step1PropertyDetails = ({
                       className="spinner-border spinner-border-sm text-muted me-2"
                       role="status"
                     >
-                      <span className="visually-hidden">Loading...</span>
+                      <span className="visually-hidden">{t("common.loading")}</span>
                     </div>
 
-                    <span className="text-muted">Loading Google Maps...</span>
+                    <span className="text-muted">{t("petitionSteps.step2.loadingGoogleMaps")}</span>
                   </div>
                 )}
               </div>
 
               <div className="col-12">
                 <label htmlFor="propertyStreet2" className="form-label">
-                  Street Address Line 2 (Optional)
+                  {t("petitionSteps.step2.streetAddressLine2")}
                 </label>
 
                 <input
@@ -196,13 +196,13 @@ const Step1PropertyDetails = ({
                   className="form-control"
                   value={formData.propertyStreet2}
                   onChange={handleInputChange}
-                  placeholder="Apartment, suite, unit, building, floor, etc."
+                  placeholder={t("petitionSteps.step2.placeholderStreet2")}
                 />
               </div>
 
               <div className="col-md-6">
                 <label htmlFor="propertyCity" className="form-label">
-                  City *
+                  {t("petitionSteps.step2.city")} *
                 </label>
 
                 <input
@@ -214,7 +214,7 @@ const Step1PropertyDetails = ({
                   }`}
                   value={formData.propertyCity}
                   onChange={handleInputChange}
-                  placeholder="Enter city name"
+                  placeholder={t("petitionSteps.step2.placeholderCity")}
                 />
 
                 {fieldErrors.propertyCity && (
@@ -226,7 +226,7 @@ const Step1PropertyDetails = ({
 
               <div className="col-md-6">
                 <label htmlFor="propertyState" className="form-label">
-                  State *
+                  {t("petitionSteps.step2.state")} *
                 </label>
 
                 <select
@@ -251,7 +251,7 @@ const Step1PropertyDetails = ({
 
               <div className="col-md-6">
                 <label htmlFor="propertyZip" className="form-label">
-                  ZIP Code *
+                  {t("petitionSteps.step2.zipCode")} *
                 </label>
 
                 <input
@@ -264,7 +264,7 @@ const Step1PropertyDetails = ({
                   }`}
                   value={formData.propertyZip}
                   onChange={handleInputChange}
-                  placeholder="12345 or 12345-6789"
+                  placeholder={t("petitionSteps.step2.placeholderZip")}
                 />
 
                 {fieldErrors.propertyZip && (
@@ -276,7 +276,7 @@ const Step1PropertyDetails = ({
 
               <div className="col-md-6">
                 <label htmlFor="propertyCounty" className="form-label">
-                  County (Filing Location) *
+                  {t("petitionSteps.step2.county")} *
                 </label>
 
                 <input
@@ -288,7 +288,7 @@ const Step1PropertyDetails = ({
                   }`}
                   value={formData.propertyCounty}
                   onChange={handleInputChange}
-                  placeholder="Enter county name"
+                  placeholder={t("petitionSteps.step2.placeholderCounty")}
                 />
 
                 {fieldErrors.propertyCounty && (
@@ -300,7 +300,7 @@ const Step1PropertyDetails = ({
 
               <div className="col-12">
                 <label htmlFor="assessorParcelId" className="form-label">
-                  Assessor Parcel ID (Optional)
+                  {t("petitionSteps.step2.assessorParcelId")}
                 </label>
 
                 <input
@@ -310,7 +310,7 @@ const Step1PropertyDetails = ({
                   className="form-control"
                   value={formData.assessorParcelId}
                   onChange={handleInputChange}
-                  placeholder="Enter assessor parcel ID"
+                  placeholder={t("petitionSteps.step2.placeholderAssessorParcelId")}
                 />
               </div>
             </div>

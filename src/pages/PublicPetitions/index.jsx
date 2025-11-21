@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate, useLocation } from "react-router-dom";
 import HomeHeader from "../../components/Home/HomeHeader";
 import HomeFooter from "../../components/Home/HomeFooter";
@@ -10,6 +11,7 @@ import autoTable from "jspdf-autotable";
 import ScrollToTop from "../../components/shared/ScrollToTop";
 
 function PublicPetitions() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -42,14 +44,14 @@ function PublicPetitions() {
         setPetitions(response.data);
         setTotalRecords(response.totalRecords || 0);
       } else {
-        setError(response.message || "Failed to fetch petitions");
+        setError(response.message || t("publicPetitions.failedFetchPetitions"));
         setPetitions([]);
       }
     } catch (err) {
       console.error("Error fetching public petitions:", err);
-      setError(err.response?.data?.message || err.message || "Failed to fetch petitions. Please try again.");
+      setError(err.response?.data?.message || err.message || t("publicPetitions.failedFetchPetitionsTryAgain"));
       setPetitions([]);
-      toast.error("Failed to load petitions. Please try again.");
+      toast.error(t("publicPetitions.failedLoadPetitions"));
     } finally {
       setLoading(false);
     }
@@ -171,7 +173,7 @@ function PublicPetitions() {
   };
 
   const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
+    if (!dateString) return t("common.nA");
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
       year: "numeric",
@@ -211,10 +213,10 @@ function PublicPetitions() {
         await exportToPDF(allPetitions);
       }
       toast.success(
-        `Petitions exported as ${format.toUpperCase()} successfully!`
+        t("publicPetitions.exportSuccess", { format: format.toUpperCase() })
       );
     } catch (error) {
-      toast.error("Failed to export petitions. Please try again.");
+      toast.error(t("publicPetitions.failedExport"));
     } finally {
       setExporting(false);
     }
@@ -224,17 +226,17 @@ function PublicPetitions() {
   const exportToCSV = async (allPetitions) => {
     try {
       const headers = [
-        "City",
-        "Zip Code",
-        "Sale Amount",
-        "Sale Date",
+        t("publicPetitions.city"),
+        t("publicPetitions.zipCode"),
+        t("publicPetitions.saleAmount"),
+        t("publicPetitions.saleDate"),
       ];
       const csvContent = [
         headers.join(","),
         ...allPetitions.map((petition) =>
           [
-            `"${petition.city || "N/A"}"`,
-            `"${petition.zipCode || "N/A"}"`,
+            `"${petition.city || t("common.nA")}"`,
+            `"${petition.zipCode || t("common.nA")}"`,
             formatCurrency(petition.saleAmount),
             formatDate(petition.saleDate),
           ].join(",")
@@ -254,7 +256,7 @@ function PublicPetitions() {
       link.click();
       document.body.removeChild(link);
     } catch (error) {
-      toast.error("Failed to export CSV. Please try again.");
+      toast.error(t("publicPetitions.failedExportCSV"));
     }
   };
 
@@ -265,22 +267,22 @@ function PublicPetitions() {
 
       // Add title
       doc.setFontSize(18);
-      doc.text("Public Petitions Report", 14, 22);
+      doc.text(t("publicPetitions.reportTitle"), 14, 22);
 
       // Add date
       doc.setFontSize(10);
-      doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 32);
+      doc.text(`${t("publicPetitions.generatedOn")}: ${new Date().toLocaleDateString()}`, 14, 32);
 
       // Prepare table data
       const headers = [
-        "City",
-        "Zip Code",
-        "Sale Amount",
-        "Sale Date",
+        t("publicPetitions.city"),
+        t("publicPetitions.zipCode"),
+        t("publicPetitions.saleAmount"),
+        t("publicPetitions.saleDate"),
       ];
       const tableData = allPetitions.map((petition) => [
-        petition.city || "N/A",
-        petition.zipCode || "N/A",
+        petition.city || t("common.nA"),
+        petition.zipCode || t("common.nA"),
         formatCurrency(petition.saleAmount),
         formatDate(petition.saleDate),
       ]);
@@ -314,12 +316,12 @@ function PublicPetitions() {
       // Add summary at the bottom
       const finalY = doc.lastAutoTable.finalY + 10;
       doc.setFontSize(10);
-      doc.text(`Total Petitions: ${allPetitions.length}`, 14, finalY);
+      doc.text(t("publicPetitions.totalPetitions", { count: allPetitions.length }), 14, finalY);
 
       // Save the PDF
       doc.save(`public_petitions_${new Date().toISOString().split("T")[0]}.pdf`);
     } catch (error) {
-      toast.error("Failed to export PDF. Please try again.");
+      toast.error(t("publicPetitions.failedExportPDF"));
     }
   };
 
@@ -341,9 +343,9 @@ function PublicPetitions() {
         <div className="container">
           <div className="d-flex justify-content-between align-items-center">
             <div>
-              <h1 className="font-xl-med mb-2 fw-medium">Filed Petitions</h1>
+              <h1 className="font-xl-med mb-2 fw-medium">{t("publicPetitions.title")}</h1>
               <p className="text-muted mb-0">
-                View publicly filed foreclosure petitions in Massachusetts
+                {t("publicPetitions.subtitle")}
               </p>
             </div>
             <div className="d-flex gap-2">
@@ -352,7 +354,7 @@ function PublicPetitions() {
                   className={`dashboard-btn-create ${exporting ? 'disabled' : ''} ${showExportDropdown ? 'active' : ''}`}
                   onClick={() => setShowExportDropdown(!showExportDropdown)}
                   disabled={exporting}
-                  title="Export petitions"
+                  title={t("publicPetitions.exportPetitions")}
                 >
                   {exporting ? (
                     <>
@@ -361,12 +363,12 @@ function PublicPetitions() {
                         role="status"
                         aria-hidden="true"
                       ></span>
-                      Exporting...
+                      {t("publicPetitions.exporting")}
                     </>
                   ) : (
                     <>
                       <i className="fa-solid fa-download me-2"></i>
-                      Export
+                      {t("publicPetitions.export")}
                       <i className={`fas fa-chevron-down ms-2 transition-icon ${showExportDropdown ? 'rotate' : ''}`} style={{ fontSize: "0.7rem" }}></i>
                     </>
                   )}
@@ -382,7 +384,7 @@ function PublicPetitions() {
                       disabled={exporting}
                     >
                       <i className="fas fa-file-csv edit-option-icon"></i>
-                      <span>Export as CSV</span>
+                      <span>{t("publicPetitions.exportAsCSV")}</span>
                     </button>
                     <button
                       className="edit-option-item"
@@ -393,7 +395,7 @@ function PublicPetitions() {
                       disabled={exporting}
                     >
                       <i className="fas fa-file-pdf edit-option-icon"></i>
-                      <span>Export as PDF</span>
+                      <span>{t("publicPetitions.exportAsPDF")}</span>
                     </button>
                   </div>
                 )}
@@ -403,7 +405,7 @@ function PublicPetitions() {
                 onClick={() => navigate(ROUTES.HOME)}
               >
                 <i className="fas fa-arrow-left me-2"></i>
-                Back to Home
+                {t("publicPetitions.backToHome")}
               </button>
             </div>
           </div>
@@ -423,7 +425,7 @@ function PublicPetitions() {
                 <input
                   type="text"
                   className="form-control"
-                  placeholder="Search by city..."
+                  placeholder={t("publicPetitions.searchByCity")}
                   value={searchCity}
                   onChange={(e) => handleCitySearch(e.target.value)}
                 />
@@ -437,7 +439,7 @@ function PublicPetitions() {
                 <input
                   type="text"
                   className="form-control"
-                  placeholder="Search by zip code..."
+                  placeholder={t("publicPetitions.searchByZipCode")}
                   value={searchZipCode}
                   onChange={(e) => handleZipCodeSearch(e.target.value)}
                 />
@@ -447,31 +449,31 @@ function PublicPetitions() {
           {loading ? (
             <div className="text-center py-5">
               <div className="spinner-border text-primary mb-3" role="status">
-                <span className="visually-hidden">Loading...</span>
+                <span className="visually-hidden">{t("common.loading")}</span>
               </div>
-              <p className="text-muted">Loading petitions...</p>
+              <p className="text-muted">{t("publicPetitions.loadingPetitions")}</p>
             </div>
           ) : error ? (
             <div className="text-center py-5">
               <i className="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
-              <h4 className="text-muted">Error loading petitions</h4>
+              <h4 className="text-muted">{t("publicPetitions.errorLoadingPetitions")}</h4>
               <p className="text-muted">{error}</p>
               <button
                 className="btn btn-primary mt-3"
                 onClick={fetchPetitions}
               >
                 <i className="fas fa-redo me-2"></i>
-                Try Again
+                {t("publicPetitions.tryAgain")}
               </button>
             </div>
           ) : petitions.length === 0 ? (
             <div className="text-center py-5">
               <i className="fas fa-file-alt fa-3x text-muted mb-3"></i>
-              <h4 className="text-muted">No petitions found</h4>
+              <h4 className="text-muted">{t("publicPetitions.noPetitionsFound")}</h4>
               <p className="text-muted">
                 {searchCity || searchZipCode
-                  ? "Try adjusting your search criteria."
-                  : "No petitions are currently available."}
+                  ? t("publicPetitions.tryAdjustingSearch")
+                  : t("publicPetitions.noPetitionsAvailable")}
               </p>
             </div>
           ) : (
@@ -480,10 +482,10 @@ function PublicPetitions() {
               <div className="mb-2">
                 <p className="text-muted mb-0">
                   {loading ? (
-                    "Loading petitions..."
+                    t("publicPetitions.loadingPetitions")
                   ) : (
                     <>
-                      Showing {petitions.length} of {totalRecords} petition{totalRecords !== 1 ? 's' : ''}
+                      {t("publicPetitions.showingResults", { showing: petitions.length, total: totalRecords, count: totalRecords })}
                     </>
                   )}
                 </p>
@@ -493,17 +495,17 @@ function PublicPetitions() {
                 <table className="table table-hover">
                   <thead className="table-light">
                     <tr>
-                      <th>City</th>
-                      <th>Zip Code</th>
-                      <th>Sale Amount</th>
-                      <th>Sale Date</th>
+                      <th>{t("publicPetitions.city")}</th>
+                      <th>{t("publicPetitions.zipCode")}</th>
+                      <th>{t("publicPetitions.saleAmount")}</th>
+                      <th>{t("publicPetitions.saleDate")}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {petitions.map((petition, index) => (
                       <tr key={index}>
-                        <td>{petition.city || "N/A"}</td>
-                        <td>{petition.zipCode || "N/A"}</td>
+                        <td>{petition.city || t("common.nA")}</td>
+                        <td>{petition.zipCode || t("common.nA")}</td>
                         <td>{formatCurrency(petition.saleAmount)}</td>
                         <td>{formatDate(petition.saleDate)}</td>
                       </tr>
@@ -542,7 +544,7 @@ function PublicPetitions() {
                           strokeLinejoin="round"
                         />
                       </svg>
-                      Previous
+                      {t("common.previous")}
                     </button>
 
                     <div className="pagination-pages">
@@ -576,7 +578,7 @@ function PublicPetitions() {
                       }}
                       disabled={currentPage >= totalPages}
                     >
-                      Next
+                      {t("common.next")}
                       <svg
                         width="16"
                         height="16"
@@ -605,38 +607,35 @@ function PublicPetitions() {
       <section className="py-4 py-lg-5 bg-mesgray">
         <div className="container">
           <h2 className="font-xl-med mb-4 fw-medium heading-divider">
-            About Filed Petitions
+            {t("publicPetitions.aboutTitle")}
           </h2>
           <div className="row">
             <div className="col-md-6">
               <p className="font-base-med">
-                This page displays publicly filed foreclosure petitions in Massachusetts.
-                All petitions listed here have been submitted to the Division of Banks
-                and are part of the public record.
+                {t("publicPetitions.aboutDescription1")}
               </p>
               <p className="font-base-med">
-                You can search for petitions by city or zip code. The table displays
-                the city, zip code, sale amount, and sale date for each filed petition.
+                {t("publicPetitions.aboutDescription2")}
               </p>
             </div>
             <div className="col-md-6">
-              <h5 className="fw-semibold mb-3">Search Information</h5>
+              <h5 className="fw-semibold mb-3">{t("publicPetitions.searchInformation")}</h5>
               <ul className="list-unstyled">
                 <li className="mb-2">
                   <i className="fas fa-city me-2 text-primary"></i>
-                  Search by city name to find petitions in a specific city
+                  {t("publicPetitions.searchByCityInfo")}
                 </li>
                 <li className="mb-2">
                   <i className="fas fa-map-marker-alt me-2 text-primary"></i>
-                  Search by zip code to find petitions in a specific area
+                  {t("publicPetitions.searchByZipCodeInfo")}
                 </li>
                 <li className="mb-2">
                   <i className="fas fa-dollar-sign me-2 text-primary"></i>
-                  Sale amount represents the foreclosure sale amount
+                  {t("publicPetitions.saleAmountInfo")}
                 </li>
                 <li className="mb-2">
                   <i className="fas fa-calendar me-2 text-primary"></i>
-                  Sale date indicates when the foreclosure sale occurred
+                  {t("publicPetitions.saleDateInfo")}
                 </li>
               </ul>
             </div>

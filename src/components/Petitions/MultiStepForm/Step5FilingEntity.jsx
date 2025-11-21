@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 const Step5FilingEntity = ({
   organizationLoading,
@@ -10,13 +11,13 @@ const Step5FilingEntity = ({
   userFilingEntityType,
   filingEntityTypes,
 }) => {
+  const { t } = useTranslation();
    return (
           <div>
-            <h2 className="theme-color font-med mb-1">5. Filing Entity</h2>
+            <h2 className="theme-color font-med mb-1">{t("petitionSteps.step5.title")}</h2>
 
             <p className="text-muted small mb-3">
-              Provide the organization and contact details for the party
-              submitting this petition.
+              {t("petitionSteps.step5.description")}
             </p>
 
             {/* Organization Data Loading Indicator */}
@@ -27,21 +28,20 @@ const Step5FilingEntity = ({
                   className="spinner-border spinner-border-sm me-2"
                   role="status"
                 >
-                  <span className="visually-hidden">Loading...</span>
+                  <span className="visually-hidden">{t("common.loading")}</span>
                 </div>
 
-                <span>Loading organization details...</span>
+                <span>{t("petitionSteps.step5.loadingOrganization")}</span>
               </div>
             )}
 
             <div className="row g-3">
               <div className="col-12">
                 <label htmlFor="filingEntityLegalName" className="form-label">
-                  Filing Entity Legal Name *
+                  {t("petitionSteps.step5.filingEntityLegalName")} *
                   {organizationData && (
                     <span className="text-success small ms-2">
-                      <i className="fas fa-check-circle me-1"></i>Prefilled from
-                      organization
+                      <i className="fas fa-check-circle me-1"></i>{t("petitionSteps.step5.prefilledFromOrganization")}
                     </span>
                   )}
                 </label>
@@ -73,21 +73,21 @@ const Step5FilingEntity = ({
 
                 {profileLoading ? (
                   <div className="form-control form-control-lg bg-light">
-                    <span className="text-muted">Loading...</span>
+                    <span className="text-muted">{t("common.loading")}</span>
                   </div>
                 ) : userFilingEntityType ? (
                   <div className="form-control form-control-lg bg-light">
                     <span className="text-success">
                       {filingEntityTypes.find(
                         (type) => type.id === userFilingEntityType
-                      )?.name || "Unknown Type"}
+                      )?.name || t("petitionSteps.step5.unknownType")}
                     </span>
                   </div>
                 ) : (
                   <div className="form-control form-control-lg bg-light">
                     <span className="text-muted">
                       <i className="fa fa-exclamation-triangle me-2"></i>
-                      Please set your filing entity type in your profile
+                      {t("petitionSteps.step5.setFilingEntityType")}
                     </span>
                   </div>
                 )}
@@ -97,11 +97,10 @@ const Step5FilingEntity = ({
 
               <div className="col-12">
                 <label htmlFor="filingEntityStreet1" className="form-label">
-                  Street Address Line 1 *
+                  {t("petitionSteps.step5.streetAddress")} *
                   {organizationData && (
                     <span className="text-success small ms-2">
-                      <i className="fas fa-check-circle me-1"></i>Prefilled from
-                      organization
+                      <i className="fas fa-check-circle me-1"></i>{t("petitionSteps.step5.prefilledFromOrganization")}
                     </span>
                   )}
                 </label>
@@ -126,7 +125,7 @@ const Step5FilingEntity = ({
 
               <div className="col-12">
                 <label htmlFor="filingEntityStreet2" className="form-label">
-                  Street Address Line 2 (Optional)
+                  {t("petitionSteps.step5.streetAddressLine2")}
                 </label>
 
                 <input
@@ -136,13 +135,13 @@ const Step5FilingEntity = ({
                   className="form-control"
                   value={formData.filingEntityStreet2}
                   onChange={handleInputChange}
-                  placeholder="Apartment, suite, unit, building, floor, etc."
+                  placeholder={t("petitionSteps.step5.placeholderStreet2")}
                 />
               </div>
 
               <div className="col-md-4">
                 <label htmlFor="filingEntityCity" className="form-label">
-                  City *
+                  {t("petitionSteps.step5.city")} *
                 </label>
 
                 <input
@@ -165,7 +164,7 @@ const Step5FilingEntity = ({
 
               <div className="col-md-4">
                 <label htmlFor="filingEntityState" className="form-label">
-                  State *
+                  {t("petitionSteps.step5.state")} *
                 </label>
 
                 <input
@@ -188,7 +187,7 @@ const Step5FilingEntity = ({
 
               <div className="col-md-4">
                 <label htmlFor="filingEntityZip" className="form-label">
-                  ZIP Code *
+                  {t("petitionSteps.step5.zipCode")} *
                 </label>
 
                 <input
@@ -211,11 +210,10 @@ const Step5FilingEntity = ({
 
               <div className="col-md-6">
                 <label htmlFor="filingContactName" className="form-label">
-                  Filing Contact Name *
+                  {t("petitionSteps.step5.filingContactName")} *
                   {organizationData && (
                     <span className="text-success small ms-2">
-                      <i className="fas fa-check-circle me-1"></i>Prefilled from
-                      organization
+                      <i className="fas fa-check-circle me-1"></i>{t("petitionSteps.step5.prefilledFromOrganization")}
                     </span>
                   )}
                 </label>
@@ -240,11 +238,10 @@ const Step5FilingEntity = ({
 
               <div className="col-md-6">
                 <label htmlFor="filingContactPhone" className="form-label">
-                  Filing Contact Phone *
+                  {t("petitionSteps.step5.filingContactPhone")} *
                   {organizationData && (
                     <span className="text-success small ms-2">
-                      <i className="fas fa-check-circle me-1"></i>Prefilled from
-                      organization
+                      <i className="fas fa-check-circle me-1"></i>{t("petitionSteps.step5.prefilledFromOrganization")}
                     </span>
                   )}
                 </label>
@@ -269,11 +266,10 @@ const Step5FilingEntity = ({
 
               <div className="col-12">
                 <label htmlFor="filingContactEmail" className="form-label">
-                  Filing Contact Email *
+                  {t("petitionSteps.step5.filingContactEmail")} *
                   {organizationData && (
                     <span className="text-success small ms-2">
-                      <i className="fas fa-check-circle me-1"></i>Prefilled from
-                      organization
+                      <i className="fas fa-check-circle me-1"></i>{t("petitionSteps.step5.prefilledFromOrganization")}
                     </span>
                   )}
                 </label>
@@ -298,7 +294,7 @@ const Step5FilingEntity = ({
 
               <div className="col-md-4">
                 <label htmlFor="nmlsLicenseNumber" className="form-label">
-                  NMLS License Number
+                  {t("petitionSteps.step5.nmlsLicenseNumber")}
                 </label>
 
                 <input
@@ -313,7 +309,7 @@ const Step5FilingEntity = ({
 
               <div className="col-md-4">
                 <label htmlFor="stateLicenseNumber" className="form-label">
-                  State License Number
+                  {t("petitionSteps.step5.stateLicenseNumber")}
                 </label>
 
                 <input
@@ -328,7 +324,7 @@ const Step5FilingEntity = ({
 
               <div className="col-md-4">
                 <label htmlFor="stateLicenseState" className="form-label">
-                  License State
+                  {t("petitionSteps.step5.licenseState")}
                 </label>
 
                 <input

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { logout as logoutApi } from '../../services/authService';
@@ -16,6 +17,7 @@ import {
 } from '../../services/chatService';
 
 const Messages = () => {
+  const { t } = useTranslation();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState('messages');
@@ -48,7 +50,7 @@ const Messages = () => {
     if (diffInHours < 24) {
       return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
     } else if (diffInHours < 48) {
-      return 'Yesterday';
+      return t("messages.yesterday");
     } else {
       return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     }
@@ -81,7 +83,7 @@ const Messages = () => {
         const formattedConversations = response.data.map((chat) => ({
           id: chat.chatId,
           chatId: chat.chatId,
-          name: chat.userName || 'Unknown User',
+          name: chat.userName || t("messages.unknownUser"),
           lastMessage: chat.lastMessage || '',
           timestamp: formatTimestamp(chat.lastMessageTime),
           lastMessageTime: chat.lastMessageTime, // Store original timestamp for sorting
@@ -586,7 +588,7 @@ const Messages = () => {
       <main className="dashboard-main-area container-fluid messages-main-area">
         <Header 
           user={user}
-          pageTitle="Messages"
+          pageTitle={t("messages.title")}
           onLogout={handleLogout}
         />
 
@@ -594,9 +596,9 @@ const Messages = () => {
           {loading && conversations.length === 0 ? (
             <div className="text-center py-5">
               <div className="spinner-border text-primary" role="status">
-                <span className="visually-hidden">Loading...</span>
+                <span className="visually-hidden">{t("common.loading")}</span>
               </div>
-              <p className="mt-2 text-muted">Loading conversations...</p>
+              <p className="mt-2 text-muted">{t("messages.loadingConversations")}</p>
             </div>
           ) : (
           <MessagesLayout

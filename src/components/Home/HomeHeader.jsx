@@ -1,6 +1,8 @@
 import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import logo from "../../assets/logo-index.png";
 import { ROUTES } from "../../constants/routerConstants";
+import LanguageSwitcher from "../shared/LanguageSwitcher";
 
 function HomeHeader({
   featureRef,
@@ -12,6 +14,7 @@ function HomeHeader({
   hideNavigation = false,
 }) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   
   return (
     <>
@@ -21,48 +24,19 @@ function HomeHeader({
           <div className="row align-items-center">
             <div className="col-md-6 order-md-2">
               {/* Language selector */}
-              <div className="dropdown font-base text-white text-md-end mb-2 mb-md-0">
-                <button
-                  className="btn btn-sm dropdown-toggle font-sm fw-medium text-white border-0 text-decoration-none p-0"
-                  type="button"
-                  id="langDropdown"
-                  data-bs-toggle="dropdown"
-                  aria-expanded="false"
-                >
-                  <i className="fa-solid fa-globe me-1"></i> Select Language
-                </button>
-                <ul
-                  className="dropdown-menu dropdown-menu-end"
-                  aria-labelledby="langDropdown"
-                >
-                  <li>
-                    <a className="dropdown-item" href="#" hreflang="en">
-                      English
-                    </a>
-                  </li>
-                  <li>
-                    <a className="dropdown-item" href="#" hreflang="es">
-                      Español
-                    </a>
-                  </li>
-                  <li>
-                    <a className="dropdown-item" href="#" hreflang="zh">
-                      中文
-                    </a>
-                  </li>
-                  <li>
-                    <a className="dropdown-item" href="#" hreflang="pt">
-                      Português
-                    </a>
-                  </li>
-                </ul>
+              <div className="text-md-end mb-2 mb-md-0">
+                <LanguageSwitcher 
+                  className="font-base"
+                  variant="dropdown"
+                  textColor="white"
+                />
               </div>
             </div>
             <div className="col-md-6">
               <div className="d-flex align-items-center gap-2 font-sm">
                 <i className="fa-solid fa-shield"></i>
                 <span className="flex-grow-1">
-                  An official website of the Commonwealth of Massachusetts{" "}
+                  {t("home.officialBanner")}{" "}
                   <button
                     className="btn btn-link text-white p-0 font-sm fw-semibold text-nowrap ms-1 align-baseline"
                     type="button"
@@ -76,7 +50,7 @@ function HomeHeader({
                       lineHeight: "1.2",
                     }}
                   >
-                    Here's how you know{" "}
+                    {t("home.howYouKnow")}{" "}
                     <i className="fa-solid fa-chevron-down small"></i>
                   </button>
                 </span>
@@ -92,10 +66,9 @@ function HomeHeader({
                 </span>
                 <p className="font-sm">
                   <span className="fw-semibold">
-                    Official websites use .mass.gov
+                    {t("home.officialWebsites")}
                   </span>
-                  <br />A .mass.gov website belongs to an official government
-                  organization in Massachusetts.
+                  <br />{t("home.officialWebsitesDesc")}
                 </p>
               </div>
               <div className="col-md-6 d-flex">
@@ -104,12 +77,9 @@ function HomeHeader({
                 </span>
                 <p className="font-sm">
                   <span className="fw-semibold">
-                    Secure websites use HTTPS certificate
+                    {t("home.secureWebsites")}
                   </span>
-                  <br />A lock icon (<i className="fa-solid fa-lock"></i>) or{" "}
-                  <code>https://</code> means you've safely connected to the
-                  official website. Share sensitive information only on
-                  official, secure websites.
+                  <br />{t("home.secureWebsitesDesc")}
                 </p>
               </div>
             </div>
@@ -122,9 +92,9 @@ function HomeHeader({
         <div className="container">
           <div className="d-flex flex-wrap align-items-center justify-content-between gap-2">
             <div className="d-flex flex-wrap align-items-center gap-2 gap-md-3">
-              <span className="font-med fw-bold">FILIR</span>
+              <span className="font-med fw-bold">{t("home.filir")}</span>
               <small className="d-none d-md-block">
-                Foreclosure Intake & Loan Information Resource
+                {t("home.filirSubtitle")}
               </small>
             </div>
 
@@ -137,7 +107,7 @@ function HomeHeader({
                   data-bs-toggle="dropdown"
                   aria-expanded="false"
                 >
-                  <i className="fa-solid fa-user me-1"></i> Register
+                  <i className="fa-solid fa-user me-1"></i> {t("common.register")}
                 </button>
                 <ul
                   className="dropdown-menu dropdown-menu-end theme-dropdown"
@@ -145,12 +115,12 @@ function HomeHeader({
                 >
                   <li>
                     <Link className="dropdown-item" to="/register?role=filer">
-                      Filer
+                      {t("home.filer")}
                     </Link>
                   </li>
                   <li>
                     <Link className="dropdown-item" to="/register?role=orgAdmin">
-                      Organisation Admin
+                      {t("home.organisationAdmin")}
                     </Link>
                   </li>
                 </ul>
@@ -161,7 +131,7 @@ function HomeHeader({
                 role="button"
                 aria-label="Sign in"
               >
-                <i className="fa-solid fa-user me-1"></i> Sign in
+                <i className="fa-solid fa-user me-1"></i> {t("common.signIn")}
               </Link>
             </div>
           </div>
@@ -188,11 +158,11 @@ function HomeHeader({
                 height="50"
                 className="me-2"
               />
-              <span aria-hidden="true">Mass.gov</span>
+              <span aria-hidden="true">{t("home.massgov")}</span>
             </a>
           </div>
           <div className="font-med fw-medium">
-            Division of Banks <small>(DOB)</small>
+            {t("home.divisionOfBanks")} <small>{t("home.dob")}</small>
           </div>
         </div>
       </header>
@@ -204,7 +174,7 @@ function HomeHeader({
           <div className="d-lg-none"></div>
           <div className="d-flex align-items-center me-auto d-lg-none">
             <a className="font-base opacity-75" href="#" id="mobileAppName">
-              Table of Contents
+              {t("home.tableOfContents")}
             </a>
             <span className="active-text d-none" id="activeLinkText">
               Featured
@@ -249,7 +219,7 @@ function HomeHeader({
                   }
                 }}
               >
-                Featured
+                {t("home.featured")}
               </a>
               <a
                 className="nav-link"
@@ -272,7 +242,7 @@ function HomeHeader({
                   }
                 }}
               >
-                Contact Us
+                {t("home.contactUs")}
               </a>
               <a
                 className="nav-link"
@@ -295,7 +265,7 @@ function HomeHeader({
                   }
                 }}
               >
-                Who we serve
+                {t("home.whoWeServe")}
               </a>
               <a
                 className="nav-link"
@@ -318,7 +288,7 @@ function HomeHeader({
                   }
                 }}
               >
-                I want to…
+                {t("home.iWantTo")}
               </a>
               <a
                 className="nav-link"
@@ -341,7 +311,7 @@ function HomeHeader({
                   }
                 }}
               >
-                News
+                {t("home.news")}
               </a>
               <a
                 className="nav-link"
@@ -364,7 +334,7 @@ function HomeHeader({
                   }
                 }}
               >
-                Events
+                {t("home.events")}
               </a>
             </div>
           </div>

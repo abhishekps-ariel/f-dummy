@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { logout as logoutApi } from '../../services/authService';
@@ -11,6 +12,7 @@ import { usePetitions } from '../../hooks/usePetitions';
 import { TabProvider } from '../../context/TabContext';
 
 const Petitions = () => {
+  const { t } = useTranslation();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState('petitions');
@@ -57,7 +59,7 @@ const Petitions = () => {
       <main className="dashboard-main-area container-fluid">
         <Header 
           user={user}
-          pageTitle="Petitions"
+          pageTitle={t("petitionsPage.title")}
           onLogout={handleLogout}
         />
 

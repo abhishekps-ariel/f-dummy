@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import MessageItem from './MessageItem';
 import DateBreaker from './DateBreaker';
 
@@ -10,6 +11,7 @@ const MessageList = ({
   hasMoreMessages, 
   loadingMoreMessages 
 }) => {
+  const { t } = useTranslation();
   const messagesEndRef = useRef(null);
   const messagesListRef = useRef(null);
   const messagesTopRef = useRef(null);
@@ -33,9 +35,9 @@ const MessageList = ({
     const yesterdayOnly = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate());
     
     if (messageDateOnly.getTime() === todayOnly.getTime()) {
-      return 'Today';
+      return t("messages.today");
     } else if (messageDateOnly.getTime() === yesterdayOnly.getTime()) {
-      return 'Yesterday';
+      return t("messages.yesterday");
     } else {
       return messageDate.toLocaleDateString('en-US', { 
         month: 'long', 
@@ -200,7 +202,7 @@ const MessageList = ({
       {loadingMoreMessages && (
         <div className="messages-loading-more text-center py-2">
           <div className="spinner-border spinner-border-sm text-primary" role="status">
-            <span className="visually-hidden">Loading older messages...</span>
+            <span className="visually-hidden">{t("messages.loadingOlderMessages")}</span>
           </div>
         </div>
       )}

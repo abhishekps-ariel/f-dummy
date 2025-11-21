@@ -1,6 +1,9 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 const ChatHeader = ({ conversation, onBack }) => {
+  const { t } = useTranslation();
+  
   if (!conversation) return null;
 
   return (
@@ -10,8 +13,8 @@ const ChatHeader = ({ conversation, onBack }) => {
           <button
             className="chat-back-btn"
             onClick={onBack}
-            aria-label="Back to conversations"
-            title="Back to conversations"
+            aria-label={t("messages.backToConversations")}
+            title={t("messages.backToConversations")}
           >
             <i className="fas fa-arrow-left"></i>
           </button>
@@ -19,7 +22,7 @@ const ChatHeader = ({ conversation, onBack }) => {
         <div className="chat-avatar">{conversation.avatar}</div>
         <div>
           <h4 className="chat-name">{conversation.name}</h4>
-          <span className="chat-status">Active</span>
+          <span className="chat-status">{t("messages.active")}</span>
         </div>
       </div>
     </div>

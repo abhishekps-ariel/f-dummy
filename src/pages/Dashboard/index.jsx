@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { getAuthData, clearAuthData, getUserRole } from "../../utils/storage";
 import { useAuth } from "../../context/AuthContext";
@@ -14,6 +15,7 @@ import "../../styles/custom.css";
 
 
 function Dashboard() {
+  const { t } = useTranslation();
   const [user, setUser] = useState(null);
   const [activeSection, setActiveSection] = useState("dashboard");
   
@@ -240,31 +242,31 @@ function Dashboard() {
               <div className="shadow-custom bg-white org-search-box">
                 <div className="text-center py-5">
                   <div className="spinner-border text-primary" role="status">
-                    <span className="visually-hidden">Loading...</span>
+                    <span className="visually-hidden">{t("common.loading")}</span>
                   </div>
-                  <p className="mt-3 text-muted">Loading...</p>
+                  <p className="mt-3 text-muted">{t("common.loading")}</p>
                 </div>
               </div>
             ) : (
             <div className="shadow-custom bg-white org-search-box">
-              <h2 className="font-med mb-4">Dashboard</h2>
+              <h2 className="font-med mb-4">{t("dashboard.title")}</h2>
               <div className="row mb-5">
                 <div className="col-md-4 mb-3">
                   <div className="stat-card stat-card-metric h-100">
                     <h4 className="stat-count">{petitionCounts.totalRecords}</h4>
-                    <p className="stat-title">Total Petitions</p>
+                    <p className="stat-title">{t("dashboard.totalPetitions")}</p>
                   </div>
                 </div>
                 <div className="col-md-4 mb-3">
                   <div className="stat-card stat-card-metric h-100">
                     <h4 className="stat-count">{petitionCounts.totalSubmittedCount}</h4>
-                    <p className="stat-title">Total Submitted Petitions</p>
+                    <p className="stat-title">{t("dashboard.totalSubmittedPetitions")}</p>
                   </div>
                 </div>
                 <div className="col-md-4 mb-3">
                   <div className="stat-card stat-card-metric h-100">
                     <h4 className="stat-count">{petitionCounts.totalClosedCount}</h4>
-                    <p className="stat-title">Total Closed Petitions</p>
+                    <p className="stat-title">{t("dashboard.totalClosedPetitions")}</p>
                   </div>
                 </div>
               </div>
@@ -277,50 +279,50 @@ function Dashboard() {
                   <div className="stat-card h-100">
                     {getUserRole(user)?.toLowerCase() === 'filer' ? (
                       <>
-                        <h5 className="stat-count mb-3" style={{ fontSize: '1.2rem' }}>Form 35B Compliance</h5>
+                        <h5 className="stat-count mb-3" style={{ fontSize: '1.2rem' }}>{t("dashboard.form35BCompliance")}</h5>
                         <div className="d-flex align-items-center justify-content-center h-100" style={{ minHeight: '150px' }}>
-                          <p className="text-muted small mb-0 text-center">Will be implemented later</p>
+                          <p className="text-muted small mb-0 text-center">{t("dashboard.willBeImplementedLater")}</p>
                         </div>
                       </>
                     ) : (
                       <>
-                        <h5 className="stat-count mb-3" style={{ fontSize: '1.2rem' }}>Organization Details</h5>
+                        <h5 className="stat-count mb-3" style={{ fontSize: '1.2rem' }}>{t("dashboard.organizationDetails")}</h5>
                         {isLoadingOrgData ? (
                       <div className="text-center py-3">
                         <div className="spinner-border spinner-border-sm text-primary" role="status">
-                          <span className="visually-hidden">Loading...</span>
+                          <span className="visually-hidden">{t("common.loading")}</span>
                         </div>
-                        <p className="mt-2 text-muted small">Loading organization details...</p>
+                        <p className="mt-2 text-muted small">{t("dashboard.loadingOrganizationDetails")}</p>
                       </div>
                     ) : displayOrganization ? (
                       <div className="organization-info">
                         <h6 className="mb-2 fw-bold">{displayOrganization.organizationName || displayOrganization.name}</h6>
                         <p className="text-muted small mb-1">
                           <i className="fa-solid fa-tag me-1"></i>
-                          Type: {displayOrganization.organizationType || displayOrganization.type || "N/A"}
+                          {t("dashboard.type")}: {displayOrganization.organizationType || displayOrganization.type || t("header.nA")}
                         </p>
                         {(displayOrganization.organizationAddress || (displayOrganization.addressStreet1 || displayOrganization.addressCity)) && (
                             <p className="text-muted small mb-1">
                               <i className="fa-solid fa-location-dot me-1"></i>
-                            Address: {displayOrganization.organizationAddress || 
+                            {t("dashboard.address")}: {displayOrganization.organizationAddress || 
                                      `${displayOrganization.addressStreet1 || ''}${displayOrganization.addressStreet2 ? ', ' + displayOrganization.addressStreet2 : ''}, ${displayOrganization.addressCity || ''}, ${displayOrganization.addressState || ''} ${displayOrganization.addressZip || ''}`.replace(/^,\s*/, '').replace(/,\s*$/, '')}
                             </p>
                         )}
                         {(displayOrganization.primaryContact || (displayOrganization.primaryContactName || displayOrganization.primaryContactEmail || displayOrganization.primaryContactPhone)) && (
                             <p className="text-muted small mb-1">
                               <i className="fa-solid fa-user me-1"></i>
-                            Contact: {displayOrganization.primaryContact || 
+                            {t("dashboard.contact")}: {displayOrganization.primaryContact || 
                                      `${displayOrganization.primaryContactName || ''}${displayOrganization.primaryContactEmail ? ', ' + displayOrganization.primaryContactEmail : ''}${displayOrganization.primaryContactPhone ? ', ' + displayOrganization.primaryContactPhone : ''}`.replace(/^,\s*/, '').replace(/,\s*$/, '')}
                           </p>
                         )}
                         <span className="badge bg-success">
                           <i className="fa-solid fa-check-circle me-1"></i>
-                          Active Member
+                          {t("dashboard.activeMember")}
                             </span>
                           </div>
                         ) : (
                           <div className="text-center">
-                            <p className="text-muted small mb-0">Organization details not available</p>
+                            <p className="text-muted small mb-0">{t("dashboard.organizationDetailsNotAvailable")}</p>
                           </div>
                         )}
                       </>
@@ -331,25 +333,25 @@ function Dashboard() {
                 {/* User Details Card */}
                 <div className="col-md-4 mb-3">
                   <div className="stat-card h-100">
-                    <h5 className="stat-count mb-3" style={{ fontSize: '1.2rem' }}>User Details</h5>
+                    <h5 className="stat-count mb-3" style={{ fontSize: '1.2rem' }}>{t("dashboard.userDetails")}</h5>
                     <div className="user-info">
                       <h6 className="mb-2 fw-bold">{user.firstName} {user.lastName}</h6>
                       <p className="text-muted small mb-1">
                         <i className="fa-solid fa-envelope me-1"></i>
-                        Email: {user.email}
+                        {t("dashboard.email")}: {user.email}
                       </p>
                       <p className="text-muted small mb-1">
                         <i className="fa-solid fa-user-tag me-1"></i>
-                        Role: {getUserRole(user) || "N/A"}
+                        {t("profile.role")}: {getUserRole(user) || t("header.nA")}
                           </p>
                           <p className="text-muted small mb-0">
                             <i className="fa-solid fa-tag me-1"></i>
-                        Filing Entity Type: {
+                        {t("dashboard.filingEntityType")}: {
                           user.filingEntityTypeId && filingEntityTypes.length > 0 
-                            ? filingEntityTypes.find(et => et.id === user.filingEntityTypeId)?.name || "Not Set"
+                            ? filingEntityTypes.find(et => et.id === user.filingEntityTypeId)?.name || t("profile.notSet")
                             : isLoadingFilingEntityTypes 
-                              ? "Loading..." 
-                              : "Not Set"
+                              ? t("common.loading") 
+                              : t("profile.notSet")
                         }
                       </p>
                     </div>
@@ -359,26 +361,26 @@ function Dashboard() {
                 {/* Action Alerts Card */}
                 <div className="col-md-4 mb-3">
                   <div className="stat-card h-100">
-                    <h5 className="stat-count mb-3" style={{ fontSize: '1.2rem' }}>Action Alerts</h5>
+                    <h5 className="stat-count mb-3" style={{ fontSize: '1.2rem' }}>{t("dashboard.actionAlerts")}</h5>
                     <div className="d-flex align-items-center justify-content-center h-100">
-                      <p className="text-muted small mb-0">All alerts will be displayed here</p>
+                      <p className="text-muted small mb-0">{t("dashboard.allAlertsDisplayedHere")}</p>
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* Desktop Table View */}
-              <h3 className="font-med mb-4">Recent Petitions</h3>
+              <h3 className="font-med mb-4">{t("dashboard.recentPetitions")}</h3>
               <div className="d-none d-lg-block table-responsive petition-table-container dashboard-petition-table">
                 <table className="table table-hover w-100">
                   <thead className="table-light">
                     <tr>
-                      <th style={{ width: '20%' }}>Petition Number</th>
-                      <th style={{ width: '25%' }}>Property Address</th>
-                      <th style={{ width: '16%' }}>Borrower</th>
-                      <th style={{ width: '12%' }}>Status</th>
-                      <th style={{ width: '13%' }}>Filing Date</th>
-                      <th style={{ width: '14%' }}>Last Updated</th>
+                      <th style={{ width: '20%' }}>{t("dashboard.petitionNumber")}</th>
+                      <th style={{ width: '25%' }}>{t("dashboard.propertyAddress")}</th>
+                      <th style={{ width: '16%' }}>{t("dashboard.borrower")}</th>
+                      <th style={{ width: '12%' }}>{t("dashboard.status")}</th>
+                      <th style={{ width: '13%' }}>{t("dashboard.filingDate")}</th>
+                      <th style={{ width: '14%' }}>{t("dashboard.lastUpdated")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -410,7 +412,7 @@ function Dashboard() {
                     ) : (
                       <tr>
                         <td colSpan="6" className="text-center py-4 text-muted">
-                          No petitions found
+                          {t("dashboard.noPetitionsFound")}
                         </td>
                       </tr>
                     )}
@@ -452,8 +454,8 @@ function Dashboard() {
                 ) : (
                   <div className="text-center py-4">
                     <i className="fa-solid fa-file-circle-plus text-muted mb-3" style={{ fontSize: '2rem' }}></i>
-                    <p className="text-muted mb-0">No petitions found</p>
-                    <small className="text-muted">Create your first petition to see it here</small>
+                    <p className="text-muted mb-0">{t("dashboard.noPetitionsFound")}</p>
+                    <small className="text-muted">{t("dashboard.createFirstPetition")}</small>
                   </div>
                 )}
               </div>

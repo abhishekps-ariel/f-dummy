@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import CustomDropdown from "../shared/CustomDropdown";
 import { toast } from "react-toastify";
 
@@ -12,6 +13,7 @@ const EditForeclosureModal = ({
   findOptionByValue,
   onSave,
 }) => {
+  const { t } = useTranslation();
   const [foreclosureData, setForeclosureData] = useState({
     saleDate: formData?.foreclosureSale?.saleDate || "",
     soldToId: formData?.foreclosureSale?.soldToId || "",
@@ -87,23 +89,23 @@ const EditForeclosureModal = ({
   const validate = () => {
     const errors = {};
     if (!foreclosureData.saleDate?.trim()) {
-      errors.saleDate = "Sale date is required";
+      errors.saleDate = t("modals.editForeclosure.validation.saleDateRequired");
     }
     if (!foreclosureData.soldToId?.trim()) {
-      errors.soldToId = "Sold To is required";
+      errors.soldToId = t("modals.editForeclosure.validation.soldToRequired");
     }
     if (isMortgageeInvestor) {
       if (!foreclosureData.vestingEntityName?.trim()) {
-        errors.vestingEntityName = "Vesting Entity Name is required when Sold To is Mortgagee/Investor";
+        errors.vestingEntityName = t("modals.editForeclosure.validation.vestingEntityNameRequired");
       }
       if (!foreclosureData.reoContactFirstName?.trim()) {
-        errors.reoContactFirstName = "REO Contact First Name is required when Sold To is Mortgagee/Investor";
+        errors.reoContactFirstName = t("modals.editForeclosure.validation.reoContactFirstNameRequired");
       }
       if (!foreclosureData.reoContactLastName?.trim()) {
-        errors.reoContactLastName = "REO Contact Last Name is required when Sold To is Mortgagee/Investor";
+        errors.reoContactLastName = t("modals.editForeclosure.validation.reoContactLastNameRequired");
       }
       if (!foreclosureData.reoBusinessPhone?.trim()) {
-        errors.reoBusinessPhone = "REO Business Phone is required when Sold To is Mortgagee/Investor";
+        errors.reoBusinessPhone = t("modals.editForeclosure.validation.reoBusinessPhoneRequired");
       }
     }
     setFieldErrors(errors);
@@ -133,7 +135,7 @@ const EditForeclosureModal = ({
       onClose();
     } catch (error) {
       console.error("Error saving foreclosure:", error);
-      toast.error("Failed to save foreclosure. Please try again.");
+      toast.error(t("modals.editForeclosure.failedSave"));
     } finally {
       setIsSaving(false);
     }
@@ -168,19 +170,19 @@ const EditForeclosureModal = ({
       <div className="modal-dialog modal-dialog-centered modal-lg">
         <div className="modal-content">
           <div className="modal-header">
-            <h5 className="modal-title">Edit Foreclosure</h5>
+            <h5 className="modal-title">{t("modals.editForeclosure.title")}</h5>
             <button
               type="button"
               className="btn-close"
               onClick={handleCancel}
-              aria-label="Close"
+              aria-label={t("common.close")}
             ></button>
           </div>
           <div className="modal-body">
             <div className="row g-3">
               <div className="col-md-6">
                 <label htmlFor="saleDate" className="form-label">
-                  Sale Date *
+                  {t("modals.editForeclosure.saleDate")} *
                 </label>
                 <input
                   type="date"
@@ -201,17 +203,17 @@ const EditForeclosureModal = ({
 
               <div className="col-md-6">
                 <label htmlFor="soldToId" className="form-label">
-                  Sold To? *
+                  {t("modals.editForeclosure.soldTo")} *
                 </label>
                 <CustomDropdown
                   id="soldToId"
                   name="soldToId"
                   value={foreclosureData.soldToId}
                   onChange={handleDropdownChange}
-                  placeholder="Select..."
+                  placeholder={t("common.select")}
                   error={!!fieldErrors.soldToId}
                   options={[
-                    { value: "", label: "Select..." },
+                    { value: "", label: t("common.select") },
                     ...buyerTypes.map((buyerType) => ({
                       value: buyerType.id || buyerType.value,
                       label: buyerType.name || buyerType.value,
@@ -227,9 +229,9 @@ const EditForeclosureModal = ({
 
               <div className="col-md-6">
                 <label htmlFor="vestingEntityName" className="form-label">
-                  Vesting Entity Name {isMortgageeInvestor ? "*" : ""}
+                  {t("modals.editForeclosure.vestingEntityName")} {isMortgageeInvestor ? "*" : ""}
                   {isMortgageeInvestor && (
-                    <span className="text-muted small ms-1">(If Mortgagee/Investor)</span>
+                    <span className="text-muted small ms-1">({t("modals.editForeclosure.ifMortgageeInvestor")})</span>
                   )}
                 </label>
                 <input
@@ -241,7 +243,7 @@ const EditForeclosureModal = ({
                   }`}
                   value={foreclosureData.vestingEntityName}
                   onChange={handleInputChange}
-                  placeholder="Enter vesting entity name"
+                  placeholder={t("modals.editForeclosure.placeholder.vestingEntityName")}
                 />
                 {fieldErrors.vestingEntityName && (
                   <div className="text-danger small mt-1">
@@ -252,7 +254,7 @@ const EditForeclosureModal = ({
 
               <div className="col-md-6">
                 <label htmlFor="reoEntityName" className="form-label">
-                  REO Entity Name
+                  {t("modals.editForeclosure.reoEntityName")}
                 </label>
                 <input
                   type="text"
@@ -261,15 +263,15 @@ const EditForeclosureModal = ({
                   className="form-control"
                   value={foreclosureData.reoEntityName}
                   onChange={handleInputChange}
-                  placeholder="Enter REO entity name"
+                  placeholder={t("modals.editForeclosure.placeholder.reoEntityName")}
                 />
               </div>
 
               <div className="col-md-6">
                 <label htmlFor="reoContactFirstName" className="form-label">
-                  REO Contact First Name {isMortgageeInvestor ? "*" : ""}
+                  {t("modals.editForeclosure.reoContactFirstName")} {isMortgageeInvestor ? "*" : ""}
                   {isMortgageeInvestor && (
-                    <span className="text-muted small ms-1">(If Mortgagee/Investor)</span>
+                    <span className="text-muted small ms-1">({t("modals.editForeclosure.ifMortgageeInvestor")})</span>
                   )}
                 </label>
                 <input
@@ -281,7 +283,7 @@ const EditForeclosureModal = ({
                   }`}
                   value={foreclosureData.reoContactFirstName}
                   onChange={handleInputChange}
-                  placeholder="Enter REO contact first name"
+                  placeholder={t("modals.editForeclosure.placeholder.reoContactFirstName")}
                 />
                 {fieldErrors.reoContactFirstName && (
                   <div className="text-danger small mt-1">
@@ -292,9 +294,9 @@ const EditForeclosureModal = ({
 
               <div className="col-md-6">
                 <label htmlFor="reoContactLastName" className="form-label">
-                  REO Contact Last Name {isMortgageeInvestor ? "*" : ""}
+                  {t("modals.editForeclosure.reoContactLastName")} {isMortgageeInvestor ? "*" : ""}
                   {isMortgageeInvestor && (
-                    <span className="text-muted small ms-1">(If Mortgagee/Investor)</span>
+                    <span className="text-muted small ms-1">({t("modals.editForeclosure.ifMortgageeInvestor")})</span>
                   )}
                 </label>
                 <input
@@ -306,7 +308,7 @@ const EditForeclosureModal = ({
                   }`}
                   value={foreclosureData.reoContactLastName}
                   onChange={handleInputChange}
-                  placeholder="Enter REO contact last name"
+                  placeholder={t("modals.editForeclosure.placeholder.reoContactLastName")}
                 />
                 {fieldErrors.reoContactLastName && (
                   <div className="text-danger small mt-1">
@@ -317,9 +319,9 @@ const EditForeclosureModal = ({
 
               <div className="col-md-6">
                 <label htmlFor="reoBusinessPhone" className="form-label">
-                  REO Business Phone {isMortgageeInvestor ? "*" : ""}
+                  {t("modals.editForeclosure.reoBusinessPhone")} {isMortgageeInvestor ? "*" : ""}
                   {isMortgageeInvestor && (
-                    <span className="text-muted small ms-1">(If Mortgagee/Investor)</span>
+                    <span className="text-muted small ms-1">({t("modals.editForeclosure.ifMortgageeInvestor")})</span>
                   )}
                 </label>
                 <input
@@ -331,7 +333,7 @@ const EditForeclosureModal = ({
                   }`}
                   value={foreclosureData.reoBusinessPhone}
                   onChange={handleInputChange}
-                  placeholder="Enter REO business phone"
+                  placeholder={t("modals.editForeclosure.placeholder.reoBusinessPhone")}
                 />
                 {fieldErrors.reoBusinessPhone && (
                   <div className="text-danger small mt-1">
@@ -342,7 +344,7 @@ const EditForeclosureModal = ({
 
               <div className="col-md-6">
                 <label htmlFor="reoEmergencyPhone" className="form-label">
-                  REO Emergency Phone
+                  {t("modals.editForeclosure.reoEmergencyPhone")}
                 </label>
                 <input
                   type="text"
@@ -351,7 +353,7 @@ const EditForeclosureModal = ({
                   className="form-control"
                   value={foreclosureData.reoEmergencyPhone}
                   onChange={handleInputChange}
-                  placeholder="Enter REO emergency phone"
+                  placeholder={t("modals.editForeclosure.placeholder.reoEmergencyPhone")}
                 />
               </div>
             </div>
@@ -363,7 +365,7 @@ const EditForeclosureModal = ({
               onClick={handleCancel}
               disabled={isSaving}
             >
-              Cancel
+              {t("common.cancel")}
             </button>
             <button
               type="button"
@@ -378,12 +380,12 @@ const EditForeclosureModal = ({
                     role="status"
                     aria-hidden="true"
                   ></span>
-                  Saving...
+                  {t("common.saving")}
                 </>
               ) : (
                 <>
                   <i className="fas fa-save me-1"></i>
-                  Save Foreclosure
+                  {t("modals.editForeclosure.saveButton")}
                 </>
               )}
             </button>

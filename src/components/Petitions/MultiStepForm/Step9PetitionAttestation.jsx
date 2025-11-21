@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../../../constants/routerConstants";
 
@@ -8,16 +9,16 @@ const Step9PetitionAttestation = ({
   userProfile,
   onClose,
 }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
    return (
           <div>
             <h2 className="theme-color font-med mb-1">
-              9. Petition Attestation & Certification
+              {t("petitionSteps.step9.title")}
             </h2>
 
             <p className="text-muted small mb-3">
-              By completing this section, you formally certify the accuracy and
-              completeness of the entire petition.
+              {t("petitionSteps.step9.description")}
             </p>
 
             {/* Attester Details & Digital Signature - Combined */}
@@ -25,13 +26,13 @@ const Step9PetitionAttestation = ({
             <div className="p-4 border border-info bg-info-subtle rounded mb-4">
               <h5 className="fw-bold font-base mb-3">
                 <i className="fas fa-signature me-2"></i>
-                Attester Details & Digital Signature
+                {t("petitionSteps.step9.attesterDetails")}
               </h5>
 
               <div className="row g-3">
                 <div className="col-md-4">
                   <label htmlFor="signerFirstName" className="form-label">
-                    First Name *
+                    {t("petitionSteps.step9.firstName")} *
                   </label>
 
                   <input
@@ -45,13 +46,13 @@ const Step9PetitionAttestation = ({
                   />
 
                   <small className="text-muted">
-                    Prefilled from your profile
+                    {t("petitionSteps.step9.prefilledFromProfile")}
                   </small>
                 </div>
 
                 <div className="col-md-4">
                   <label htmlFor="signerMiddleInitial" className="form-label">
-                    Middle Initial
+                    {t("petitionSteps.step9.middleInitial")}
                   </label>
 
                   <input
@@ -66,13 +67,13 @@ const Step9PetitionAttestation = ({
                   />
 
                   <small className="text-muted">
-                    Prefilled from your profile
+                    {t("petitionSteps.step9.prefilledFromProfile")}
                   </small>
                 </div>
 
                 <div className="col-md-4">
                   <label htmlFor="signerLastName" className="form-label">
-                    Last Name *
+                    {t("petitionSteps.step9.lastName")} *
                   </label>
 
                   <input
@@ -86,13 +87,13 @@ const Step9PetitionAttestation = ({
                   />
 
                   <small className="text-muted">
-                    Prefilled from your profile
+                    {t("petitionSteps.step9.prefilledFromProfile")}
                   </small>
                 </div>
 
                 <div className="col-md-6">
                   <label htmlFor="signerEmail" className="form-label">
-                    Email Address *
+                    {t("petitionSteps.step9.emailAddress")} *
                   </label>
 
                   <input
@@ -106,13 +107,13 @@ const Step9PetitionAttestation = ({
                   />
 
                   <small className="text-muted">
-                    Prefilled from your profile
+                    {t("petitionSteps.step9.prefilledFromProfile")}
                   </small>
                 </div>
 
                 <div className="col-md-6">
                   <label htmlFor="signerTitle" className="form-label">
-                    Title *
+                    {t("petitionSteps.step9.title")} *
                   </label>
 
                   <input
@@ -126,23 +127,23 @@ const Step9PetitionAttestation = ({
                   />
 
                   <small className="text-muted">
-                    Prefilled from your profile
+                    {t("petitionSteps.step9.prefilledFromProfile")}
                   </small>
                 </div>
 
                 <div className="col-md-6">
-                  <label className="form-label">Digital Signature Status</label>
+                  <label className="form-label">{t("petitionSteps.step9.digitalSignatureStatus")}</label>
 
                   <div className="d-flex align-items-center">
                     {userProfile?.signatureUrl ? (
                       <span className="badge bg-success fs-6 me-2">
                         <i className="fa-solid fa-check-circle me-1"></i>
-                        Available
+                        {t("petitionSteps.step9.available")}
                       </span>
                     ) : (
                       <span className="badge bg-danger fs-6 me-2">
                         <i className="fa-solid fa-exclamation-circle me-1"></i>
-                        Required
+                        {t("petitionSteps.step9.required")}
                       </span>
                     )}
                   </div>
@@ -150,7 +151,7 @@ const Step9PetitionAttestation = ({
 
                 {userProfile?.signatureUrl && (
                   <div className="col-12">
-                    <label className="form-label">Signature Preview</label>
+                    <label className="form-label">{t("petitionSteps.step9.signaturePreview")}</label>
 
                     <div
                       className="signature-preview-container p-3 border rounded bg-light"
@@ -158,7 +159,7 @@ const Step9PetitionAttestation = ({
                     >
                       <img
                         src={userProfile.signatureUrl}
-                        alt="Digital Signature"
+                        alt={t("petitionSteps.step9.digitalSignature")}
                         className="signature-preview-img"
                         style={{
                           maxWidth: "100%",
@@ -192,12 +193,11 @@ const Step9PetitionAttestation = ({
 
                   <div className="flex-grow-1">
                     <h5 className="fw-bold text-danger mb-2">
-                      Digital Signature Required
+                      {t("petitionSteps.step9.digitalSignatureRequired")}
                     </h5>
 
                     <p className="mb-3">
-                      You must upload a digital signature to your profile before
-                      you can proceed to review and submit the petition.
+                      {t("petitionSteps.step9.digitalSignatureRequiredDesc")}
                     </p>
 
                     <button
@@ -210,7 +210,7 @@ const Step9PetitionAttestation = ({
                       }}
                     >
                       <i className="fas fa-user me-2"></i>
-                      Go to Profile to Upload Signature
+                      {t("petitionSteps.step9.goToProfileToUpload")}
                     </button>
                   </div>
                 </div>
@@ -225,11 +225,11 @@ const Step9PetitionAttestation = ({
 
                   <div className="flex-grow-1">
                     <h5 className="fw-bold text-success mb-2">
-                      Digital Signature Available
+                      {t("petitionSteps.step9.digitalSignatureAvailable")}
                     </h5>
 
                     <p className="mb-0">
-                      Your digital signature is ready for petition submission.
+                      {t("petitionSteps.step9.digitalSignatureReady")}
                     </p>
                   </div>
                 </div>
@@ -251,21 +251,18 @@ const Step9PetitionAttestation = ({
                 className="form-check-label font-sm fw-medium"
                 htmlFor="certification_check"
               >
-                Electronic Certification: I solemnly certify under the pains and
-                penalties of perjury that the information contained in this
-                petition is true and correct to the best of my knowledge and
-                belief.
+                {t("petitionSteps.step9.electronicCertification")}
                 {!userProfile?.signatureUrl && (
-                  <span className="text-danger ms-2">(Signature required)</span>
+                  <span className="text-danger ms-2">({t("petitionSteps.step9.signatureRequired")})</span>
                 )}
               </label>
             </div>
 
             <div className="border-top pt-3 text-muted small">
               <p>
-                Submission Timestamp:{" "}
+                {t("petitionSteps.step9.submissionTimestamp")}{" "}
                 <span className="text-dark">
-                  Will be captured upon submission
+                  {t("petitionSteps.step9.willBeCaptured")}
                 </span>
               </p>
             </div>

@@ -1,21 +1,24 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { usePetitionWizard } from "../../context/PetitionWizardContext";
 import "./PetitionStepper.css";
 
-const stepLabels = [
-  "Select Organization",
-  "Property Details",
-  "Loan Details",
-  "Borrower Details",
-  "Filing Entity",
-  "Right-to-Cure",
-  "Form 35B Compliance",
-  "Loan Assignees",
-  "Attestation & Signatures",
-  "Review & Submit",
-];
-
 const PetitionStepper = () => {
+  const { t } = useTranslation();
+  
+  const stepLabels = [
+    t("petitions.selectOrganization"),
+    t("petitions.propertyDetails"),
+    t("petitions.loanDetails"),
+    t("petitions.borrowerDetails"),
+    t("petitions.filingEntity"),
+    t("petitions.rightToCure"),
+    t("petitions.form35BCompliance"),
+    t("petitions.loanAssignees"),
+    t("petitions.attestationSignatures"),
+    t("petitions.reviewSubmit"),
+  ];
+
   const { currentStep, completedSteps, stepsWithErrors, goToStep, canAccessStep } =
     usePetitionWizard();
   const stepperNavRef = useRef(null);
@@ -61,7 +64,7 @@ const PetitionStepper = () => {
 
   return (
     <div className="petition-stepper-container">
-      <h5 className="stepper-title">Petition Form Progress</h5>
+      <h5 className="stepper-title">{t("petitions.petitionFormProgress")}</h5>
       <div className="stepper-nav" ref={stepperNavRef}>
         {stepLabels.map((label, index) => {
           const stepNumber = index + 1;

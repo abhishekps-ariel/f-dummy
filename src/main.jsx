@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 import { initializeAccessibility } from './utils/accessibilityInit.js'
+import './i18n/config.js'
 
 // Initialize accessibility features before React renders
 initializeAccessibility();

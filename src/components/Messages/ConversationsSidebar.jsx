@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import CustomInput from '../shared/CustomInput';
 
 const ConversationsSidebar = ({ conversations, selectedConversation, onConversationClick }) => {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
 
   // Filter conversations based on search query
@@ -16,11 +18,11 @@ const ConversationsSidebar = ({ conversations, selectedConversation, onConversat
   return (
     <div className="conversations-sidebar">
       <div className="conversations-header">
-        <h3 className="conversations-title">Conversations</h3>
+        <h3 className="conversations-title">{t("messages.conversations")}</h3>
         <div className="conversations-search">
           <CustomInput
             type="text"
-            placeholder="Search conversations..."
+            placeholder={t("messages.searchConversations")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             autoComplete="off"
@@ -60,7 +62,7 @@ const ConversationsSidebar = ({ conversations, selectedConversation, onConversat
           ))
         ) : (
           <div className="conversations-empty">
-            <p className="conversations-empty-text">No conversations found</p>
+            <p className="conversations-empty-text">{t("messages.noConversationsFound")}</p>
           </div>
         )}
       </div>

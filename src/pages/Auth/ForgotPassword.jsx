@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { forgotPassword } from "../../services/authService";
@@ -6,6 +7,7 @@ import loginImg from "../../assets/logo-sample.png";
 import "../../styles/custom.css";
 
 function ForgotPassword() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -15,9 +17,9 @@ function ForgotPassword() {
     const newErrors = {};
 
     if (!email.trim()) {
-      newErrors.email = "Email is required";
+      newErrors.email = t("forgotPassword.emailRequired");
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      newErrors.email = "Please enter a valid email address";
+      newErrors.email = t("forgotPassword.emailInvalid");
     }
 
     setErrors(newErrors);
@@ -38,7 +40,7 @@ function ForgotPassword() {
     e.preventDefault();
 
     if (!validateForm()) {
-      toast.error("Please fix the errors below");
+      toast.error(t("forgotPassword.fixErrors"));
       return;
     }
 
@@ -51,7 +53,7 @@ function ForgotPassword() {
 
       if (response.isSuccess) {
         toast.success(
-          response.msg || "Password reset email sent! Please check your inbox."
+          response.msg || t("forgotPassword.passwordResetEmailSent")
         );
         // Store email in localStorage for resend functionality
         localStorage.setItem("resetEmail", email);
@@ -59,7 +61,7 @@ function ForgotPassword() {
         window.location.href = "/password-email-sent";
       } else {
         toast.error(
-          response.msg || "Failed to send reset email. Please try again."
+          response.msg || t("forgotPassword.failedSendResetEmail")
         );
       }
     } catch (error) {
@@ -67,7 +69,7 @@ function ForgotPassword() {
       if (error.response?.data?.message) {
         toast.error(error.response.data.message);
       } else {
-        toast.error("Failed to send reset email. Please try again.");
+        toast.error(t("forgotPassword.failedSendResetEmail"));
       }
     } finally {
       setIsSubmitting(false);
@@ -90,15 +92,14 @@ function ForgotPassword() {
                       <img src={loginImg} alt="logo" className="w-100" />
                     </Link>
                   </div>
-                  <h2 className="font-xl-med fw-bold">Forgot your password?</h2>
+                  <h2 className="font-xl-med fw-bold">{t("forgotPassword.title")}</h2>
                   <p className="font-base">
-                    Enter your email so that we can send you password reset
-                    link.
+                    {t("forgotPassword.description")}
                   </p>
                 </div>
 
                 <div className="form-group">
-                  <label className="label-text">Email</label>
+                  <label className="label-text">{t("forgotPassword.email")}</label>
                   <div className="input-group">
                     <div className="user-icon">
                       <i className="fa-solid fa-envelope"></i>
@@ -133,10 +134,10 @@ function ForgotPassword() {
                         role="status"
                         aria-hidden="true"
                       ></span>
-                      Sending...
+                      {t("common.loading")}
                     </>
                   ) : (
-                    "Send Email"
+                    t("forgotPassword.resetPassword")
                   )}
                 </button>
                 <div className="text-center mt-4">
@@ -144,8 +145,7 @@ function ForgotPassword() {
                     to="/login"
                     className="font-base fw-medium text-decoration-none"
                   >
-                    <i className="fa-solid fa-chevron-left me-1"></i> Back to
-                    Login
+                    <i className="fa-solid fa-chevron-left me-1"></i> {t("forgotPassword.backToLogin")}
                   </Link>
                 </div>
               </form>

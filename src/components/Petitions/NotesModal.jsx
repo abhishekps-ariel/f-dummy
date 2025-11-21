@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import petitionApiService from "../../services/petitionApiService";
 
 const NotesModal = ({ isOpen, onClose, petition, noteToEdit = null, onNoteSaved }) => {
+  const { t } = useTranslation();
   const [noteText, setNoteText] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const isEditMode = !!noteToEdit;
@@ -20,12 +22,12 @@ const NotesModal = ({ isOpen, onClose, petition, noteToEdit = null, onNoteSaved 
 
   const handleSaveNote = async () => {
     if (!noteText.trim()) {
-      toast.error("Please enter a note.");
+      toast.error(t("modals.notes.validation.pleaseEnterNote"));
       return;
     }
 
     if (!petition?.id) {
-      toast.error("Petition ID is required.");
+      toast.error(t("modals.notes.validation.petitionIdRequired"));
       return;
     }
 
@@ -40,7 +42,7 @@ const NotesModal = ({ isOpen, onClose, petition, noteToEdit = null, onNoteSaved 
 
       // Clear the input
       setNoteText("");
-      toast.success(isEditMode ? "Note updated successfully." : "Note added successfully.");
+      toast.success(isEditMode ? t("modals.notes.success.update") : t("modals.notes.success.add"));
       
       // Call the callback to refetch petition data
       if (onNoteSaved) {
@@ -52,7 +54,7 @@ const NotesModal = ({ isOpen, onClose, petition, noteToEdit = null, onNoteSaved 
     } catch (error) {
       console.error("Error saving note:", error);
       const errorMessage = error?.response?.data?.message || error?.message || 
-        (isEditMode ? "Failed to update note. Please try again." : "Failed to add note. Please try again.");
+        (isEditMode ? t("modals.notes.failedUpdate") : t("modals.notes.failedAdd"));
       toast.error(errorMessage);
     } finally {
       setIsSaving(false);
@@ -71,19 +73,19 @@ const NotesModal = ({ isOpen, onClose, petition, noteToEdit = null, onNoteSaved 
       <div className="modal-dialog modal-dialog-centered modal-lg">
         <div className="modal-content">
           <div className="modal-header">
-            <h5 className="modal-title">{isEditMode ? "Edit Note" : "Add Note"}</h5>
+            <h5 className="modal-title">{isEditMode ? t("modals.notes.editTitle") : t("modals.notes.addTitle")}</h5>
             <button
               type="button"
               className="btn-close"
               onClick={onClose}
-              aria-label="Close"
+              aria-label={t("common.close")}
             ></button>
           </div>
           <div className="modal-body">
             {/* Note Form */}
             <div className="mb-3">
               <label htmlFor="noteText" className="form-label fw-semibold">
-                Note
+                {t("modals.notes.note")}
               </label>
               <textarea
                 id="noteText"
@@ -91,7 +93,7 @@ const NotesModal = ({ isOpen, onClose, petition, noteToEdit = null, onNoteSaved 
                 rows="5"
                 value={noteText}
                 onChange={(e) => setNoteText(e.target.value)}
-                placeholder="Enter your note here..."
+                placeholder={t("modals.notes.placeholder")}
                 disabled={isSaving}
               />
             </div>
@@ -103,7 +105,7 @@ const NotesModal = ({ isOpen, onClose, petition, noteToEdit = null, onNoteSaved 
               onClick={onClose}
               disabled={isSaving}
             >
-              Cancel
+              {t("common.cancel")}
             </button>
             <button
               type="button"
@@ -118,12 +120,12 @@ const NotesModal = ({ isOpen, onClose, petition, noteToEdit = null, onNoteSaved 
                     role="status"
                     aria-hidden="true"
                   ></span>
-                  {isEditMode ? "Updating..." : "Adding..."}
+                  {isEditMode ? t("modals.notes.updating") : t("modals.notes.adding")}
                 </>
               ) : (
                 <>
                   <i className={`fas ${isEditMode ? "fa-save" : "fa-plus"} me-1`}></i>
-                  {isEditMode ? "Update Note" : "Add Note"}
+                  {isEditMode ? t("modals.notes.updateButton") : t("modals.notes.addButton")}
                 </>
               )}
             </button>

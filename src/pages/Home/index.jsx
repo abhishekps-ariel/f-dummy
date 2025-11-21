@@ -1,4 +1,5 @@
 import { useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate, useLocation } from "react-router-dom";
 import img1 from "../../assets/loan.jpg";
 import img2 from "../../assets/moneytab.jpg";
@@ -11,6 +12,7 @@ import { ROUTES } from "../../constants/routerConstants";
 function Home() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
 
   // Scroll to top when component mounts or location changes
   useEffect(() => {
@@ -50,10 +52,7 @@ function Home() {
       {/* Intro Text */}
       <div className="container pt-4">
         <p className="text-dark-black font-med fw-semibold">
-          The Division of Banks (DOB) is the chartering authority and primary
-          regulator for financial service providers in Massachusetts. DOB's
-          primary mission is to ensure a sound, competitive, and accessible
-          financial services environment throughout the Commonwealth.
+          {t("home.intro")}
         </p>
       </div>
 
@@ -65,23 +64,23 @@ function Home() {
       >
         <div className="container">
           <h2 className="font-xl-med mb-4 fw-medium heading-divider">
-            Featured Items
+            {t("home.featuredItems")}
           </h2>
           <div className="row">
             <div className="col-md-6 col-lg-4">
               <div className="item">
                 <img src={coinsImg} alt="Student Loan Info" className="w-100" />
-                <p>Financial and Climate-Related Risk Resources</p>
+                <p>{t("home.financialClimateRisk")}</p>
               </div>
             </div>
             <div className="col-md-6 col-lg-4">
               <div className="item">
                 <img src={img1} alt="Student Loan Info" className="w-100" />
-                <p>Student Loan Information for Consumers</p>
+                <p>{t("home.studentLoanInfo")}</p>
               </div>
               <div className="item">
                 <img src={img3} alt="Student Loan Info" className="w-100" />
-                <p>Enforcement actions</p>
+                <p>{t("home.enforcementActions")}</p>
               </div>
             </div>
             <div className="col-md-12 col-lg-4">
@@ -89,7 +88,7 @@ function Home() {
                 <div className="col-md-6 col-lg-12">
                   <div className="item">
                     <img src={img2} alt="Student Loan Info" className="w-100" />
-                    <p>New Money Transmission Law</p>
+                    <p>{t("home.newMoneyTransmissionLaw")}</p>
                   </div>
                 </div>
                 <div className="col-md-6 col-lg-12">
@@ -99,7 +98,7 @@ function Home() {
                       alt="New Transmission Law"
                       className="w-100"
                     />
-                    <p>Cybersecurity for the financial services industry</p>
+                    <p>{t("home.cybersecurityIndustry")}</p>
                   </div>
                 </div>
               </div>
@@ -115,7 +114,7 @@ function Home() {
       >
         <div className="container">
           <h2 className="font-xl-med mb-4 fw-medium heading-divider">
-            Contact Us
+            {t("home.contactUs")}
           </h2>
           <div className="row g-5">
             {/* Left Column: Online and Phone */}
@@ -124,21 +123,21 @@ function Home() {
               <div className="mb-5">
                 <h3 className="fs-5 fw-semibold icon-header mb-3">
                   <i className="fa-solid fa-desktop me-2 ms-primary-green"></i>{" "}
-                  Online
+                  {t("home.online")}
                 </h3>
-                <p className="mb-1 fw-medium">Contact us</p>
+                <p className="mb-1 fw-medium">{t("home.contactUs")}</p>
                 <a href="#" className="text-decoration-hover fw-medium">
-                  Contact detail by unit or inquiry
+                  {t("home.contactDetailByUnit")}
                 </a>
               </div>
               {/* Phone Section */}
               <div>
                 <h3 className="fs-5 fw-semibold icon-header mb-3">
                   <i className="fa-solid fa-phone me-2 ms-primary-green"></i>{" "}
-                  Phone
+                  {t("home.phone")}
                 </h3>
                 <p className="mb-1 fw-medium">
-                  Main{" "}
+                  {t("home.main")}{" "}
                   <a
                     href="tel:+16179561500"
                     className="fw-medium text-decoration-hover"
@@ -147,11 +146,11 @@ function Home() {
                   </a>
                 </p>
                 <p className="font-sm mb-3">
-                  Open Monday through Friday 9:00 am - 4:00 pm.
+                  {t("home.openHours")}
                 </p>
 
                 <p className="mb-1 fw-medium">
-                  Toll-Free{" "}
+                  {t("home.tollFree")}{" "}
                   <a
                     href="tel:+18004952265"
                     className="fw-medium text-decoration-hover"
@@ -160,11 +159,11 @@ function Home() {
                   </a>
                 </p>
                 <p className="font-sm mb-3">
-                  Open Monday through Friday 9:00 am - 4:00 pm.
+                  {t("home.openHours")}
                 </p>
 
                 <p className="mb-1 fw-medium">
-                  TDD{" "}
+                  {t("home.tdd")}{" "}
                   <a
                     href="tel:+16179561577"
                     className="fw-medium text-decoration-hover"
@@ -173,8 +172,7 @@ function Home() {
                   </a>
                 </p>
                 <p className="font-sm mb-0">
-                  Open Monday through Friday 9:00 am - 4:00 pm. Use this number
-                  if you are hearing impaired.
+                  {t("home.tddDesc")}
                 </p>
               </div>
             </div>
@@ -184,14 +182,14 @@ function Home() {
               <div className="ps-md-3">
                 <h3 className="fs-5 fw-semibold icon-header mb-3">
                   <i className="fa-solid fa-map-marker-alt me-2 ms-primary-green"></i>{" "}
-                  Address
+                  {t("home.address")}
                 </h3>
-                <p className="mb-1 fw-medium">Main Office</p>
-                <p className="mb-1">One Federal Street</p>
-                <p className="mb-1">Suite 710</p>
-                <p className="mb-3">Boston, MA 02110-2012</p>
+                <p className="mb-1 fw-medium">{t("home.mainOffice")}</p>
+                <p className="mb-1">{t("home.addressLine1")}</p>
+                <p className="mb-1">{t("home.addressLine2")}</p>
+                <p className="mb-3">{t("home.addressLine3")}</p>
                 <a href="#" className="text-decoration-hover fw-medium">
-                  Directions
+                  {t("home.directions")}
                 </a>
               </div>
             </div>
@@ -207,39 +205,32 @@ function Home() {
       >
         <div className="container">
           <h2 className="font-xl-med mb-4 fw-medium heading-divider">
-            Who We Serve
+            {t("home.whoWeServe")}
           </h2>
           <p className="font-base-med">
-            The DOB supervises nearly 140 state-chartered banks and credit
-            unions and over 14,500 non-depository licensees doing business in
-            Massachusetts. The supervision of these entities allow us to
-            implement and enforce consumer protection laws while providing
-            consumers the information needed to make informed financial
-            decisions.
+            {t("home.whoWeServeDesc")}
           </p>
           <p className="font-base-med">
-            Non-depository institutions doing business in Massachusetts
-            supervised by the DOB include:
+            {t("home.nonDepositoryInstitutions")}
           </p>
           <ul className="font-base-med d-flex flex-column gap-2">
-            <li>Mortgage lenders</li>
-            <li>Mortgage brokers</li>
-            <li>Mortgage loan originators</li>
-            <li>Consumer finance companies</li>
-            <li>Money service businesses</li>
-            <li>Debt collectors</li>
-            <li>Loan servicers</li>
-            <li>Student Loan servicers</li>
+            <li>{t("home.mortgageLenders")}</li>
+            <li>{t("home.mortgageBrokers")}</li>
+            <li>{t("home.mortgageLoanOriginators")}</li>
+            <li>{t("home.consumerFinanceCompanies")}</li>
+            <li>{t("home.moneyServiceBusinesses")}</li>
+            <li>{t("home.debtCollectors")}</li>
+            <li>{t("home.loanServicers")}</li>
+            <li>{t("home.studentLoanServicers")}</li>
           </ul>
           <div className="d-flex flex-column gap-4">
             <a href="#!" className="font-base-med fw-medium">
-              Learn more about the DOB, the departmental units, and the
-              Commissioner of Banks.
+              {t("home.learnMoreDOB")}
             </a>
             <h4>
               <i className="font-lg-med fa-brands fa-linkedin-in me-2 ms-primary-green"></i>{" "}
               <a href="#!" className="font-base-med fw-medium">
-                DOB LinkedIn{" "}
+                {t("home.dobLinkedIn")}{" "}
               </a>
             </h4>
           </div>
@@ -254,7 +245,7 @@ function Home() {
         <div className="container">
           <div className="green-title-box position-relative">
             <h2 className="font-xl-med mb-4 fw-medium">
-              What would you like to do?
+              {t("home.whatWouldYouLikeToDo")}
             </h2>
           </div>
 
@@ -262,21 +253,21 @@ function Home() {
             <div className="col-md-6 col-lg-4">
               <div className="link-box-theme">
                 <a href="#" className="text-decoration-hover">
-                  Submit a complaint to the DOB &rarr;
+                  {t("home.submitComplaint")}
                 </a>
               </div>
             </div>
             <div className="col-md-6 col-lg-4">
               <div className="link-box-theme">
                 <a href="#" className="text-decoration-hover">
-                  Public Records Request &rarr;
+                  {t("home.publicRecordsRequest")}
                 </a>
               </div>
             </div>
             <div className="col-md-6 col-lg-4">
               <div className="link-box-theme">
                 <a href="#" className="text-decoration-hover">
-                  Find state-chartered banks and credit unions &rarr;
+                  {t("home.findBanksCreditUnions")}
                 </a>
               </div>
             </div>
@@ -289,7 +280,7 @@ function Home() {
               data-bs-toggle="collapse"
               data-bs-target=".more-actions-collapse"
             >
-              <h5 className="mb-0">More actions & services</h5>
+              <h5 className="mb-0">{t("home.moreActionsServices")}</h5>
               <span className="badge bg-success rounded-pill">4</span>
             </div>
 
@@ -306,7 +297,7 @@ function Home() {
                         href="#"
                         className="font-base-med fw-medium text-decoration-hover"
                       >
-                        Cybersecurity for Consumers and the Financial Industry
+                        {t("home.cybersecurityConsumers")}
                       </a>
                     </li>
                     <li className="col-12">
@@ -314,7 +305,7 @@ function Home() {
                         href="#"
                         className="font-base-med fw-medium text-decoration-hover"
                       >
-                        Protecting Older Adults from Abuse
+                        {t("home.protectingOlderAdults")}
                       </a>
                     </li>
                     <li className="col-12">
@@ -322,7 +313,7 @@ function Home() {
                         href="#"
                         className="font-base-med fw-medium text-decoration-hover"
                       >
-                        Division of Banks Licenses{" "}
+                        {t("home.divisionOfBanksLicenses")}{" "}
                       </a>
                     </li>
                     <li className="col-12">
@@ -330,7 +321,7 @@ function Home() {
                         href="#"
                         className="font-base-med fw-medium text-decoration-hover"
                       >
-                        DOB Connects
+                        {t("home.dobConnects")}
                       </a>
                     </li>
                   </ul>
@@ -348,13 +339,13 @@ function Home() {
       >
         <div className="container">
           <h2 className="font-xl-med mb-4 fw-medium heading-divider">
-            Recent News & Announcements
+            {t("home.recentNewsAnnouncements")}
           </h2>
           <div className="row g-5">
             <div className="col-lg-4">
               <div className="news-item">
                 <span className="news-tag font-xs text-uppercase fw-medium">
-                  News
+                  {t("home.news")}
                 </span>
                 <h4 className="mt-2">
                   <a
@@ -376,7 +367,7 @@ function Home() {
             <div className="col-lg-4">
               <div className="news-item">
                 <span className="news-tag font-xs text-uppercase fw-medium">
-                  Press Release
+                  {t("home.pressRelease")}
                 </span>
                 <h4 className="mt-2">
                   <a
@@ -404,7 +395,7 @@ function Home() {
             <div className="col-lg-4">
               <div className="news-item">
                 <span className="news-tag font-xs text-uppercase fw-medium">
-                  News
+                  {t("home.news")}
                 </span>
                 <h4 className="mt-2">
                   <a
@@ -428,7 +419,7 @@ function Home() {
             <div className="col-lg-4">
               <div className="news-item">
                 <span className="news-tag font-xs text-uppercase fw-medium">
-                  News
+                  {t("home.news")}
                 </span>
                 <h4 className="mt-2">
                   <a
@@ -449,7 +440,7 @@ function Home() {
             <div className="col-lg-4">
               <div className="news-item font-sm">
                 <span className="news-tag font-xs text-uppercase fw-medium">
-                  News
+                  {t("home.news")}
                 </span>
                 <h4 className="mt-2">
                   <a
@@ -469,7 +460,7 @@ function Home() {
             <div className="col-lg-4">
               <div className="news-item">
                 <span className="news-tag font-xs text-uppercase fw-medium">
-                  News
+                  {t("home.news")}
                 </span>
                 <h4 className="mt-2">
                   <a
@@ -491,7 +482,7 @@ function Home() {
           </div>
           <div className="mt-4 mt-md-5">
             <a href="#" className="font-base-med fw-medium">
-              See all news and announcements
+              {t("home.seeAllNews")}
             </a>
           </div>
         </div>
@@ -505,7 +496,7 @@ function Home() {
       >
         <div className="container">
           <h2 className="font-xl-med mb-4 fw-medium heading-divider">
-            Upcoming Events
+            {t("home.upcomingEvents")}
           </h2>
           <div className="row g-4 g-md-5">
             {/* Event Card 1 */}
@@ -577,7 +568,7 @@ function Home() {
           {/* See all events link */}
           <div className="mt-4 mt-md-5">
             <a href="#" className="font-base-med fw-medium">
-              See all events
+              {t("home.seeAllEvents")}
             </a>
           </div>
         </div>
@@ -586,7 +577,7 @@ function Home() {
       <section className="related-organisation py-4 py-lg-5">
         <div className="container">
           <h2 className="font-xl-med mb-4 fw-medium heading-divider">
-            Related organizations
+            {t("home.relatedOrganizations")}
           </h2>
 
           {/* Organization List (ul.grid md:grid-cols-2 gap-4) */}
@@ -596,7 +587,7 @@ function Home() {
                 href="#"
                 className="font-base-med fw-medium text-decoration-hover"
               >
-                Office of Consumer Affairs and Business Regulation
+                {t("home.officeOfConsumerAffairs")}
               </a>
             </li>
             <li className="col-12 col-lg-6">
@@ -604,7 +595,7 @@ function Home() {
                 href="#"
                 className="font-base-med fw-medium text-decoration-hover"
               >
-                Executive Office of Economic Development
+                {t("home.executiveOfficeEconomic")}
               </a>
             </li>
             <li className="col-12 col-lg-6">
@@ -612,7 +603,7 @@ function Home() {
                 href="#"
                 className="font-base-med fw-medium text-decoration-hover"
               >
-                Office of the Attorney General
+                {t("home.officeOfAttorneyGeneral")}
               </a>
             </li>
             <li className="col-12 col-lg-6">
@@ -620,8 +611,7 @@ function Home() {
                 href="#"
                 className="font-base-med fw-medium text-decoration-hover"
               >
-                Office of State Treasurer and Receiver General Deborah B.
-                Goldberg{" "}
+                {t("home.officeOfStateTreasurer")}{" "}
               </a>
             </li>
           </ul>
@@ -631,7 +621,7 @@ function Home() {
       <section className="related-organisation py-4 py-lg-5">
         <div className="container">
           <h2 className="font-xl-med mb-4 fw-medium heading-divider">
-            Division of Banks information
+            {t("home.divisionOfBanksInfo")}
           </h2>
 
           {/* Organization List (ul.grid md:grid-cols-2 gap-4) */}
@@ -641,7 +631,7 @@ function Home() {
                 href="#"
                 className="font-base-med fw-medium text-decoration-hover"
               >
-                Agency overview
+                {t("home.agencyOverview")}
               </a>
             </li>
             <li className="col-12">
@@ -649,7 +639,7 @@ function Home() {
                 href="#"
                 className="font-base-med fw-medium text-decoration-hover"
               >
-                Staff directory by unit{" "}
+                {t("home.staffDirectory")}{" "}
               </a>
             </li>
             <li className="col-12">
@@ -657,7 +647,7 @@ function Home() {
                 href="#"
                 className="font-base-med fw-medium text-decoration-hover"
               >
-                Employment{" "}
+                {t("home.employment")}{" "}
               </a>
             </li>
             <li className="col-12">
@@ -665,7 +655,7 @@ function Home() {
                 href="#"
                 className="font-base-med fw-medium text-decoration-hover"
               >
-                Register for the DOB listserv e-mail delivery
+                {t("home.registerListserv")}
               </a>
             </li>
             <li className="col-12">
@@ -673,7 +663,7 @@ function Home() {
                 href="#"
                 className="font-base-med fw-medium text-decoration-hover"
               >
-                DOB Public Records Request
+                {t("home.dobPublicRecords")}
               </a>
             </li>
           </ul>

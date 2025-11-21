@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import petitionApiService from "../../services/petitionApiService";
 import { formatDate } from "../../utils/dateUtils";
 
 const TakeOverPetitionModal = ({ isOpen, duplicateInfo, onConfirm, onCancel }) => {
+  const { t } = useTranslation();
   const [petitionDetails, setPetitionDetails] = useState(null);
   const [petitionRawData, setPetitionRawData] = useState(null); // Store raw API response
   const [isLoading, setIsLoading] = useState(false);
@@ -35,11 +37,11 @@ const TakeOverPetitionModal = ({ isOpen, duplicateInfo, onConfirm, onCancel }) =
             setPetitionDetails(response.data);
           }
         } else {
-          setError("Failed to load petition details");
+          setError(t("modals.takeOver.failedLoadDetails"));
         }
       } catch (err) {
         console.error("Error fetching petition details:", err);
-        setError("Failed to load petition details");
+        setError(t("modals.takeOver.failedLoadDetails"));
       } finally {
         setIsLoading(false);
       }
@@ -59,25 +61,25 @@ const TakeOverPetitionModal = ({ isOpen, duplicateInfo, onConfirm, onCancel }) =
       <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: "700px" }}>
         <div className="modal-content">
           <div className="modal-header">
-            <h5 className="modal-title">Take Over Petition</h5>
+            <h5 className="modal-title">{t("modals.takeOver.title")}</h5>
             <button
               type="button"
               className="btn-close"
               onClick={onCancel}
-              aria-label="Close"
+              aria-label={t("common.close")}
             ></button>
           </div>
           <div className="modal-body">
             <p className="mb-2 small">
-              A petition with the same property already exists.
+              {t("modals.takeOver.description")}
             </p>
             
             {isLoading && (
               <div className="text-center py-3">
                 <div className="spinner-border spinner-border-sm text-primary" role="status">
-                  <span className="visually-hidden">Loading...</span>
+                  <span className="visually-hidden">{t("common.loading")}</span>
                 </div>
-                <p className="text-muted small mt-2">Loading petition details...</p>
+                <p className="text-muted small mt-2">{t("modals.takeOver.loadingDetails")}</p>
               </div>
             )}
 
@@ -92,20 +94,20 @@ const TakeOverPetitionModal = ({ isOpen, duplicateInfo, onConfirm, onCancel }) =
               <div className="mb-3 p-2 border rounded bg-light">
                 <h6 className="mb-2">
                   <i className="fas fa-file-alt me-2"></i>
-                  Existing Petition Details
+                  {t("modals.takeOver.existingDetails")}
                 </h6>
                 
                 <div className="row g-2 mb-1">
                   {petitionDetails.petitionNumber && (
                     <div className="col-12">
-                      <span className="text-muted small">Petition Number:</span>
+                      <span className="text-muted small">{t("modals.takeOver.petitionNumber")}</span>
                       <p className="mb-0 fw-medium">{petitionDetails.petitionNumber}</p>
                     </div>
                   )}
                   
                   {petitionDetails.status && (
                     <div className="col-6">
-                      <span className="text-muted small">Status:</span>
+                      <span className="text-muted small">{t("common.status")}</span>
                       <p className="mb-0 fw-medium">
                         <span className={`status-badge status-${petitionDetails.statusClass || petitionDetails.status}`}>
                           {petitionDetails.status}
@@ -116,7 +118,7 @@ const TakeOverPetitionModal = ({ isOpen, duplicateInfo, onConfirm, onCancel }) =
                   
                   {petitionDetails.createdDate && (
                     <div className="col-6">
-                      <span className="text-muted small">Created:</span>
+                      <span className="text-muted small">{t("common.created")}</span>
                       <p className="mb-0 fw-medium">{formatDate(petitionDetails.createdDate)}</p>
                     </div>
                   )}
@@ -125,7 +127,7 @@ const TakeOverPetitionModal = ({ isOpen, duplicateInfo, onConfirm, onCancel }) =
                 <div className="row g-2 mt-2 pt-2 border-top">
                   {petitionDetails.property && (
                     <div className="col-md-6">
-                      <span className="text-muted small">Property Address:</span>
+                      <span className="text-muted small">{t("modals.takeOver.propertyAddress")}</span>
                       <p className="mb-0 fw-medium small">
                         {[
                           petitionDetails.property.propertyStreet1,
@@ -140,7 +142,7 @@ const TakeOverPetitionModal = ({ isOpen, duplicateInfo, onConfirm, onCancel }) =
 
                   {petitionDetails.filingEntity && (
                     <div className="col-md-6">
-                      <span className="text-muted small">Filing Entity:</span>
+                      <span className="text-muted small">{t("modals.takeOver.filingEntity")}</span>
                       <p className="mb-0 fw-medium small">{petitionDetails.filingEntity.filingEntityLegalName}</p>
                     </div>
                   )}
@@ -149,14 +151,14 @@ const TakeOverPetitionModal = ({ isOpen, duplicateInfo, onConfirm, onCancel }) =
                 <div className="row g-2 mt-2">
                   {duplicateInfo?.userName && (
                     <div className="col-md-6">
-                      <span className="text-muted small">Current Owner:</span>
+                      <span className="text-muted small">{t("modals.takeOver.currentOwner")}</span>
                       <p className="mb-0 fw-medium small">{duplicateInfo.userName}</p>
                     </div>
                   )}
 
                   {duplicateInfo?.userEmail && (
                     <div className="col-md-6">
-                      <span className="text-muted small">Current Owner Email:</span>
+                      <span className="text-muted small">{t("modals.takeOver.currentOwnerEmail")}</span>
                       <p className="mb-0 fw-medium small">{duplicateInfo.userEmail}</p>
                     </div>
                   )}
@@ -168,7 +170,7 @@ const TakeOverPetitionModal = ({ isOpen, duplicateInfo, onConfirm, onCancel }) =
               <div className="alert alert-info mb-0 py-2">
                 <i className="fas fa-info-circle me-2"></i>
                 <span className="small">
-                  Clicking "Take Over Petition" will make you the new owner of this petition.
+                  {t("modals.takeOver.confirmationMessage")}
                 </span>
               </div>
             )}
@@ -180,7 +182,7 @@ const TakeOverPetitionModal = ({ isOpen, duplicateInfo, onConfirm, onCancel }) =
               onClick={onCancel}
               disabled={isLoading}
             >
-              Cancel
+              {t("common.cancel")}
             </button>
             <button
               type="button"
@@ -188,7 +190,7 @@ const TakeOverPetitionModal = ({ isOpen, duplicateInfo, onConfirm, onCancel }) =
               onClick={() => onConfirm(petitionRawData, duplicateInfo)}
               disabled={isLoading || !petitionRawData}
             >
-              Take Over Petition
+              {t("modals.takeOver.confirmButton")}
             </button>
           </div>
         </div>

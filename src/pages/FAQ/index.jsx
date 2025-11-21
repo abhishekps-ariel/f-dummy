@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { logout as logoutApi } from '../../services/authService';
@@ -11,6 +12,7 @@ import FAQcomponent from '../../components/FAQ/FAQcomponent';
 const FAQ = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [activeSection, setActiveSection] = useState('faq');
 
   const handleLogout = async () => {
@@ -62,8 +64,8 @@ const FAQ = () => {
         <div className="dashboard-content-section">
           <div className="shadow-custom bg-white org-search-box">
             <div className="p-4">
-              <h2 className="h4 mb-3 fw-bold theme-color">Frequently Asked Questions</h2>
-              <p className="text-muted mb-4">Find answers to common questions about the FILIR system.</p>
+              <h2 className="h4 mb-3 fw-bold theme-color">{t("faq.title")}</h2>
+              <p className="text-muted mb-4">{t("faq.subtitle")}</p>
               
               {/* Placeholder content */}
               {/* <div className="row">

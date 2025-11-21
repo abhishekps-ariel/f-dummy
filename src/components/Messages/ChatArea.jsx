@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import ChatHeader from './ChatHeader';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
@@ -15,12 +16,14 @@ const ChatArea = ({
   loadingMoreMessages,
   onBack
 }) => {
+  const { t } = useTranslation();
+  
   if (!selectedConversation) {
     return (
       <div className="chat-placeholder">
         <i className="fas fa-comments fa-3x text-muted mb-3"></i>
-        <h5>Select a conversation</h5>
-        <p className="text-muted">Choose a conversation from the list to start messaging</p>
+        <h5>{t("messages.selectConversation")}</h5>
+        <p className="text-muted">{t("messages.chooseConversation")}</p>
       </div>
     );
   }

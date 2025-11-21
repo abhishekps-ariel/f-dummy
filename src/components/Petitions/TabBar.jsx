@@ -1,7 +1,9 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { useTabs } from "../../context/TabContext";
 
 const TabBar = () => {
+  const { t } = useTranslation();
   const { tabs, activeTabId, switchToTab, closeTab, loadingTabs } = useTabs();
 
   return (
@@ -29,7 +31,7 @@ const TabBar = () => {
                     e.stopPropagation();
                     closeTab(tab.id);
                   }}
-                  title="Close tab"
+                  title={t("tabs.closeTab")}
                 >
                   <i className="fas fa-times"></i>
                 </button>

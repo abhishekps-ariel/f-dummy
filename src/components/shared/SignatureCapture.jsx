@@ -1,8 +1,10 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import SignatureCanvas from 'react-signature-canvas';
 import SignatureOtpModal from './SignatureOtpModal';
 
 const SignatureCapture = ({ isOpen, onClose, onSave, isUploading = false }) => {
+  const { t } = useTranslation();
   const signatureRef = useRef();
   const textCanvasRef = useRef();
   const [mode, setMode] = useState('draw'); // 'draw' or 'type'
@@ -72,14 +74,14 @@ const SignatureCapture = ({ isOpen, onClose, onSave, isUploading = false }) => {
 
     if (mode === 'draw') {
       if (!signatureRef.current || signatureRef.current.isEmpty()) {
-        alert('Please provide a signature first');
+        alert(t("signature.provideSignatureFirst"));
         return;
       }
       data = signatureRef.current.toDataURL();
     } else {
       // Type mode
       if (!typedSignature.trim()) {
-        alert('Please enter your name first');
+        alert(t("signature.enterNameFirst"));
         return;
       }
       
@@ -88,7 +90,7 @@ const SignatureCapture = ({ isOpen, onClose, onSave, isUploading = false }) => {
         renderTypedSignature();
         data = textCanvasRef.current.toDataURL();
       } else {
-        alert('Error generating signature. Please try again.');
+        alert(t("signature.errorGeneratingSignature"));
         return;
       }
     }
@@ -146,13 +148,13 @@ const SignatureCapture = ({ isOpen, onClose, onSave, isUploading = false }) => {
             <div className="modal-header">
               <h5 className="modal-title">
                 <i className="fas fa-signature me-2"></i>
-                Capture Digital Signature
+                {t("signature.captureDigitalSignature")}
               </h5>
               <button 
                 type="button" 
                 className="btn-close" 
                 onClick={onClose}
-                aria-label="Close"
+                aria-label={t("common.close")}
               ></button>
             </div>
             <div className="modal-body">
@@ -166,7 +168,7 @@ const SignatureCapture = ({ isOpen, onClose, onSave, isUploading = false }) => {
                       onClick={() => handleModeChange('draw')}
                     >
                       <i className="fas fa-pen me-2"></i>
-                      Draw Signature
+                      {t("signature.drawSignature")}
                     </button>
                     <button
                       type="button"
@@ -174,7 +176,7 @@ const SignatureCapture = ({ isOpen, onClose, onSave, isUploading = false }) => {
                       onClick={() => handleModeChange('type')}
                     >
                       <i className="fas fa-keyboard me-2"></i>
-                      Type Signature
+                      {t("signature.typeSignature")}
                     </button>
                   </div>
                 </div>
@@ -182,7 +184,7 @@ const SignatureCapture = ({ isOpen, onClose, onSave, isUploading = false }) => {
                 {mode === 'draw' ? (
                   <>
                     <p className="text-muted small mb-3">
-                      Please sign in the box below using your mouse or touch device.
+                      {t("signature.drawSignatureDesc")}
                     </p>
                     
                     {/* Signature Canvas */}
@@ -205,14 +207,14 @@ const SignatureCapture = ({ isOpen, onClose, onSave, isUploading = false }) => {
                     <div className="mt-2">
                       <small className="text-muted">
                         <i className="fas fa-info-circle me-1"></i>
-                        Use your mouse or touch device to sign in the box above.
+                        {t("signature.useMouseToSign")}
                       </small>
                     </div>
                   </>
                 ) : (
                   <>
                     <p className="text-muted small mb-3">
-                      Enter your name below. It will be displayed in a cursive font.
+                      {t("signature.typeSignatureDesc")}
                     </p>
                     
                     {/* Text Input */}
@@ -220,7 +222,7 @@ const SignatureCapture = ({ isOpen, onClose, onSave, isUploading = false }) => {
                       <input
                         type="text"
                         className="form-control form-control-lg"
-                        placeholder="Enter your full name"
+                        placeholder={t("signature.enterFullName")}
                         value={typedSignature}
                         onChange={handleTypedSignatureChange}
                         style={{ fontSize: '18px', textAlign: 'center' }}
@@ -237,7 +239,7 @@ const SignatureCapture = ({ isOpen, onClose, onSave, isUploading = false }) => {
                         />
                       ) : (
                         <div className="text-muted" style={{ fontFamily: '"Great Vibes", serif', fontWeight: 'bold', fontSize: '42px' }}>
-                          Your signature will appear here
+                          {t("signature.signatureWillAppear")}
                         </div>
                       )}
                     </div>
@@ -246,7 +248,7 @@ const SignatureCapture = ({ isOpen, onClose, onSave, isUploading = false }) => {
                     <div className="mt-2">
                       <small className="text-muted">
                         <i className="fas fa-info-circle me-1"></i>
-                        Type your name above to see it rendered in a cursive font.
+                        {t("signature.typeNameToSeePreview")}
                       </small>
                     </div>
                   </>
@@ -262,7 +264,7 @@ const SignatureCapture = ({ isOpen, onClose, onSave, isUploading = false }) => {
                 style={{ minWidth: '80px' }}
               >
                 <i className="fas fa-eraser me-1"></i>
-                Clear
+                {t("signature.clear")}
               </button>
               <button 
                 type="button" 
@@ -271,7 +273,7 @@ const SignatureCapture = ({ isOpen, onClose, onSave, isUploading = false }) => {
                 disabled={isUploading}
                 style={{ minWidth: '80px' }}
               >
-                Cancel
+                {t("common.cancel")}
               </button>
               <button 
                 type="button" 
@@ -283,12 +285,12 @@ const SignatureCapture = ({ isOpen, onClose, onSave, isUploading = false }) => {
                 {isUploading ? (
                   <>
                     <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                    Uploading...
+                    {t("signature.uploading")}
                   </>
                 ) : (
                   <>
                     <i className="fas fa-upload me-1"></i>
-                    Upload Signature
+                    {t("signature.uploadSignature")}
                   </>
                 )}
               </button>

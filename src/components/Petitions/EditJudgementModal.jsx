@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import CustomDropdown from "../shared/CustomDropdown";
 import { toast } from "react-toastify";
 
@@ -23,6 +24,7 @@ const parseCurrencyInput = (value) => {
 };
 
 const EditJudgementModal = ({ isOpen, onClose, petition, onSave, formData, setFormData, getJudgmentTypes, findOptionByValue }) => {
+  const { t } = useTranslation();
   const [judgmentData, setJudgmentData] = useState({
     judgmentDate: formData?.judgment?.judgmentDate || "",
     judgmentAmount: formData?.judgment?.judgmentAmount || "",
@@ -131,24 +133,24 @@ const EditJudgementModal = ({ isOpen, onClose, petition, onSave, formData, setFo
   const validate = () => {
     const errors = {};
     if (!judgmentData.judgmentDate || (typeof judgmentData.judgmentDate === 'string' && !judgmentData.judgmentDate.trim())) {
-      errors.judgmentDate = "Judgment date is required";
+      errors.judgmentDate = t("modals.editJudgment.validation.judgmentDateRequired");
     }
     // Parse judgment amount to check if it's valid (handle formatted currency with commas)
     const parsedAmount = parseCurrencyInput(judgmentData.judgmentAmount);
     if (!parsedAmount || !parsedAmount.trim()) {
-      errors.judgmentAmount = "Judgment amount is required";
+      errors.judgmentAmount = t("modals.editJudgment.validation.judgmentAmountRequired");
     } else if (isNaN(parseFloat(parsedAmount)) || parseFloat(parsedAmount) <= 0) {
-      errors.judgmentAmount = "Judgment amount must be a valid positive number";
+      errors.judgmentAmount = t("modals.editJudgment.validation.judgmentAmountInvalid");
     }
     // judgmentType can be a number (0 is valid) or string, so check for empty string or null/undefined
     if (judgmentData.judgmentType === "" || judgmentData.judgmentType === null || judgmentData.judgmentType === undefined) {
-      errors.judgmentType = "Judgment type is required";
+      errors.judgmentType = t("modals.editJudgment.validation.judgmentTypeRequired");
     }
     if (!judgmentData.courtInformation || (typeof judgmentData.courtInformation === 'string' && !judgmentData.courtInformation.trim())) {
-      errors.courtInformation = "Court information is required";
+      errors.courtInformation = t("modals.editJudgment.validation.courtInformationRequired");
     }
     if (!judgmentData.docketNumbers || (typeof judgmentData.docketNumbers === 'string' && !judgmentData.docketNumbers.trim())) {
-      errors.docketNumbers = "Docket numbers are required";
+      errors.docketNumbers = t("modals.editJudgment.validation.docketNumbersRequired");
     }
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
@@ -158,7 +160,7 @@ const EditJudgementModal = ({ isOpen, onClose, petition, onSave, formData, setFo
     console.log("Save Judgment button clicked");
     
     if (!validate()) {
-      toast.error("Please fill all required fields.");
+      toast.error(t("modals.editJudgment.validation.fillAllRequired"));
       return;
     }
 
@@ -171,7 +173,7 @@ const EditJudgementModal = ({ isOpen, onClose, petition, onSave, formData, setFo
         : null;
       
       if (judgmentTypeNumber === null || isNaN(judgmentTypeNumber)) {
-        toast.error("Please select a judgment type.");
+        toast.error(t("modals.editJudgment.validation.selectJudgmentType"));
         setIsSaving(false);
         return;
       }
@@ -206,7 +208,7 @@ const EditJudgementModal = ({ isOpen, onClose, petition, onSave, formData, setFo
         console.log("onSave completed successfully");
       } else {
         console.error("onSave function is not provided!");
-        toast.error("Save function not available. Please try again.");
+        toast.error(t("modals.editJudgment.saveFunctionNotAvailable"));
         setIsSaving(false);
         return;
       }
@@ -215,7 +217,7 @@ const EditJudgementModal = ({ isOpen, onClose, petition, onSave, formData, setFo
       onClose();
     } catch (error) {
       console.error("Error saving judgment:", error);
-      toast.error(error?.message || "Failed to save judgment. Please try again.");
+      toast.error(error?.message || t("modals.editJudgment.failedSave"));
       // Don't close the modal if there's an error
     } finally {
       setIsSaving(false);
@@ -268,19 +270,19 @@ const EditJudgementModal = ({ isOpen, onClose, petition, onSave, formData, setFo
       <div className="modal-dialog modal-dialog-centered modal-lg">
         <div className="modal-content">
           <div className="modal-header">
-            <h5 className="modal-title">Edit Judgment</h5>
+            <h5 className="modal-title">{t("modals.editJudgment.title")}</h5>
             <button
               type="button"
               className="btn-close"
               onClick={handleCancel}
-              aria-label="Close"
+              aria-label={t("common.close")}
             ></button>
           </div>
           <div className="modal-body">
             <div className="row g-3">
               <div className="col-md-6">
                 <label htmlFor="judgmentDate" className="form-label">
-                  Judgment Date *
+                  {t("modals.editJudgment.judgmentDate")} *
                 </label>
                 <input
                   type="date"
@@ -301,7 +303,7 @@ const EditJudgementModal = ({ isOpen, onClose, petition, onSave, formData, setFo
 
               <div className="col-md-6">
                 <label htmlFor="judgmentAmount" className="form-label">
-                  Judgment Amount ($) *
+                  {t("modals.editJudgment.judgmentAmount")} ($) *
                 </label>
                 <input
                   type="text"
@@ -312,7 +314,7 @@ const EditJudgementModal = ({ isOpen, onClose, petition, onSave, formData, setFo
                   }`}
                   value={judgmentData.judgmentAmount}
                   onChange={handleInputChange}
-                  placeholder="Enter judgment amount"
+                  placeholder={t("modals.editJudgment.placeholder.judgmentAmount")}
                 />
                 {fieldErrors.judgmentAmount && (
                   <div className="text-danger small mt-1">
@@ -323,14 +325,14 @@ const EditJudgementModal = ({ isOpen, onClose, petition, onSave, formData, setFo
 
               <div className="col-md-6">
                 <label htmlFor="judgmentType" className="form-label">
-                  Judgment Type *
+                  {t("modals.editJudgment.judgmentType")} *
                 </label>
                 <CustomDropdown
                   id="judgmentType"
                   name="judgmentType"
                   value={judgmentData.judgmentType}
                   onChange={handleDropdownChange}
-                  placeholder="Select Judgment Type"
+                  placeholder={t("modals.editJudgment.placeholder.judgmentType")}
                   error={!!fieldErrors.judgmentType}
                   options={judgmentTypes}
                   maxMenuHeight={180}
@@ -344,7 +346,7 @@ const EditJudgementModal = ({ isOpen, onClose, petition, onSave, formData, setFo
 
               <div className="col-md-6">
                 <label htmlFor="docketNumbers" className="form-label">
-                  Docket Numbers *
+                  {t("modals.editJudgment.docketNumbers")} *
                 </label>
                 <input
                   type="text"
@@ -355,7 +357,7 @@ const EditJudgementModal = ({ isOpen, onClose, petition, onSave, formData, setFo
                   }`}
                   value={judgmentData.docketNumbers}
                   onChange={handleInputChange}
-                  placeholder="Enter docket numbers"
+                  placeholder={t("modals.editJudgment.placeholder.docketNumbers")}
                 />
                 {fieldErrors.docketNumbers && (
                   <div className="text-danger small mt-1">
@@ -366,7 +368,7 @@ const EditJudgementModal = ({ isOpen, onClose, petition, onSave, formData, setFo
 
               <div className="col-12">
                 <label htmlFor="courtInformation" className="form-label">
-                  Court Information *
+                  {t("modals.editJudgment.courtInformation")} *
                 </label>
                 <textarea
                   id="courtInformation"
@@ -377,7 +379,7 @@ const EditJudgementModal = ({ isOpen, onClose, petition, onSave, formData, setFo
                   value={judgmentData.courtInformation}
                   onChange={handleInputChange}
                   rows="3"
-                  placeholder="Enter court information"
+                  placeholder={t("modals.editJudgment.placeholder.courtInformation")}
                 />
                 {fieldErrors.courtInformation && (
                   <div className="text-danger small mt-1">
@@ -394,7 +396,7 @@ const EditJudgementModal = ({ isOpen, onClose, petition, onSave, formData, setFo
               onClick={handleCancel}
               disabled={isSaving}
             >
-              Cancel
+              {t("common.cancel")}
             </button>
             <button
               type="button"
@@ -409,12 +411,12 @@ const EditJudgementModal = ({ isOpen, onClose, petition, onSave, formData, setFo
                     role="status"
                     aria-hidden="true"
                   ></span>
-                  Saving...
+                  {t("common.saving")}
                 </>
               ) : (
                 <>
                   <i className="fas fa-save me-1"></i>
-                  Save Judgment
+                  {t("modals.editJudgment.saveButton")}
                 </>
               )}
             </button>

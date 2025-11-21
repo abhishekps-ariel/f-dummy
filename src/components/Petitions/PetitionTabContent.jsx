@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useTabs } from "../../context/TabContext";
@@ -29,6 +30,7 @@ import { useAuth } from "../../context/AuthContext";
 import { getUserRole } from "../../utils/storage";
 
 const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) => {
+  const { t } = useTranslation();
   const { loadingTabs, activeTabId, refreshTab, tabs } = useTabs();
   const {
     getLoanTypes,
@@ -1575,7 +1577,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
         await refreshTab(activeTabId);
       }
     } catch (error) {
-      toast.error("Failed to save draft. Please try again.");
+      toast.error(t("petitionTabContent.failedSaveDraft"));
     } finally {
       setIsSavingDraft(false);
     }
@@ -1587,12 +1589,12 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
     try {
       // Validate all sections
       if (!validateFormForSubmit()) {
-        toast.error("Please fill all required fields.");
+        toast.error(t("petitionTabContent.fillAllRequiredFields"));
         return;
       }
       const addressValidation = await validatePropertyAddressWithGeocoding();
       if (!addressValidation.isValid) {
-        toast.error("Property address could not be validated.");
+        toast.error(t("petitionTabContent.propertyAddressNotValidated"));
         return;
       }
       // Ensure organizationId is set from petition if not in formData
@@ -1641,22 +1643,22 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
       doc.setFontSize(16);
       doc.setFont("helvetica", "bold");
       doc.text(
-        "FILIR - Foreclosure Intake & Loan Information Resource",
+        t("petitionTabContent.filirTitle"),
         20,
         yPosition
       );
       yPosition += 10;
 
       doc.setFontSize(14);
-      doc.text(`Petition: ${petition.petitionNumber}`, 20, yPosition);
+      doc.text(`${t("petitionTabContent.petition")}: ${petition.petitionNumber}`, 20, yPosition);
       yPosition += 10;
 
       doc.setFontSize(10);
       doc.setFont("helvetica", "normal");
       doc.text(
-        `Status: ${petition.status} | Created: ${formatDate(
+        `${t("common.status")}: ${petition.status} | ${t("common.created")}: ${formatDate(
           petition.createdDate
-        )} | Modified: ${formatDate(petition.modifiedDate)}`,
+        )} | ${t("common.lastUpdated")}: ${formatDate(petition.modifiedDate)}`,
         20,
         yPosition
       );
@@ -1665,33 +1667,33 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
       // Property Details
       doc.setFontSize(12);
       doc.setFont("helvetica", "bold");
-      doc.text("Property Details", 20, yPosition);
+      doc.text(t("petitionTabContent.propertyDetails"), 20, yPosition);
       yPosition += 10;
 
       doc.setFontSize(10);
       doc.setFont("helvetica", "normal");
       const propertyData = [
         [
-          "Street Address",
-          petition.details?.property?.propertyStreet1 || "N/A",
+          t("petitionTabContent.streetAddress"),
+          petition.details?.property?.propertyStreet1 || t("common.nA"),
         ],
         [
-          "Address Line 2",
-          petition.details?.property?.propertyStreet2 || "N/A",
+          t("petitionTabContent.addressLine2"),
+          petition.details?.property?.propertyStreet2 || t("common.nA"),
         ],
-        ["City", petition.details?.property?.propertyCity || "N/A"],
-        ["State", petition.details?.property?.propertyState || "N/A"],
-        ["ZIP Code", petition.details?.property?.propertyZip || "N/A"],
-        ["County", petition.details?.property?.propertyCounty || "N/A"],
+        [t("petitionTabContent.city"), petition.details?.property?.propertyCity || t("common.nA")],
+        [t("petitionTabContent.state"), petition.details?.property?.propertyState || t("common.nA")],
+        [t("petitionTabContent.zipCode"), petition.details?.property?.propertyZip || t("common.nA")],
+        [t("petitionTabContent.county"), petition.details?.property?.propertyCounty || t("common.nA")],
         [
-          "Assessor Parcel ID",
-          petition.details?.property?.assessorParcelId || "N/A",
+          t("petitionTabContent.assessorParcelId"),
+          petition.details?.property?.assessorParcelId || t("common.nA"),
         ],
       ];
 
       autoTable(doc, {
         startY: yPosition,
-        head: [["Field", "Value"]],
+        head: [[t("common.field"), t("common.value")]],
         body: propertyData,
         theme: "grid",
         headStyles: { fillColor: [52, 73, 94] },
@@ -1704,57 +1706,57 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
       // Loan Details
       doc.setFontSize(12);
       doc.setFont("helvetica", "bold");
-      doc.text("Loan Details", 20, yPosition);
+      doc.text(t("petitionTabContent.loanDetails"), 20, yPosition);
       yPosition += 10;
 
       const loanData = [
-        ["MIN Number", petition.details?.loan?.minNumber || "N/A"],
-        ["Loan Number", petition.details?.loan?.loanNumber || "N/A"],
+        [t("petitionTabContent.minNumber"), petition.details?.loan?.minNumber || t("common.nA")],
+        [t("petitionTabContent.loanNumber"), petition.details?.loan?.loanNumber || t("common.nA")],
         [
-          "Loan Type",
+          t("petitionTabContent.loanType"),
           getLoanTypeName(petition.details?.loan?.petitionLoanTypeId),
         ],
         [
-          "Lien Position",
+          t("petitionTabContent.lienPosition"),
           getLienPositionName(petition.details?.loan?.lienPosition),
         ],
         [
-          "Origination Date",
+          t("petitionTabContent.originationDate"),
           formatDate(petition.details?.loan?.originationDate),
         ],
         [
-          "Original Amount",
+          t("petitionTabContent.originalAmount"),
           formatCurrency(petition.details?.loan?.originalPrincipalAmount),
         ],
         [
-          "Current Amount",
+          t("petitionTabContent.currentAmount"),
           formatCurrency(petition.details?.loan?.currentPrincipalBalance),
         ],
         [
-          "Interest Rate",
+          t("petitionTabContent.interestRate"),
           petition.details?.loan?.interestRatePercent
             ? `${petition.details.loan.interestRatePercent}%`
-            : "N/A",
+            : t("common.nA"),
         ],
         [
-          "Monthly Payment",
+          t("petitionTabContent.monthlyPayment"),
           formatCurrency(petition.details?.loan?.monthlyPaymentAmount),
         ],
         [
-          "Delinquency Days",
-          petition.details?.loan?.delinquencyDaysAtFiling || "N/A",
+          t("petitionTabContent.delinquencyDays"),
+          petition.details?.loan?.delinquencyDaysAtFiling || t("common.nA"),
         ],
-        ["Variable Rate", petition.details?.loan?.variableRate ? "Yes" : "No"],
-        ["Interest Only", petition.details?.loan?.interestOnly ? "Yes" : "No"],
+        [t("petitionTabContent.variableRate"), petition.details?.loan?.variableRate ? t("common.yes") : t("common.no")],
+        [t("petitionTabContent.interestOnly"), petition.details?.loan?.interestOnly ? t("common.yes") : t("common.no")],
         [
-          "Negative Amortization",
-          petition.details?.loan?.negativeAmortization ? "Yes" : "No",
+          t("petitionTabContent.negativeAmortization"),
+          petition.details?.loan?.negativeAmortization ? t("common.yes") : t("common.no"),
         ],
       ];
 
       autoTable(doc, {
         startY: yPosition,
-        head: [["Field", "Value"]],
+        head: [[t("common.field"), t("common.value")]],
         body: loanData,
         theme: "grid",
         headStyles: { fillColor: [52, 73, 94] },
@@ -1771,27 +1773,27 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
       ) {
         doc.setFontSize(12);
         doc.setFont("helvetica", "bold");
-        doc.text("Borrower Details", 20, yPosition);
+        doc.text(t("petitionTabContent.borrowerDetails"), 20, yPosition);
         yPosition += 10;
 
         petition.details.borrowers.forEach((borrower, index) => {
           const borrowerData = [
-            ["First Name", borrower.firstName || "N/A"],
-            ["Middle Name", borrower.middleName || "N/A"],
-            ["Last Name", borrower.lastName || "N/A"],
-            ["Suffix", borrower.suffix || "N/A"],
-            ["Primary Borrower", borrower.borrowerIsPrimary ? "Yes" : "No"],
-            ["Email", borrower.email || "N/A"],
-            ["Phone", borrower.phone || "N/A"],
-            ["Mailing Address", borrower.mailingStreet1 || "N/A"],
-            ["Mailing City", borrower.mailingCity || "N/A"],
-            ["Mailing State", borrower.mailingState || "N/A"],
-            ["Mailing ZIP", borrower.mailingZip || "N/A"],
+            [t("petitionTabContent.firstName"), borrower.firstName || t("common.nA")],
+            [t("petitionTabContent.middleName"), borrower.middleName || t("common.nA")],
+            [t("petitionTabContent.lastName"), borrower.lastName || t("common.nA")],
+            [t("petitionTabContent.suffix"), borrower.suffix || t("common.nA")],
+            [t("petitionTabContent.primaryBorrower"), borrower.borrowerIsPrimary ? t("common.yes") : t("common.no")],
+            [t("petitionTabContent.email"), borrower.email || t("common.nA")],
+            [t("petitionTabContent.phone"), borrower.phone || t("common.nA")],
+            [t("petitionTabContent.mailingAddress"), borrower.mailingStreet1 || t("common.nA")],
+            [t("petitionTabContent.mailingCity"), borrower.mailingCity || t("common.nA")],
+            [t("petitionTabContent.mailingState"), borrower.mailingState || t("common.nA")],
+            [t("petitionTabContent.mailingZip"), borrower.mailingZip || t("common.nA")],
           ];
 
           autoTable(doc, {
             startY: yPosition,
-            head: [["Field", "Value"]],
+            head: [[t("common.field"), t("common.value")]],
             body: borrowerData,
             theme: "grid",
             headStyles: { fillColor: [52, 73, 94] },
@@ -1807,54 +1809,54 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
       if (petition.details?.filingEntity) {
         doc.setFontSize(12);
         doc.setFont("helvetica", "bold");
-        doc.text("Filing Entity", 20, yPosition);
+        doc.text(t("petitionTabContent.filingEntity"), 20, yPosition);
         yPosition += 10;
 
         const filingEntityData = [
           [
-            "Legal Name",
-            petition.details.filingEntity.filingEntityLegalName || "N/A",
+            t("petitionTabContent.legalName"),
+            petition.details.filingEntity.filingEntityLegalName || t("common.nA"),
           ],
           [
-            "Contact Name",
-            petition.details.filingEntity.filingContactName || "N/A",
+            t("petitionTabContent.contactName"),
+            petition.details.filingEntity.filingContactName || t("common.nA"),
           ],
           [
-            "Contact Email",
-            petition.details.filingEntity.filingContactEmail || "N/A",
+            t("petitionTabContent.contactEmail"),
+            petition.details.filingEntity.filingContactEmail || t("common.nA"),
           ],
           [
-            "Contact Phone",
-            petition.details.filingEntity.filingContactPhone || "N/A",
+            t("petitionTabContent.contactPhone"),
+            petition.details.filingEntity.filingContactPhone || t("common.nA"),
           ],
           [
-            "NMLS License",
-            petition.details.filingEntity.nmlsLicenseNumber || "N/A",
+            t("petitionTabContent.nmlsLicense"),
+            petition.details.filingEntity.nmlsLicenseNumber || t("common.nA"),
           ],
           [
-            "State License",
-            petition.details.filingEntity.stateLicenseNumber || "N/A",
+            t("petitionTabContent.stateLicense"),
+            petition.details.filingEntity.stateLicenseNumber || t("common.nA"),
           ],
           [
-            "License State",
-            petition.details.filingEntity.stateLicenseState || "N/A",
+            t("petitionTabContent.licenseState"),
+            petition.details.filingEntity.stateLicenseState || t("common.nA"),
           ],
           [
-            "Street Address",
-            petition.details.filingEntity.filingEntityStreet1 || "N/A",
+            t("petitionTabContent.streetAddress"),
+            petition.details.filingEntity.filingEntityStreet1 || t("common.nA"),
           ],
           [
-            "Address Line 2",
-            petition.details.filingEntity.filingEntityStreet2 || "N/A",
+            t("petitionTabContent.addressLine2"),
+            petition.details.filingEntity.filingEntityStreet2 || t("common.nA"),
           ],
-          ["City", petition.details.filingEntity.filingEntityCity || "N/A"],
-          ["State", petition.details.filingEntity.filingEntityState || "N/A"],
-          ["ZIP Code", petition.details.filingEntity.filingEntityZip || "N/A"],
+          [t("petitionTabContent.city"), petition.details.filingEntity.filingEntityCity || t("common.nA")],
+          [t("petitionTabContent.state"), petition.details.filingEntity.filingEntityState || t("common.nA")],
+          [t("petitionTabContent.zipCode"), petition.details.filingEntity.filingEntityZip || t("common.nA")],
         ];
 
         autoTable(doc, {
           startY: yPosition,
-          head: [["Field", "Value"]],
+          head: [[t("common.field"), t("common.value")]],
           body: filingEntityData,
           theme: "grid",
           headStyles: { fillColor: [52, 73, 94] },
@@ -1869,52 +1871,52 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
       if (petition.details?.rightToCure) {
         doc.setFontSize(12);
         doc.setFont("helvetica", "bold");
-        doc.text("Right-to-Cure (§35A)", 20, yPosition);
+        doc.text(t("petitionTabContent.rightToCure"), 20, yPosition);
         yPosition += 10;
 
         const rightToCureData = [
           [
-            "Notice Sent",
-            petition.details.rightToCure.noticeSent ? "Yes" : "No",
+            t("petitionTabContent.noticeSent"),
+            petition.details.rightToCure.noticeSent ? t("common.yes") : t("common.no"),
           ],
-          ["Notice Date", formatDate(petition.details.rightToCure.noticeDate)],
+          [t("petitionTabContent.noticeDate"), formatDate(petition.details.rightToCure.noticeDate)],
           [
-            "Days Delinquent",
-            petition.details.rightToCure.daysDelinquentAtNotice || "N/A",
+            t("petitionTabContent.daysDelinquent"),
+            petition.details.rightToCure.daysDelinquentAtNotice || t("common.nA"),
           ],
           [
-            "Amount in Default",
+            t("petitionTabContent.amountInDefault"),
             formatCurrency(petition.details.rightToCure.amountInDefault),
           ],
           [
-            "Cure Expiration",
+            t("petitionTabContent.cureExpiration"),
             formatDate(petition.details.rightToCure.cureExpirationDate),
           ],
           [
-            "Override Reason",
-            petition.details.rightToCure.manualOverrideReason || "N/A",
+            t("petitionTabContent.overrideReason"),
+            petition.details.rightToCure.manualOverrideReason || t("common.nA"),
           ],
           [
-            "Notice Address",
-            petition.details.rightToCure.noticeAddressStreet1 || "N/A",
+            t("petitionTabContent.noticeAddress"),
+            petition.details.rightToCure.noticeAddressStreet1 || t("common.nA"),
           ],
           [
-            "Notice City",
-            petition.details.rightToCure.noticeAddressCity || "N/A",
+            t("petitionTabContent.noticeCity"),
+            petition.details.rightToCure.noticeAddressCity || t("common.nA"),
           ],
           [
-            "Notice State",
-            petition.details.rightToCure.noticeAddressState || "N/A",
+            t("petitionTabContent.noticeState"),
+            petition.details.rightToCure.noticeAddressState || t("common.nA"),
           ],
           [
-            "Notice ZIP",
-            petition.details.rightToCure.noticeAddressZip || "N/A",
+            t("petitionTabContent.noticeZip"),
+            petition.details.rightToCure.noticeAddressZip || t("common.nA"),
           ],
         ];
 
         autoTable(doc, {
           startY: yPosition,
-          head: [["Field", "Value"]],
+          head: [[t("common.field"), t("common.value")]],
           body: rightToCureData,
           theme: "grid",
           headStyles: { fillColor: [52, 73, 94] },
@@ -1944,28 +1946,28 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
         if (hasJudgmentData) {
           doc.setFontSize(12);
           doc.setFont("helvetica", "bold");
-          doc.text("Judgment", 20, yPosition);
+          doc.text(t("petitionTabContent.judgment"), 20, yPosition);
           yPosition += 10;
 
           // Get judgment type name
-          let judgmentTypeName = "N/A";
+          let judgmentTypeName = t("common.nA");
           if (judgment.judgmentType !== null && judgment.judgmentType !== undefined && judgment.judgmentType !== 0 && judgment.judgmentType !== '') {
             const judgmentTypes = getJudgmentTypes ? getJudgmentTypes() : [];
             const selectedType = findOptionByValue ? findOptionByValue(judgmentTypes, judgment.judgmentType) : null;
-            judgmentTypeName = selectedType ? (selectedType.description || selectedType.name || "N/A") : "N/A";
+            judgmentTypeName = selectedType ? (selectedType.description || selectedType.name || t("common.nA")) : t("common.nA");
           }
 
           const judgmentData = [
-            ["Judgment Date", formatDate(judgment.judgmentDate) || "N/A"],
-            ["Judgment Amount", formatCurrency(judgment.judgmentAmount) || "N/A"],
-            ["Judgment Type", judgmentTypeName],
-            ["Court Information", judgment.courtInformation || "N/A"],
-            ["Docket Numbers", judgment.docketNumbers || "N/A"],
+            [t("petitionTabContent.judgmentDate"), formatDate(judgment.judgmentDate) || t("common.nA")],
+            [t("petitionTabContent.judgmentAmount"), formatCurrency(judgment.judgmentAmount) || t("common.nA")],
+            [t("petitionTabContent.judgmentType"), judgmentTypeName],
+            [t("petitionTabContent.courtInformation"), judgment.courtInformation || t("common.nA")],
+            [t("petitionTabContent.docketNumbers"), judgment.docketNumbers || t("common.nA")],
           ];
 
           autoTable(doc, {
             startY: yPosition,
-            head: [["Field", "Value"]],
+            head: [[t("common.field"), t("common.value")]],
             body: judgmentData,
             theme: "grid",
             headStyles: { fillColor: [52, 73, 94] },
@@ -2003,31 +2005,31 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
         if (hasForeclosureSaleData) {
           doc.setFontSize(12);
           doc.setFont("helvetica", "bold");
-          doc.text("Foreclosure Sale", 20, yPosition);
+          doc.text(t("petitionTabContent.foreclosureSale"), 20, yPosition);
           yPosition += 10;
 
           // Get buyer type name
-          let soldToName = "N/A";
+          let soldToName = t("common.nA");
           if (foreclosureSale.soldToId !== null && foreclosureSale.soldToId !== undefined && foreclosureSale.soldToId !== '') {
             const buyerTypes = getBuyerTypes ? getBuyerTypes() : [];
             const selectedBuyerType = findOptionByValue ? findOptionByValue(buyerTypes, foreclosureSale.soldToId) : null;
-            soldToName = selectedBuyerType ? (selectedBuyerType.name || selectedBuyerType.value || "N/A") : "N/A";
+            soldToName = selectedBuyerType ? (selectedBuyerType.name || selectedBuyerType.value || t("common.nA")) : t("common.nA");
           }
 
           const foreclosureSaleData = [
-            ["Sale Date", formatDate(foreclosureSale.saleDate) || "N/A"],
-            ["Sold To", soldToName],
-            ["Vesting Entity Name", foreclosureSale.vestingEntityName || "N/A"],
-            ["REO Entity Name", foreclosureSale.reoEntityName || "N/A"],
-            ["REO Contact First Name", foreclosureSale.reoContactFirstName || "N/A"],
-            ["REO Contact Last Name", foreclosureSale.reoContactLastName || "N/A"],
-            ["REO Business Phone", foreclosureSale.reoBusinessPhone || "N/A"],
-            ["REO Emergency Phone", foreclosureSale.reoEmergencyPhone || "N/A"],
+            [t("petitionTabContent.saleDate"), formatDate(foreclosureSale.saleDate) || t("common.nA")],
+            [t("petitionTabContent.soldTo"), soldToName],
+            [t("petitionTabContent.vestingEntityName"), foreclosureSale.vestingEntityName || t("common.nA")],
+            [t("petitionTabContent.reoEntityName"), foreclosureSale.reoEntityName || t("common.nA")],
+            [t("petitionTabContent.reoContactFirstName"), foreclosureSale.reoContactFirstName || t("common.nA")],
+            [t("petitionTabContent.reoContactLastName"), foreclosureSale.reoContactLastName || t("common.nA")],
+            [t("petitionTabContent.reoBusinessPhone"), foreclosureSale.reoBusinessPhone || t("common.nA")],
+            [t("petitionTabContent.reoEmergencyPhone"), foreclosureSale.reoEmergencyPhone || t("common.nA")],
           ];
 
           autoTable(doc, {
             startY: yPosition,
-            head: [["Field", "Value"]],
+            head: [[t("common.field"), t("common.value")]],
             body: foreclosureSaleData,
             theme: "grid",
             headStyles: { fillColor: [52, 73, 94] },
@@ -2043,19 +2045,19 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
       if (petition.details?.affidavit) {
         doc.setFontSize(12);
         doc.setFont("helvetica", "bold");
-        doc.text("Form 35B Compliance", 20, yPosition);
+        doc.text(t("petitionTabContent.form35BCompliance"), 20, yPosition);
         yPosition += 10;
 
         const affidavitData = [
           [
-            "Certain Mortgage Loan",
-            petition.details.affidavit.certainMortgageLoan ? "Yes" : "No",
+            t("petitionTabContent.certainMortgageLoan"),
+            petition.details.affidavit.certainMortgageLoan ? t("common.yes") : t("common.no"),
           ],
         ];
 
         autoTable(doc, {
           startY: yPosition,
-          head: [["Field", "Value"]],
+          head: [[t("common.field"), t("common.value")]],
           body: affidavitData,
           theme: "grid",
           headStyles: { fillColor: [52, 73, 94] },
@@ -2073,26 +2075,26 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
       ) {
         doc.setFontSize(12);
         doc.setFont("helvetica", "bold");
-        doc.text("Loan Assignees", 20, yPosition);
+        doc.text(t("petitionTabContent.loanAssignees"), 20, yPosition);
         yPosition += 10;
 
         petition.details.loanAssignees.forEach((assignee, index) => {
           const assigneeData = [
-            ["Assignee Name", assignee.assigneeName || "N/A"],
-            ["Assignee Type", getAssigneeTypeName(assignee.assigneeTypeId)],
-            ["Assignee Role", getAssigneeRoleName(assignee.assigneeRoleId)],
-            ["Street Address", assignee.street1 || "N/A"],
-            ["Address Line 2", assignee.street2 || "N/A"],
-            ["City", assignee.city || "N/A"],
-            ["State", assignee.addressState || "N/A"],
-            ["ZIP Code", assignee.zip || "N/A"],
-            ["License Number", assignee.licenseNumber || "N/A"],
-            ["License State", assignee.licenseState || "N/A"],
+            [t("petitionTabContent.assigneeName"), assignee.assigneeName || t("common.nA")],
+            [t("petitionTabContent.assigneeType"), getAssigneeTypeName(assignee.assigneeTypeId)],
+            [t("petitionTabContent.assigneeRole"), getAssigneeRoleName(assignee.assigneeRoleId)],
+            [t("petitionTabContent.streetAddress"), assignee.street1 || t("common.nA")],
+            [t("petitionTabContent.addressLine2"), assignee.street2 || t("common.nA")],
+            [t("petitionTabContent.city"), assignee.city || t("common.nA")],
+            [t("petitionTabContent.state"), assignee.addressState || t("common.nA")],
+            [t("petitionTabContent.zipCode"), assignee.zip || t("common.nA")],
+            [t("petitionTabContent.licenseNumber"), assignee.licenseNumber || t("common.nA")],
+            [t("petitionTabContent.licenseState"), assignee.licenseState || t("common.nA")],
           ];
 
           autoTable(doc, {
             startY: yPosition,
-            head: [["Field", "Value"]],
+            head: [[t("common.field"), t("common.value")]],
             body: assigneeData,
             theme: "grid",
             headStyles: { fillColor: [52, 73, 94] },
@@ -2111,23 +2113,23 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
       ) {
         doc.setFontSize(12);
         doc.setFont("helvetica", "bold");
-        doc.text("Signatures", 20, yPosition);
+        doc.text(t("petitionTabContent.signatures"), 20, yPosition);
         yPosition += 10;
 
         petition.details.signatures.forEach((signature, index) => {
           const signatureData = [
-            ["Signer Name", signature.signerFullName || "N/A"],
-            ["Signer Title", signature.signerTitle || "N/A"],
-            ["Signer Email", signature.signerEmail || "N/A"],
-            ["E-Sign Consent", signature.esignConsent ? "Yes" : "No"],
-            ["Signed At", formatDate(signature.signedAt)],
-            ["Signer IP", signature.signerIp || "N/A"],
-            ["OTP Code", signature.otpCode || "N/A"],
+            [t("petitionTabContent.signerName"), signature.signerFullName || t("common.nA")],
+            [t("petitionTabContent.signerTitle"), signature.signerTitle || t("common.nA")],
+            [t("petitionTabContent.signerEmail"), signature.signerEmail || t("common.nA")],
+            [t("petitionTabContent.esignConsent"), signature.esignConsent ? t("common.yes") : t("common.no")],
+            [t("petitionTabContent.signedAt"), formatDate(signature.signedAt)],
+            [t("petitionTabContent.signerIp"), signature.signerIp || t("common.nA")],
+            [t("petitionTabContent.otpCode"), signature.otpCode || t("common.nA")],
           ];
 
           autoTable(doc, {
             startY: yPosition,
-            head: [["Field", "Value"]],
+            head: [[t("common.field"), t("common.value")]],
             body: signatureData,
             theme: "grid",
             headStyles: { fillColor: [52, 73, 94] },
@@ -2142,7 +2144,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
       // Save the PDF
       doc.save(`petition-${petition.petitionNumber}-details.pdf`);
     } catch (error) {
-      alert("Error generating PDF. Please try again.");
+      toast.error(t("common.errorGeneratingPDF") || "Error generating PDF. Please try again.");
     }
   };
 
@@ -2172,13 +2174,13 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
                     <div className="petition-meta-line">
                       <i className="fas fa-calendar-alt me-2 text-muted"></i>
                       <span className="text-muted">
-                        Created: {formatDate(petition.createdDate)}
+                        {t("common.created")}: {formatDate(petition.createdDate)}
                       </span>
                     </div>
                     <div className="petition-meta-line">
                       <i className="fas fa-clock me-2 text-muted"></i>
                       <span className="text-muted">
-                        Last Updated: {formatDateTime(petition.modifiedDate)}
+                        {t("common.lastUpdated")}: {formatDateTime(petition.modifiedDate)}
                       </span>
                     </div>
                   </div>
@@ -2192,82 +2194,82 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
                         <button
                           type="button"
                           className={`dashboard-btn-create ${showEditDropdown ? 'active' : ''}`}
-                          onClick={() => setShowEditDropdown(!showEditDropdown)}
-                          title="Edit options"
+                        onClick={() => setShowEditDropdown(!showEditDropdown)}
+                        title={t("petitionTabContent.editOptions")}
+                      >
+                        <i className="fas fa-edit me-1"></i>
+                        {t("petitionTabContent.edit")}
+                        <i className={`fas fa-chevron-down ms-1 transition-icon ${showEditDropdown ? 'rotate' : ''}`} style={{ fontSize: "0.7rem" }}></i>
+                      </button>
+                      {showEditDropdown && (
+                        <div className="edit-options-menu">
+                          <button
+                            className="edit-option-item"
+                            onClick={() => handleEditOptionSelect("filing")}
+                          >
+                            <i className="fas fa-edit edit-option-icon"></i>
+                            <span>{t("petitionTabContent.editFiling")}</span>
+                          </button>
+                          <button
+                            className="edit-option-item"
+                            onClick={() => handleEditOptionSelect("judgement")}
+                          >
+                            <i className="fas fa-edit edit-option-icon"></i>
+                            <span>{t("petitionTabContent.editJudgement")}</span>
+                          </button>
+                          <button
+                            className="edit-option-item"
+                            onClick={() => handleEditOptionSelect("foreclosure")}
+                          >
+                            <i className="fas fa-edit edit-option-icon"></i>
+                            <span>{t("petitionTabContent.editForeclosure")}</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                    {!isPublic && (
+                      <div className="dropdown notes-options-dropdown" style={{ position: "relative" }}>
+                        <button
+                          type="button"
+                          className={`dashboard-btn-refresh ${showNotesDropdown ? 'active' : ''}`}
+                          onClick={() => setShowNotesDropdown(!showNotesDropdown)}
+                          title={t("petitionTabContent.notesOptions")}
                         >
-                          <i className="fas fa-edit me-1"></i>
-                          Edit
-                          <i className={`fas fa-chevron-down ms-1 transition-icon ${showEditDropdown ? 'rotate' : ''}`} style={{ fontSize: "0.7rem" }}></i>
+                          <i className="fas fa-sticky-note me-1"></i>
+                          {t("petitionTabContent.notes")}
+                          <i className={`fas fa-chevron-down ms-1 transition-icon ${showNotesDropdown ? 'rotate' : ''}`} style={{ fontSize: "0.7rem" }}></i>
                         </button>
-                        {showEditDropdown && (
+                        {showNotesDropdown && (
                           <div className="edit-options-menu">
                             <button
                               className="edit-option-item"
-                              onClick={() => handleEditOptionSelect("filing")}
+                              onClick={handleAddNote}
                             >
-                              <i className="fas fa-edit edit-option-icon"></i>
-                              <span>Edit Filing</span>
+                              <i className="fas fa-plus edit-option-icon"></i>
+                              <span>{t("petitionTabContent.addNote")}</span>
                             </button>
                             <button
                               className="edit-option-item"
-                              onClick={() => handleEditOptionSelect("judgement")}
+                              onClick={() => {
+                                setShowNotesSection(true);
+                                setShowNotesDropdown(false);
+                              }}
                             >
-                              <i className="fas fa-edit edit-option-icon"></i>
-                              <span>Edit Judgement</span>
-                            </button>
-                            <button
-                              className="edit-option-item"
-                              onClick={() => handleEditOptionSelect("foreclosure")}
-                            >
-                              <i className="fas fa-edit edit-option-icon"></i>
-                              <span>Edit Foreclosure</span>
+                              <i className="fas fa-eye edit-option-icon"></i>
+                              <span>{t("petitionTabContent.viewNotes")}</span>
                             </button>
                           </div>
                         )}
                       </div>
-                      {!isPublic && (
-                        <div className="dropdown notes-options-dropdown" style={{ position: "relative" }}>
-                          <button
-                            type="button"
-                            className={`dashboard-btn-refresh ${showNotesDropdown ? 'active' : ''}`}
-                            onClick={() => setShowNotesDropdown(!showNotesDropdown)}
-                            title="Notes options"
-                          >
-                            <i className="fas fa-sticky-note me-1"></i>
-                            Notes
-                            <i className={`fas fa-chevron-down ms-1 transition-icon ${showNotesDropdown ? 'rotate' : ''}`} style={{ fontSize: "0.7rem" }}></i>
-                          </button>
-                          {showNotesDropdown && (
-                            <div className="edit-options-menu">
-                              <button
-                                className="edit-option-item"
-                                onClick={handleAddNote}
-                              >
-                                <i className="fas fa-plus edit-option-icon"></i>
-                                <span>Add Note</span>
-                              </button>
-                              <button
-                                className="edit-option-item"
-                                onClick={() => {
-                                  setShowNotesSection(true);
-                                  setShowNotesDropdown(false);
-                                }}
-                              >
-                                <i className="fas fa-eye edit-option-icon"></i>
-                                <span>View Notes</span>
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      )}
+                    )}
                       <button
                         type="button"
                         className="dashboard-btn-refresh"
                         onClick={handleDownloadPDF}
-                        title="Download as PDF"
+                        title={t("petitionTabContent.downloadAsPDF")}
                       >
                         <i className="fas fa-download me-1"></i>
-                        Download PDF
+                        {t("petitionTabContent.downloadPDF")}
                       </button>
                     </>
                   ) : (
@@ -2286,7 +2288,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
                           className="dashboard-btn-create"
                           onClick={handleSaveDraft}
                           disabled={isSavingDraft || isSubmitting}
-                          title="Save as Draft"
+                          title={t("petitionTabContent.saveDraftTitle")}
                         >
                           {isSavingDraft ? (
                             <>
@@ -2295,12 +2297,12 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
                                 role="status"
                                 aria-hidden="true"
                               ></span>
-                              Saving...
+                              {t("petitionTabContent.saving")}
                             </>
                           ) : (
                             <>
                               <i className="fas fa-save me-1"></i>
-                              Save as Draft
+                              {t("petitionTabContent.saveAsDraft")}
                             </>
                           )}
                         </button>
@@ -2310,7 +2312,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
                         className="dashboard-btn-create"
                         onClick={handleFinalSubmit}
                         disabled={isSavingDraft || isSubmitting}
-                        title="Submit Petition"
+                        title={t("petitionTabContent.submitPetitionTitle")}
                       >
                         {isSubmitting ? (
                           <>
@@ -2319,12 +2321,12 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
                               role="status"
                               aria-hidden="true"
                             ></span>
-                            Submitting...
+                            {t("petitionTabContent.submitting")}
                           </>
                         ) : (
                           <>
                             <i className="fas fa-paper-plane me-1"></i>
-                            Submit Petition
+                            {t("petitionTabContent.submitPetition")}
                           </>
                         )}
                       </button>
@@ -2333,10 +2335,10 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
                         className="dashboard-btn-refresh"
                         onClick={handleEditToggle}
                         disabled={isSavingDraft || isSubmitting}
-                        title="Cancel editing"
+                        title={t("petitionTabContent.cancelEditing")}
                       >
                         <i className="fas fa-times me-1"></i>
-                        Cancel
+                        {t("common.cancel")}
                       </button>
                     </>
                   )}
@@ -2353,7 +2355,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
          petition.statusClass?.toLowerCase() !== "draft" &&
          (!formData.foreclosureSale?.saleDate || !formData.foreclosureSale?.soldToId) && (
           <div className="alert alert-warning mb-4">
-            <strong>Please fill foreclosure sale info</strong> - Sale Date and Sold To fields are required before committing the petition sale.
+            <strong>{t("petitionTabContent.pleaseFillForeclosureSaleInfo")}</strong> - {t("petitionTabContent.pleaseFillForeclosureSaleDesc")}
           </div>
         )}
 
@@ -2543,10 +2545,10 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
         // Determine which conditions are not met
         const missingConditions = [];
         if (!rightToCureMet) {
-          missingConditions.push('Right to Cure notice must be sent (set to "Yes")');
+          missingConditions.push(t("petitionTabContent.rightToCureMustBeSent"));
         }
         if (!judgmentSubmitted) {
-          missingConditions.push('Judgment must be submitted first');
+          missingConditions.push(t("petitionTabContent.judgmentMustBeSubmitted"));
         }
         
         return (
@@ -2554,22 +2556,22 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
             <div className="modal-dialog modal-dialog-centered">
               <div className="modal-content">
                 <div className="modal-header">
-                  <h5 className="modal-title">Cannot Edit Foreclosure Sale</h5>
+                  <h5 className="modal-title">{t("petitionTabContent.cannotEditForeclosureSale")}</h5>
                   <button
                     type="button"
                     className="btn-close"
                     onClick={() => setShowForeclosureWarningModal(false)}
-                    aria-label="Close"
+                    aria-label={t("common.close")}
                   ></button>
                 </div>
                 <div className="modal-body">
-                  <p>You cannot edit foreclosure sale information until the following condition{missingConditions.length > 1 ? 's are' : ' is'} met:</p>
+                  <p>{t("petitionTabContent.cannotEditForeclosureDesc", { s: missingConditions.length > 1 ? 's' : '' })}</p>
                   <ul>
                     {missingConditions.map((condition, index) => (
                       <li key={index}>{condition}</li>
                     ))}
                   </ul>
-                  <p className="mb-0">Please ensure {missingConditions.length > 1 ? 'all conditions are' : 'this condition is'} met before attempting to edit foreclosure sale information.</p>
+                  <p className="mb-0">{t("petitionTabContent.pleaseEnsureConditions", { count: missingConditions.length })}</p>
                 </div>
                 <div className="modal-footer">
                   <button
@@ -2577,7 +2579,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
                     className="dashboard-btn-refresh"
                     onClick={() => setShowForeclosureWarningModal(false)}
                   >
-                    Close
+                    {t("common.close")}
                   </button>
                 </div>
               </div>
