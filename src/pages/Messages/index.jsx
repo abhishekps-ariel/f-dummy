@@ -524,30 +524,34 @@ const Messages = () => {
   };
 
   const handleConversationClick = (conversation) => {
-    setSelectedConversation(conversation);
-    // Reset unread count when conversation is opened
-    if (conversation.chatId && unreadCounts[conversation.chatId] > 0) {
-      setUnreadCounts((prev) => ({
-        ...prev,
-        [conversation.chatId]: 0,
-      }));
-      // Update conversation unread count in conversations list
-      setConversations((prev) =>
-        prev.map((conv) =>
-          conv.chatId === conversation.chatId
-            ? { ...conv, unread: 0 }
-            : conv
-        )
-      );
+    // Toggle conversation: if clicking the same one, close it; otherwise open it
+    if (selectedConversation?.chatId === conversation.chatId) {
+      // Close the conversation
+      setSelectedConversation(null);
+      setCurrentChatId(null);
+      currentChatIdRef.current = null;
+      setMessages([]);
+    } else {
+      // Open the conversation
+      setSelectedConversation(conversation);
+      // Reset unread count when conversation is opened
+      if (conversation.chatId && unreadCounts[conversation.chatId] > 0) {
+        setUnreadCounts((prev) => ({
+          ...prev,
+          [conversation.chatId]: 0,
+        }));
+        // Update conversation unread count in conversations list
+        setConversations((prev) =>
+          prev.map((conv) =>
+            conv.chatId === conversation.chatId
+              ? { ...conv, unread: 0 }
+              : conv
+          )
+        );
+      }
     }
   };
 
-  // Select first conversation by default
-  useEffect(() => {
-    if (conversations.length > 0 && !selectedConversation) {
-      setSelectedConversation(conversations[0]);
-    }
-  }, [conversations, selectedConversation]);
 
   return (
     <div className="dashboard-wrapper">
