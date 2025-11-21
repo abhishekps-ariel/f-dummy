@@ -22,7 +22,11 @@ const ChatHeader = ({ conversation, onBack }) => {
         <div className="chat-avatar">{conversation.avatar}</div>
         <div>
           <h4 className="chat-name">{conversation.name}</h4>
-          <span className="chat-status">{t("messages.active")}</span>
+          {conversation.email ? (
+            <span className="chat-status">{conversation.email}</span>
+          ) : (
+            <span className="chat-status">{t("messages.active")}</span>
+          )}
         </div>
       </div>
     </div>

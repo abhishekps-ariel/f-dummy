@@ -84,6 +84,7 @@ const Messages = () => {
           id: chat.chatId,
           chatId: chat.chatId,
           name: chat.userName || t("messages.unknownUser"),
+          email: chat.email || '',
           lastMessage: chat.lastMessage || '',
           timestamp: formatTimestamp(chat.lastMessageTime),
           lastMessageTime: chat.lastMessageTime, // Store original timestamp for sorting
@@ -510,6 +511,7 @@ const Messages = () => {
               id: chat.chatId,
               chatId: chat.chatId,
               name: chat.userName || t("messages.unknownUser"),
+              email: chat.email || '',
               lastMessage: chat.lastMessage || '',
               timestamp: formatTimestamp(chat.lastMessageTime),
               lastMessageTime: chat.lastMessageTime,
@@ -624,6 +626,7 @@ const Messages = () => {
         id: `new-${user.userId || user.id}`, // Temporary ID until chat is created
         chatId: null, // Will be set when first message is sent
         name: user.userName || user.name || t("messages.unknownUser"),
+        email: user.email || '',
         lastMessage: '',
         timestamp: '',
         lastMessageTime: null,
