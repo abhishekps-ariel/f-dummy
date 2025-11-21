@@ -33,7 +33,7 @@ const Messages = () => {
   const [currentPage, setCurrentPage] = useState({}); // Track current page per chatId
   const [hasMoreMessages, setHasMoreMessages] = useState({}); // Track if more messages available per chatId
   const [loadingMoreMessages, setLoadingMoreMessages] = useState(false);
-  const pageSize = 10; // Number of messages per page
+  const pageSize = 25; // Number of messages per page
 
   // Hardcoded receiver ID for testing
   const TEST_RECEIVER_ID = '1c490bd3-e968-4a36-b915-78b64815ba6c';
