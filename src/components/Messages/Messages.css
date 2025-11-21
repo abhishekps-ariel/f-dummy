@@ -352,6 +352,30 @@
   margin-top: 0.25rem;
 }
 
+/* Date Breaker */
+.date-breaker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 1.5rem 0;
+  padding: 0 1rem;
+}
+
+.date-breaker-line {
+  flex: 1;
+  height: 1px;
+  background-color: #e9ecef;
+}
+
+.date-breaker-text {
+  padding: 0 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #6c757d;
+  background-color: white;
+  white-space: nowrap;
+}
+
 /* Message Input */
 .message-input-container {
   padding: 0.875rem 1.25rem;

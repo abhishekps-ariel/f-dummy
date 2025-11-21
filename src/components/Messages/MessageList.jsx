@@ -1,9 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import MessageItem from './MessageItem';
+import DateBreaker from './DateBreaker';
 
 const MessageList = ({ 
   messages, 
-  conversationAvatar, 
+  conversationAvatar,
+  conversationId,
   onLoadMoreMessages, 
   hasMoreMessages, 
   loadingMoreMessages 
@@ -14,6 +16,81 @@ const MessageList = ({
   const [shouldScrollToBottom, setShouldScrollToBottom] = useState(true);
   const previousMessagesLengthRef = useRef(0);
   const scrollPositionRef = useRef(null);
+  const previousConversationIdRef = useRef(null);
+
+  // Helper function to get date label for a message
+  const getDateLabel = (timestamp) => {
+    if (!timestamp) return null;
+    
+    const messageDate = new Date(timestamp);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    // Reset time to compare only dates
+    const messageDateOnly = new Date(messageDate.getFullYear(), messageDate.getMonth(), messageDate.getDate());
+    const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const yesterdayOnly = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate());
+    
+    if (messageDateOnly.getTime() === todayOnly.getTime()) {
+      return 'Today';
+    } else if (messageDateOnly.getTime() === yesterdayOnly.getTime()) {
+      return 'Yesterday';
+    } else {
+      return messageDate.toLocaleDateString('en-US', { 
+        month: 'long', 
+        day: 'numeric', 
+        year: 'numeric' 
+      });
+    }
+  };
+
+  // Helper function to check if two messages are on different dates
+  const isDifferentDate = (timestamp1, timestamp2) => {
+    if (!timestamp1 || !timestamp2) return true;
+    
+    const date1 = new Date(timestamp1);
+    const date2 = new Date(timestamp2);
+    
+    return (
+      date1.getFullYear() !== date2.getFullYear() ||
+      date1.getMonth() !== date2.getMonth() ||
+      date1.getDate() !== date2.getDate()
+    );
+  };
+
+  // Group messages with date breakers
+  const renderMessagesWithDateBreakers = () => {
+    if (!messages || messages.length === 0) return null;
+    
+    const elements = [];
+    let previousDate = null;
+    
+    messages.forEach((message, index) => {
+      const currentDate = message.originalTimestamp 
+        ? getDateLabel(message.originalTimestamp)
+        : null;
+      
+      // Add date breaker if this is the first message or date changed
+      if (currentDate && (index === 0 || isDifferentDate(message.originalTimestamp, messages[index - 1]?.originalTimestamp))) {
+        elements.push(
+          <DateBreaker key={`date-${message.id || index}`} date={currentDate} />
+        );
+        previousDate = currentDate;
+      }
+      
+      // Add the message
+      elements.push(
+        <MessageItem
+          key={message.id || index}
+          message={message}
+          conversationAvatar={conversationAvatar}
+        />
+      );
+    });
+    
+    return elements;
+  };
 
   // Scroll to bottom on initial load or when new messages arrive at bottom
   useEffect(() => {
@@ -80,6 +157,32 @@ const MessageList = ({
     }
   }, [messages, loadingMoreMessages]);
 
+  // Scroll to bottom when switching between conversations
+  useEffect(() => {
+    if (conversationId !== undefined && conversationId !== previousConversationIdRef.current) {
+      // Conversation changed - scroll to bottom after messages are rendered
+      const prevId = previousConversationIdRef.current;
+      previousConversationIdRef.current = conversationId;
+      setShouldScrollToBottom(true);
+      
+      // Only scroll if this is an actual conversation change (not initial mount)
+      if (prevId !== null && prevId !== undefined) {
+        // Wait for messages to render, then scroll to bottom
+        // Use requestAnimationFrame for better timing
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            if (messagesEndRef.current) {
+              messagesEndRef.current.scrollIntoView({ behavior: 'auto' });
+            } else if (messagesListRef.current) {
+              // Fallback: scroll container to bottom
+              messagesListRef.current.scrollTop = messagesListRef.current.scrollHeight;
+            }
+          }, 100);
+        });
+      }
+    }
+  }, [conversationId, messages]);
+
   return (
     <div 
       className="messages-list" 
@@ -95,13 +198,7 @@ const MessageList = ({
         </div>
       )}
       <div ref={messagesTopRef} />
-      {messages.map((message) => (
-        <MessageItem
-          key={message.id}
-          message={message}
-          conversationAvatar={conversationAvatar}
-        />
-      ))}
+      {renderMessagesWithDateBreakers()}
       <div ref={messagesEndRef} />
     </div>
   );

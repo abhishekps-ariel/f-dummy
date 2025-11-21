@@ -30,6 +30,7 @@ const ChatArea = ({
       <MessageList 
         messages={messages} 
         conversationAvatar={selectedConversation.avatar}
+        conversationId={selectedConversation.chatId}
         onLoadMoreMessages={onLoadMoreMessages}
         hasMoreMessages={hasMoreMessages}
         loadingMoreMessages={loadingMoreMessages}

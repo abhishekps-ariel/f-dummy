@@ -38,7 +38,7 @@ const Messages = () => {
   // Hardcoded receiver ID for testing
   const TEST_RECEIVER_ID = '1c490bd3-e968-4a36-b915-78b64815ba6c';
 
-  // Format timestamp for display
+  // Format timestamp for display (for conversation list)
   const formatTimestamp = (timestamp) => {
     if (!timestamp) return '';
     const date = new Date(timestamp);
@@ -52,6 +52,13 @@ const Messages = () => {
     } else {
       return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     }
+  };
+
+  // Format message time (only time, no date - date breakers handle dates)
+  const formatMessageTime = (timestamp) => {
+    if (!timestamp) return '';
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
   };
 
   // Sort conversations by latest message time (descending)
@@ -121,7 +128,8 @@ const Messages = () => {
           chatId: msg.chatId,
           sender: msg.author?.user || 'Unknown',
           text: msg.message || '',
-          timestamp: formatTimestamp(msg.timeStamp),
+          timestamp: formatMessageTime(msg.timeStamp),
+          originalTimestamp: msg.timeStamp, // Store original timestamp for date grouping
           isOwn: msg.sendbyYou || false,
           messageSeen: msg.messageSeen || false,
           status: msg.status?.text || '',
@@ -233,7 +241,8 @@ const Messages = () => {
         chatId: chatId,
         sender: msg.Author?.User || msg.author?.user || 'Unknown',
         text: msg.Message || msg.message || '',
-        timestamp: formatTimestamp(msg.TimeStamp || msg.timeStamp),
+        timestamp: formatMessageTime(msg.TimeStamp || msg.timeStamp),
+        originalTimestamp: msg.TimeStamp || msg.timeStamp, // Store original timestamp for date grouping
         isOwn: isOwn,
         messageSeen: msg.MessageSeen !== undefined ? msg.MessageSeen : (msg.messageSeen || false),
         status: msg.Status?.Text || msg.status?.text || '',
@@ -484,7 +493,8 @@ const Messages = () => {
             chatId: response.data.chatId,
             sender: response.data.author?.user || 'You',
             text: response.data.message || '',
-            timestamp: formatTimestamp(response.data.timeStamp),
+            timestamp: formatMessageTime(response.data.timeStamp),
+            originalTimestamp: response.data.timeStamp, // Store original timestamp for date grouping
             isOwn: true,
             messageSeen: response.data.messageSeen || false,
             status: response.data.status?.text || '',
