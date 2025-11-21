@@ -275,20 +275,6 @@ function Home() {
             </div>
             <div className="col-md-6 col-lg-4">
               <div className="link-box-theme">
-                <a 
-                  href="#" 
-                  className="text-decoration-hover"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    navigate(ROUTES.PUBLIC_PETITIONS);
-                  }}
-                >
-                  View Filed Petitions &rarr;
-                </a>
-              </div>
-            </div>
-            <div className="col-md-6 col-lg-4">
-              <div className="link-box-theme">
                 <a href="#" className="text-decoration-hover">
                   Find state-chartered banks and credit unions &rarr;
                 </a>

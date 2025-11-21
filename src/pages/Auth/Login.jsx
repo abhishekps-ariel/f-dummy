@@ -433,6 +433,40 @@ function Login() {
                       </a>
                     </div>
 
+                    <div className="text-center mt-4 mb-4">
+                      <Link
+                        to={ROUTES.PUBLIC_PETITIONS}
+                        className="d-inline-flex align-items-center gap-2 text-decoration-none"
+                        style={{
+                          color: "#357a5b",
+                          fontSize: "0.95rem",
+                          fontWeight: "600",
+                          transition: "all 0.3s ease"
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.color = "#2d6349";
+                          e.currentTarget.style.transform = "translateX(2px)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.color = "#357a5b";
+                          e.currentTarget.style.transform = "translateX(0)";
+                        }}
+                      >
+                        <i 
+                          className="fa-solid fa-file-lines"
+                          style={{ fontSize: "1rem" }}
+                        ></i>
+                        <span>View Filed Petitions</span>
+                        <i 
+                          className="fa-solid fa-arrow-right"
+                          style={{ 
+                            fontSize: "0.85rem",
+                            transition: "transform 0.3s ease"
+                          }}
+                        ></i>
+                      </Link>
+                    </div>
+
                     <div className="d-flex flex-column important-notice mt-5">
                       <strong>Important Notice:</strong>
                       The filer/mortgagee/loan holder can only initiate the
