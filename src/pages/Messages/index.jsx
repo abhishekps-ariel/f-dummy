@@ -28,6 +28,7 @@ const Messages = () => {
   const currentChatIdRef = useRef(null);
   const signalRConnectionRef = useRef(null);
   const messagesMapRef = useRef({});
+  const [unreadCounts, setUnreadCounts] = useState({}); // Track unread counts per chatId
 
   // Hardcoded receiver ID for testing
   const TEST_RECEIVER_ID = '1c490bd3-e968-4a36-b915-78b64815ba6c';
@@ -74,7 +75,19 @@ const Messages = () => {
           lastMessageTime: chat.lastMessageTime, // Store original timestamp for sorting
           userId: chat.userId,
           avatar: chat.userName ? chat.userName.charAt(0).toUpperCase() : 'U',
+          unread: chat.unreadCount || unreadCounts[chat.chatId] || 0, // Use API unread count or state
         }));
+        
+        // Initialize unread counts from API response if available
+        const initialUnreadCounts = {};
+        response.data.forEach((chat) => {
+          if (chat.unreadCount !== undefined && chat.unreadCount > 0) {
+            initialUnreadCounts[chat.chatId] = chat.unreadCount;
+          }
+        });
+        if (Object.keys(initialUnreadCounts).length > 0) {
+          setUnreadCounts((prev) => ({ ...prev, ...initialUnreadCounts }));
+        }
         const sortedConversations = sortConversationsByLatest(formattedConversations);
         setConversations(sortedConversations);
       }
@@ -113,6 +126,22 @@ const Messages = () => {
         setMessages(reversedMessages);
         setCurrentChatId(chatId);
         currentChatIdRef.current = chatId;
+        
+        // Reset unread count when messages are loaded (conversation is opened)
+        if (unreadCounts[chatId] > 0) {
+          setUnreadCounts((prev) => ({
+            ...prev,
+            [chatId]: 0,
+          }));
+          // Update conversation unread count in conversations list
+          setConversations((prev) =>
+            prev.map((conv) =>
+              conv.chatId === chatId
+                ? { ...conv, unread: 0 }
+                : conv
+            )
+          );
+        }
       }
     } catch (error) {
       console.error('Error loading messages:', error);
@@ -140,13 +169,15 @@ const Messages = () => {
       
       const chatId = msg.ChatId || msg.chatId;
       const messageId = msg.Id || msg.id;
+      const isOwn = msg.SendbyYou !== undefined ? msg.SendbyYou : (msg.sendbyYou || false);
+      
       const formattedMessage = {
         id: messageId,
         chatId: chatId,
         sender: msg.Author?.User || msg.author?.user || 'Unknown',
         text: msg.Message || msg.message || '',
         timestamp: formatTimestamp(msg.TimeStamp || msg.timeStamp),
-        isOwn: msg.SendbyYou !== undefined ? msg.SendbyYou : (msg.sendbyYou || false),
+        isOwn: isOwn,
         messageSeen: msg.MessageSeen !== undefined ? msg.MessageSeen : (msg.messageSeen || false),
         status: msg.Status?.Text || msg.status?.text || '',
         author: msg.Author || msg.author,
@@ -166,59 +197,127 @@ const Messages = () => {
           formattedMessage,
         ];
         
+        // Determine if we should increment unread count
+        // Convert both to strings for consistent comparison
+        const currentChatIdStr = currentChatIdRef.current?.toString();
+        const msgChatIdStr = chatId?.toString();
+        const shouldIncrementUnread = !isOwn && currentChatIdStr !== msgChatIdStr;
+        
+        // Debug logging
+        console.log('Message received - chatId:', msgChatIdStr, 'currentChatId:', currentChatIdStr, 'isOwn:', isOwn, 'shouldIncrement:', shouldIncrementUnread);
+        
+        // Prepare message data for conversation update
+        const msgText = msg.Message || msg.message || '';
+        const msgTime = msg.TimeStamp || msg.timeStamp;
+        const msgAuthor = msg.Author || msg.author;
+        const msgSenderId = msg.SenderId || msg.senderId;
+        const msgReceiverId = msg.ReceiverId || msg.receiverId;
+        
+        // Update unread counts and conversations together
+        if (shouldIncrementUnread) {
+          // Increment unread count
+          setUnreadCounts((prev) => {
+            const newCount = (prev[chatId] || 0) + 1;
+            
+            // Update conversations with the new unread count
+            setConversations((prevConvs) => {
+              const msgChatIdStr = chatId?.toString();
+              const existingConv = prevConvs.find((conv) => {
+                const convChatId = conv.chatId?.toString();
+                return convChatId === msgChatIdStr;
+              });
+              
+              let updatedConversations;
+              if (existingConv) {
+                updatedConversations = prevConvs.map((conv) => {
+                  const convChatId = conv.chatId?.toString();
+                  return convChatId === msgChatIdStr
+                    ? {
+                        ...conv,
+                        lastMessage: msgText,
+                        timestamp: formatTimestamp(msgTime),
+                        lastMessageTime: msgTime,
+                        unread: newCount,
+                      }
+                    : conv;
+                });
+              } else {
+                updatedConversations = [
+                  {
+                    id: chatId,
+                    chatId: chatId,
+                    name: msgAuthor?.User || msgAuthor?.user || 'Unknown User',
+                    lastMessage: msgText,
+                    timestamp: formatTimestamp(msgTime),
+                    lastMessageTime: msgTime,
+                    userId: isOwn ? msgReceiverId : msgSenderId,
+                    avatar: (msgAuthor?.User || msgAuthor?.user)
+                      ? (msgAuthor.User || msgAuthor.user).charAt(0).toUpperCase()
+                      : 'U',
+                    unread: newCount,
+                  },
+                  ...prevConvs,
+                ];
+              }
+              
+              return sortConversationsByLatest(updatedConversations);
+            });
+            
+            return {
+              ...prev,
+              [chatId]: newCount,
+            };
+          });
+        } else {
+          // Update conversations without changing unread count
+          setConversations((prev) => {
+            const msgChatIdStr = chatId?.toString();
+            const currentChatIdStr = currentChatIdRef.current?.toString();
+            const existingConv = prev.find((conv) => {
+              const convChatId = conv.chatId?.toString();
+              return convChatId === msgChatIdStr;
+            });
+            
+            let updatedConversations;
+            if (existingConv) {
+              updatedConversations = prev.map((conv) => {
+                const convChatId = conv.chatId?.toString();
+                return convChatId === msgChatIdStr
+                  ? {
+                      ...conv,
+                      lastMessage: msgText,
+                      timestamp: formatTimestamp(msgTime),
+                      lastMessageTime: msgTime,
+                      unread: currentChatIdStr === msgChatIdStr ? 0 : (conv.unread || 0),
+                    }
+                  : conv;
+              });
+            } else {
+              updatedConversations = [
+                {
+                  id: chatId,
+                  chatId: chatId,
+                  name: msgAuthor?.User || msgAuthor?.user || 'Unknown User',
+                  lastMessage: msgText,
+                  timestamp: formatTimestamp(msgTime),
+                  lastMessageTime: msgTime,
+                  userId: isOwn ? msgReceiverId : msgSenderId,
+                  avatar: (msgAuthor?.User || msgAuthor?.user)
+                    ? (msgAuthor.User || msgAuthor.user).charAt(0).toUpperCase()
+                    : 'U',
+                  unread: 0,
+                },
+                ...prev,
+              ];
+            }
+            
+            return sortConversationsByLatest(updatedConversations);
+          });
+        }
+        
         if (currentChatIdRef.current === chatId) {
           setMessages([...messagesMapRef.current[chatId]]);
         }
-        
-        setConversations((prev) => {
-          const msgText = msg.Message || msg.message || '';
-          const msgTime = msg.TimeStamp || msg.timeStamp;
-          const msgAuthor = msg.Author || msg.author;
-          const msgSenderId = msg.SenderId || msg.senderId;
-          const msgReceiverId = msg.ReceiverId || msg.receiverId;
-          const isOwn = msg.SendbyYou !== undefined ? msg.SendbyYou : (msg.sendbyYou || false);
-          
-          const existingConv = prev.find((conv) => {
-            const convChatId = conv.chatId?.toString();
-            const msgChatId = chatId?.toString();
-            return convChatId === msgChatId;
-          });
-          
-          let updatedConversations;
-          if (existingConv) {
-            updatedConversations = prev.map((conv) => {
-              const convChatId = conv.chatId?.toString();
-              const msgChatId = chatId?.toString();
-              return convChatId === msgChatId
-                ? {
-                    ...conv,
-                    lastMessage: msgText,
-                    timestamp: formatTimestamp(msgTime),
-                    lastMessageTime: msgTime, // Update timestamp for sorting
-                  }
-                : conv;
-            });
-          } else {
-            updatedConversations = [
-              {
-                id: chatId,
-                chatId: chatId,
-                name: msgAuthor?.User || msgAuthor?.user || 'Unknown User',
-                lastMessage: msgText,
-                timestamp: formatTimestamp(msgTime),
-                lastMessageTime: msgTime, // Store timestamp for sorting
-                userId: isOwn ? msgReceiverId : msgSenderId,
-                avatar: (msgAuthor?.User || msgAuthor?.user)
-                  ? (msgAuthor.User || msgAuthor.user).charAt(0).toUpperCase()
-                  : 'U',
-              },
-              ...prev,
-            ];
-          }
-          
-          // Sort by latest message time
-          return sortConversationsByLatest(updatedConversations);
-        });
       }
     });
 
@@ -339,6 +438,7 @@ const Messages = () => {
                     lastMessage: response.data.message || '',
                     timestamp: formatTimestamp(response.data.timeStamp),
                     lastMessageTime: response.data.timeStamp, // Update timestamp for sorting
+                    unread: conv.unread || 0, // Preserve unread count
                   }
                 : conv
             );
@@ -356,6 +456,21 @@ const Messages = () => {
 
   const handleConversationClick = (conversation) => {
     setSelectedConversation(conversation);
+    // Reset unread count when conversation is opened
+    if (conversation.chatId && unreadCounts[conversation.chatId] > 0) {
+      setUnreadCounts((prev) => ({
+        ...prev,
+        [conversation.chatId]: 0,
+      }));
+      // Update conversation unread count in conversations list
+      setConversations((prev) =>
+        prev.map((conv) =>
+          conv.chatId === conversation.chatId
+            ? { ...conv, unread: 0 }
+            : conv
+        )
+      );
+    }
   };
 
   // Select first conversation by default
@@ -402,7 +517,12 @@ const Messages = () => {
             </div>
           ) : (
           <MessagesLayout
-            conversations={conversations}
+            conversations={conversations.map((conv) => ({
+              ...conv,
+              unread: unreadCounts[conv.chatId] !== undefined 
+                ? unreadCounts[conv.chatId] 
+                : (conv.unread || 0),
+            }))}
             selectedConversation={selectedConversation}
             onConversationClick={handleConversationClick}
               messages={messages}
