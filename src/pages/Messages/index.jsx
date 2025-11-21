@@ -48,6 +48,15 @@ const Messages = () => {
     }
   };
 
+  // Sort conversations by latest message time (descending)
+  const sortConversationsByLatest = (conversations) => {
+    return [...conversations].sort((a, b) => {
+      const timeA = a.lastMessageTime ? new Date(a.lastMessageTime).getTime() : 0;
+      const timeB = b.lastMessageTime ? new Date(b.lastMessageTime).getTime() : 0;
+      return timeB - timeA; // Latest first (descending order)
+    });
+  };
+
   // Load chat list
   const loadChatList = async () => {
     if (!user?.id) return;
@@ -62,10 +71,12 @@ const Messages = () => {
           name: chat.userName || 'Unknown User',
           lastMessage: chat.lastMessage || '',
           timestamp: formatTimestamp(chat.lastMessageTime),
+          lastMessageTime: chat.lastMessageTime, // Store original timestamp for sorting
           userId: chat.userId,
           avatar: chat.userName ? chat.userName.charAt(0).toUpperCase() : 'U',
         }));
-        setConversations(formattedConversations);
+        const sortedConversations = sortConversationsByLatest(formattedConversations);
+        setConversations(sortedConversations);
       }
     } catch (error) {
       console.error('Error loading chat list:', error);
@@ -173,8 +184,9 @@ const Messages = () => {
             return convChatId === msgChatId;
           });
           
+          let updatedConversations;
           if (existingConv) {
-            return prev.map((conv) => {
+            updatedConversations = prev.map((conv) => {
               const convChatId = conv.chatId?.toString();
               const msgChatId = chatId?.toString();
               return convChatId === msgChatId
@@ -182,17 +194,19 @@ const Messages = () => {
                     ...conv,
                     lastMessage: msgText,
                     timestamp: formatTimestamp(msgTime),
+                    lastMessageTime: msgTime, // Update timestamp for sorting
                   }
                 : conv;
             });
           } else {
-            return [
+            updatedConversations = [
               {
                 id: chatId,
                 chatId: chatId,
                 name: msgAuthor?.User || msgAuthor?.user || 'Unknown User',
                 lastMessage: msgText,
                 timestamp: formatTimestamp(msgTime),
+                lastMessageTime: msgTime, // Store timestamp for sorting
                 userId: isOwn ? msgReceiverId : msgSenderId,
                 avatar: (msgAuthor?.User || msgAuthor?.user)
                   ? (msgAuthor.User || msgAuthor.user).charAt(0).toUpperCase()
@@ -201,6 +215,9 @@ const Messages = () => {
               ...prev,
             ];
           }
+          
+          // Sort by latest message time
+          return sortConversationsByLatest(updatedConversations);
         });
       }
     });
@@ -314,17 +331,20 @@ const Messages = () => {
           currentChatIdRef.current = response.data.chatId;
           
           // Update conversation list
-          setConversations((prev) =>
-            prev.map((conv) =>
+          setConversations((prev) => {
+            const updatedConversations = prev.map((conv) =>
               conv.chatId === response.data.chatId
                 ? {
                     ...conv,
                     lastMessage: response.data.message || '',
                     timestamp: formatTimestamp(response.data.timeStamp),
+                    lastMessageTime: response.data.timeStamp, // Update timestamp for sorting
                   }
                 : conv
-            )
-          );
+            );
+            // Sort by latest message time
+            return sortConversationsByLatest(updatedConversations);
+          });
         }
       }
     } catch (error) {
