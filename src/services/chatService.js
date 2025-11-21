@@ -100,3 +100,21 @@ export const markAsRead = async (chatId, userId) => {
   };
 };
 
+// Get chat user list (search users) API
+export const getChatUserList = async (userId, searchText) => {
+  const response = await client.get(
+    CHAT_ENDPOINTS.GET_CHAT_USER_LIST(userId, searchText),
+    {
+      headers: {
+        Accept: "text/plain",
+      },
+    }
+  );
+
+  return {
+    isSuccess: response.data?.success !== false,
+    msg: response.data?.message || "Users fetched successfully",
+    data: response.data?.data || [],
+  };
+};
+

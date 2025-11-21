@@ -483,37 +483,81 @@ const Messages = () => {
 
       if (response.isSuccess && response.data) {
         // Message sent successfully
-      setMessageText('');
+        setMessageText('');
         
-        // If this is a new chat, reload chat list to get the new chatId
+        const newChatId = response.data.chatId;
+        
+        // Format the sent message
+        const formattedMessage = {
+          id: response.data.id,
+          chatId: newChatId,
+          sender: response.data.author?.user || 'You',
+          text: response.data.message || '',
+          timestamp: formatMessageTime(response.data.timeStamp),
+          originalTimestamp: response.data.timeStamp, // Store original timestamp for date grouping
+          isOwn: true,
+          messageSeen: response.data.messageSeen || false,
+          status: response.data.status?.text || '',
+          author: response.data.author,
+        };
+        
+        // If this is a new chat (chatId was null), reload chat list and select the new conversation
         if (!chatId) {
-          await loadChatList();
+          // Reload chat list to get the new conversation
+          const responseChatList = await getChatList(user.id);
+          if (responseChatList.isSuccess && responseChatList.data) {
+            const formattedConversations = responseChatList.data.map((chat) => ({
+              id: chat.chatId,
+              chatId: chat.chatId,
+              name: chat.userName || t("messages.unknownUser"),
+              lastMessage: chat.lastMessage || '',
+              timestamp: formatTimestamp(chat.lastMessageTime),
+              lastMessageTime: chat.lastMessageTime,
+              userId: chat.userId,
+              avatar: chat.userName ? chat.userName.charAt(0).toUpperCase() : 'U',
+              unread: chat.unreadCount || 0,
+            }));
+            
+            const sortedConversations = sortConversationsByLatest(formattedConversations);
+            setConversations(sortedConversations);
+            
+            // Find the new conversation that was just created
+            const newConversation = sortedConversations.find(
+              (conv) => conv.chatId === newChatId && conv.userId === receiverId
+            );
+            
+            if (newConversation) {
+              // Select the new conversation
+              setSelectedConversation(newConversation);
+              setCurrentChatId(newChatId);
+              currentChatIdRef.current = newChatId;
+              
+              // Initialize messages array with the sent message
+              messagesMapRef.current[newChatId] = [formattedMessage];
+              setMessages([formattedMessage]);
+              
+              // Mark as read
+              if (user?.id) {
+                try {
+                  await markAsRead(newChatId, user.id);
+                } catch (error) {
+                  console.error('Error marking messages as read:', error);
+                }
+              }
+            }
+          }
         } else {
-          // Add sent message to current messages (append to end for latest at bottom)
-          const formattedMessage = {
-            id: response.data.id,
-            chatId: response.data.chatId,
-            sender: response.data.author?.user || 'You',
-            text: response.data.message || '',
-            timestamp: formatMessageTime(response.data.timeStamp),
-            originalTimestamp: response.data.timeStamp, // Store original timestamp for date grouping
-            isOwn: true,
-            messageSeen: response.data.messageSeen || false,
-            status: response.data.status?.text || '',
-            author: response.data.author,
-          };
-          
-          // Append new message to the end (latest at bottom)
+          // Existing chat - add message to current messages
           const updatedMessages = [...messages, formattedMessage];
-          messagesMapRef.current[response.data.chatId] = updatedMessages;
+          messagesMapRef.current[newChatId] = updatedMessages;
           setMessages(updatedMessages);
-          setCurrentChatId(response.data.chatId);
-          currentChatIdRef.current = response.data.chatId;
+          setCurrentChatId(newChatId);
+          currentChatIdRef.current = newChatId;
           
           // Update conversation list
           setConversations((prev) => {
             const updatedConversations = prev.map((conv) =>
-              conv.chatId === response.data.chatId
+              conv.chatId === newChatId
                 ? {
                     ...conv,
                     lastMessage: response.data.message || '',
@@ -564,6 +608,40 @@ const Messages = () => {
     }
   };
 
+  // Handle user selection from search to start a new conversation
+  const handleUserSelect = (user) => {
+    // Check if a conversation already exists with this user
+    const existingConversation = conversations.find(
+      (conv) => conv.userId === (user.userId || user.id)
+    );
+
+    if (existingConversation) {
+      // If conversation exists, open it
+      setSelectedConversation(existingConversation);
+    } else {
+      // Create a new conversation object for the selected user
+      const newConversation = {
+        id: `new-${user.userId || user.id}`, // Temporary ID until chat is created
+        chatId: null, // Will be set when first message is sent
+        name: user.userName || user.name || t("messages.unknownUser"),
+        lastMessage: '',
+        timestamp: '',
+        lastMessageTime: null,
+        userId: user.userId || user.id,
+        avatar: (user.userName || user.name || 'U').charAt(0).toUpperCase(),
+        unread: 0,
+      };
+      
+      // Set this as the selected conversation
+      setSelectedConversation(newConversation);
+      
+      // Clear messages since this is a new conversation
+      setMessages([]);
+      setCurrentChatId(null);
+      currentChatIdRef.current = null;
+    }
+  };
+
 
   return (
     <div className="dashboard-wrapper">
@@ -610,11 +688,13 @@ const Messages = () => {
             }))}
             selectedConversation={selectedConversation}
             onConversationClick={handleConversationClick}
-              messages={messages}
+            onUserSelect={handleUserSelect}
+            userId={user?.id}
+            messages={messages}
             messageText={messageText}
             setMessageText={setMessageText}
             onSendMessage={handleSendMessage}
-              sendingMessage={sendingMessage}
+            sendingMessage={sendingMessage}
             onLoadMoreMessages={() => loadMoreMessages(currentChatId)}
             hasMoreMessages={currentChatId ? (hasMoreMessages[currentChatId] || false) : false}
             loadingMoreMessages={loadingMoreMessages}

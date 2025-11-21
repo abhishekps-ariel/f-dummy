@@ -318,6 +318,9 @@
     "loadingOlderMessages": "Cargando mensajes antiguos...",
     "conversations": "Conversaciones",
     "searchConversations": "Buscar conversaciones...",
+    "searchUsersOrConversations": "Buscar usuarios o conversaciones...",
+    "searchResults": "Resultados de Búsqueda",
+    "noUsersFound": "No se encontraron usuarios",
     "active": "Activo",
     "backToConversations": "Volver a conversaciones"
   },

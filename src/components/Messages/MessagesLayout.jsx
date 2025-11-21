@@ -7,6 +7,8 @@ const MessagesLayout = ({
   conversations,
   selectedConversation,
   onConversationClick,
+  onUserSelect,
+  userId,
   messages,
   messageText,
   setMessageText,
@@ -30,6 +32,8 @@ const MessagesLayout = ({
           conversations={conversations}
           selectedConversation={selectedConversation}
           onConversationClick={onConversationClick}
+          onUserSelect={onUserSelect}
+          userId={userId}
         />
         <div className={`chat-area ${selectedConversation ? 'chat-area-open' : ''}`}>
           <ChatArea

@@ -65,6 +65,7 @@ export const CHAT_ENDPOINTS = {
   SEND_MESSAGE: "/api/Chat/send-message",
   GET_MESSAGES: "/api/Chat/get-messages",
   GET_CHAT_LIST: (userId) => `/api/Chat/get-chat-list/${userId}`,
+  GET_CHAT_USER_LIST: (userId, searchText) => `/api/Chat/get-chat-user-list?userId=${userId}&searchText=${encodeURIComponent(searchText || '')}`,
   SIGNALR_HUB_URL: "/hubs/realtime-chat",
   MARK_AS_READ: (chatId, userId) => `/api/Chat/mark-as-read?chatId=${chatId}&userId=${userId}`,
 };

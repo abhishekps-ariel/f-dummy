@@ -318,6 +318,9 @@
     "loadingOlderMessages": "Loading older messages...",
     "conversations": "Conversations",
     "searchConversations": "Search conversations...",
+    "searchUsersOrConversations": "Search users or conversations...",
+    "searchResults": "Search Results",
+    "noUsersFound": "No users found",
     "active": "Active",
     "backToConversations": "Back to conversations"
   },
