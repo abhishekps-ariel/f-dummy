@@ -97,6 +97,7 @@
   margin-top: 8px;
   max-height: 400px;
   overflow: hidden;
+  overflow-x: hidden;
   z-index: 1000;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.08);
   animation: slideDown 0.2s ease-out;
@@ -127,6 +128,8 @@
 .search-results-list {
   max-height: 352px;
   overflow-y: auto;
+  overflow-x: hidden;
+  width: 100%;
 }
 
 .search-results-list::-webkit-scrollbar {
@@ -151,9 +154,12 @@
   align-items: center;
   padding: 14px 16px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease;
   border-bottom: 1px solid #f8f9fa;
   gap: 12px;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .search-result-item:last-child {
@@ -162,12 +168,10 @@
 
 .search-result-item:hover {
   background-color: #f8f9fa;
-  transform: translateX(2px);
 }
 
 .search-result-item:active {
   background-color: #e9ecef;
-  transform: translateX(0);
 }
 
 .search-result-avatar {
@@ -235,7 +239,6 @@
 
 .search-result-item:hover .search-result-arrow {
   color: var(--theme-color, #0265A3);
-  transform: translateX(4px);
 }
 
 .search-results-loading {
