@@ -29,6 +29,10 @@ const Messages = () => {
   const signalRConnectionRef = useRef(null);
   const messagesMapRef = useRef({});
   const [unreadCounts, setUnreadCounts] = useState({}); // Track unread counts per chatId
+  const [currentPage, setCurrentPage] = useState({}); // Track current page per chatId
+  const [hasMoreMessages, setHasMoreMessages] = useState({}); // Track if more messages available per chatId
+  const [loadingMoreMessages, setLoadingMoreMessages] = useState(false);
+  const pageSize = 10; // Number of messages per page
 
   // Hardcoded receiver ID for testing
   const TEST_RECEIVER_ID = '1c490bd3-e968-4a36-b915-78b64815ba6c';
@@ -98,13 +102,18 @@ const Messages = () => {
     }
   };
 
-  // Load messages for a chat
-  const loadMessages = async (chatId) => {
+  // Load messages for a chat (with pagination)
+  const loadMessages = async (chatId, page = 1, appendToTop = false) => {
     if (!chatId || !user?.id) return;
     
     try {
-      setLoading(true);
-      const response = await getMessages(chatId, user.id, 1, 15);
+      if (appendToTop) {
+        setLoadingMoreMessages(true);
+      } else {
+        setLoading(true);
+      }
+      
+      const response = await getMessages(chatId, user.id, page, pageSize);
       if (response.isSuccess && response.data?.messages?.messages) {
         const formattedMessages = response.data.messages.messages.map((msg) => ({
           id: msg.id,
@@ -121,14 +130,40 @@ const Messages = () => {
         // Reverse the array so oldest messages are at top and latest at bottom
         const reversedMessages = formattedMessages.reverse();
         
-        // Store messages in map
-        messagesMapRef.current[chatId] = reversedMessages;
-        setMessages(reversedMessages);
+        if (appendToTop) {
+          // Append older messages to the top
+          const existingMessages = messagesMapRef.current[chatId] || [];
+          // Filter out duplicates
+          const existingIds = new Set(existingMessages.map(m => m.id));
+          const newMessages = reversedMessages.filter(m => !existingIds.has(m.id));
+          messagesMapRef.current[chatId] = [...newMessages, ...existingMessages];
+        } else {
+          // Replace all messages (initial load)
+          messagesMapRef.current[chatId] = reversedMessages;
+        }
+        
+        setMessages([...messagesMapRef.current[chatId]]);
         setCurrentChatId(chatId);
         currentChatIdRef.current = chatId;
         
+        // Update pagination state
+        setCurrentPage((prev) => ({
+          ...prev,
+          [chatId]: page,
+        }));
+        
+        // Check if there are more messages to load
+        // If we got a full page of messages, there might be more
+        const returnedMessagesCount = formattedMessages.length;
+        const hasMore = returnedMessagesCount >= pageSize;
+        
+        setHasMoreMessages((prev) => ({
+          ...prev,
+          [chatId]: hasMore,
+        }));
+        
         // Reset unread count when messages are loaded (conversation is opened)
-        if (unreadCounts[chatId] > 0) {
+        if (!appendToTop && unreadCounts[chatId] > 0) {
           setUnreadCounts((prev) => ({
             ...prev,
             [chatId]: 0,
@@ -142,12 +177,24 @@ const Messages = () => {
             )
           );
         }
+        
+        return { hasMore: loadedMessages < totalMessages, scrollToBottom: !appendToTop };
       }
     } catch (error) {
       console.error('Error loading messages:', error);
+      return { hasMore: false, scrollToBottom: false };
     } finally {
       setLoading(false);
+      setLoadingMoreMessages(false);
     }
+  };
+  
+  // Load more messages (next page)
+  const loadMoreMessages = async (chatId) => {
+    if (!chatId || loadingMoreMessages || !hasMoreMessages[chatId]) return;
+    
+    const nextPage = (currentPage[chatId] || 1) + 1;
+    await loadMessages(chatId, nextPage, true);
   };
 
   useEffect(() => {
@@ -202,9 +249,6 @@ const Messages = () => {
         const currentChatIdStr = currentChatIdRef.current?.toString();
         const msgChatIdStr = chatId?.toString();
         const shouldIncrementUnread = !isOwn && currentChatIdStr !== msgChatIdStr;
-        
-        // Debug logging
-        console.log('Message received - chatId:', msgChatIdStr, 'currentChatId:', currentChatIdStr, 'isOwn:', isOwn, 'shouldIncrement:', shouldIncrementUnread);
         
         // Prepare message data for conversation update
         const msgText = msg.Message || msg.message || '';
@@ -353,13 +397,15 @@ const Messages = () => {
   // Load messages when conversation is selected
   useEffect(() => {
     if (selectedConversation?.chatId) {
+      const chatId = selectedConversation.chatId;
       // Check if we already have messages for this chat
-      if (messagesMapRef.current[selectedConversation.chatId]) {
-        setMessages(messagesMapRef.current[selectedConversation.chatId]);
-        setCurrentChatId(selectedConversation.chatId);
-        currentChatIdRef.current = selectedConversation.chatId;
+      if (messagesMapRef.current[chatId] && messagesMapRef.current[chatId].length > 0) {
+        setMessages(messagesMapRef.current[chatId]);
+        setCurrentChatId(chatId);
+        currentChatIdRef.current = chatId;
       } else {
-        loadMessages(selectedConversation.chatId);
+        // Load initial page (page 1)
+        loadMessages(chatId, 1, false);
       }
     }
   }, [selectedConversation]);
@@ -530,6 +576,9 @@ const Messages = () => {
             setMessageText={setMessageText}
             onSendMessage={handleSendMessage}
               sendingMessage={sendingMessage}
+            onLoadMoreMessages={() => loadMoreMessages(currentChatId)}
+            hasMoreMessages={currentChatId ? (hasMoreMessages[currentChatId] || false) : false}
+            loadingMoreMessages={loadingMoreMessages}
           />
           )}
         </div>

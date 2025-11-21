@@ -11,7 +11,10 @@ const MessagesLayout = ({
   messageText,
   setMessageText,
   onSendMessage,
-  sendingMessage
+  sendingMessage,
+  onLoadMoreMessages,
+  hasMoreMessages,
+  loadingMoreMessages
 }) => {
   return (
     <div className="messages-container">
@@ -29,6 +32,9 @@ const MessagesLayout = ({
             setMessageText={setMessageText}
             onSendMessage={onSendMessage}
             sendingMessage={sendingMessage}
+            onLoadMoreMessages={onLoadMoreMessages}
+            hasMoreMessages={hasMoreMessages}
+            loadingMoreMessages={loadingMoreMessages}
           />
         </div>
       </div>

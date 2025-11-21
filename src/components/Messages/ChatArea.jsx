@@ -3,7 +3,17 @@ import ChatHeader from './ChatHeader';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
 
-const ChatArea = ({ selectedConversation, messages, messageText, setMessageText, onSendMessage, sendingMessage }) => {
+const ChatArea = ({ 
+  selectedConversation, 
+  messages, 
+  messageText, 
+  setMessageText, 
+  onSendMessage, 
+  sendingMessage,
+  onLoadMoreMessages,
+  hasMoreMessages,
+  loadingMoreMessages
+}) => {
   if (!selectedConversation) {
     return (
       <div className="chat-placeholder">
@@ -20,6 +30,9 @@ const ChatArea = ({ selectedConversation, messages, messageText, setMessageText,
       <MessageList 
         messages={messages} 
         conversationAvatar={selectedConversation.avatar}
+        onLoadMoreMessages={onLoadMoreMessages}
+        hasMoreMessages={hasMoreMessages}
+        loadingMoreMessages={loadingMoreMessages}
       />
       <MessageInput
         messageText={messageText}
