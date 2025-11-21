@@ -3086,6 +3086,135 @@ body.high-contrast .text-size-dropdown-menu {
     background: #ffffff !important;
 }
 
+/* High Contrast Mode - Messages Component */
+body.high-contrast .messages-container,
+body.high-contrast .messages-layout,
+body.high-contrast .messages-page-content {
+    border: 2px solid #000000 !important;
+}
+
+body.high-contrast .conversations-sidebar {
+    border-right: 2px solid #000000 !important;
+    border: 2px solid #000000 !important;
+}
+
+body.high-contrast .conversations-header {
+    border-bottom: 2px solid #000000 !important;
+}
+
+body.high-contrast .conversation-item {
+    border: 1px solid #000000 !important;
+    margin-bottom: 2px !important;
+}
+
+body.high-contrast .conversation-item.active {
+    border: 2px solid #000000 !important;
+}
+
+body.high-contrast .chat-area {
+    border: 2px solid #000000 !important;
+}
+
+body.high-contrast .chat-header {
+    border-bottom: 2px solid #000000 !important;
+}
+
+body.high-contrast .message-bubble {
+    border: 1px solid #000000 !important;
+}
+
+body.high-contrast .message-input-container {
+    border-top: 2px solid #000000 !important;
+}
+
+body.high-contrast .message-send-btn {
+    border: 2px solid #000000 !important;
+}
+
+body.high-contrast .date-breaker-line {
+    background-color: #000000 !important;
+    height: 2px !important;
+}
+
+/* High Contrast Mode - Notes Viewer Modal/Display */
+body.high-contrast .notes-list {
+    border: 1px solid #000000 !important;
+}
+
+body.high-contrast .note-item {
+    border: 2px solid #000000 !important;
+    margin-bottom: 4px !important;
+}
+
+body.high-contrast .note-item:last-child {
+    margin-bottom: 0 !important;
+}
+
+/* High Contrast Mode - Petition Form Progress Sidebar */
+body.high-contrast .petition-steps-sidebar {
+    border-right: 2px solid #000000 !important;
+    border: 2px solid #000000 !important;
+}
+
+body.high-contrast .petition-stepper-container {
+    border: 2px solid #000000 !important;
+}
+
+
+
+body.high-contrast .stepper-item {
+    border: 1px solid #000000 !important;
+    margin-bottom: 2px !important;
+}
+
+body.high-contrast .stepper-item.current {
+    border: 2px solid #000000 !important;
+}
+
+body.high-contrast .stepper-item.has-error {
+    border: 2px solid #000000 !important;
+}
+
+/* High Contrast Mode - FAQ Page Components */
+
+body.high-contrast .faq-section {
+    border: 2px solid #000000 !important;
+}
+
+body.high-contrast .faq-category-btn {
+    border: 2px solid #000000 !important;
+    margin: 2px !important;
+}
+
+body.high-contrast .faq-category-btn.active {
+    border: 3px solid #000000 !important;
+}
+
+body.high-contrast .faq-item {
+    border-bottom: 2px solid #000000 !important;
+}
+
+body.high-contrast .faq-item:last-child {
+    border-bottom: none !important;
+}
+
+body.high-contrast .faq-question {
+    border: 1px solid #000000 !important;
+    margin: 2px 0 !important;
+}
+
+body.high-contrast .faq-question.expanded,
+body.high-contrast .faq-item.active .faq-question {
+    border: 2px solid #000000 !important;
+}
+
+body.high-contrast .faq-answer {
+    border-top: 2px solid #000000 !important;
+    border-left: 1px solid #000000 !important;
+    border-right: 1px solid #000000 !important;
+    border-bottom: 1px solid #000000 !important;
+}
+
 body.high-contrast .text-size-dropdown-item {
     border-bottom: 1px solid #000000 !important;
     color: #000000 !important;
