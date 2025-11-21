@@ -166,11 +166,18 @@ const StepRightToCure = ({
                     <input
                       type="date"
                       name="cureExpirationDate"
-                      className="form-control"
+                      className={`form-control ${
+                        fieldErrors.cureExpirationDate ? "is-invalid" : ""
+                      }`}
                       value={formData.cureExpirationDate || ""}
                       readOnly={!isEditing}
                       onChange={handleInputChange}
                     />
+                    {fieldErrors.cureExpirationDate && (
+                      <div className="text-danger small mt-1">
+                        {fieldErrors.cureExpirationDate}
+                      </div>
+                    )}
                   </div>
                 </div>
 

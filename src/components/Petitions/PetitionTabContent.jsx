@@ -1053,54 +1053,6 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
       });
     }
 
-    // Real-time validation for principal amount comparison
-    // Validate immediately as user types to show error right away
-    if (
-      name === "originalPrincipalAmount" ||
-      name === "currentPrincipalBalance"
-    ) {
-      // Get the current values - use processedValue for the field being changed
-      const currentOriginalAmount =
-        name === "originalPrincipalAmount"
-          ? processedValue
-          : formData.originalPrincipalAmount;
-      
-      const currentBalanceValue =
-        name === "currentPrincipalBalance"
-          ? processedValue
-          : formData.currentPrincipalBalance;
-
-      // Parse to numeric values (handle empty strings and commas)
-      const originalAmount = parseFloat(
-        String(currentOriginalAmount || "").replace(/[^\d.]/g, "")
-      ) || 0;
-      const currentBalance = parseFloat(
-        String(currentBalanceValue || "").replace(/[^\d.]/g, "")
-      ) || 0;
-
-      // Show validation error if current balance exceeds original amount
-      if (
-        originalAmount > 0 &&
-        currentBalance > 0 &&
-        currentBalance > originalAmount
-      ) {
-        setFieldErrors((prev) => ({
-          ...prev,
-          currentPrincipalBalance:
-            "Current Principal Balance cannot exceed the Original Principal Amount",
-        }));
-      } else if (
-        fieldErrors.currentPrincipalBalance ===
-        "Current Principal Balance cannot exceed the Original Principal Amount"
-      ) {
-        // Clear the error if validation passes
-        setFieldErrors((prev) => {
-          const newErrors = { ...prev };
-          delete newErrors.currentPrincipalBalance;
-          return newErrors;
-        });
-      }
-    }
 
     // Real-time validation for origination date - must be in the past
     if (name === "originationDate" && processedValue.trim()) {
@@ -1120,6 +1072,30 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
           setFieldErrors((prev) => {
             const newErrors = { ...prev };
             delete newErrors.originationDate;
+            return newErrors;
+          });
+        }
+      }
+    }
+
+    // Real-time validation for notice date - must be in the past
+    if (name === "noticeDate" && processedValue.trim()) {
+      const noticeDate = new Date(processedValue);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      if (!isNaN(noticeDate.getTime())) {
+        if (noticeDate >= today) {
+          setFieldErrors((prev) => ({
+            ...prev,
+            noticeDate: "Notice Date must be in the past",
+          }));
+        } else if (
+          fieldErrors.noticeDate === "Notice Date must be in the past"
+        ) {
+          setFieldErrors((prev) => {
+            const newErrors = { ...prev };
+            delete newErrors.noticeDate;
             return newErrors;
           });
         }
@@ -1147,12 +1123,33 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
     }
 
     // Real-time validation for cure expiration date - must be after notice date
-    if (
-      (name === "cureExpirationDate" || name === "noticeDate") &&
-      formData.noticeDate &&
-      formData.cureExpirationDate
-    ) {
+    if (name === "cureExpirationDate" && processedValue.trim() && formData.noticeDate) {
       const noticeDate = new Date(formData.noticeDate);
+      const cureExpirationDate = new Date(processedValue);
+      
+      if (!isNaN(noticeDate.getTime()) && !isNaN(cureExpirationDate.getTime())) {
+        if (cureExpirationDate <= noticeDate) {
+          setFieldErrors((prev) => ({
+            ...prev,
+            cureExpirationDate:
+              "Cure Expiration Date must be after Notice Date",
+          }));
+        } else if (
+          fieldErrors.cureExpirationDate ===
+          "Cure Expiration Date must be after Notice Date"
+        ) {
+          setFieldErrors((prev) => {
+            const newErrors = { ...prev };
+            delete newErrors.cureExpirationDate;
+            return newErrors;
+          });
+        }
+      }
+    }
+
+    // Re-validate cure expiration date when notice date changes
+    if (name === "noticeDate" && formData.cureExpirationDate && processedValue.trim()) {
+      const noticeDate = new Date(processedValue);
       const cureExpirationDate = new Date(formData.cureExpirationDate);
       
       if (!isNaN(noticeDate.getTime()) && !isNaN(cureExpirationDate.getTime())) {

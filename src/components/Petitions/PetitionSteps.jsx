@@ -3112,46 +3112,6 @@ const PetitionSteps = ({
     }
 
     // Real-time validation for principal amount comparison
-    if (
-      name === "originalPrincipalAmount" ||
-      name === "currentPrincipalBalance"
-    ) {
-      // Use processedValue for currency fields (after parsing commas)
-      const currentOriginalAmount =
-          name === "originalPrincipalAmount"
-          ? (currencyFields.includes(name) ? parseCurrencyInput(value) : value)
-          : formData.originalPrincipalAmount;
-
-      const currentBalanceValue =
-          name === "currentPrincipalBalance"
-          ? (currencyFields.includes(name) ? parseCurrencyInput(value) : value)
-          : formData.currentPrincipalBalance;
-
-      const originalAmount = parseFloat(currentOriginalAmount) || 0;
-      const currentBalance = parseFloat(currentBalanceValue) || 0;
-
-      if (
-        originalAmount > 0 &&
-        currentBalance > 0 &&
-        currentBalance > originalAmount
-      ) {
-        setFieldErrors((prev) => ({
-          ...prev,
-          currentPrincipalBalance:
-            "Current Principal Balance cannot exceed the Original Principal Amount",
-        }));
-      } else if (
-        fieldErrors.currentPrincipalBalance ===
-        "Current Principal Balance cannot exceed the Original Principal Amount"
-      ) {
-        setFieldErrors((prev) => {
-          const newErrors = { ...prev };
-          delete newErrors.currentPrincipalBalance;
-          return newErrors;
-        });
-      }
-    }
-
     // Real-time validation for origination date - must be in the past
     if (name === "originationDate" && value.trim()) {
       const originationDate = new Date(value);
@@ -3170,6 +3130,30 @@ const PetitionSteps = ({
           setFieldErrors((prev) => {
             const newErrors = { ...prev };
             delete newErrors.originationDate;
+            return newErrors;
+          });
+        }
+      }
+    }
+
+    // Real-time validation for notice date - must be in the past
+    if (name === "noticeDate" && value.trim()) {
+      const noticeDate = new Date(value);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      if (!isNaN(noticeDate.getTime())) {
+        if (noticeDate >= today) {
+          setFieldErrors((prev) => ({
+            ...prev,
+            noticeDate: "Notice Date must be in the past",
+          }));
+        } else if (
+          fieldErrors.noticeDate === "Notice Date must be in the past"
+        ) {
+          setFieldErrors((prev) => {
+            const newErrors = { ...prev };
+            delete newErrors.noticeDate;
             return newErrors;
           });
         }
@@ -3197,12 +3181,33 @@ const PetitionSteps = ({
     }
 
     // Real-time validation for cure expiration date - must be after notice date
-    if (
-      (name === "cureExpirationDate" || name === "noticeDate") &&
-      formData.noticeDate &&
-      formData.cureExpirationDate
-    ) {
+    if (name === "cureExpirationDate" && value.trim() && formData.noticeDate) {
       const noticeDate = new Date(formData.noticeDate);
+      const cureExpirationDate = new Date(value);
+      
+      if (!isNaN(noticeDate.getTime()) && !isNaN(cureExpirationDate.getTime())) {
+        if (cureExpirationDate <= noticeDate) {
+          setFieldErrors((prev) => ({
+            ...prev,
+            cureExpirationDate:
+              "Cure Expiration Date must be after Notice Date",
+          }));
+        } else if (
+          fieldErrors.cureExpirationDate ===
+          "Cure Expiration Date must be after Notice Date"
+        ) {
+          setFieldErrors((prev) => {
+            const newErrors = { ...prev };
+            delete newErrors.cureExpirationDate;
+            return newErrors;
+          });
+        }
+      }
+    }
+
+    // Re-validate cure expiration date when notice date changes
+    if (name === "noticeDate" && formData.cureExpirationDate && value.trim()) {
+      const noticeDate = new Date(value);
       const cureExpirationDate = new Date(formData.cureExpirationDate);
       
       if (!isNaN(noticeDate.getTime()) && !isNaN(cureExpirationDate.getTime())) {
@@ -3582,23 +3587,6 @@ const PetitionSteps = ({
     ) {
       errors.currentPrincipalBalance =
         "Current Principal Balance is required and must be greater than 0";
-
-      hasErrors = true;
-    }
-
-    // Current Principal Balance cannot exceed Original Principal Amount
-
-    const originalAmount = parseFloat(formData.originalPrincipalAmount) || 0;
-
-    const currentBalance = parseFloat(formData.currentPrincipalBalance) || 0;
-
-    if (
-      originalAmount > 0 &&
-      currentBalance > 0 &&
-      currentBalance > originalAmount
-    ) {
-      errors.currentPrincipalBalance =
-        "Current Principal Balance cannot exceed the Original Principal Amount";
 
       hasErrors = true;
     }

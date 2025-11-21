@@ -48,7 +48,7 @@
 }
 
 .conversations-header {
-  padding: 1.25rem 1.25rem 1rem 1.25rem;
+  padding: 1.5rem 1.25rem 1rem 1.25rem;
   border-bottom: 1px solid #e9ecef;
   background: white;
 }
@@ -99,7 +99,7 @@
 .conversations-list {
   flex: 1;
   overflow-y: auto;
-  padding: 0.5rem 0;
+  /* padding: 0.5rem 0; */
 }
 
 .conversation-item {
