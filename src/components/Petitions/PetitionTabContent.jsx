@@ -1904,59 +1904,118 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
         yPosition = doc.lastAutoTable.finalY + 15;
       }
 
-      // Foreclosure Sale - Only show if Right to Cure is "Yes"
-      if (
-        petition.details?.rightToCure?.noticeSent &&
-        petition.details?.foreclosureSale
-      ) {
-        doc.setFontSize(12);
-        doc.setFont("helvetica", "bold");
-        doc.text("Foreclosure Sale", 20, yPosition);
-        yPosition += 10;
+      // Judgment
+      if (petition.details?.judgment) {
+        const judgment = petition.details.judgment;
+        
+        // Check if judgment has meaningful data
+        const hasJudgmentData = 
+          (judgment.judgmentDate !== null && judgment.judgmentDate !== undefined && 
+           ((typeof judgment.judgmentDate === 'string' && judgment.judgmentDate.trim() !== '') ||
+            (typeof judgment.judgmentDate !== 'string'))) ||
+          (judgment.judgmentAmount !== null && judgment.judgmentAmount !== undefined && judgment.judgmentAmount !== 0) ||
+          (judgment.judgmentType !== null && judgment.judgmentType !== undefined && judgment.judgmentType !== 0 && judgment.judgmentType !== '') ||
+          (judgment.courtInformation !== null && judgment.courtInformation !== undefined && 
+           typeof judgment.courtInformation === 'string' && judgment.courtInformation.trim() !== '') ||
+          (judgment.docketNumbers !== null && judgment.docketNumbers !== undefined && 
+           typeof judgment.docketNumbers === 'string' && judgment.docketNumbers.trim() !== '');
 
-        const foreclosureSaleData = [
-          [
-            "Sale Date",
-            formatDate(petition.details.foreclosureSale.saleDate) || "N/A",
-          ],
-          ["Sold To", petition.details.foreclosureSale.soldTo || "N/A"],
-          [
-            "Vesting Entity Name",
-            petition.details.foreclosureSale.vestingEntityName || "N/A",
-          ],
-          [
-            "REO Entity Name",
-            petition.details.foreclosureSale.reoEntityName || "N/A",
-          ],
-          [
-            "REO Contact First Name",
-            petition.details.foreclosureSale.reoContactFirstName || "N/A",
-          ],
-          [
-            "REO Contact Last Name",
-            petition.details.foreclosureSale.reoContactLastName || "N/A",
-          ],
-          [
-            "REO Business Phone",
-            petition.details.foreclosureSale.reoBusinessPhone || "N/A",
-          ],
-          [
-            "REO Emergency Phone",
-            petition.details.foreclosureSale.reoEmergencyPhone || "N/A",
-          ],
-        ];
+        if (hasJudgmentData) {
+          doc.setFontSize(12);
+          doc.setFont("helvetica", "bold");
+          doc.text("Judgment", 20, yPosition);
+          yPosition += 10;
 
-        autoTable(doc, {
-          startY: yPosition,
-          head: [["Field", "Value"]],
-          body: foreclosureSaleData,
-          theme: "grid",
-          headStyles: { fillColor: [52, 73, 94] },
-          styles: { fontSize: 9 },
-          columnStyles: { 0: { cellWidth: 60 }, 1: { cellWidth: 120 } },
-        });
+          // Get judgment type name
+          let judgmentTypeName = "N/A";
+          if (judgment.judgmentType !== null && judgment.judgmentType !== undefined && judgment.judgmentType !== 0 && judgment.judgmentType !== '') {
+            const judgmentTypes = getJudgmentTypes ? getJudgmentTypes() : [];
+            const selectedType = findOptionByValue ? findOptionByValue(judgmentTypes, judgment.judgmentType) : null;
+            judgmentTypeName = selectedType ? (selectedType.description || selectedType.name || "N/A") : "N/A";
+          }
 
-        yPosition = doc.lastAutoTable.finalY + 15;
+          const judgmentData = [
+            ["Judgment Date", formatDate(judgment.judgmentDate) || "N/A"],
+            ["Judgment Amount", formatCurrency(judgment.judgmentAmount) || "N/A"],
+            ["Judgment Type", judgmentTypeName],
+            ["Court Information", judgment.courtInformation || "N/A"],
+            ["Docket Numbers", judgment.docketNumbers || "N/A"],
+          ];
+
+          autoTable(doc, {
+            startY: yPosition,
+            head: [["Field", "Value"]],
+            body: judgmentData,
+            theme: "grid",
+            headStyles: { fillColor: [52, 73, 94] },
+            styles: { fontSize: 9 },
+            columnStyles: { 0: { cellWidth: 60 }, 1: { cellWidth: 120 } },
+          });
+
+          yPosition = doc.lastAutoTable.finalY + 15;
+        }
+      }
+
+      // Foreclosure Sale - Show if data exists
+      if (petition.details?.foreclosureSale) {
+        const foreclosureSale = petition.details.foreclosureSale;
+        
+        // Check if foreclosure sale has meaningful data
+        const hasForeclosureSaleData = 
+          (foreclosureSale.saleDate !== null && foreclosureSale.saleDate !== undefined && 
+           foreclosureSale.saleDate !== '' && typeof foreclosureSale.saleDate === 'string' && foreclosureSale.saleDate.trim() !== '') ||
+          (foreclosureSale.soldToId !== null && foreclosureSale.soldToId !== undefined && 
+           foreclosureSale.soldToId !== '' && ((typeof foreclosureSale.soldToId === 'string' && foreclosureSale.soldToId.trim() !== '') || (typeof foreclosureSale.soldToId !== 'string'))) ||
+          (foreclosureSale.vestingEntityName !== null && foreclosureSale.vestingEntityName !== undefined && 
+           foreclosureSale.vestingEntityName !== '' && typeof foreclosureSale.vestingEntityName === 'string' && foreclosureSale.vestingEntityName.trim() !== '') ||
+          (foreclosureSale.reoEntityName !== null && foreclosureSale.reoEntityName !== undefined && 
+           foreclosureSale.reoEntityName !== '' && typeof foreclosureSale.reoEntityName === 'string' && foreclosureSale.reoEntityName.trim() !== '') ||
+          (foreclosureSale.reoContactFirstName !== null && foreclosureSale.reoContactFirstName !== undefined && 
+           foreclosureSale.reoContactFirstName !== '' && typeof foreclosureSale.reoContactFirstName === 'string' && foreclosureSale.reoContactFirstName.trim() !== '') ||
+          (foreclosureSale.reoContactLastName !== null && foreclosureSale.reoContactLastName !== undefined && 
+           foreclosureSale.reoContactLastName !== '' && typeof foreclosureSale.reoContactLastName === 'string' && foreclosureSale.reoContactLastName.trim() !== '') ||
+          (foreclosureSale.reoBusinessPhone !== null && foreclosureSale.reoBusinessPhone !== undefined && 
+           foreclosureSale.reoBusinessPhone !== '' && typeof foreclosureSale.reoBusinessPhone === 'string' && foreclosureSale.reoBusinessPhone.trim() !== '') ||
+          (foreclosureSale.reoEmergencyPhone !== null && foreclosureSale.reoEmergencyPhone !== undefined && 
+           foreclosureSale.reoEmergencyPhone !== '' && typeof foreclosureSale.reoEmergencyPhone === 'string' && foreclosureSale.reoEmergencyPhone.trim() !== '');
+
+        if (hasForeclosureSaleData) {
+          doc.setFontSize(12);
+          doc.setFont("helvetica", "bold");
+          doc.text("Foreclosure Sale", 20, yPosition);
+          yPosition += 10;
+
+          // Get buyer type name
+          let soldToName = "N/A";
+          if (foreclosureSale.soldToId !== null && foreclosureSale.soldToId !== undefined && foreclosureSale.soldToId !== '') {
+            const buyerTypes = getBuyerTypes ? getBuyerTypes() : [];
+            const selectedBuyerType = findOptionByValue ? findOptionByValue(buyerTypes, foreclosureSale.soldToId) : null;
+            soldToName = selectedBuyerType ? (selectedBuyerType.name || selectedBuyerType.value || "N/A") : "N/A";
+          }
+
+          const foreclosureSaleData = [
+            ["Sale Date", formatDate(foreclosureSale.saleDate) || "N/A"],
+            ["Sold To", soldToName],
+            ["Vesting Entity Name", foreclosureSale.vestingEntityName || "N/A"],
+            ["REO Entity Name", foreclosureSale.reoEntityName || "N/A"],
+            ["REO Contact First Name", foreclosureSale.reoContactFirstName || "N/A"],
+            ["REO Contact Last Name", foreclosureSale.reoContactLastName || "N/A"],
+            ["REO Business Phone", foreclosureSale.reoBusinessPhone || "N/A"],
+            ["REO Emergency Phone", foreclosureSale.reoEmergencyPhone || "N/A"],
+          ];
+
+          autoTable(doc, {
+            startY: yPosition,
+            head: [["Field", "Value"]],
+            body: foreclosureSaleData,
+            theme: "grid",
+            headStyles: { fillColor: [52, 73, 94] },
+            styles: { fontSize: 9 },
+            columnStyles: { 0: { cellWidth: 60 }, 1: { cellWidth: 120 } },
+          });
+
+          yPosition = doc.lastAutoTable.finalY + 15;
+        }
       }
 
       // Form 35B Compliance

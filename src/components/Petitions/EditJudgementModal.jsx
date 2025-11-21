@@ -75,10 +75,12 @@ const EditJudgementModal = ({ isOpen, onClose, petition, onSave, formData, setFo
 
   // Get judgment types from API - remove placeholder option
   const judgmentTypesFromApi = getJudgmentTypes ? getJudgmentTypes() : [];
-  const judgmentTypes = judgmentTypesFromApi.map((jt) => ({
-    value: jt.value || jt.id,
-    label: jt.description || jt.name,
-  }));
+  const judgmentTypes = judgmentTypesFromApi
+    .filter((jt) => (jt.value !== null && jt.value !== undefined) || (jt.id !== null && jt.id !== undefined))
+    .map((jt) => ({
+      value: String(jt.value ?? jt.id ?? ''), // Convert to string to match judgmentTypeValue format
+      label: jt.description || jt.name || '',
+    }));
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
