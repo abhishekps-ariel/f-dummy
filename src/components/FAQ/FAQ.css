@@ -225,4 +225,22 @@
   font-size: 1rem;
 }
 
+/* Style for multiple answers */
+.faq-answer-item {
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.faq-answer-item:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+/* Adjust max-height for multiple answers */
+.faq-item.active .faq-answer {
+  max-height: 1000px; /* increased for multiple answers */
+}
+
 

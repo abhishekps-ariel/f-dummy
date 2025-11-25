@@ -1,124 +1,75 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import faqService from "../../services/faqService";
 import "./FAQ.css";
 
 const FAQcomponent = () => {
   const { t } = useTranslation();
-  const categories = [
-    t("faq.categories.petitions"),
-    t("faq.categories.notes"),
-    t("faq.categories.profileSignatures"),
-    t("faq.categories.messages"),
-  ];
-
-  // Static FAQ data (category-wise)
-  const faqData = {
-    [t("faq.categories.petitions")]: [
-      {
-        question: t("faq.petitions.whatIsPetition"),
-        answer: t("faq.petitions.whatIsPetitionAnswer"),
-      },
-      {
-        question: t("faq.petitions.howCreatePetition"),
-        answer: t("faq.petitions.howCreatePetitionAnswer"),
-      },
-      {
-        question: t("faq.petitions.canSaveDraft"),
-        answer: t("faq.petitions.canSaveDraftAnswer"),
-      },
-      {
-        question: t("faq.petitions.whatHappensAfterSubmit"),
-        answer: t("faq.petitions.whatHappensAfterSubmitAnswer"),
-      },
-      {
-        question: t("faq.petitions.canEditAfterSubmit"),
-        answer: t("faq.petitions.canEditAfterSubmitAnswer"),
-      },
-    ],
-
-    [t("faq.categories.notes")]: [
-      {
-        question: t("faq.notes.whatAreNotes"),
-        answer: t("faq.notes.whatAreNotesAnswer"),
-      },
-      {
-        question: t("faq.notes.howAddNote"),
-        answer: t("faq.notes.howAddNoteAnswer"),
-      },
-      {
-        question: t("faq.notes.canEditDeleteNotes"),
-        answer: t("faq.notes.canEditDeleteNotesAnswer"),
-      },
-      {
-        question: t("faq.notes.whoCanSeeNotes"),
-        answer: t("faq.notes.whoCanSeeNotesAnswer"),
-      },
-      {
-        question: t("faq.notes.areNotesRequired"),
-        answer: t("faq.notes.areNotesRequiredAnswer"),
-      },
-    ],
-
-    [t("faq.categories.profileSignatures")]: [
-      {
-        question: t("faq.profileSignatures.howSetupFilingEntity"),
-        answer: t("faq.profileSignatures.howSetupFilingEntityAnswer"),
-      },
-      {
-        question: t("faq.profileSignatures.whatIsFilingEntityType"),
-        answer: t("faq.profileSignatures.whatIsFilingEntityTypeAnswer"),
-      },
-      {
-        question: t("faq.profileSignatures.howUploadSignature"),
-        answer: t("faq.profileSignatures.howUploadSignatureAnswer"),
-      },
-      {
-        question: t("faq.profileSignatures.whatIsEsignatureConsent"),
-        answer: t("faq.profileSignatures.whatIsEsignatureConsentAnswer"),
-      },
-      {
-        question: t("faq.profileSignatures.canUseDifferentSignatures"),
-        answer: t("faq.profileSignatures.canUseDifferentSignaturesAnswer"),
-      },
-      {
-        question: t("faq.profileSignatures.doNeedVerifySignature"),
-        answer: t("faq.profileSignatures.doNeedVerifySignatureAnswer"),
-      },
-    ],
-
-    [t("faq.categories.messages")]: [
-      {
-        question: t("faq.messages.howSendMessage"),
-        answer: t("faq.messages.howSendMessageAnswer"),
-      },
-      {
-        question: t("faq.messages.canSendMultipleRecipients"),
-        answer: t("faq.messages.canSendMultipleRecipientsAnswer"),
-      },
-      {
-        question: t("faq.messages.areMessagesRealtime"),
-        answer: t("faq.messages.areMessagesRealtimeAnswer"),
-      },
-      {
-        question: t("faq.messages.canSearchMessageHistory"),
-        answer: t("faq.messages.canSearchMessageHistoryAnswer"),
-      },
-      {
-        question: t("faq.messages.howKnowMessageRead"),
-        answer: t("faq.messages.howKnowMessageReadAnswer"),
-      },
-      {
-        question: t("faq.messages.canDeleteMessages"),
-        answer: t("faq.messages.canDeleteMessagesAnswer"),
-      },
-    ],
-  };
-
-  const [activeCategory, setActiveCategory] = useState(categories[0]);
+  const [categories, setCategories] = useState([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState(null);
+  const [questions, setQuestions] = useState([]);
   const [activeQuestion, setActiveQuestion] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [loadingQuestions, setLoadingQuestions] = useState(false);
+  const [error, setError] = useState(null);
 
-  const handleCategoryClick = (category) => {
-    setActiveCategory(category);
+  // Fetch FAQ categories on component mount
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await faqService.getFAQCategories();
+        
+        if (response.success && response.data && response.data.length > 0) {
+          setCategories(response.data);
+          // Auto-select first category
+          setSelectedCategoryId(response.data[0].id);
+        } else {
+          setError(t("faq.errors.noCategories") || "No FAQ categories available");
+        }
+      } catch (err) {
+        console.error("Error fetching FAQ categories:", err);
+        setError(t("faq.errors.fetchError") || "Failed to load FAQ categories. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, [t]);
+
+  // Fetch questions when a category is selected
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      if (!selectedCategoryId) return;
+
+      try {
+        setLoadingQuestions(true);
+        setError(null);
+        const response = await faqService.getQuestionsByCategory(selectedCategoryId);
+        
+        if (response.success && response.data) {
+          setQuestions(response.data);
+          setActiveQuestion(null); // Reset active question when category changes
+        } else {
+          setQuestions([]);
+          setError(t("faq.errors.noQuestions") || "No questions available for this category");
+        }
+      } catch (err) {
+        console.error("Error fetching FAQ questions:", err);
+        setError(t("faq.errors.fetchQuestionsError") || "Failed to load questions. Please try again later.");
+        setQuestions([]);
+      } finally {
+        setLoadingQuestions(false);
+      }
+    };
+
+    fetchQuestions();
+  }, [selectedCategoryId, t]);
+
+  const handleCategoryClick = (categoryId) => {
+    setSelectedCategoryId(categoryId);
     setActiveQuestion(null);
   };
 
@@ -126,48 +77,106 @@ const FAQcomponent = () => {
     setActiveQuestion(activeQuestion === index ? null : index);
   };
 
+  const selectedCategory = categories.find(cat => cat.id === selectedCategoryId);
+
+  if (loading) {
+    return (
+      <div className="faq-container">
+        <div className="text-center py-5">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+          <p className="mt-3 text-muted">Loading</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && categories.length === 0) {
+    return (
+      <div className="faq-container">
+        <div className="alert alert-danger" role="alert">
+          <i className="fas fa-exclamation-triangle me-2"></i>
+          {error}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="faq-container">
       {/* Category Tabs */}
       <div className="faq-categories">
         {categories.map((category) => (
           <button
-            key={category}
+            key={category.id}
             className={`faq-category-btn ${
-              activeCategory === category ? "active" : ""
+              selectedCategoryId === category.id ? "active" : ""
             }`}
-            onClick={() => handleCategoryClick(category)}
+            onClick={() => handleCategoryClick(category.id)}
+            disabled={loadingQuestions}
           >
-            {category}
+            {category.name}
           </button>
         ))}
       </div>
 
-      {/* FAQ Accordion */}
+      {/* FAQ Section */}
       <div className="faq-section">
-        {faqData[activeCategory].map((item, index) => (
-          <div
-            key={index}
-            className={`faq-item ${
-              activeQuestion === index ? "active" : ""
-            }`}
-          >
-            <div
-              className={`faq-question ${
-                activeQuestion === index ? "expanded" : ""
-              }`}
-              onClick={() => toggleQuestion(index)}
-            >
-              {item.question}
-              <span className="arrow">
-                {activeQuestion === index ? "▴" : "▾"}
-              </span>
+        {loadingQuestions ? (
+          <div className="text-center py-5">
+            <div className="spinner-border text-primary" role="status">
+              <span className="visually-hidden">Loading...</span>
             </div>
-
-            {/* Keep answer always rendered, but control via CSS */}
-            <div className="faq-answer">{item.answer}</div>
+            <p className="mt-3 text-muted">Loading</p>
           </div>
-        ))}
+        ) : error && questions.length === 0 ? (
+          <div className="alert alert-warning" role="alert">
+            <i className="fas fa-info-circle me-2"></i>
+            {error}
+          </div>
+        ) : questions.length === 0 ? (
+          <div className="text-center py-5">
+            <i className="fa-solid fa-question-circle fa-3x text-muted mb-3"></i>
+            <p className="text-muted">No QNA found for this category</p>
+          </div>
+        ) : (
+          questions.map((questionItem, index) => (
+            <div
+              key={questionItem.id || index}
+              className={`faq-item ${
+                activeQuestion === index ? "active" : ""
+              }`}
+            >
+              <div
+                className={`faq-question ${
+                  activeQuestion === index ? "expanded" : ""
+                }`}
+                onClick={() => toggleQuestion(index)}
+              >
+                {questionItem.question}
+                <span className="arrow">
+                  {activeQuestion === index ? "▴" : "▾"}
+                </span>
+              </div>
+
+              {/* Answers */}
+              <div className="faq-answer">
+                {questionItem.answers && questionItem.answers.length > 0 ? (
+                  questionItem.answers.map((answer, answerIndex) => (
+                    <div key={answer.id || answerIndex} className="faq-answer-item">
+                      {answer.answerText}
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-muted">
+                    {t("faq.noAnswer") || "No answer available."}
+                  </div>
+                )}
+              </div>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );

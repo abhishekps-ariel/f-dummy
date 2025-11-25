@@ -48,8 +48,13 @@ export const COMMON_ENDPOINTS = {
   GET_PETITION_ASSIGNEE_ROLES: "/Common/get-petition-assignee-roles",
   GET_BUYER_TYPES: "/Common/get-buyer-type",
   GET_LENDER_TYPES: "/Common/get-lender-type",
+  GET_FAQ_CATEGORIES: "/Common/get-faq-category",
   GET_JOIN_REQUEST_STATUS_ENUM: "/Common/join-request-status-enum",
   GET_MFA_TYPES_ENUM: "/Common/mfa-types-enum",
+};
+
+export const FAQ_ENDPOINTS = {
+  GET_QUESTIONS_BY_CATEGORY: "/Faq/questions-by-category",
 };
 
 export const PETITION_ENDPOINTS = {
