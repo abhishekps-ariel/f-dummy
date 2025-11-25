@@ -3075,6 +3075,12 @@ body.high-contrast .selected-org-container {
     position: relative;
 }
 
+.language-switcher {
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
 /* Minimal dropdown menu for text size */
 .text-size-dropdown-menu {
     background: #ffffff;
