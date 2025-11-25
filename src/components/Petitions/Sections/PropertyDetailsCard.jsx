@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 
 const PropertyDetailsCard = ({
@@ -13,9 +14,10 @@ const PropertyDetailsCard = ({
   handlePropertyAddressInput,
   handlePropertyAddressSelect,
 }) => {
+  const { t } = useTranslation();
   return (
     <div className={`card mb-4 ${isEditing ? "editing" : ""}`}>
-            <SectionHeader title="Property Details" />
+            <SectionHeader title={t("petitionTabContent.propertyDetails")} />
             <div className="card-body">
               <div className="row">
                 <div className="col-md-6">

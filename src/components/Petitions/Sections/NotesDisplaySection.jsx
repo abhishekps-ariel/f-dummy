@@ -1,7 +1,9 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { formatDateTime } from "../../../utils/dateUtils";
 
 const NotesDisplaySection = ({ formData, onClose, onEditNote }) => {
+  const { t } = useTranslation();
   // Get notes from formData, sorted by most recent first
   const notes = (formData?.notes || []).sort((a, b) => {
     const dateA = new Date(a.createdAt || a.createdDate || 0);
@@ -12,18 +14,18 @@ const NotesDisplaySection = ({ formData, onClose, onEditNote }) => {
   return (
     <div className="card mb-4">
       <div className="card-header d-flex justify-content-between align-items-center">
-        <h5 className="mb-0">Notes</h5>
+        <h5 className="mb-0">{t("petitionTabContent.notes")}</h5>
         <button
           type="button"
           className="btn btn-sm btn-outline-secondary"
           onClick={onClose}
-          aria-label="Close"
+          aria-label={t("common.close") || "Close"}
           style={{ 
             minWidth: "30px",
             padding: "0.25rem 0.5rem",
             lineHeight: "1.2"
           }}
-          title="Close Notes"
+          title={t("common.close") || "Close Notes"}
         >
           <i className="fas fa-times"></i>
         </button>

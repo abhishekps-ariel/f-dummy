@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import CustomDropdown from "../../shared/CustomDropdown";
 
 // Helper function to format currency with commas
@@ -28,6 +29,7 @@ const StepRightToCure = ({
   removeRightToCure,
   updateRightToCure,
 }) => {
+  const { t } = useTranslation();
   // Ensure rightToCures is an array
   const rightToCures = formData.rightToCures || [];
   
@@ -51,7 +53,7 @@ const StepRightToCure = ({
     <>
       {/* Right-to-Cure Section */}
       <div className={`card mb-4 ${isEditing ? "editing" : ""}`}>
-        <SectionHeader title="Right-to-Cure (§35A)" />
+        <SectionHeader title={t("petitionTabContent.rightToCure")} />
         <div className="card-body">
           {displayRightToCures.length === 0 && !isEditing ? (
             <p className="text-muted">No right to cure information available</p>

@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 
 const StepSignaturesSection = ({
@@ -12,6 +13,7 @@ const StepSignaturesSection = ({
   petition,
   formatDate,
 }) => {
+  const { t } = useTranslation();
   return (
     <>
       <div 
@@ -20,7 +22,7 @@ const StepSignaturesSection = ({
               fieldErrors.esignConsent ? "border-danger" : ""
             }`}
           >
-            <SectionHeader title="Signatures" />
+            <SectionHeader title={t("petitionTabContent.signatures")} />
             <div className="card-body">
               {(() => {
                 // Use formData.signatures when editing, otherwise use petition.details.signatures

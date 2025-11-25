@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 const JudgmentDisplaySection = ({
   SectionHeader,
@@ -8,6 +9,7 @@ const JudgmentDisplaySection = ({
   formatDate,
   formatCurrency,
 }) => {
+  const { t } = useTranslation();
   // Check if judgment data exists and has meaningful content
   const hasJudgmentData = () => {
     const judgment = formData?.judgment;
@@ -103,7 +105,7 @@ const JudgmentDisplaySection = ({
 
   return (
     <div className="card mb-4">
-      <SectionHeader title="Judgment" />
+      <SectionHeader title={t("petitionTabContent.judgment")} />
       <div className="card-body">
         <div className="row">
           <div className="col-md-6">

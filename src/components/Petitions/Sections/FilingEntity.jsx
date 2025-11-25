@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 
 const StepFilingEntity = ({
@@ -8,10 +9,11 @@ const StepFilingEntity = ({
   fieldErrors,
   handleInputChange,
 }) => {
+  const { t } = useTranslation();
   return (
     <>
       <div className={`card mb-4 ${isEditing ? "editing" : ""}`}>
-            <SectionHeader title="Filing Entity" />
+            <SectionHeader title={t("petitionTabContent.filingEntity")} />
             <div className="card-body">
               <div className="row">
                 <div className="col-12">

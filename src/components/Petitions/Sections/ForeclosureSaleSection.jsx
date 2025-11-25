@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import CustomDropdown from "../../shared/CustomDropdown";
 
 const ForeclosureSaleSection = ({
@@ -12,6 +13,7 @@ const ForeclosureSaleSection = ({
   findOptionByValue,
   updateForeclosureSale,
 }) => {
+  const { t } = useTranslation();
   return (
     <>
       {/* Foreclosure Sale Section - Only show if Right to Cure is "Yes" AND petition is not Draft */}
@@ -26,7 +28,7 @@ const ForeclosureSaleSection = ({
                   : ""
               }`}
             >
-              <SectionHeader title="Foreclosure Sale" />
+              <SectionHeader title={t("petitionTabContent.foreclosureSale")} />
               <div className="card-body">
                 
                 {/* Determine if selected buyer is Mortgagee/Investor */}

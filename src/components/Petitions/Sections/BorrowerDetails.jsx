@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 const BorrowerDetails = ({
   SectionHeader,
@@ -14,10 +15,11 @@ const BorrowerDetails = ({
   isLoaded,
   addBorrower,
 }) => {
+  const { t } = useTranslation();
   return (
     <>
       <div className={`card mb-4 ${isEditing ? "editing" : ""}`}>
-            <SectionHeader title="Borrower Details" />
+            <SectionHeader title={t("petitionTabContent.borrowerDetails")} />
             <div className="card-body">
               {formData.borrowers && formData.borrowers.length > 0 ? (
                 <>

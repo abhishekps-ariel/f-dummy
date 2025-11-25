@@ -4,6 +4,82 @@
   padding: 0;
 }
 
+/* Scroll margin for section navigation - accounts for sticky headers */
+/* Apply scroll-margin-top to all section wrapper divs that have refs */
+.petition-form > div {
+  scroll-margin-top: 180px; /* App header (80px) + Petition header (~100px) */
+}
+
+/* Petition Form Layout with Sidebar */
+.petition-form-layout {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+
+.petition-form-content {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Section Header Actions */
+.section-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.section-edit-btn,
+.section-save-btn,
+.section-cancel-btn {
+  font-size: 0.85rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.section-edit-btn {
+  background: white;
+  border: 1px solid #dee2e6;
+  color: #495057;
+}
+
+.section-edit-btn:hover {
+  background: #f8f9fa;
+  border-color: var(--theme-color, #0265A3);
+  color: var(--theme-color, #0265A3);
+}
+
+.section-save-btn {
+  background: #28a745;
+  border: 1px solid #28a745;
+  color: white;
+}
+
+.section-save-btn:hover {
+  background: #218838;
+  border-color: #218838;
+}
+
+.section-cancel-btn {
+  background: #6c757d;
+  border: 1px solid #6c757d;
+  color: white;
+}
+
+.section-cancel-btn:hover {
+  background: #5a6268;
+  border-color: #5a6268;
+}
+
+/* Responsive Design */
+@media (max-width: 992px) {
+  .petition-form-layout {
+    flex-direction: column;
+  }
+}
+
 /* Main Header Styling */
 .petition-header-card {
   background: #ffffff;

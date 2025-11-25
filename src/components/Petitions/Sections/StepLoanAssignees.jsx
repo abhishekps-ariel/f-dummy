@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import CustomDropdown from "../../shared/CustomDropdown";
 
 const StepLoanAssignees = ({
@@ -17,10 +18,11 @@ const StepLoanAssignees = ({
   handleAssigneeAddressInput,
   handleAssigneeAddressSelect,
 }) => {
+  const { t } = useTranslation();
   return (
     <>
       <div className={`card mb-4 ${isEditing ? "editing" : ""}`}>
-            <SectionHeader title="Loan Assignees" />
+            <SectionHeader title={t("petitionTabContent.loanAssignees")} />
             <div className="card-body">
               {formData.loanAssignees && formData.loanAssignees.length > 0 ? (
                 <>

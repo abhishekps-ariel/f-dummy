@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import CustomDropdown from "../../shared/CustomDropdown";
 
 const StepForm35BCompliance = ({
@@ -21,10 +22,11 @@ const StepForm35BCompliance = ({
     if (selected.length === 2) return `${selected[0]} and ${selected[1]} are selected on loan detail step.`;
     return `${selected[0]}, ${selected[1]}, and ${selected[2]} are selected on loan detail step.`;
   };
+  const { t } = useTranslation();
   return (
     <>
       <div className={`card mb-4 ${isEditing ? "editing" : ""}`}>
-            <SectionHeader title="Form 35B Compliance" />
+            <SectionHeader title={t("petitionTabContent.form35BCompliance")} />
             <div className="card-body">
               <div className="row">
                 <div className="col-12">

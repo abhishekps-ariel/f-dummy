@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import CustomDropdown from "../../shared/CustomDropdown";
 
 // Helper function to format currency with commas
@@ -24,11 +25,12 @@ const LoanDetails = ({
   getLenderTypes,
   commonDataLoading,
 }) => {
+  const { t } = useTranslation();
   return (
     <>
       {/* Loan Details Section */}
       <div className={`card mb-4 ${isEditing ? "editing" : ""}`}>
-            <SectionHeader title="Loan Details" />
+            <SectionHeader title={t("petitionTabContent.loanDetails")} />
             <div className="card-body">
               <div className="row">
                 <div className="col-md-6">

@@ -776,8 +776,12 @@ select.form-control {
     padding-bottom: 20px;
 }
 
+:root {
+    --sidebar-width: 260px;
+}
+
 .dashboard-sidebar {
-    width: 260px;
+    width: var(--sidebar-width);
     min-height: 100vh;
     border-right: 1px solid #e8e8e8;
     position: fixed;
@@ -785,7 +789,26 @@ select.form-control {
     top: 0;
     z-index: 1030;
     background: #fff;
-    padding:8px
+    padding:8px;
+    transition: width 0.3s ease;
+}
+
+.dashboard-sidebar.collapsed {
+    width: 80px;
+}
+
+.dashboard-sidebar.collapsed .logo-box {
+    padding: 0.8rem 0.5rem !important;
+    min-height: 60px;
+}
+
+.dashboard-sidebar.collapsed .dashboard-nav-link {
+    justify-content: center;
+    padding: 10px;
+}
+
+.dashboard-sidebar.collapsed .dashboard-sidebar-footer {
+    padding: 16px 8px;
 }
 
 .dashboard-sidebar nav {
@@ -819,22 +842,24 @@ select.form-control {
 }
 
 .dashboard-main-area {
-    margin-left: 260px;
-    width: calc(100% - 260px);
+    margin-left: var(--sidebar-width);
+    width: calc(100% - var(--sidebar-width));
     background: #fafafa;
     min-height: 100vh;
     padding:80px 24px 24px;
+    transition: margin-left 0.3s ease, width 0.3s ease;
 }
 
 .dashboard-header {
     background: #fff;
     position: fixed;
-       width: calc(100% - 260px);
-    left: 260px;
+    width: calc(100% - var(--sidebar-width));
+    left: var(--sidebar-width);
     top: 0;
     padding: 14px 24px;
     border-bottom: 1px solid #e8e8e8;
-    z-index: 1020;      
+    z-index: 1020;
+    transition: width 0.3s ease, left 0.3s ease;
 }
 
 .dashboard-btn-icon {

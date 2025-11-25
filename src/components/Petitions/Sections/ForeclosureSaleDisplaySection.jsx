@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 const ForeclosureSaleDisplaySection = ({
   SectionHeader,
@@ -7,6 +8,7 @@ const ForeclosureSaleDisplaySection = ({
   findOptionByValue,
   formatDate,
 }) => {
+  const { t } = useTranslation();
   // Check if foreclosure sale data exists and has meaningful content
   const hasForeclosureSaleData = () => {
     const foreclosureSale = formData?.foreclosureSale;
@@ -109,7 +111,7 @@ const ForeclosureSaleDisplaySection = ({
 
   return (
     <div className="card mb-4">
-      <SectionHeader title="Foreclosure Sale" />
+      <SectionHeader title={t("petitionTabContent.foreclosureSale")} />
       <div className="card-body">
         <div className="row">
           <div className="col-md-6">

@@ -26,6 +26,8 @@ import NotesDisplaySection from "./Sections/NotesDisplaySection";
 import EditJudgementModal from "./EditJudgementModal";
 import EditForeclosureModal from "./EditForeclosureModal";
 import NotesModal from "./NotesModal";
+import PetitionContentSidebar from "./PetitionContentSidebar";
+import "./PetitionContentSidebar.css";
 import { useAuth } from "../../context/AuthContext";
 import { getUserRole } from "../../utils/storage";
 
@@ -47,11 +49,17 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
   } = usePetitionCommonData();
   const { submitPetition, fetchPetitions } = usePetitions();
 
-  // Single edit mode state - makes all fields editable at once
-  const [isEditing, setIsEditing] = useState(false);
+  // Section-level editing state - each section can be edited independently
+  const [editingSections, setEditingSections] = useState({});
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
+  
+  // Sidebar state for section navigation
+  const [activeSection, setActiveSection] = useState(null);
+  
+  // Legacy isEditing for backward compatibility
+  const isEditing = Object.values(editingSections).some(editing => editing === true);
   
   // Modal states
   const [showJudgementModal, setShowJudgementModal] = useState(false);
@@ -80,6 +88,19 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
   const propertyAddressInputRef = useRef(null);
   const signatureSectionRef = useRef(null);
   const foreclosureSaleSectionRef = useRef(null);
+  
+  // Section refs for scrolling
+  const propertyDetailsRef = useRef(null);
+  const loanDetailsRef = useRef(null);
+  const borrowerDetailsRef = useRef(null);
+  const filingEntityRef = useRef(null);
+  const rightToCureRef = useRef(null);
+  const form35BRef = useRef(null);
+  const loanAssigneesRef = useRef(null);
+  const signaturesRef = useRef(null);
+  const judgmentRef = useRef(null);
+  const foreclosureSaleRef = useRef(null);
+  const notesRef = useRef(null);
   // Borrower address autocomplete
   const [borrowerPredictions, setBorrowerPredictions] = useState({}); // { [borrowerId]: Prediction[] }
   const [isLoadingBorrowerPredictions, setIsLoadingBorrowerPredictions] =
@@ -723,7 +744,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
 
   // Reset edit mode when switching to a different petition
   useEffect(() => {
-    setIsEditing(false);
+    setEditingSections({});
     setFieldErrors({});
     setShowEditDropdown(false);
     setShowJudgementModal(false);
@@ -731,7 +752,219 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
     setShowNotesDropdown(false);
     setShowNotesSection(false);
     setNoteToEdit(null);
+    setActiveSection(null);
   }, [petition?.id]);
+  
+  // Helper function to check if judgment has meaningful data
+  const hasJudgmentData = () => {
+    const judgment = formData?.judgment;
+    if (!judgment) return false;
+    
+    // Check if at least one field has a meaningful value
+    const hasDate = judgment.judgmentDate !== null && 
+                    judgment.judgmentDate !== undefined &&
+                    ((typeof judgment.judgmentDate === 'string' && judgment.judgmentDate.trim() !== '') ||
+                     (typeof judgment.judgmentDate !== 'string'));
+    
+    const hasAmount = judgment.judgmentAmount !== null && 
+                      judgment.judgmentAmount !== undefined && 
+                      judgment.judgmentAmount !== 0;
+    
+    const hasType = judgment.judgmentType !== null && 
+                    judgment.judgmentType !== undefined && 
+                    judgment.judgmentType !== 0 &&
+                    judgment.judgmentType !== '';
+    
+    const hasCourtInfo = judgment.courtInformation !== null &&
+                         judgment.courtInformation !== undefined &&
+                         typeof judgment.courtInformation === 'string' && 
+                         judgment.courtInformation.trim() !== '';
+    
+    const hasDocket = judgment.docketNumbers !== null &&
+                      judgment.docketNumbers !== undefined &&
+                      typeof judgment.docketNumbers === 'string' && 
+                      judgment.docketNumbers.trim() !== '';
+    
+    return hasDate || hasAmount || hasType || hasCourtInfo || hasDocket;
+  };
+
+  // Helper function to check if foreclosure sale has meaningful data
+  const hasForeclosureSaleData = () => {
+    const foreclosureSale = formData?.foreclosureSale;
+    if (!foreclosureSale) return false;
+    
+    // Check if at least one field has a meaningful value
+    const hasSaleDate = foreclosureSale.saleDate !== null && 
+                        foreclosureSale.saleDate !== undefined && 
+                        foreclosureSale.saleDate !== '' && 
+                        typeof foreclosureSale.saleDate === 'string' && 
+                        foreclosureSale.saleDate.trim() !== '';
+    
+    const hasSoldTo = foreclosureSale.soldToId !== null && 
+                      foreclosureSale.soldToId !== undefined && 
+                      foreclosureSale.soldToId !== '' && 
+                      ((typeof foreclosureSale.soldToId === 'string' && foreclosureSale.soldToId.trim() !== '') || 
+                       (typeof foreclosureSale.soldToId !== 'string'));
+    
+    const hasVesting = foreclosureSale.vestingEntityName !== null && 
+                       foreclosureSale.vestingEntityName !== undefined && 
+                       foreclosureSale.vestingEntityName !== '' && 
+                       typeof foreclosureSale.vestingEntityName === 'string' && 
+                       foreclosureSale.vestingEntityName.trim() !== '';
+    
+    const hasReoEntity = foreclosureSale.reoEntityName !== null && 
+                         foreclosureSale.reoEntityName !== undefined && 
+                         foreclosureSale.reoEntityName !== '' && 
+                         typeof foreclosureSale.reoEntityName === 'string' && 
+                         foreclosureSale.reoEntityName.trim() !== '';
+    
+    const hasReoContact = (foreclosureSale.reoContactFirstName !== null &&
+                           foreclosureSale.reoContactFirstName !== undefined &&
+                           foreclosureSale.reoContactFirstName !== '' &&
+                           typeof foreclosureSale.reoContactFirstName === 'string' &&
+                           foreclosureSale.reoContactFirstName.trim() !== '') ||
+                          (foreclosureSale.reoContactLastName !== null &&
+                           foreclosureSale.reoContactLastName !== undefined &&
+                           foreclosureSale.reoContactLastName !== '' &&
+                           typeof foreclosureSale.reoContactLastName === 'string' &&
+                           foreclosureSale.reoContactLastName.trim() !== '');
+    
+    const hasReoPhone = (foreclosureSale.reoBusinessPhone !== null &&
+                         foreclosureSale.reoBusinessPhone !== undefined &&
+                         foreclosureSale.reoBusinessPhone !== '' &&
+                         typeof foreclosureSale.reoBusinessPhone === 'string' &&
+                         foreclosureSale.reoBusinessPhone.trim() !== '') ||
+                        (foreclosureSale.reoEmergencyPhone !== null &&
+                         foreclosureSale.reoEmergencyPhone !== undefined &&
+                         foreclosureSale.reoEmergencyPhone !== '' &&
+                         typeof foreclosureSale.reoEmergencyPhone === 'string' &&
+                         foreclosureSale.reoEmergencyPhone.trim() !== '');
+    
+    return hasSaleDate || hasSoldTo || hasVesting || hasReoEntity || hasReoContact || hasReoPhone;
+  };
+
+  // Section definitions for sidebar - only show sections that are actually displayed
+  const sections = useMemo(() => {
+    const baseSections = [
+      { id: "property", title: t("petitionTabContent.propertyDetails"), icon: "fa-home" },
+      { id: "loan", title: t("petitionTabContent.loanDetails"), icon: "fa-file-invoice-dollar" },
+      { id: "borrower", title: t("petitionTabContent.borrowerDetails"), icon: "fa-user" },
+      { id: "filing-entity", title: t("petitionTabContent.filingEntity"), icon: "fa-building" },
+      { id: "right-to-cure", title: t("petitionTabContent.rightToCure"), icon: "fa-gavel" },
+      { id: "form35b", title: t("petitionTabContent.form35BCompliance"), icon: "fa-file-contract" },
+      { id: "loan-assignees", title: t("petitionTabContent.loanAssignees"), icon: "fa-users" },
+      { id: "signatures", title: t("petitionTabContent.signatures"), icon: "fa-signature" },
+    ];
+    
+    // Add conditional sections only if they have meaningful data
+    if (hasJudgmentData()) {
+      baseSections.push({ id: "judgment", title: t("petitionTabContent.judgment"), icon: "fa-balance-scale" });
+    }
+    if (hasForeclosureSaleData()) {
+      baseSections.push({ id: "foreclosure", title: t("petitionTabContent.foreclosureSale"), icon: "fa-handshake" });
+    }
+    if (!isPublic && showNotesSection) {
+      baseSections.push({ id: "notes", title: t("petitionTabContent.notes"), icon: "fa-sticky-note" });
+    }
+    
+    return baseSections;
+  }, [formData, showNotesSection, isPublic, t, hasJudgmentData, hasForeclosureSaleData]);
+  
+  // Handle section click - scroll to section (don't change sidebar collapsed state)
+  const handleSectionClick = (sectionId, e) => {
+    // Prevent any default behavior
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
+    setActiveSection(sectionId);
+    
+    const refMap = {
+      property: propertyDetailsRef,
+      loan: loanDetailsRef,
+      borrower: borrowerDetailsRef,
+      "filing-entity": filingEntityRef,
+      "right-to-cure": rightToCureRef,
+      form35b: form35BRef,
+      "loan-assignees": loanAssigneesRef,
+      signatures: signaturesRef,
+      judgment: judgmentRef,
+      foreclosure: foreclosureSaleRef,
+      notes: notesRef,
+    };
+    
+    const ref = refMap[sectionId];
+    if (ref?.current) {
+      // Use the same simple approach as home page - CSS scroll-margin-top handles the offset
+      ref.current.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  };
+  
+  // Track active section based on scroll position
+  useEffect(() => {
+    const handleScroll = () => {
+      const refs = [
+        { id: "property", ref: propertyDetailsRef },
+        { id: "loan", ref: loanDetailsRef },
+        { id: "borrower", ref: borrowerDetailsRef },
+        { id: "filing-entity", ref: filingEntityRef },
+        { id: "right-to-cure", ref: rightToCureRef },
+        { id: "form35b", ref: form35BRef },
+        { id: "loan-assignees", ref: loanAssigneesRef },
+        { id: "signatures", ref: signaturesRef },
+        { id: "judgment", ref: judgmentRef },
+        { id: "foreclosure", ref: foreclosureSaleRef },
+        { id: "notes", ref: notesRef },
+      ];
+      
+      const scrollPosition = window.scrollY + 150;
+      
+      for (let i = refs.length - 1; i >= 0; i--) {
+        const { id, ref } = refs[i];
+        if (ref?.current) {
+          const elementTop = ref.current.offsetTop;
+          if (scrollPosition >= elementTop) {
+            setActiveSection(id);
+            break;
+          }
+        }
+      }
+    };
+    
+    window.addEventListener("scroll", handleScroll);
+    handleScroll();
+    
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [formData, showNotesSection]);
+  
+  // Toggle section editing
+  const toggleSectionEditing = (sectionId) => {
+    setEditingSections(prev => ({
+      ...prev,
+      [sectionId]: !prev[sectionId]
+    }));
+  };
+  
+  // Check if a section is being edited
+  const isSectionEditing = (sectionId) => {
+    return editingSections[sectionId] === true;
+  };
+  
+  // Handle section edit toggle
+  const handleSectionEditToggle = (sectionId) => {
+    if (isSectionEditing(sectionId)) {
+      // Cancel edit - reset form data for this section
+      if (initialFormData) {
+        setFormData(initialFormData);
+      }
+      setFieldErrors({});
+    }
+    toggleSectionEditing(sectionId);
+  };
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -1478,14 +1711,24 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
     });
   };
 
-  // Handle edit mode toggle
+  // Handle edit mode toggle (legacy - for backward compatibility)
   const handleEditToggle = () => {
-    if (isEditing) {
-      // Cancel edit - reset form data
-      setFormData(initialFormData);
+    const allSectionIds = sections.map(s => s.id);
+    const allEditing = allSectionIds.every(id => isSectionEditing(id));
+    
+    if (allEditing) {
+      setEditingSections({});
+      if (initialFormData) {
+        setFormData(initialFormData);
+      }
       setFieldErrors({});
+    } else {
+      const newEditingState = {};
+      allSectionIds.forEach(id => {
+        newEditingState[id] = true;
+      });
+      setEditingSections(newEditingState);
     }
-    setIsEditing(!isEditing);
     setShowEditDropdown(false);
   };
 
@@ -1670,7 +1913,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
       };
       await submitPetition(petitionData, true, petition.id);
       // Toast message is shown by submitPetition function
-      setIsEditing(false);
+      setEditingSections({});
       
       // Call the callback to refresh the petitions list (just like delete does)
       // Small delay to ensure backend has processed the update
@@ -1712,7 +1955,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
       };
       await submitPetition(petitionData, false, petition.id);
       // Toast message is shown by submitPetition function
-      setIsEditing(false);
+      setEditingSections({});
       
       // Call the callback to refresh the petitions list (just like delete does)
       // Small delay to ensure backend has processed the update
@@ -1734,12 +1977,67 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
     }
   };
 
-  // Reusable section header component - no edit buttons, just title
-  const SectionHeader = ({ title }) => (
-    <div className="card-header">
-      <h5 className="mb-0">{title}</h5>
-    </div>
-  );
+  // Reusable section header component with section-level edit button
+  const SectionHeader = ({ title, sectionId }) => {
+    const canEdit = !isPublic && petition?.status?.toLowerCase() !== "closed";
+    const sectionEditing = sectionId ? isSectionEditing(sectionId) : false;
+    
+    return (
+      <div className="card-header">
+        <div className="d-flex justify-content-between align-items-center">
+          <h5 className="mb-0">{title}</h5>
+          {canEdit && sectionId && (
+            <div className="section-header-actions">
+              {!sectionEditing ? (
+                <button
+                  type="button"
+                  className="btn btn-sm btn-light section-edit-btn"
+                  onClick={() => handleSectionEditToggle(sectionId)}
+                  title={t("common.edit") || "Edit this section"}
+                >
+                  <i className="fas fa-edit me-1"></i>
+                  {t("common.edit")}
+                </button>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-success section-save-btn me-2"
+                    onClick={async () => {
+                      try {
+                        setIsSavingDraft(true);
+                        await handleSaveDraft();
+                        toggleSectionEditing(sectionId);
+                        toast.success(t("petitionTabContent.sectionSaved") || "Section saved successfully");
+                      } catch (error) {
+                        toast.error(t("petitionTabContent.saveError") || "Error saving section");
+                      } finally {
+                        setIsSavingDraft(false);
+                      }
+                    }}
+                    title={t("common.save") || "Save changes"}
+                    disabled={isSavingDraft}
+                  >
+                    <i className="fas fa-save me-1"></i>
+                    {t("common.save")}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-secondary section-cancel-btn"
+                    onClick={() => handleSectionEditToggle(sectionId)}
+                    title={t("common.cancel") || "Cancel editing"}
+                  >
+                    <i className="fas fa-times me-1"></i>
+                    {t("common.cancel")}
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   const handleDownloadPDF = () => {
     try {
@@ -2481,150 +2779,183 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
           </div>
         )}
 
-        {/* Form Layout */}
-        <form className="petition-form">
-          {/* Notes Display Section - Shows above Property Details when toggled (only for non-public pages) */}
-          {!isPublic && showNotesSection && (
-            <NotesDisplaySection
-              formData={formData}
-              onClose={() => setShowNotesSection(false)}
-              onEditNote={null}
-            />
-          )}
-          {/* onEditNote={handleEditNote} - COMMENTED OUT: only allowing adding notes for now */}
-
-          {/* Property Details Section */}
-          <PropertyDetailsCard
-            SectionHeader={SectionHeader}
-            isEditing={isEditing}
-            isLoaded={isLoaded}
-            propertyAddressInputRef={propertyAddressInputRef}
-            predictions={predictions}
-            fieldErrors={fieldErrors}
-            formData={formData}
-            handleInputChange={handleInputChange}
-            handlePropertyAddressInput={handlePropertyAddressInput}
-            handlePropertyAddressSelect={handlePropertyAddressSelect}
+        {/* Form Layout with Sidebar */}
+        <div className="petition-form-layout">
+          {/* Sidebar Navigation */}
+          <PetitionContentSidebar
+            sections={sections}
+            activeSection={activeSection}
+            onSectionClick={handleSectionClick}
           />
 
-          {/* Loan Details Section */}
-          <LoanDetails
-            SectionHeader={SectionHeader}
-            isEditing={isEditing}
-            fieldErrors={fieldErrors}
-            formData={formData}
-            handleInputChange={handleInputChange}
-            getLoanTypes={getLoanTypes}
-            getLienPositions={getLienPositions}
-            getLenderTypes={getLenderTypes}
-            commonDataLoading={commonDataLoading}
-          />
+          {/* Main Content Area */}
+          <div className="petition-form-content">
+            <form className="petition-form">
+              {/* Notes Display Section - Shows above Property Details when toggled (only for non-public pages) */}
+              {!isPublic && showNotesSection && (
+                <div ref={notesRef}>
+                  <NotesDisplaySection
+                    formData={formData}
+                    onClose={() => setShowNotesSection(false)}
+                    onEditNote={null}
+                  />
+                </div>
+              )}
+              {/* onEditNote={handleEditNote} - COMMENTED OUT: only allowing adding notes for now */}
 
-          {/* Borrower Details Section */}
-          <BorrowerDetails
-            SectionHeader={SectionHeader}
-            isEditing={isEditing}
-            formData={formData}
-            fieldErrors={fieldErrors}
-            removeBorrower={removeBorrower}
-            updateBorrower={updateBorrower}
-            setPrimaryBorrower={setPrimaryBorrower}
-            handleBorrowerAddressInput={handleBorrowerAddressInput}
-            handleBorrowerAddressSelect={handleBorrowerAddressSelect}
-            borrowerPredictions={borrowerPredictions}
-            isLoaded={isLoaded}
-            addBorrower={addBorrower}
-          />
+              {/* Property Details Section */}
+              <div ref={propertyDetailsRef}>
+                <PropertyDetailsCard
+                  SectionHeader={(props) => <SectionHeader {...props} sectionId="property" />}
+                  isEditing={isSectionEditing("property")}
+                  isLoaded={isLoaded}
+                  propertyAddressInputRef={propertyAddressInputRef}
+                  predictions={predictions}
+                  fieldErrors={fieldErrors}
+                  formData={formData}
+                  handleInputChange={handleInputChange}
+                  handlePropertyAddressInput={handlePropertyAddressInput}
+                  handlePropertyAddressSelect={handlePropertyAddressSelect}
+                />
+              </div>
 
-          {/* Filing Entity Section */}
-          <StepFilingEntity
-            SectionHeader={SectionHeader}
-            isEditing={isEditing}
-            formData={formData}
-            fieldErrors={fieldErrors}
-            handleInputChange={handleInputChange}
-          />
+              {/* Loan Details Section */}
+              <div ref={loanDetailsRef}>
+                <LoanDetails
+                  SectionHeader={(props) => <SectionHeader {...props} sectionId="loan" />}
+                  isEditing={isSectionEditing("loan")}
+                  fieldErrors={fieldErrors}
+                  formData={formData}
+                  handleInputChange={handleInputChange}
+                  getLoanTypes={getLoanTypes}
+                  getLienPositions={getLienPositions}
+                  getLenderTypes={getLenderTypes}
+                  commonDataLoading={commonDataLoading}
+                />
+              </div>
 
-          {/* Right-to-Cure Section */}
-          <StepRightToCure
-            SectionHeader={SectionHeader}
-            isEditing={isEditing}
-            formData={formData}
-            fieldErrors={fieldErrors}
-            setFormData={setFormData}
-            handleInputChange={handleInputChange}
-            handleNoticeAddressInput={handleNoticeAddressInput}
-            isLoaded={isLoaded}
-            noticePredictions={noticePredictions}
-            handleNoticeAddressSelect={handleNoticeAddressSelect}
-            addRightToCure={addRightToCure}
-            removeRightToCure={removeRightToCure}
-            updateRightToCure={updateRightToCure}
-          />
+              {/* Borrower Details Section */}
+              <div ref={borrowerDetailsRef}>
+                <BorrowerDetails
+                  SectionHeader={(props) => <SectionHeader {...props} sectionId="borrower" />}
+                  isEditing={isSectionEditing("borrower")}
+                  formData={formData}
+                  fieldErrors={fieldErrors}
+                  removeBorrower={removeBorrower}
+                  updateBorrower={updateBorrower}
+                  setPrimaryBorrower={setPrimaryBorrower}
+                  handleBorrowerAddressInput={handleBorrowerAddressInput}
+                  handleBorrowerAddressSelect={handleBorrowerAddressSelect}
+                  borrowerPredictions={borrowerPredictions}
+                  isLoaded={isLoaded}
+                  addBorrower={addBorrower}
+                />
+              </div>
 
-          {/* Form 35B Compliance Section */}
-          <StepForm35BCompliance
-            SectionHeader={SectionHeader}
-            isEditing={isEditing}
-            formData={formData}
-            setFormData={setFormData}
-            fieldErrors={fieldErrors}
-            isCertainMortgageLoanReadOnly={
-              formData.variableRate || formData.interestOnly || formData.negativeAmortization
-            }
-          />
+              {/* Filing Entity Section */}
+              <div ref={filingEntityRef}>
+                <StepFilingEntity
+                  SectionHeader={(props) => <SectionHeader {...props} sectionId="filing-entity" />}
+                  isEditing={isSectionEditing("filing-entity")}
+                  formData={formData}
+                  fieldErrors={fieldErrors}
+                  handleInputChange={handleInputChange}
+                />
+              </div>
 
+              {/* Right-to-Cure Section */}
+              <div ref={rightToCureRef}>
+                <StepRightToCure
+                  SectionHeader={(props) => <SectionHeader {...props} sectionId="right-to-cure" />}
+                  isEditing={isSectionEditing("right-to-cure")}
+                  formData={formData}
+                  fieldErrors={fieldErrors}
+                  setFormData={setFormData}
+                  handleInputChange={handleInputChange}
+                  handleNoticeAddressInput={handleNoticeAddressInput}
+                  isLoaded={isLoaded}
+                  noticePredictions={noticePredictions}
+                  handleNoticeAddressSelect={handleNoticeAddressSelect}
+                  addRightToCure={addRightToCure}
+                  removeRightToCure={removeRightToCure}
+                  updateRightToCure={updateRightToCure}
+                />
+              </div>
 
-          {/* Loan Assignees Section */}
-          <StepLoanAssignees
-            SectionHeader={SectionHeader}
-            isEditing={isEditing}
-            formData={formData}
-            fieldErrors={fieldErrors}
-            removeLoanAssignee={removeLoanAssignee}
-            updateLoanAssignee={updateLoanAssignee}
-            addLoanAssignee={addLoanAssignee}
-            getAssigneeTypes={getAssigneeTypes}
-            getAssigneeRoles={getAssigneeRoles}
-            commonDataLoading={commonDataLoading}
-            isLoaded={isLoaded}
-            assigneePredictions={assigneePredictions}
-            handleAssigneeAddressInput={handleAssigneeAddressInput}
-            handleAssigneeAddressSelect={handleAssigneeAddressSelect}
-          />
+              {/* Form 35B Compliance Section */}
+              <div ref={form35BRef}>
+                <StepForm35BCompliance
+                  SectionHeader={(props) => <SectionHeader {...props} sectionId="form35b" />}
+                  isEditing={isSectionEditing("form35b")}
+                  formData={formData}
+                  setFormData={setFormData}
+                  fieldErrors={fieldErrors}
+                  isCertainMortgageLoanReadOnly={
+                    formData.variableRate || formData.interestOnly || formData.negativeAmortization
+                  }
+                />
+              </div>
 
-          {/* Signatures Section */}
-          <StepSignaturesSection
-            SectionHeader={SectionHeader}
-            signatureSectionRef={signatureSectionRef}
-            isEditing={isEditing}
-            fieldErrors={fieldErrors}
-            formData={formData}
-            setFormData={setFormData}
-            setFieldErrors={setFieldErrors}
-            petition={petition}
-            formatDate={formatDate}
-          />
+              {/* Loan Assignees Section */}
+              <div ref={loanAssigneesRef}>
+                <StepLoanAssignees
+                  SectionHeader={(props) => <SectionHeader {...props} sectionId="loan-assignees" />}
+                  isEditing={isSectionEditing("loan-assignees")}
+                  formData={formData}
+                  fieldErrors={fieldErrors}
+                  removeLoanAssignee={removeLoanAssignee}
+                  updateLoanAssignee={updateLoanAssignee}
+                  addLoanAssignee={addLoanAssignee}
+                  getAssigneeTypes={getAssigneeTypes}
+                  getAssigneeRoles={getAssigneeRoles}
+                  commonDataLoading={commonDataLoading}
+                  isLoaded={isLoaded}
+                  assigneePredictions={assigneePredictions}
+                  handleAssigneeAddressInput={handleAssigneeAddressInput}
+                  handleAssigneeAddressSelect={handleAssigneeAddressSelect}
+                />
+              </div>
 
-          {/* Judgment Display Section - Read-only, only shows if data exists */}
-          <JudgmentDisplaySection
-            SectionHeader={SectionHeader}
-            formData={formData}
-            getJudgmentTypes={getJudgmentTypes}
-            findOptionByValue={findOptionByValue}
-            formatDate={formatDate}
-            formatCurrency={formatCurrency}
-          />
+              {/* Signatures Section */}
+              <div ref={signaturesRef}>
+                <StepSignaturesSection
+                  SectionHeader={(props) => <SectionHeader {...props} sectionId="signatures" />}
+                  signatureSectionRef={signatureSectionRef}
+                  isEditing={isSectionEditing("signatures")}
+                  fieldErrors={fieldErrors}
+                  formData={formData}
+                  setFormData={setFormData}
+                  setFieldErrors={setFieldErrors}
+                  petition={petition}
+                  formatDate={formatDate}
+                />
+              </div>
 
-          {/* Foreclosure Sale Display Section - Read-only, only shows if data exists */}
-          <ForeclosureSaleDisplaySection
-            SectionHeader={SectionHeader}
-            formData={formData}
-            getBuyerTypes={getBuyerTypes}
-            findOptionByValue={findOptionByValue}
-            formatDate={formatDate}
-          />
-        </form>
+              {/* Judgment Display Section - Read-only, only shows if data exists */}
+              <div ref={judgmentRef}>
+                <JudgmentDisplaySection
+                  SectionHeader={SectionHeader}
+                  formData={formData}
+                  getJudgmentTypes={getJudgmentTypes}
+                  findOptionByValue={findOptionByValue}
+                  formatDate={formatDate}
+                  formatCurrency={formatCurrency}
+                />
+              </div>
+
+              {/* Foreclosure Sale Display Section - Read-only, only shows if data exists */}
+              <div ref={foreclosureSaleRef}>
+                <ForeclosureSaleDisplaySection
+                  SectionHeader={SectionHeader}
+                  formData={formData}
+                  getBuyerTypes={getBuyerTypes}
+                  findOptionByValue={findOptionByValue}
+                  formatDate={formatDate}
+                />
+              </div>
+            </form>
+          </div>
+        </div>
       </div>
 
       {/* Edit Judgement Modal */}

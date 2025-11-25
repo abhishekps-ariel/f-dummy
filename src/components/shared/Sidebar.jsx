@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ROUTES } from "../../constants/routerConstants";
@@ -7,6 +8,16 @@ const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
+  // Initialize from localStorage immediately to prevent flash of wrong state
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    const savedState = localStorage.getItem('sidebarCollapsed');
+    return savedState !== null ? savedState === 'true' : false;
+  });
+
+  // Save collapsed state to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('sidebarCollapsed', isCollapsed.toString());
+  }, [isCollapsed]);
   
   const filerNavItems = [
     {
@@ -51,6 +62,8 @@ const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
     if (onSectionChange) {
       onSectionChange(item.key);
     }
+    // Don't expand sidebar when clicking navigation items - keep it collapsed
+    // Sidebar state remains unchanged
   };
 
   const isItemActive = (item) => {
@@ -63,20 +76,81 @@ const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
     return false;
   };
 
+  // Update CSS variable for sidebar width
+  useEffect(() => {
+    document.documentElement.style.setProperty('--sidebar-width', isCollapsed ? '80px' : '260px');
+  }, [isCollapsed]);
+
+  const toggleSidebar = () => {
+    setIsCollapsed(!isCollapsed);
+  };
+
   return (
     <>
       {/* Sidebar - Desktop Only */}
-      <aside className="dashboard-sidebar d-none d-lg-flex flex-column">
-        <div className="logo-box" style={{ padding: "0.8rem 1rem 2rem 1rem" }}>
-          {/* Logo */}
-          <div className="dashboard-logo">
-            <img
-              src={loginImg}
-              alt="FILIR Logo"
-              className="dashboard-logo-img"
-              style={{ width: "150px", height: "150px" }}
-            />
-          </div>
+      <aside className={`dashboard-sidebar d-none d-lg-flex flex-column ${isCollapsed ? 'collapsed' : ''}`}>
+        <div className="logo-box" style={{ padding: isCollapsed ? "0.8rem 0.5rem" : "0.8rem 1rem 2rem 1rem", position: "relative", display: "flex", justifyContent: "center", alignItems: "center" }}>
+          {/* Toggle Button - Hamburger when collapsed, arrow when expanded */}
+          {isCollapsed ? (
+            <button
+              className="sidebar-toggle-btn"
+              onClick={toggleSidebar}
+              title={t("sidebar.expand") || "Expand sidebar"}
+              style={{
+                background: "transparent",
+                border: "none",
+                color: "#666",
+                cursor: "pointer",
+                padding: "0.75rem",
+                borderRadius: "4px",
+                transition: "all 0.2s",
+                width: "100%",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center"
+              }}
+              onMouseEnter={(e) => e.target.style.background = "#f5f5f5"}
+              onMouseLeave={(e) => e.target.style.background = "transparent"}
+            >
+              <i className="fas fa-bars" style={{ fontSize: "1.2rem" }}></i>
+            </button>
+          ) : (
+            <>
+              {/* Toggle Button - Arrow when expanded */}
+              <button
+                className="sidebar-toggle-btn"
+                onClick={toggleSidebar}
+                title={t("sidebar.collapse") || "Collapse sidebar"}
+                style={{
+                  position: "absolute",
+                  top: "1rem",
+                  right: "0.5rem",
+                  background: "transparent",
+                  border: "none",
+                  color: "#666",
+                  cursor: "pointer",
+                  padding: "0.5rem",
+                  borderRadius: "4px",
+                  transition: "all 0.2s",
+                  zIndex: 10
+                }}
+                onMouseEnter={(e) => e.target.style.background = "#f5f5f5"}
+                onMouseLeave={(e) => e.target.style.background = "transparent"}
+              >
+                <i className="fas fa-chevron-left"></i>
+              </button>
+
+              {/* Logo - Only show when expanded */}
+              <div className="dashboard-logo">
+                <img
+                  src={loginImg}
+                  alt="FILIR Logo"
+                  className="dashboard-logo-img"
+                  style={{ width: "150px", height: "150px" }}
+                />
+              </div>
+            </>
+          )}
         </div>
 
         {/* Navigation Links */}
@@ -97,9 +171,10 @@ const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
                       e.preventDefault();
                       handleNavigation(item);
                     }}
+                    title={isCollapsed ? item.label : undefined}
                   >
-                    <i className={`fa-solid ${item.icon} me-2`}></i>
-                    <span>{item.label}</span>
+                    <i className={`fa-solid ${item.icon} ${isCollapsed ? '' : 'me-2'}`}></i>
+                    {!isCollapsed && <span>{item.label}</span>}
                   </a>
                 </li>
               )
@@ -116,9 +191,10 @@ const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
               e.preventDefault();
               onLogout();
             }}
+            title={isCollapsed ? t("sidebar.signOut") : undefined}
           >
-            <i className="fas fa-sign-out-alt me-2"></i>
-            <span>{t("sidebar.signOut")}</span>
+            <i className={`fas fa-sign-out-alt ${isCollapsed ? '' : 'me-2'}`}></i>
+            {!isCollapsed && <span>{t("sidebar.signOut")}</span>}
           </a>
         </div>
       </aside>
