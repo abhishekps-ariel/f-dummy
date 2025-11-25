@@ -36,14 +36,25 @@ class CommonPetitionService {
     return response.data;
   }
 
+  // Get lender types
+  async getLenderTypes() {
+    const response = await axiosInstance.get(COMMON_ENDPOINTS.GET_LENDER_TYPES, {
+      headers: {
+        Accept: "text/plain",
+      },
+    });
+    return response.data;
+  }
+
   // Get all petition common data in one call
   async getAllPetitionCommonData() {
-    const [enums, loanTypes, assigneeTypes, assigneeRoles, buyerTypes] = await Promise.all([
+    const [enums, loanTypes, assigneeTypes, assigneeRoles, buyerTypes, lenderTypes] = await Promise.all([
       this.getPetitionEnums(),
       this.getPetitionLoanTypes(),
       this.getPetitionAssigneeTypes(),
       this.getPetitionAssigneeRoles(),
-      this.getBuyerTypes()
+      this.getBuyerTypes(),
+      this.getLenderTypes()
     ]);
 
     return {
@@ -53,7 +64,8 @@ class CommonPetitionService {
         loanTypes: loanTypes.data,
         assigneeTypes: assigneeTypes.data,
         assigneeRoles: assigneeRoles.data,
-        buyerTypes: buyerTypes.data || buyerTypes // Handle different response structures
+        buyerTypes: buyerTypes.data || buyerTypes, // Handle different response structures
+        lenderTypes: lenderTypes.data || lenderTypes // Handle different response structures
       }
     };
   }

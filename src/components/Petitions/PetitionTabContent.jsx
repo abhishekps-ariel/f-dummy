@@ -38,6 +38,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
     getAssigneeRoles,
     getLienPositions,
     getBuyerTypes,
+    getLenderTypes,
     getJudgmentTypes,
     getPetitionStatuses,
     getOptionName,
@@ -406,22 +407,37 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
     }, 250);
   };
 
-  const handleNoticeAddressSelect = (prediction) => {
+  const handleNoticeAddressSelect = (prediction, index = null) => {
     setNoticePredictions([]);
     const street = prediction.description?.split(",")[0] || "";
-    setFormData((prev) => ({ ...prev, noticeAddressStreet1: street }));
-    geocodePlaceAndFill(
-      prediction.place_id,
-      ({ street1, city, state, zip }) => {
-        setFormData((prev) => ({
-          ...prev,
-          noticeAddressStreet1: street1 || prev.noticeAddressStreet1,
-          noticeAddressCity: city || prev.noticeAddressCity,
-          noticeAddressState: state || prev.noticeAddressState,
-          noticeAddressZip: zip || prev.noticeAddressZip,
-        }));
-      }
-    );
+    
+    if (index !== null && index !== undefined) {
+      // Update specific rightToCure entry
+      geocodePlaceAndFill(
+        prediction.place_id,
+        ({ street1, city, state, zip }) => {
+          updateRightToCure(index, "noticeAddressStreet1", street1 || street);
+          if (city) updateRightToCure(index, "noticeAddressCity", city);
+          if (state) updateRightToCure(index, "noticeAddressState", state);
+          if (zip) updateRightToCure(index, "noticeAddressZip", zip);
+        }
+      );
+    } else {
+      // Legacy single-object format
+      setFormData((prev) => ({ ...prev, noticeAddressStreet1: street }));
+      geocodePlaceAndFill(
+        prediction.place_id,
+        ({ street1, city, state, zip }) => {
+          setFormData((prev) => ({
+            ...prev,
+            noticeAddressStreet1: street1 || prev.noticeAddressStreet1,
+            noticeAddressCity: city || prev.noticeAddressCity,
+            noticeAddressState: state || prev.noticeAddressState,
+            noticeAddressZip: zip || prev.noticeAddressZip,
+          }));
+        }
+      );
+    }
   };
 
   const validatePropertyAddressWithGeocoding = async () => {
@@ -568,6 +584,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
       delinquencyDaysAtFiling: details.loan?.delinquencyDaysAtFiling || 0,
       mortgageBrokerLicenseNumber: details.loan?.mortgageBrokerLicenseNumber || "",
       mortgageLoanOriginatorLicenseNumber: details.loan?.mortgageLoanOriginatorLicenseNumber || "",
+      lenderId: details.loan?.lenderId || "",
 
       // Borrowers
       borrowers: mappedBorrowers,
@@ -587,21 +604,43 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
       stateLicenseNumber: details.filingEntity?.stateLicenseNumber || "",
       stateLicenseState: details.filingEntity?.stateLicenseState || "",
 
-      // Right-to-Cure
-      noticeSent: details.rightToCure?.noticeSent || false,
-      noticeDate: details.rightToCure?.noticeDate
-        ? details.rightToCure.noticeDate.split("T")[0]
-        : "",
-      amountInDefault: details.rightToCure?.amountInDefault || 0,
-      daysDelinquentAtNotice: details.rightToCure?.daysDelinquentAtNotice || 0,
-      cureExpirationDate: details.rightToCure?.cureExpirationDate
-        ? details.rightToCure.cureExpirationDate.split("T")[0]
-        : "",
-      noticeAddressStreet1: details.rightToCure?.noticeAddressStreet1 || "",
-      noticeAddressCity: details.rightToCure?.noticeAddressCity || "",
-      noticeAddressState: details.rightToCure?.noticeAddressState || "",
-      noticeAddressZip: details.rightToCure?.noticeAddressZip || "",
-      manualOverrideReason: details.rightToCure?.manualOverrideReason || "",
+      // Right-to-Cure - now an array for multiple entries
+      rightToCures: (() => {
+        // Check if rightToCures array exists (new format)
+        if (details.rightToCures && Array.isArray(details.rightToCures) && details.rightToCures.length > 0) {
+          return details.rightToCures.map((rtc) => ({
+            id: rtc.id || null,
+            noticeSent: rtc.noticeSent !== undefined ? rtc.noticeSent : null,
+            noticeDate: rtc.noticeDate ? rtc.noticeDate.split("T")[0] : "",
+            amountInDefault: rtc.amountInDefault || 0,
+            daysDelinquentAtNotice: rtc.daysDelinquentAtNotice || 0,
+            cureExpirationDate: rtc.cureExpirationDate ? rtc.cureExpirationDate.split("T")[0] : "",
+            noticeAddressStreet1: rtc.noticeAddressStreet1 || "",
+            noticeAddressCity: rtc.noticeAddressCity || "",
+            noticeAddressState: rtc.noticeAddressState || "",
+            noticeAddressZip: rtc.noticeAddressZip || "",
+            manualOverrideReason: rtc.manualOverrideReason || "",
+          }));
+        }
+        // Fallback to single rightToCure object (old format)
+        if (details.rightToCure) {
+          return [{
+            id: details.rightToCure.id || null,
+            noticeSent: details.rightToCure.noticeSent !== undefined ? details.rightToCure.noticeSent : null,
+            noticeDate: details.rightToCure.noticeDate ? details.rightToCure.noticeDate.split("T")[0] : "",
+            amountInDefault: details.rightToCure.amountInDefault || 0,
+            daysDelinquentAtNotice: details.rightToCure.daysDelinquentAtNotice || 0,
+            cureExpirationDate: details.rightToCure.cureExpirationDate ? details.rightToCure.cureExpirationDate.split("T")[0] : "",
+            noticeAddressStreet1: details.rightToCure.noticeAddressStreet1 || "",
+            noticeAddressCity: details.rightToCure.noticeAddressCity || "",
+            noticeAddressState: details.rightToCure.noticeAddressState || "",
+            noticeAddressZip: details.rightToCure.noticeAddressZip || "",
+            manualOverrideReason: details.rightToCure.manualOverrideReason || "",
+          }];
+        }
+        // Return empty array if no data
+        return [];
+      })(),
 
       // Foreclosure Sale
       foreclosureSale: details.foreclosureSale
@@ -619,7 +658,8 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
             reoBusinessPhone: details.foreclosureSale.reoBusinessPhone || "",
             reoEmergencyPhone: details.foreclosureSale.reoEmergencyPhone || "",
           }
-        : details.rightToCure?.noticeSent === true
+        : (details.rightToCures && details.rightToCures.length > 0 && details.rightToCures.some(rtc => rtc.noticeSent === true)) ||
+          (details.rightToCure?.noticeSent === true)
         ? {
             saleDate: "",
             soldToId: "",
@@ -1375,6 +1415,69 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
     }));
   };
 
+  // Add right to cure entry
+  const addRightToCure = () => {
+    setFormData((prev) => ({
+      ...prev,
+      rightToCures: [
+        ...(prev.rightToCures || []),
+        {
+          id: null,
+          noticeSent: null,
+          noticeDate: "",
+          amountInDefault: 0,
+          daysDelinquentAtNotice: 0,
+          cureExpirationDate: "",
+          noticeAddressStreet1: "",
+          noticeAddressCity: "",
+          noticeAddressState: "",
+          noticeAddressZip: "",
+          manualOverrideReason: "",
+        },
+      ],
+    }));
+  };
+
+  // Remove right to cure entry
+  const removeRightToCure = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      rightToCures: (prev.rightToCures || []).filter((_, idx) => idx !== index),
+    }));
+  };
+
+  // Update right to cure entry
+  const updateRightToCure = (index, field, value) => {
+    setFormData((prev) => {
+      const updatedRightToCures = (prev.rightToCures || []).map((rtc, idx) =>
+        idx === index ? { ...rtc, [field]: value } : rtc
+      );
+      
+      // If noticeSent is set to true, initialize foreclosureSale if it doesn't exist
+      if (field === "noticeSent" && value === true && !prev.foreclosureSale) {
+        return {
+          ...prev,
+          rightToCures: updatedRightToCures,
+          foreclosureSale: {
+            saleDate: "",
+            soldToId: "",
+            vestingEntityName: "",
+            reoEntityName: "",
+            reoContactFirstName: "",
+            reoContactLastName: "",
+            reoBusinessPhone: "",
+            reoEmergencyPhone: "",
+          },
+        };
+      }
+      
+      return {
+        ...prev,
+        rightToCures: updatedRightToCures,
+      };
+    });
+  };
+
   // Handle edit mode toggle
   const handleEditToggle = () => {
     if (isEditing) {
@@ -1421,8 +1524,12 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
 
   // Helper function to check if foreclosure editing is allowed
   const canEditForeclosure = () => {
-    // Right to cure must be yes
-    if (formData.noticeSent !== true) {
+    // Check if any right to cure has noticeSent === true
+    const hasNoticeSent = (formData.rightToCures && formData.rightToCures.length > 0 && 
+      formData.rightToCures.some(rtc => rtc.noticeSent === true)) ||
+      (formData.noticeSent === true); // Fallback for old single-object format
+    
+    if (!hasNoticeSent) {
       return false;
     }
     // Judgment must be submitted
@@ -1752,6 +1859,10 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
           t("petitionTabContent.negativeAmortization"),
           petition.details?.loan?.negativeAmortization ? t("common.yes") : t("common.no"),
         ],
+        [
+          t("petitionTabContent.lenderType"),
+          getOptionName(getLenderTypes(), petition.details?.loan?.lenderId) || t("common.nA"),
+        ],
       ];
 
       autoTable(doc, {
@@ -1867,64 +1978,75 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
         yPosition = doc.lastAutoTable.finalY + 15;
       }
 
-      // Right-to-Cure
-      if (petition.details?.rightToCure) {
-        doc.setFontSize(12);
-        doc.setFont("helvetica", "bold");
-        doc.text(t("petitionTabContent.rightToCure"), 20, yPosition);
-        yPosition += 10;
+      // Right-to-Cure - handle both array and single object formats
+      const rightToCuresArray = petition.details?.rightToCures || 
+        (petition.details?.rightToCure ? [petition.details.rightToCure] : []);
+      
+      if (rightToCuresArray.length > 0) {
+        rightToCuresArray.forEach((rtc, index) => {
+          doc.setFontSize(12);
+          doc.setFont("helvetica", "bold");
+          doc.text(
+            rightToCuresArray.length > 1 
+              ? `${t("petitionTabContent.rightToCure")} #${index + 1}`
+              : t("petitionTabContent.rightToCure"),
+            20,
+            yPosition
+          );
+          yPosition += 10;
 
-        const rightToCureData = [
-          [
-            t("petitionTabContent.noticeSent"),
-            petition.details.rightToCure.noticeSent ? t("common.yes") : t("common.no"),
-          ],
-          [t("petitionTabContent.noticeDate"), formatDate(petition.details.rightToCure.noticeDate)],
-          [
-            t("petitionTabContent.daysDelinquent"),
-            petition.details.rightToCure.daysDelinquentAtNotice || t("common.nA"),
-          ],
-          [
-            t("petitionTabContent.amountInDefault"),
-            formatCurrency(petition.details.rightToCure.amountInDefault),
-          ],
-          [
-            t("petitionTabContent.cureExpiration"),
-            formatDate(petition.details.rightToCure.cureExpirationDate),
-          ],
-          [
-            t("petitionTabContent.overrideReason"),
-            petition.details.rightToCure.manualOverrideReason || t("common.nA"),
-          ],
-          [
-            t("petitionTabContent.noticeAddress"),
-            petition.details.rightToCure.noticeAddressStreet1 || t("common.nA"),
-          ],
-          [
-            t("petitionTabContent.noticeCity"),
-            petition.details.rightToCure.noticeAddressCity || t("common.nA"),
-          ],
-          [
-            t("petitionTabContent.noticeState"),
-            petition.details.rightToCure.noticeAddressState || t("common.nA"),
-          ],
-          [
-            t("petitionTabContent.noticeZip"),
-            petition.details.rightToCure.noticeAddressZip || t("common.nA"),
-          ],
-        ];
+          const rightToCureData = [
+            [
+              t("petitionTabContent.noticeSent"),
+              rtc.noticeSent ? t("common.yes") : t("common.no"),
+            ],
+            [t("petitionTabContent.noticeDate"), formatDate(rtc.noticeDate)],
+            [
+              t("petitionTabContent.daysDelinquent"),
+              rtc.daysDelinquentAtNotice || t("common.nA"),
+            ],
+            [
+              t("petitionTabContent.amountInDefault"),
+              formatCurrency(rtc.amountInDefault),
+            ],
+            [
+              t("petitionTabContent.cureExpiration"),
+              formatDate(rtc.cureExpirationDate),
+            ],
+            [
+              t("petitionTabContent.overrideReason"),
+              rtc.manualOverrideReason || t("common.nA"),
+            ],
+            [
+              t("petitionTabContent.noticeAddress"),
+              rtc.noticeAddressStreet1 || t("common.nA"),
+            ],
+            [
+              t("petitionTabContent.noticeCity"),
+              rtc.noticeAddressCity || t("common.nA"),
+            ],
+            [
+              t("petitionTabContent.noticeState"),
+              rtc.noticeAddressState || t("common.nA"),
+            ],
+            [
+              t("petitionTabContent.noticeZip"),
+              rtc.noticeAddressZip || t("common.nA"),
+            ],
+          ];
 
-        autoTable(doc, {
-          startY: yPosition,
-          head: [[t("common.field"), t("common.value")]],
-          body: rightToCureData,
-          theme: "grid",
-          headStyles: { fillColor: [52, 73, 94] },
-          styles: { fontSize: 9 },
-          columnStyles: { 0: { cellWidth: 60 }, 1: { cellWidth: 120 } },
+          autoTable(doc, {
+            startY: yPosition,
+            head: [[t("common.field"), t("common.value")]],
+            body: rightToCureData,
+            theme: "grid",
+            headStyles: { fillColor: [52, 73, 94] },
+            styles: { fontSize: 9 },
+            columnStyles: { 0: { cellWidth: 60 }, 1: { cellWidth: 120 } },
+          });
+
+          yPosition = doc.lastAutoTable.finalY + 15;
         });
-
-        yPosition = doc.lastAutoTable.finalY + 15;
       }
 
       // Judgment
@@ -2394,6 +2516,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
             handleInputChange={handleInputChange}
             getLoanTypes={getLoanTypes}
             getLienPositions={getLienPositions}
+            getLenderTypes={getLenderTypes}
             commonDataLoading={commonDataLoading}
           />
 
@@ -2434,6 +2557,9 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
             isLoaded={isLoaded}
             noticePredictions={noticePredictions}
             handleNoticeAddressSelect={handleNoticeAddressSelect}
+            addRightToCure={addRightToCure}
+            removeRightToCure={removeRightToCure}
+            updateRightToCure={updateRightToCure}
           />
 
           {/* Form 35B Compliance Section */}
@@ -2539,7 +2665,9 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
 
       {/* Foreclosure Edit Warning Modal */}
       {showForeclosureWarningModal && (() => {
-        const rightToCureMet = formData.noticeSent === true;
+        const rightToCureMet = (formData.rightToCures && formData.rightToCures.length > 0 && 
+          formData.rightToCures.some(rtc => rtc.noticeSent === true)) ||
+          (formData.noticeSent === true); // Fallback for old single-object format
         const judgmentSubmitted = hasJudgmentBeenSubmitted();
         
         // Determine which conditions are not met

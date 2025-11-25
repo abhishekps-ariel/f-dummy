@@ -21,6 +21,7 @@ const Step3LoanDetails = ({
   handleInputChange,
   getLoanTypes,
   getLienPositions,
+  getLenderTypes,
 }) => {
   return (
           <div>
@@ -396,6 +397,42 @@ const Step3LoanDetails = ({
                 {fieldErrors.mortgageLoanOriginatorLicenseNumber && (
                   <div className="text-danger small mt-1">
                     {fieldErrors.mortgageLoanOriginatorLicenseNumber}
+                  </div>
+                )}
+              </div>
+
+              <div className="col-md-6">
+                <label htmlFor="lenderId" className="form-label">
+                  Lender Type
+                </label>
+
+                <CustomDropdown
+                  id="lenderId"
+                  name="lenderId"
+                  value={formData.lenderId || ""}
+                  onChange={handleInputChange}
+                  placeholder="Select Lender Type"
+                  disabled={commonDataLoading}
+                  error={!!fieldErrors.lenderId}
+                  options={[
+                    { value: "", label: "Select Lender Type" },
+                    ...getLenderTypes().map((lenderType) => ({
+                      value: lenderType.id,
+                      label: lenderType.name,
+                    })),
+                  ]}
+                />
+
+                {fieldErrors.lenderId && (
+                  <div className="text-danger small mt-1">
+                    {fieldErrors.lenderId}
+                  </div>
+                )}
+
+                {commonDataLoading && (
+                  <div className="form-text">
+                    <i className="fas fa-spinner fa-spin me-1"></i>
+                    Loading lender types...
                   </div>
                 )}
               </div>

@@ -237,22 +237,51 @@ class PetitionApiService {
         monthlyPaymentAmount: parseFloat(formData.monthlyPaymentAmount) || 0,
         delinquencyDaysAtFiling: parseInt(formData.delinquencyDaysAtFiling) || 0,
         mortgageBrokerLicenseNumber: formData.mortgageBrokerLicenseNumber || null,
-        mortgageLoanOriginatorLicenseNumber: formData.mortgageLoanOriginatorLicenseNumber || null
+        mortgageLoanOriginatorLicenseNumber: formData.mortgageLoanOriginatorLicenseNumber || null,
+        lenderId: formData.lenderId && formData.lenderId.trim() !== '' ? formData.lenderId : null
       },
-      rightToCure: {
-        noticeSent: formData.noticeSent || false,
-        noticeDate: safeDateConversion(formData.noticeDate),
-        amountInDefault: parseFloat(formData.amountInDefault) || 0,
-        daysDelinquentAtNotice: parseInt(formData.daysDelinquentAtNotice) || 0,
-        cureExpirationDate: safeDateConversion(formData.cureExpirationDate),
-        noticeAddressStreet1: formData.noticeAddressStreet1 || "",
-        noticeAddressCity: formData.noticeAddressCity || "",
-        noticeAddressState: formData.noticeAddressState || "",
-        noticeAddressZip: formData.noticeAddressZip || "",
-        manualOverrideReason: formData.manualOverrideReason || ""
-      },
+      rightToCures: (() => {
+        // If rightToCures array exists and has entries, use it (from edit mode in PetitionTabContent)
+        if (formData.rightToCures && Array.isArray(formData.rightToCures) && formData.rightToCures.length > 0) {
+          return formData.rightToCures.map(rightToCure => ({
+            id: rightToCure.id || null,
+            noticeSent: rightToCure.noticeSent !== null && rightToCure.noticeSent !== undefined ? rightToCure.noticeSent : false,
+            noticeDate: safeDateConversion(rightToCure.noticeDate),
+            amountInDefault: parseFloat(rightToCure.amountInDefault) || 0,
+            daysDelinquentAtNotice: parseInt(rightToCure.daysDelinquentAtNotice) || 0,
+            cureExpirationDate: safeDateConversion(rightToCure.cureExpirationDate),
+            noticeAddressStreet1: rightToCure.noticeAddressStreet1 || "",
+            noticeAddressCity: rightToCure.noticeAddressCity || "",
+            noticeAddressState: rightToCure.noticeAddressState || "",
+            noticeAddressZip: rightToCure.noticeAddressZip || "",
+            manualOverrideReason: rightToCure.manualOverrideReason || ""
+          }));
+        }
+        // If old single-object format exists (from wizard form - first submission), convert to array with one object
+        if (formData.noticeSent !== null && formData.noticeSent !== undefined) {
+          return [{
+            id: null,
+            noticeSent: formData.noticeSent,
+            noticeDate: safeDateConversion(formData.noticeDate),
+            amountInDefault: parseFloat(formData.amountInDefault) || 0,
+            daysDelinquentAtNotice: parseInt(formData.daysDelinquentAtNotice) || 0,
+            cureExpirationDate: safeDateConversion(formData.cureExpirationDate),
+            noticeAddressStreet1: formData.noticeAddressStreet1 || "",
+            noticeAddressCity: formData.noticeAddressCity || "",
+            noticeAddressState: formData.noticeAddressState || "",
+            noticeAddressZip: formData.noticeAddressZip || "",
+            manualOverrideReason: formData.manualOverrideReason || ""
+          }];
+        }
+        // Return empty array if no rightToCure data exists
+        return [];
+      })(),
       // For taken-over petitions, don't send judgment and foreclosure sale data as they need to be redone
-      foreclosureSale: (formData.takeOverToUserId) ? null : (formData.noticeSent === true && formData.foreclosureSale ? {
+      // Check if any rightToCure has noticeSent === true
+      foreclosureSale: (formData.takeOverToUserId) ? null : (() => {
+        const hasNoticeSent = (formData.rightToCures && Array.isArray(formData.rightToCures) && formData.rightToCures.length > 0 && formData.rightToCures.some(rtc => rtc.noticeSent === true)) ||
+          (formData.noticeSent === true);
+        return hasNoticeSent && formData.foreclosureSale ? {
         saleDate: safeDateConversion(formData.foreclosureSale.saleDate),
         soldToId: formData.foreclosureSale.soldToId && formData.foreclosureSale.soldToId.trim() !== '' ? formData.foreclosureSale.soldToId : null,
         vestingEntityName: formData.foreclosureSale.vestingEntityName || null,
@@ -261,7 +290,8 @@ class PetitionApiService {
         reoContactLastName: formData.foreclosureSale.reoContactLastName || null,
         reoBusinessPhone: formData.foreclosureSale.reoBusinessPhone || null,
         reoEmergencyPhone: formData.foreclosureSale.reoEmergencyPhone || null
-      } : null),
+      } : null;
+      })(),
       // Include judgment object - send empty object if no data, or full object if data exists
       // For taken-over petitions, don't send judgment data as it needs to be redone
       judgment: (formData.takeOverToUserId) ? {
@@ -405,7 +435,8 @@ class PetitionApiService {
       details: {
         property: petition.property,
         loan: petition.loan,
-        rightToCure: petition.rightToCure,
+        rightToCures: petition.rightToCures || (petition.rightToCure ? [petition.rightToCure] : []), // Map rightToCures array, fallback to rightToCure (singular) for backward compatibility
+        rightToCure: petition.rightToCure, // Keep for backward compatibility
         foreclosureSale: petition.foreclosureSale,
         affidavit: petition.affidavit,
         filingEntity: petition.filingEntity,

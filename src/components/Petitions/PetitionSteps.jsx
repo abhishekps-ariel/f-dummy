@@ -201,6 +201,7 @@ const PetitionSteps = ({
     getLienPositions,
 
     getLoanTypes,
+    getLenderTypes,
 
     getAssigneeTypes,
 
@@ -365,6 +366,7 @@ const PetitionSteps = ({
     delinquencyDaysAtFiling: null,
     mortgageBrokerLicenseNumber: "",
     mortgageLoanOriginatorLicenseNumber: "",
+    lenderId: "",
     // Step 4: Borrower Details
     borrowers: [
       {
@@ -5434,6 +5436,7 @@ const PetitionSteps = ({
             handleInputChange={handleInputChangeWithMinLogic}
             getLoanTypes={getLoanTypes}
             getLienPositions={getLienPositions}
+            getLenderTypes={getLenderTypes}
           />
         );
 

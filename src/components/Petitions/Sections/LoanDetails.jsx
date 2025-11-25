@@ -21,6 +21,7 @@ const LoanDetails = ({
   handleInputChange,
   getLoanTypes,
   getLienPositions,
+  getLenderTypes,
   commonDataLoading,
 }) => {
   return (
@@ -330,6 +331,31 @@ const LoanDetails = ({
                     {fieldErrors.mortgageLoanOriginatorLicenseNumber && (
                       <div className="text-danger small mt-1">
                         {fieldErrors.mortgageLoanOriginatorLicenseNumber}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="col-md-6">
+                  <div className="form-group mb-3">
+                    <label className="form-label">Lender Type</label>
+                    <CustomDropdown
+                      name="lenderId"
+                      value={formData.lenderId || ""}
+                      onChange={handleInputChange}
+                      placeholder="Select Lender Type"
+                      disabled={!isEditing || commonDataLoading}
+                      error={!!fieldErrors.lenderId}
+                      options={[
+                        { value: "", label: "Select Lender Type" },
+                        ...getLenderTypes().map((lenderType) => ({
+                          value: lenderType.id,
+                          label: lenderType.name,
+                        })),
+                      ]}
+                    />
+                    {fieldErrors.lenderId && (
+                      <div className="text-danger small mt-1">
+                        {fieldErrors.lenderId}
                       </div>
                     )}
                   </div>

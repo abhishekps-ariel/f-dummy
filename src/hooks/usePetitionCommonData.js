@@ -13,7 +13,8 @@ export const usePetitionCommonData = () => {
     loanTypes: [],
     assigneeTypes: [],
     assigneeRoles: [],
-    buyerTypes: []
+    buyerTypes: [],
+    lenderTypes: []
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -51,6 +52,7 @@ export const usePetitionCommonData = () => {
   const getAssigneeTypes = () => data.assigneeTypes || [];
   const getAssigneeRoles = () => data.assigneeRoles || [];
   const getBuyerTypes = () => data.buyerTypes || [];
+  const getLenderTypes = () => data.lenderTypes || [];
 
   // Helper function to find option by value
   const findOptionByValue = (options, value) => {
@@ -77,6 +79,7 @@ export const usePetitionCommonData = () => {
     getAssigneeTypes,
     getAssigneeRoles,
     getBuyerTypes,
+    getLenderTypes,
     // Helper functions
     findOptionByValue,
     getOptionName
