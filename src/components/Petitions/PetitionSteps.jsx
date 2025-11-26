@@ -88,6 +88,7 @@ const PetitionSteps = ({
 
   const [currentStep, setCurrentStep] = useState(1);
   const [visitedSteps, setVisitedSteps] = useState(new Set([1])); // Track visited steps, start with step 1
+  const hasInitializedStepsRef = useRef(false); // Track if we've initialized step completion for pre-filled data
 
   const totalSteps = 10;
 
@@ -115,6 +116,29 @@ const PetitionSteps = ({
   useEffect(() => {
     setCurrentStep(wizardCurrentStep);
   }, [wizardCurrentStep]);
+
+  // Reload form data from localStorage when modal opens (for editing drafts)
+  useEffect(() => {
+    if (isOpen) {
+      const savedData = localStorage.getItem("petitionFormData");
+      if (savedData) {
+        try {
+          const parsedData = JSON.parse(savedData);
+          setFormData(prev => ({ ...defaultFormData, ...parsedData }));
+          // Reset initialization flag when opening with new data
+          hasInitializedStepsRef.current = false;
+        } catch (error) {
+          console.error("Error loading form data from localStorage:", error);
+        }
+      } else {
+        // No saved data, reset flag
+        hasInitializedStepsRef.current = false;
+      }
+    } else {
+      // Modal closed, reset flag
+      hasInitializedStepsRef.current = false;
+    }
+  }, [isOpen]);
 
   // Scroll to top when step changes
   useEffect(() => {
@@ -1054,6 +1078,39 @@ const PetitionSteps = ({
     }
   }, [formData, userFilingEntityType, userProfile, isOrgAdmin, organizationId, selectedOrganizationId]);
 
+  // Initialize step completion status when formData is loaded from localStorage (only once)
+  // This must be after checkStepHasRequiredFields is defined
+  useEffect(() => {
+    if (isOpen && formData && Object.keys(formData).length > 0 && !hasInitializedStepsRef.current && checkStepHasRequiredFields) {
+      // Use requestAnimationFrame to ensure DOM is ready and avoid flickering
+      let timer;
+      const rafId = requestAnimationFrame(() => {
+        // Small delay to ensure all formData is properly set and other useEffects have run
+        timer = setTimeout(() => {
+          // Check and mark all steps that are complete based on pre-filled data
+          // Only mark steps as complete, don't unmark them (let other useEffects handle that)
+          for (let step = 1; step <= totalSteps; step++) {
+            try {
+              const isComplete = checkStepHasRequiredFields(step);
+              if (isComplete && !completedSteps.has(step)) {
+                markStepCompleted(step);
+              }
+            } catch (error) {
+              // Silently handle errors for individual step checks
+              console.error(`Error checking step ${step}:`, error);
+            }
+          }
+          hasInitializedStepsRef.current = true;
+        }, 200); // Increased delay to let other useEffects settle
+      });
+      
+      return () => {
+        cancelAnimationFrame(rafId);
+        if (timer) clearTimeout(timer);
+      };
+    }
+  }, [isOpen, formData, checkStepHasRequiredFields, completedSteps, markStepCompleted, totalSteps]);
+
   // Track previous step for address validation prompt (moved here to access formData)
   useEffect(() => {
     const prev = previousStepRef.current;
@@ -1248,6 +1305,11 @@ const PetitionSteps = ({
 
   // When organization is selected, mark step 1 as completed
   useEffect(() => {
+    // Skip during initial load to prevent flickering
+    if (!hasInitializedStepsRef.current && isOpen) {
+      return;
+    }
+    
     // For org admins, organization is pre-selected, so check organizationId
     // For filers, require explicit selection via selectedOrganizationId
     let hasOrganization = false;
@@ -1271,10 +1333,15 @@ const PetitionSteps = ({
         markStepIncomplete(1);
       }
     }
-  }, [selectedOrganizationId, organizationId, isOrgAdmin, completedSteps, stepsWithErrors, markStepCompleted, markStepIncomplete, clearStepError]);
+  }, [selectedOrganizationId, organizationId, isOrgAdmin, completedSteps, stepsWithErrors, markStepCompleted, markStepIncomplete, clearStepError, isOpen]);
 
   // Track step 2 (Property Details) completion when formData changes
   useEffect(() => {
+    // Skip during initial load to prevent flickering
+    if (!hasInitializedStepsRef.current && isOpen) {
+      return;
+    }
+    
     if (!formData) return;
     const addressValidation = validateAddressFields();
     if (!addressValidation.hasErrors) {
@@ -1304,7 +1371,7 @@ const PetitionSteps = ({
         markStepIncomplete(2);
       }
     }
-  }, [formData, stepsWithErrors, completedSteps, markStepCompleted, markStepIncomplete, clearStepError]);
+  }, [formData, stepsWithErrors, completedSteps, markStepCompleted, markStepIncomplete, clearStepError, isOpen]);
 
   // When filing entity address is verified, mark step 5 as completed if all fields are filled
   useEffect(() => {
@@ -1543,6 +1610,7 @@ const PetitionSteps = ({
       setFormData({ ...defaultFormData, ...orgPrefill, ...userPrefill });
       clearFormDataFromStorage();
       localStorage.removeItem("petitionDrafts");
+      localStorage.removeItem("editingPetitionId");
       setFieldErrors({});
       setHasSavedDraft(false);
       
@@ -4548,8 +4616,6 @@ const PetitionSteps = ({
         : null;
 
       const petitionData = {
-        isAllStepsCompleted: false,
-
         ...formData,
 
         signatures: [
@@ -4581,9 +4647,11 @@ const PetitionSteps = ({
       const finalOrganizationId = selectedOrganizationId || formData.organizationId || organizationId;
       
       // Ensure organizationId is included in petition data for draft
+      // IMPORTANT: Set isAllStepsCompleted to false AFTER spreading formData to ensure it overrides any true value
       const finalDraftData = {
         ...petitionData,
         organizationId: finalOrganizationId,
+        isAllStepsCompleted: false, // Explicitly set to false for draft saves
       };
 
       // Add takeOverToUserId if this is a taken over petition
@@ -4592,8 +4660,12 @@ const PetitionSteps = ({
         finalDraftData.id = takenOverPetitionId; // Include the original petition ID
       }
 
+      // Check if we're editing an existing petition (from localStorage)
+      const editingPetitionId = localStorage.getItem("editingPetitionId");
+      const petitionIdToUse = editingPetitionId || (isTakenOverPetition ? takenOverPetitionId : null);
+
       // Submit petition as draft using API
-      await submitPetition(finalDraftData, true, isTakenOverPetition ? takenOverPetitionId : null); // Pass isDraft: true
+      await submitPetition(finalDraftData, true, petitionIdToUse); // Pass isDraft: true
 
       // Notify parent component that petition was saved as draft
 
@@ -5356,8 +5428,12 @@ const PetitionSteps = ({
         finalPetitionData.isAllStepsCompleted = true; // Ensure it's still true for taken over petitions
       }
 
+      // Check if we're editing an existing petition (from localStorage)
+      const editingPetitionId = localStorage.getItem("editingPetitionId");
+      const petitionIdToUse = editingPetitionId || (isTakenOverPetition ? takenOverPetitionId : null);
+
       // Submit petition using API - false means NOT a draft (final submission)
-      await submitPetition(finalPetitionData, false, isTakenOverPetition ? takenOverPetitionId : null);
+      await submitPetition(finalPetitionData, false, petitionIdToUse);
 
       // Notify parent component that petition was submitted successfully
 

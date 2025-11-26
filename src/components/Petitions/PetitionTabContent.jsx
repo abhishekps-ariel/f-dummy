@@ -30,6 +30,7 @@ import PetitionContentSidebar from "./PetitionContentSidebar";
 import "./PetitionContentSidebar.css";
 import { useAuth } from "../../context/AuthContext";
 import { getUserRole } from "../../utils/storage";
+import PetitionSteps from "./PetitionSteps";
 
 const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) => {
   const { t } = useTranslation();
@@ -70,6 +71,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
   const [showNotesSection, setShowNotesSection] = useState(false);
   const [showForeclosureWarningModal, setShowForeclosureWarningModal] = useState(false);
   const [noteToEdit, setNoteToEdit] = useState(null);
+  const [showPetitionWizard, setShowPetitionWizard] = useState(false);
   
   const { user } = useAuth();
 
@@ -1782,6 +1784,24 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
     return true;
   };
 
+  // Check if petition is draft
+  const isDraftPetition = () => {
+    const status = petition?.status?.toLowerCase();
+    const statusClass = petition?.statusClass?.toLowerCase();
+    return status === "draft" || statusClass === "draft";
+  };
+
+  // Handle opening petition wizard for draft petitions
+  const handleOpenDraftWizard = () => {
+    // Store the pre-filled form data in localStorage so PetitionSteps can load it
+    if (initialFormData) {
+      localStorage.setItem("petitionFormData", JSON.stringify(initialFormData));
+      // Also store the petition ID so we can update it when saving
+      localStorage.setItem("editingPetitionId", petition.id);
+    }
+    setShowPetitionWizard(true);
+  };
+
   // Handle edit dropdown selection
   const handleEditOptionSelect = (option) => {
     setShowEditDropdown(false);
@@ -1979,7 +1999,8 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
 
   // Reusable section header component with section-level edit button
   const SectionHeader = ({ title, sectionId }) => {
-    const canEdit = !isPublic && petition?.status?.toLowerCase() !== "closed";
+    // For draft petitions, don't show section-level edit buttons (they should use the wizard)
+    const canEdit = !isPublic && petition?.status?.toLowerCase() !== "closed" && !isDraftPetition();
     const sectionEditing = sectionId ? isSectionEditing(sectionId) : false;
     
     return (
@@ -2610,43 +2631,57 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
                 <div className="d-flex align-items-center gap-2 petition-header-actions">
                   {!isEditing ? (
                     <>
-                      <div className="dropdown edit-options-dropdown" style={{ position: "relative" }}>
+                      {/* For draft petitions, show simple edit button that opens wizard */}
+                      {isDraftPetition() ? (
                         <button
                           type="button"
-                          className={`dashboard-btn-create ${showEditDropdown ? 'active' : ''}`}
-                        onClick={() => setShowEditDropdown(!showEditDropdown)}
-                        title={t("petitionTabContent.editOptions")}
-                      >
-                        <i className="fas fa-edit me-1"></i>
-                        {t("petitionTabContent.edit")}
-                        <i className={`fas fa-chevron-down ms-1 transition-icon ${showEditDropdown ? 'rotate' : ''}`} style={{ fontSize: "0.7rem" }}></i>
-                      </button>
-                      {showEditDropdown && (
-                        <div className="edit-options-menu">
+                          className="dashboard-btn-create"
+                          onClick={handleOpenDraftWizard}
+                          title={t("petitionTabContent.edit")}
+                        >
+                          <i className="fas fa-edit me-1"></i>
+                          {t("petitionTabContent.edit")}
+                        </button>
+                      ) : (
+                        /* For non-draft petitions, show edit dropdown */
+                        <div className="dropdown edit-options-dropdown" style={{ position: "relative" }}>
                           <button
-                            className="edit-option-item"
-                            onClick={() => handleEditOptionSelect("filing")}
+                            type="button"
+                            className={`dashboard-btn-create ${showEditDropdown ? 'active' : ''}`}
+                            onClick={() => setShowEditDropdown(!showEditDropdown)}
+                            title={t("petitionTabContent.editOptions")}
                           >
-                            <i className="fas fa-edit edit-option-icon"></i>
-                            <span>{t("petitionTabContent.editFiling")}</span>
+                            <i className="fas fa-edit me-1"></i>
+                            {t("petitionTabContent.edit")}
+                            <i className={`fas fa-chevron-down ms-1 transition-icon ${showEditDropdown ? 'rotate' : ''}`} style={{ fontSize: "0.7rem" }}></i>
                           </button>
-                          <button
-                            className="edit-option-item"
-                            onClick={() => handleEditOptionSelect("judgement")}
-                          >
-                            <i className="fas fa-edit edit-option-icon"></i>
-                            <span>{t("petitionTabContent.editJudgement")}</span>
-                          </button>
-                          <button
-                            className="edit-option-item"
-                            onClick={() => handleEditOptionSelect("foreclosure")}
-                          >
-                            <i className="fas fa-edit edit-option-icon"></i>
-                            <span>{t("petitionTabContent.editForeclosure")}</span>
-                          </button>
+                          {showEditDropdown && (
+                            <div className="edit-options-menu">
+                              <button
+                                className="edit-option-item"
+                                onClick={() => handleEditOptionSelect("filing")}
+                              >
+                                <i className="fas fa-edit edit-option-icon"></i>
+                                <span>{t("petitionTabContent.editFiling")}</span>
+                              </button>
+                              <button
+                                className="edit-option-item"
+                                onClick={() => handleEditOptionSelect("judgement")}
+                              >
+                                <i className="fas fa-edit edit-option-icon"></i>
+                                <span>{t("petitionTabContent.editJudgement")}</span>
+                              </button>
+                              <button
+                                className="edit-option-item"
+                                onClick={() => handleEditOptionSelect("foreclosure")}
+                              >
+                                <i className="fas fa-edit edit-option-icon"></i>
+                                <span>{t("petitionTabContent.editForeclosure")}</span>
+                              </button>
+                            </div>
+                          )}
                         </div>
                       )}
-                    </div>
                     {!isPublic && (
                       <div className="dropdown notes-options-dropdown" style={{ position: "relative" }}>
                         <button
@@ -2994,6 +3029,44 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
         onNoteSaved={handleNoteSaved}
       />
 
+      {/* Petition Wizard Modal for Draft Petitions */}
+      {showPetitionWizard && (
+        <PetitionSteps
+          isOpen={showPetitionWizard}
+          onClose={() => {
+            setShowPetitionWizard(false);
+            // Clear localStorage when closing
+            localStorage.removeItem("petitionFormData");
+            localStorage.removeItem("editingPetitionId");
+            // Refresh the petition data
+            if (onPetitionUpdated) {
+              setTimeout(() => {
+                onPetitionUpdated();
+              }, 200);
+            }
+            if (activeTabId && refreshTab) {
+              refreshTab(activeTabId);
+            }
+          }}
+          organization={null}
+          onPetitionSubmitted={() => {
+            setShowPetitionWizard(false);
+            // Clear localStorage
+            localStorage.removeItem("petitionFormData");
+            localStorage.removeItem("editingPetitionId");
+            // Refresh the petition data
+            if (onPetitionUpdated) {
+              setTimeout(() => {
+                onPetitionUpdated();
+              }, 200);
+            }
+            if (activeTabId && refreshTab) {
+              refreshTab(activeTabId);
+            }
+          }}
+        />
+      )}
+
       {/* Foreclosure Edit Warning Modal */}
       {showForeclosureWarningModal && (() => {
         const rightToCureMet = (formData.rightToCures && formData.rightToCures.length > 0 && 
@@ -3024,7 +3097,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
                   ></button>
                 </div>
                 <div className="modal-body">
-                  <p>{t("petitionTabContent.cannotEditForeclosureDesc", { s: missingConditions.length > 1 ? 's' : '' })}</p>
+                  <p>{t("petitionTabContent.cannotEditForeclosureDesc", { count: missingConditions.length })}</p>
                   <ul>
                     {missingConditions.map((condition, index) => (
                       <li key={index}>{condition}</li>
