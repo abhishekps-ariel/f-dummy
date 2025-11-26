@@ -65,6 +65,16 @@ export const PETITION_ENDPOINTS = {
   DELETE_PETITION_BY_ID: (petitionId) => `/api/Petition/${petitionId}`,
   GET_PUBLIC_PETITIONS_PAGED: "/api/Petition/public/petitions/paged",
   SUBMIT_NOTE: "/api/Petition/add-update-note",
+  UPDATE_PROPERTY: "/api/Petition/add-update-property",
+  UPDATE_LOAN: "/api/Petition/add-update-loan",
+  UPDATE_FILING_ENTITY: "/api/Petition/add-update-filingEntity",
+  UPDATE_BORROWERS: "/api/Petition/add-update-borrower",
+  UPDATE_AFFIDAVIT: "/api/Petition/add-update-affidavit",
+  UPDATE_RIGHT_TO_CURE: "/api/Petition/add-update-righttoCure",
+  UPDATE_LOAN_ASSIGNEES: "/api/Petition/add-update-loanAssignee",
+  UPDATE_SIGNATURES: "/api/Petition/add-update-signature",
+  UPDATE_FORECLOSURE: "/api/Petition/add-update-foreclosure",
+  UPDATE_JUDGMENT: "/api/Petition/add-update-judgement",
 };
 
 export const CHAT_ENDPOINTS = {

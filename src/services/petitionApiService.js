@@ -80,6 +80,442 @@ class PetitionApiService {
     return response.data;
   }
 
+  // Update property details
+  async updateProperty(petitionId, propertyData) {
+    const requestBody = {
+      petitionId: petitionId,
+      petitionProperty: {
+        id: propertyData.id || null,
+        propertyStreet1: propertyData.propertyStreet1 || "",
+        propertyStreet2: propertyData.propertyStreet2 || "",
+        propertyCity: propertyData.propertyCity || "",
+        propertyState: propertyData.propertyState || "MA",
+        propertyZip: propertyData.propertyZip || "",
+        propertyCounty: propertyData.propertyCounty || "",
+        assessorParcelId: propertyData.assessorParcelId || ""
+      }
+    };
+    
+    const response = await axiosInstance.post(PETITION_ENDPOINTS.UPDATE_PROPERTY, requestBody, {
+      headers: {
+        'Accept': '*/*',
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    return response.data;
+  }
+
+  // Update loan details
+  async updateLoan(petitionId, loanData) {
+    const requestBody = {
+      petitionId: petitionId,
+      petitionLoan: {
+        id: loanData.id || null,
+        minNumber: loanData.minNumber || "",
+        loanNumber: loanData.loanNumber || "",
+        petitionLoanTypeId: loanData.petitionLoanTypeId && loanData.petitionLoanTypeId.trim() !== '' ? loanData.petitionLoanTypeId : null,
+        petitionLoanTypeName: loanData.petitionLoanTypeName || "",
+        lienPosition: (loanData.lienPosition === null || loanData.lienPosition === undefined || loanData.lienPosition === "") 
+          ? null 
+          : (typeof loanData.lienPosition === 'number' ? loanData.lienPosition : parseInt(loanData.lienPosition)),
+        originationDate: loanData.originationDate ? new Date(loanData.originationDate).toISOString() : null,
+        originalPrincipalAmount: parseFloat(loanData.originalPrincipalAmount) || 0,
+        currentPrincipalBalance: parseFloat(loanData.currentPrincipalBalance) || 0,
+        interestRatePercent: parseFloat(loanData.interestRatePercent) || 0,
+        variableRate: loanData.variableRate || false,
+        interestOnly: loanData.interestOnly || false,
+        negativeAmortization: loanData.negativeAmortization || false,
+        monthlyPaymentAmount: parseFloat(loanData.monthlyPaymentAmount) || 0,
+        delinquencyDaysAtFiling: parseInt(loanData.delinquencyDaysAtFiling) || 0,
+        mortgageBrokerLicenseNumber: loanData.mortgageBrokerLicenseNumber || "",
+        mortgageLoanOriginatorLicenseNumber: loanData.mortgageLoanOriginatorLicenseNumber || "",
+        lenderId: loanData.lenderId && loanData.lenderId.trim() !== '' ? loanData.lenderId : null
+      }
+    };
+    
+    const response = await axiosInstance.post(PETITION_ENDPOINTS.UPDATE_LOAN, requestBody, {
+      headers: {
+        'Accept': '*/*',
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    return response.data;
+  }
+
+  // Update filing entity details
+  async updateFilingEntity(petitionId, filingEntityData) {
+    const requestBody = {
+      petitionId: petitionId,
+      petitionFilingEntity: {
+        id: filingEntityData.id || null,
+        filingEntityLegalName: filingEntityData.filingEntityLegalName || "",
+        filingEntityTypeId: filingEntityData.filingEntityTypeId && filingEntityData.filingEntityTypeId.trim() !== '' ? filingEntityData.filingEntityTypeId : null,
+        filingEntityStreet1: filingEntityData.filingEntityStreet1 || "",
+        filingEntityStreet2: filingEntityData.filingEntityStreet2 || "",
+        filingEntityCity: filingEntityData.filingEntityCity || "",
+        filingEntityState: filingEntityData.filingEntityState || "",
+        filingEntityZip: filingEntityData.filingEntityZip || "",
+        filingContactName: filingEntityData.filingContactName || "",
+        filingContactEmail: filingEntityData.filingContactEmail || "",
+        filingContactPhone: filingEntityData.filingContactPhone || "",
+        nmlsLicenseNumber: filingEntityData.nmlsLicenseNumber || "",
+        stateLicenseNumber: filingEntityData.stateLicenseNumber || "",
+        stateLicenseState: filingEntityData.stateLicenseState || ""
+      }
+    };
+    
+    const response = await axiosInstance.post(PETITION_ENDPOINTS.UPDATE_FILING_ENTITY, requestBody, {
+      headers: {
+        'Accept': '*/*',
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    return response.data;
+  }
+
+  // Update borrowers
+  async updateBorrowers(petitionId, borrowersData) {
+    const requestBody = {
+      petitionId: petitionId,
+      petitionBorrowers: borrowersData.map(borrower => ({
+        id: borrower.id || null,
+        firstName: borrower.firstName || "",
+        middleName: borrower.middleName || "",
+        lastName: borrower.lastName || "",
+        suffix: borrower.suffix || "",
+        borrowerIsPrimary: borrower.borrowerIsPrimary || false,
+        mailingStreet1: borrower.mailingStreet1 || "",
+        mailingCity: borrower.mailingCity || "",
+        mailingState: borrower.mailingState || "",
+        mailingZip: borrower.mailingZip || "",
+        phone: borrower.phone || "",
+        email: borrower.email || ""
+      }))
+    };
+    
+    const response = await axiosInstance.post(PETITION_ENDPOINTS.UPDATE_BORROWERS, requestBody, {
+      headers: {
+        'Accept': '*/*',
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    return response.data;
+  }
+
+  // Update affidavit (Form 35B Compliance)
+  async updateAffidavit(petitionId, affidavitData) {
+    // Helper function to convert File object to base64 string
+    const fileToBase64 = (file) => {
+      if (!file || typeof file === 'string') {
+        return file || "";
+      }
+      
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          // Remove the data URL prefix (data:application/pdf;base64,) to get just the base64 string
+          const base64 = reader.result.split(',')[1];
+          resolve(base64);
+        };
+        reader.onerror = () => {
+          resolve("");
+        };
+        reader.readAsDataURL(file);
+      });
+    };
+
+    // Convert PDF files to base64 if they are File objects
+    const form35bComplianceAffidavitPdf = await fileToBase64(affidavitData.form35bComplianceAffidavitPdf);
+    const form35bNonApplicabilityAffidavitPdf = await fileToBase64(affidavitData.form35bNonApplicabilityAffidavitPdf);
+
+    // Helper function to safely convert dates
+    const safeDateConversion = (dateString) => {
+      if (!dateString) return null;
+      try {
+        const date = new Date(dateString);
+        return isNaN(date.getTime()) ? null : date.toISOString();
+      } catch {
+        return null;
+      }
+    };
+
+    const requestBody = {
+      petitionId: petitionId,
+      petitionAffidavit: {
+        id: affidavitData.id || null,
+        certainMortgageLoan: affidavitData.certainMortgageLoan !== null && affidavitData.certainMortgageLoan !== undefined ? affidavitData.certainMortgageLoan : false,
+        form35bComplianceAffidavitPdf: form35bComplianceAffidavitPdf,
+        form35bNonApplicabilityAffidavitPdf: form35bNonApplicabilityAffidavitPdf,
+        affiantName: affidavitData.affiantName || "",
+        affiantTitle: affidavitData.affiantTitle || "",
+        affidavitExecutionDate: safeDateConversion(affidavitData.affidavitExecutionDate)
+      }
+    };
+    
+    const response = await axiosInstance.post(PETITION_ENDPOINTS.UPDATE_AFFIDAVIT, requestBody, {
+      headers: {
+        'Accept': '*/*',
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    return response.data;
+  }
+
+  // Update right to cures
+  async updateRightToCures(petitionId, rightToCuresData) {
+    // Helper function to safely convert dates
+    const safeDateConversion = (dateString) => {
+      if (!dateString || !dateString.trim()) return null;
+      try {
+        // If already in ISO format, return as is
+        if (dateString.includes('T')) {
+          return dateString;
+        }
+        // Otherwise, convert to ISO format
+        const date = new Date(dateString + 'T00:00:00');
+        return isNaN(date.getTime()) ? null : date.toISOString();
+      } catch {
+        return null;
+      }
+    };
+
+    // Map right to cures data, ensuring new entries have id: null
+    const mappedRightToCures = rightToCuresData.map((rtc) => {
+      // Determine ID: if it's a number (temporary) or not a valid UUID, set to null
+      let rtcId = null;
+      if (rtc.id && typeof rtc.id === 'string' && rtc.id.includes('-')) {
+        // It's a UUID string, use it
+        rtcId = rtc.id;
+      } else if (rtc.id && typeof rtc.id === 'number') {
+        // It's a temporary ID (number), set to null for new entries
+        rtcId = null;
+      }
+
+      return {
+        id: rtcId,
+        noticeSent: rtc.noticeSent !== null && rtc.noticeSent !== undefined ? rtc.noticeSent : false,
+        noticeDate: safeDateConversion(rtc.noticeDate),
+        amountInDefault: parseFloat(rtc.amountInDefault) || 0,
+        daysDelinquentAtNotice: parseInt(rtc.daysDelinquentAtNotice) || 0,
+        cureExpirationDate: safeDateConversion(rtc.cureExpirationDate),
+        noticeAddressStreet1: rtc.noticeAddressStreet1 || "",
+        noticeAddressCity: rtc.noticeAddressCity || "",
+        noticeAddressState: rtc.noticeAddressState || "",
+        noticeAddressZip: rtc.noticeAddressZip || "",
+        manualOverrideReason: rtc.manualOverrideReason || ""
+      };
+    });
+
+    const requestBody = {
+      petitionId: petitionId,
+      petitionRightToCures: mappedRightToCures
+    };
+    
+    const response = await axiosInstance.post(PETITION_ENDPOINTS.UPDATE_RIGHT_TO_CURE, requestBody, {
+      headers: {
+        'Accept': '*/*',
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    return response.data;
+  }
+
+  // Update loan assignees
+  async updateLoanAssignees(petitionId, loanAssigneesData) {
+    // Map loan assignees data, ensuring new entries have id: null
+    const mappedLoanAssignees = loanAssigneesData.map((assignee) => {
+      // Determine ID: if it's a number (temporary) or not a valid UUID, set to null
+      let assigneeId = null;
+      if (assignee.id && typeof assignee.id === 'string' && assignee.id.includes('-')) {
+        // It's a UUID string, use it
+        assigneeId = assignee.id;
+      } else if (assignee.id && typeof assignee.id === 'number') {
+        // It's a temporary ID (number), set to null for new entries
+        assigneeId = null;
+      }
+
+      return {
+        id: assigneeId,
+        assigneeName: assignee.assigneeName || "",
+        assigneeTypeId: assignee.assigneeTypeId && assignee.assigneeTypeId.trim() !== '' ? assignee.assigneeTypeId : null,
+        assigneeRoleId: assignee.assigneeRoleId && assignee.assigneeRoleId.trim() !== '' ? assignee.assigneeRoleId : null,
+        street1: assignee.street1 || "",
+        street2: assignee.street2 || "",
+        city: assignee.city || "",
+        addressState: assignee.addressState || "",
+        zip: assignee.zip || "",
+        licenseNumber: assignee.licenseNumber || "",
+        licenseState: assignee.licenseState || ""
+      };
+    });
+
+    const requestBody = {
+      petitionId: petitionId,
+      petitionLoanAssignees: mappedLoanAssignees
+    };
+    
+    const response = await axiosInstance.post(PETITION_ENDPOINTS.UPDATE_LOAN_ASSIGNEES, requestBody, {
+      headers: {
+        'Accept': '*/*',
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    return response.data;
+  }
+
+  // Update signatures
+  async updateSignatures(petitionId, signaturesData) {
+    // Helper function to safely convert dates
+    const safeDateConversion = (dateString) => {
+      if (!dateString || !dateString.trim()) return null;
+      try {
+        // If already in ISO format, return as is
+        if (dateString.includes('T')) {
+          return dateString;
+        }
+        // Otherwise, convert to ISO format
+        const date = new Date(dateString + 'T00:00:00');
+        return isNaN(date.getTime()) ? null : date.toISOString();
+      } catch {
+        return null;
+      }
+    };
+
+    // Map signatures data, ensuring new entries have id: null
+    const mappedSignatures = signaturesData.map((signature) => {
+      // Determine ID: if it's a number (temporary) or not a valid UUID, set to null
+      let signatureId = null;
+      if (signature.id && typeof signature.id === 'string' && signature.id.includes('-')) {
+        // It's a UUID string, use it
+        signatureId = signature.id;
+      } else if (signature.id && typeof signature.id === 'number') {
+        // It's a temporary ID (number), set to null for new entries
+        signatureId = null;
+      }
+
+      return {
+        id: signatureId,
+        signerFullName: signature.signerFullName || "",
+        signerTitle: signature.signerTitle || "",
+        signerEmail: signature.signerEmail || "",
+        esignConsent: signature.esignConsent !== null && signature.esignConsent !== undefined ? signature.esignConsent : false,
+        signatureDrawnOrTyped: signature.signatureDrawnOrTyped || "",
+        signedAt: safeDateConversion(signature.signedAt),
+        signerIp: signature.signerIp || "",
+        otpCode: signature.otpCode || ""
+      };
+    });
+
+    const requestBody = {
+      petitionId: petitionId,
+      petitionSignatures: mappedSignatures
+    };
+    
+    const response = await axiosInstance.post(PETITION_ENDPOINTS.UPDATE_SIGNATURES, requestBody, {
+      headers: {
+        'Accept': 'text/plain',
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    return response.data;
+  }
+
+  // Update foreclosure sale
+  async updateForeclosure(petitionId, foreclosureData) {
+    // Helper function to safely convert dates
+    const safeDateConversion = (dateString) => {
+      if (!dateString || !dateString.trim()) return null;
+      try {
+        // If already in ISO format, return as is
+        if (dateString.includes('T')) {
+          return dateString;
+        }
+        // Otherwise, convert to ISO format
+        const date = new Date(dateString + 'T00:00:00');
+        return isNaN(date.getTime()) ? null : date.toISOString();
+      } catch {
+        return null;
+      }
+    };
+
+    const requestBody = {
+      petitionId: petitionId,
+      petitionForeclosureSale: {
+        id: foreclosureData.id || null,
+        saleDate: safeDateConversion(foreclosureData.saleDate),
+        soldToId: foreclosureData.soldToId && foreclosureData.soldToId.trim() !== '' ? foreclosureData.soldToId : null,
+        vestingEntityName: foreclosureData.vestingEntityName || "",
+        reoEntityName: foreclosureData.reoEntityName || "",
+        reoContactFirstName: foreclosureData.reoContactFirstName || "",
+        reoContactLastName: foreclosureData.reoContactLastName || "",
+        reoBusinessPhone: foreclosureData.reoBusinessPhone || "",
+        reoEmergencyPhone: foreclosureData.reoEmergencyPhone || ""
+      }
+    };
+    
+    const response = await axiosInstance.post(PETITION_ENDPOINTS.UPDATE_FORECLOSURE, requestBody, {
+      headers: {
+        'Accept': '*/*',
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    return response.data;
+  }
+
+  // Update judgment
+  async updateJudgment(petitionId, judgmentData) {
+    // Helper function to safely convert dates
+    const safeDateConversion = (dateString) => {
+      if (!dateString || !dateString.trim()) return null;
+      try {
+        // If already in ISO format, return as is
+        if (dateString.includes('T')) {
+          return dateString;
+        }
+        // Otherwise, convert to ISO format
+        const date = new Date(dateString + 'T00:00:00');
+        return isNaN(date.getTime()) ? null : date.toISOString();
+      } catch {
+        return null;
+      }
+    };
+
+    const requestBody = {
+      petitionId: petitionId,
+      petitionJudgment: {
+        id: judgmentData.id || null,
+        petitionId: petitionId,
+        judgmentDate: safeDateConversion(judgmentData.judgmentDate),
+        judgmentAmount: parseFloat(judgmentData.judgmentAmount) || 0,
+        judgmentType: judgmentData.judgmentType !== null && judgmentData.judgmentType !== undefined 
+          ? (typeof judgmentData.judgmentType === 'number' 
+              ? judgmentData.judgmentType 
+              : parseInt(judgmentData.judgmentType, 10))
+          : 0,
+        courtInformation: judgmentData.courtInformation || "",
+        docketNumbers: judgmentData.docketNumbers || ""
+      }
+    };
+    
+    const response = await axiosInstance.post(PETITION_ENDPOINTS.UPDATE_JUDGMENT, requestBody, {
+      headers: {
+        'Accept': '*/*',
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    return response.data;
+  }
+
   /**
    * Get paginated petitions by organization ID or user ID with filters, search, and sorting
    * @param {Object} paginationParams - The pagination and filter parameters

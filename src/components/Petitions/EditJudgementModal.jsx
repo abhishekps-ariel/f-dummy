@@ -182,11 +182,14 @@ const EditJudgementModal = ({ isOpen, onClose, petition, onSave, formData, setFo
       const parsedAmount = parseCurrencyInput(judgmentData.judgmentAmount);
       const judgmentAmountNumber = parsedAmount ? parseFloat(parsedAmount) : 0;
       
+      // Get judgment ID from petition details (null if new)
+      const judgmentId = petition?.details?.judgment?.id || null;
+      
       // Update formData with judgment data
       const updatedFormData = {
         ...formData,
         judgment: {
-          id: formData?.judgment?.id || null,
+          id: judgmentId,
           petitionId: petition?.id || null,
           judgmentDate: judgmentData.judgmentDate,
           judgmentAmount: judgmentAmountNumber,

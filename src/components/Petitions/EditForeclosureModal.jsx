@@ -119,10 +119,14 @@ const EditForeclosureModal = ({
 
     setIsSaving(true);
     try {
+      // Get foreclosure ID from petition details (null if new)
+      const foreclosureId = petition?.details?.foreclosureSale?.id || null;
+      
       // Update formData with foreclosure data
       const updatedFormData = {
         ...formData,
         foreclosureSale: {
+          id: foreclosureId,
           ...foreclosureData,
         },
       };

@@ -31,6 +31,7 @@ import "./PetitionContentSidebar.css";
 import { useAuth } from "../../context/AuthContext";
 import { getUserRole } from "../../utils/storage";
 import PetitionSteps from "./PetitionSteps";
+import petitionApiService from "../../services/petitionApiService";
 
 const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) => {
   const { t } = useTranslation();
@@ -710,6 +711,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
       // Loan Assignees
       loanAssignees:
         details.loanAssignees?.map((a, idx) => ({
+          id: a.id || null,
           assigneeName: a.assigneeName || "",
           assigneeTypeId: a.assigneeTypeId || "",
           assigneeRoleId: a.assigneeRoleId || "",
@@ -966,6 +968,888 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
       setFieldErrors({});
     }
     toggleSectionEditing(sectionId);
+  };
+
+  // Handle saving individual sections using their specific APIs
+  const handleSectionSave = async (sectionId) => {
+    if (!petition?.id) {
+      throw new Error("Petition ID is required");
+    }
+
+    switch (sectionId) {
+      case "property":
+        // Validate property fields
+        if (!formData.propertyStreet1?.trim()) {
+          setFieldErrors(prev => ({ ...prev, propertyStreet1: "Required" }));
+          throw new Error("Street address is required");
+        }
+        if (!formData.propertyCity?.trim()) {
+          setFieldErrors(prev => ({ ...prev, propertyCity: "Required" }));
+          throw new Error("City is required");
+        }
+        if (!formData.propertyState?.trim()) {
+          setFieldErrors(prev => ({ ...prev, propertyState: "Required" }));
+          throw new Error("State is required");
+        }
+        if (!formData.propertyZip?.trim()) {
+          setFieldErrors(prev => ({ ...prev, propertyZip: "Required" }));
+          throw new Error("Zip code is required");
+        }
+
+        // Get property ID from petition details
+        const propertyId = petition.details?.property?.id || null;
+        
+        // Prepare property data
+        const propertyData = {
+          id: propertyId,
+          propertyStreet1: formData.propertyStreet1 || "",
+          propertyStreet2: formData.propertyStreet2 || "",
+          propertyCity: formData.propertyCity || "",
+          propertyState: formData.propertyState || "MA",
+          propertyZip: formData.propertyZip || "",
+          propertyCounty: formData.propertyCounty || "",
+          assessorParcelId: formData.assessorParcelId || ""
+        };
+
+        // Call update property API
+        const response = await petitionApiService.updateProperty(petition.id, propertyData);
+        
+        // Refresh the tab data to get updated petition
+        if (activeTabId && refreshTab) {
+          await refreshTab(activeTabId);
+        }
+        
+        // Call the callback to refresh the petitions list
+        if (onPetitionUpdated) {
+          setTimeout(() => {
+            onPetitionUpdated();
+          }, 200);
+        }
+        
+        // Clear field errors on success
+        setFieldErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors.propertyStreet1;
+          delete newErrors.propertyCity;
+          delete newErrors.propertyState;
+          delete newErrors.propertyZip;
+          return newErrors;
+        });
+        break;
+
+      case "loan":
+        // Validate loan fields
+        if (!formData.isMinApplicable || (formData.isMinApplicable !== "yes" && formData.isMinApplicable !== "no")) {
+          setFieldErrors(prev => ({ ...prev, isMinApplicable: "Please select if MIN is applicable" }));
+          throw new Error("Please select if MIN is applicable");
+        }
+        if (formData.isMinApplicable === "yes" && (!formData.minNumber || !formData.minNumber.trim())) {
+          setFieldErrors(prev => ({ ...prev, minNumber: "MIN Number is required when MIN is applicable" }));
+          throw new Error("MIN Number is required when MIN is applicable");
+        }
+        if (!formData.loanNumber || formData.loanNumber.trim() === "") {
+          setFieldErrors(prev => ({ ...prev, loanNumber: "Required" }));
+          throw new Error("Loan number is required");
+        }
+        if (!formData.petitionLoanTypeId || formData.petitionLoanTypeId === "") {
+          setFieldErrors(prev => ({ ...prev, petitionLoanTypeId: "Required" }));
+          throw new Error("Loan type is required");
+        }
+        if (formData.lienPosition == null || formData.lienPosition === "") {
+          setFieldErrors(prev => ({ ...prev, lienPosition: "Required" }));
+          throw new Error("Lien position is required");
+        }
+
+        // Get loan ID from petition details
+        const loanId = petition.details?.loan?.id || null;
+        
+        // Prepare loan data
+        const loanData = {
+          id: loanId,
+          minNumber: formData.isMinApplicable === "yes" ? (formData.minNumber || "") : "",
+          loanNumber: formData.loanNumber || "",
+          petitionLoanTypeId: formData.petitionLoanTypeId && formData.petitionLoanTypeId.trim() !== '' ? formData.petitionLoanTypeId : null,
+          petitionLoanTypeName: formData.petitionLoanTypeName || "",
+          lienPosition: (formData.lienPosition === null || formData.lienPosition === undefined || formData.lienPosition === "") 
+            ? null 
+            : (typeof formData.lienPosition === 'number' ? formData.lienPosition : parseInt(formData.lienPosition)),
+          originationDate: formData.originationDate && formData.originationDate.trim() 
+            ? (formData.originationDate.includes('T') 
+                ? formData.originationDate 
+                : new Date(formData.originationDate + 'T00:00:00').toISOString())
+            : null,
+          originalPrincipalAmount: parseFloat(formData.originalPrincipalAmount) || 0,
+          currentPrincipalBalance: parseFloat(formData.currentPrincipalBalance) || 0,
+          interestRatePercent: parseFloat(formData.interestRatePercent) || 0,
+          variableRate: formData.variableRate || false,
+          interestOnly: formData.interestOnly || false,
+          negativeAmortization: formData.negativeAmortization || false,
+          monthlyPaymentAmount: parseFloat(formData.monthlyPaymentAmount) || 0,
+          delinquencyDaysAtFiling: parseInt(formData.delinquencyDaysAtFiling) || 0,
+          mortgageBrokerLicenseNumber: formData.mortgageBrokerLicenseNumber || "",
+          mortgageLoanOriginatorLicenseNumber: formData.mortgageLoanOriginatorLicenseNumber || "",
+          lenderId: formData.lenderId && formData.lenderId.trim() !== '' ? formData.lenderId : null
+        };
+
+        // Call update loan API
+        await petitionApiService.updateLoan(petition.id, loanData);
+        
+        // Refresh the tab data to get updated petition
+        if (activeTabId && refreshTab) {
+          await refreshTab(activeTabId);
+        }
+        
+        // Call the callback to refresh the petitions list
+        if (onPetitionUpdated) {
+          setTimeout(() => {
+            onPetitionUpdated();
+          }, 200);
+        }
+        
+        // Clear field errors on success
+        setFieldErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors.isMinApplicable;
+          delete newErrors.minNumber;
+          delete newErrors.loanNumber;
+          delete newErrors.petitionLoanTypeId;
+          delete newErrors.lienPosition;
+          return newErrors;
+        });
+        break;
+
+      case "filing-entity":
+        // Validate filing entity fields
+        if (!formData.filingEntityLegalName || formData.filingEntityLegalName.trim() === "") {
+          setFieldErrors(prev => ({ ...prev, filingEntityLegalName: "Required" }));
+          throw new Error("Filing entity legal name is required");
+        }
+        if (!formData.filingEntityStreet1 || formData.filingEntityStreet1.trim() === "") {
+          setFieldErrors(prev => ({ ...prev, filingEntityStreet1: "Required" }));
+          throw new Error("Filing entity street address is required");
+        }
+        if (!formData.filingEntityCity || formData.filingEntityCity.trim() === "") {
+          setFieldErrors(prev => ({ ...prev, filingEntityCity: "Required" }));
+          throw new Error("Filing entity city is required");
+        }
+        if (!formData.filingEntityState || formData.filingEntityState.trim() === "") {
+          setFieldErrors(prev => ({ ...prev, filingEntityState: "Required" }));
+          throw new Error("Filing entity state is required");
+        }
+        if (!formData.filingEntityZip || formData.filingEntityZip.trim() === "") {
+          setFieldErrors(prev => ({ ...prev, filingEntityZip: "Required" }));
+          throw new Error("Filing entity zip code is required");
+        }
+        if (!formData.filingContactName || formData.filingContactName.trim() === "") {
+          setFieldErrors(prev => ({ ...prev, filingContactName: "Required" }));
+          throw new Error("Filing contact name is required");
+        }
+        if (!formData.filingContactEmail || formData.filingContactEmail.trim() === "") {
+          setFieldErrors(prev => ({ ...prev, filingContactEmail: "Required" }));
+          throw new Error("Filing contact email is required");
+        } else {
+          // Validate email format
+          const emailRegex = /.+@.+\..+/;
+          if (!emailRegex.test(formData.filingContactEmail.trim())) {
+            setFieldErrors(prev => ({ ...prev, filingContactEmail: "Invalid email format" }));
+            throw new Error("Invalid email format");
+          }
+        }
+
+        // Get filing entity ID from petition details
+        const filingEntityId = petition.details?.filingEntity?.id || null;
+        
+        // Prepare filing entity data
+        const filingEntityData = {
+          id: filingEntityId,
+          filingEntityLegalName: formData.filingEntityLegalName || "",
+          filingEntityTypeId: formData.filingEntityTypeId && formData.filingEntityTypeId.trim() !== '' ? formData.filingEntityTypeId : null,
+          filingEntityStreet1: formData.filingEntityStreet1 || "",
+          filingEntityStreet2: formData.filingEntityStreet2 || "",
+          filingEntityCity: formData.filingEntityCity || "",
+          filingEntityState: formData.filingEntityState || "",
+          filingEntityZip: formData.filingEntityZip || "",
+          filingContactName: formData.filingContactName || "",
+          filingContactEmail: formData.filingContactEmail || "",
+          filingContactPhone: formData.filingContactPhone || "",
+          nmlsLicenseNumber: formData.nmlsLicenseNumber || "",
+          stateLicenseNumber: formData.stateLicenseNumber || "",
+          stateLicenseState: formData.stateLicenseState || ""
+        };
+
+        // Call update filing entity API
+        await petitionApiService.updateFilingEntity(petition.id, filingEntityData);
+        
+        // Refresh the tab data to get updated petition
+        if (activeTabId && refreshTab) {
+          await refreshTab(activeTabId);
+        }
+        
+        // Call the callback to refresh the petitions list
+        if (onPetitionUpdated) {
+          setTimeout(() => {
+            onPetitionUpdated();
+          }, 200);
+        }
+        
+        // Clear field errors on success
+        setFieldErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors.filingEntityLegalName;
+          delete newErrors.filingEntityStreet1;
+          delete newErrors.filingEntityCity;
+          delete newErrors.filingEntityState;
+          delete newErrors.filingEntityZip;
+          delete newErrors.filingContactName;
+          delete newErrors.filingContactEmail;
+          return newErrors;
+        });
+        break;
+
+      case "borrower":
+        // Validate borrower fields
+        if (!formData.borrowers || !Array.isArray(formData.borrowers) || formData.borrowers.length === 0) {
+          setFieldErrors(prev => ({ ...prev, borrowers: "At least one borrower is required" }));
+          throw new Error("At least one borrower is required");
+        }
+
+        // Check for primary borrower
+        const primaryBorrower = formData.borrowers.find(b => b.borrowerIsPrimary === true);
+        if (!primaryBorrower) {
+          setFieldErrors(prev => ({ ...prev, borrowers: "Primary borrower is required" }));
+          throw new Error("Primary borrower is required");
+        }
+
+        // Validate primary borrower required fields
+        const pbKey = primaryBorrower.id || "primary";
+        if (!primaryBorrower.firstName || primaryBorrower.firstName.trim() === "") {
+          setFieldErrors(prev => ({ ...prev, [`borrower_${pbKey}_firstName`]: "Required" }));
+          throw new Error("Primary borrower first name is required");
+        }
+        if (!primaryBorrower.lastName || primaryBorrower.lastName.trim() === "") {
+          setFieldErrors(prev => ({ ...prev, [`borrower_${pbKey}_lastName`]: "Required" }));
+          throw new Error("Primary borrower last name is required");
+        }
+
+        // Get borrower IDs from petition details (map by matching order or id)
+        const existingBorrowers = petition.details?.borrowers || [];
+        const borrowersData = formData.borrowers.map((borrower, index) => {
+          // Try to find matching borrower by id first, then by index
+          const existingBorrower = existingBorrowers.find(eb => eb.id === borrower.id) || existingBorrowers[index];
+          
+          // Determine borrower ID:
+          // - If existing borrower found, use its ID
+          // - If borrower.id is a number (temporary ID from Date.now()), it's a new borrower, set id to null
+          // - If borrower.id is a UUID string but not found in existing, it's also new, set id to null
+          let borrowerId = null;
+          if (existingBorrower?.id) {
+            borrowerId = existingBorrower.id;
+          } else if (borrower.id && typeof borrower.id === 'string' && borrower.id.includes('-')) {
+            // It's a UUID string but not found in existing borrowers, treat as new
+            borrowerId = null;
+          } else if (borrower.id && typeof borrower.id === 'number') {
+            // It's a temporary ID (number from Date.now()), treat as new borrower
+            borrowerId = null;
+          }
+          
+          return {
+            id: borrowerId,
+            firstName: borrower.firstName || "",
+            middleName: borrower.middleName || "",
+            lastName: borrower.lastName || "",
+            suffix: borrower.suffix || "",
+            borrowerIsPrimary: borrower.borrowerIsPrimary || false,
+            mailingStreet1: borrower.mailingStreet1 || "",
+            mailingCity: borrower.mailingCity || "",
+            mailingState: borrower.mailingState || "",
+            mailingZip: borrower.mailingZip || "",
+            phone: borrower.phone || "",
+            email: borrower.email || ""
+          };
+        });
+
+        // Call update borrowers API
+        await petitionApiService.updateBorrowers(petition.id, borrowersData);
+        
+        // Refresh the tab data to get updated petition
+        if (activeTabId && refreshTab) {
+          await refreshTab(activeTabId);
+        }
+        
+        // Call the callback to refresh the petitions list
+        if (onPetitionUpdated) {
+          setTimeout(() => {
+            onPetitionUpdated();
+          }, 200);
+        }
+        
+        // Clear field errors on success
+        setFieldErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors.borrowers;
+          // Clear borrower-specific errors
+          Object.keys(newErrors).forEach(key => {
+            if (key.startsWith('borrower_')) {
+              delete newErrors[key];
+            }
+          });
+          return newErrors;
+        });
+        break;
+
+      case "form35b":
+        // Validate Form 35B Compliance fields
+        if (formData.certainMortgageLoan === null || formData.certainMortgageLoan === undefined) {
+          setFieldErrors(prev => ({ ...prev, certainMortgageLoan: "Please select if this is a certain mortgage loan" }));
+          throw new Error("Please select if this is a certain mortgage loan");
+        }
+
+        // Get affidavit ID from petition details
+        const affidavitId = petition.details?.affidavit?.id || null;
+        
+        // Prepare affidavit data
+        const affidavitData = {
+          id: affidavitId,
+          certainMortgageLoan: formData.certainMortgageLoan !== null && formData.certainMortgageLoan !== undefined ? formData.certainMortgageLoan : false,
+          form35bComplianceAffidavitPdf: formData.form35bComplianceAffidavitPdf || "",
+          form35bNonApplicabilityAffidavitPdf: formData.form35bNonApplicabilityAffidavitPdf || "",
+          affiantName: formData.affiantName || "",
+          affiantTitle: formData.affiantTitle || "",
+          affidavitExecutionDate: formData.affidavitExecutionDate && formData.affidavitExecutionDate.trim()
+            ? (formData.affidavitExecutionDate.includes('T') 
+                ? formData.affidavitExecutionDate 
+                : new Date(formData.affidavitExecutionDate + 'T00:00:00').toISOString())
+            : null
+        };
+
+        // Call update affidavit API
+        await petitionApiService.updateAffidavit(petition.id, affidavitData);
+        
+        // Refresh the tab data to get updated petition
+        if (activeTabId && refreshTab) {
+          await refreshTab(activeTabId);
+        }
+        
+        // Call the callback to refresh the petitions list
+        if (onPetitionUpdated) {
+          setTimeout(() => {
+            onPetitionUpdated();
+          }, 200);
+        }
+        
+        // Clear field errors on success
+        setFieldErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors.certainMortgageLoan;
+          return newErrors;
+        });
+        break;
+
+      case "right-to-cure":
+        // Validate right to cure fields
+        if (!formData.rightToCures || !Array.isArray(formData.rightToCures) || formData.rightToCures.length === 0) {
+          setFieldErrors(prev => ({ ...prev, rightToCures: "At least one right to cure entry is required" }));
+          throw new Error("At least one right to cure entry is required");
+        }
+
+        // Validate each right to cure entry
+        formData.rightToCures.forEach((rtc, index) => {
+          if (rtc.noticeSent === null || rtc.noticeSent === undefined) {
+            setFieldErrors(prev => ({ ...prev, [`rightToCure_${index}_noticeSent`]: "Please select whether the notice was sent" }));
+            throw new Error(`Right to cure entry ${index + 1}: Please select whether the notice was sent`);
+          }
+        });
+
+        // Get existing right to cures from petition details
+        const existingRightToCures = petition.details?.rightToCures || [];
+        
+        // Map right to cures data, ensuring new entries have id: null
+        const rightToCuresData = formData.rightToCures.map((rtc, index) => {
+          // Try to find matching right to cure by id first, then by index
+          const existingRtc = existingRightToCures.find(ertc => ertc.id === rtc.id) || existingRightToCures[index];
+          
+          // Determine right to cure ID:
+          // - If existing right to cure found, use its ID
+          // - If rtc.id is a number (temporary ID), it's a new entry, set id to null
+          // - If rtc.id is a UUID string but not found in existing, it's also new, set id to null
+          let rtcId = null;
+          if (existingRtc?.id) {
+            rtcId = existingRtc.id;
+          } else if (rtc.id && typeof rtc.id === 'string' && rtc.id.includes('-')) {
+            // It's a UUID string but not found in existing, treat as new
+            rtcId = null;
+          } else if (rtc.id && typeof rtc.id === 'number') {
+            // It's a temporary ID (number), treat as new entry
+            rtcId = null;
+          }
+          
+          return {
+            id: rtcId,
+            noticeSent: rtc.noticeSent !== null && rtc.noticeSent !== undefined ? rtc.noticeSent : false,
+            noticeDate: rtc.noticeDate && rtc.noticeDate.trim()
+              ? (rtc.noticeDate.includes('T') 
+                  ? rtc.noticeDate 
+                  : new Date(rtc.noticeDate + 'T00:00:00').toISOString())
+              : null,
+            amountInDefault: parseFloat(rtc.amountInDefault) || 0,
+            daysDelinquentAtNotice: parseInt(rtc.daysDelinquentAtNotice) || 0,
+            cureExpirationDate: rtc.cureExpirationDate && rtc.cureExpirationDate.trim()
+              ? (rtc.cureExpirationDate.includes('T') 
+                  ? rtc.cureExpirationDate 
+                  : new Date(rtc.cureExpirationDate + 'T00:00:00').toISOString())
+              : null,
+            noticeAddressStreet1: rtc.noticeAddressStreet1 || "",
+            noticeAddressCity: rtc.noticeAddressCity || "",
+            noticeAddressState: rtc.noticeAddressState || "",
+            noticeAddressZip: rtc.noticeAddressZip || "",
+            manualOverrideReason: rtc.manualOverrideReason || ""
+          };
+        });
+
+        // Call update right to cures API
+        await petitionApiService.updateRightToCures(petition.id, rightToCuresData);
+        
+        // Refresh the tab data to get updated petition
+        if (activeTabId && refreshTab) {
+          await refreshTab(activeTabId);
+        }
+        
+        // Call the callback to refresh the petitions list
+        if (onPetitionUpdated) {
+          setTimeout(() => {
+            onPetitionUpdated();
+          }, 200);
+        }
+        
+        // Clear field errors on success
+        setFieldErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors.rightToCures;
+          // Clear right to cure-specific errors
+          Object.keys(newErrors).forEach(key => {
+            if (key.startsWith('rightToCure_')) {
+              delete newErrors[key];
+            }
+          });
+          return newErrors;
+        });
+        break;
+
+      case "loan-assignees":
+        // Validate loan assignee fields
+        if (!formData.loanAssignees || !Array.isArray(formData.loanAssignees)) {
+          setFieldErrors(prev => ({ ...prev, loanAssignees: "Loan assignees data is invalid" }));
+          throw new Error("Loan assignees data is invalid");
+        }
+
+        // Validate each loan assignee entry (only if it has any data)
+        formData.loanAssignees.forEach((assignee, index) => {
+          // Check if this assignee has any data - if it's completely empty, skip validation
+          const hasAnyData = assignee.assigneeName || assignee.assigneeTypeId || assignee.assigneeRoleId || 
+                            assignee.street1 || assignee.city || assignee.addressState || assignee.zip;
+          
+          if (hasAnyData) {
+            // If assignee has any data, validate all required fields
+            if (!assignee.assigneeName || assignee.assigneeName.trim() === "") {
+              setFieldErrors(prev => ({ ...prev, [`loanAssignees.${index}.assigneeName`]: "Required" }));
+              throw new Error(`Loan assignee ${index + 1}: Assignee name is required`);
+            }
+            if (!assignee.assigneeTypeId || assignee.assigneeTypeId === "") {
+              setFieldErrors(prev => ({ ...prev, [`loanAssignees.${index}.assigneeTypeId`]: "Required" }));
+              throw new Error(`Loan assignee ${index + 1}: Assignee type is required`);
+            }
+            if (!assignee.assigneeRoleId || assignee.assigneeRoleId === "") {
+              setFieldErrors(prev => ({ ...prev, [`loanAssignees.${index}.assigneeRoleId`]: "Required" }));
+              throw new Error(`Loan assignee ${index + 1}: Assignee role is required`);
+            }
+            if (!assignee.street1 || assignee.street1.trim() === "") {
+              setFieldErrors(prev => ({ ...prev, [`loanAssignees.${index}.street1`]: "Required" }));
+              throw new Error(`Loan assignee ${index + 1}: Street address is required`);
+            }
+            if (!assignee.city || assignee.city.trim() === "") {
+              setFieldErrors(prev => ({ ...prev, [`loanAssignees.${index}.city`]: "Required" }));
+              throw new Error(`Loan assignee ${index + 1}: City is required`);
+            }
+            if (!assignee.addressState || assignee.addressState.trim() === "") {
+              setFieldErrors(prev => ({ ...prev, [`loanAssignees.${index}.addressState`]: "Required" }));
+              throw new Error(`Loan assignee ${index + 1}: State is required`);
+            }
+            if (!assignee.zip || assignee.zip.trim() === "") {
+              setFieldErrors(prev => ({ ...prev, [`loanAssignees.${index}.zip`]: "Required" }));
+              throw new Error(`Loan assignee ${index + 1}: Zip code is required`);
+            }
+          }
+        });
+
+        // Filter out completely empty assignees before sending
+        const validAssignees = formData.loanAssignees.filter(assignee => {
+          const hasAnyData = assignee.assigneeName || assignee.assigneeTypeId || assignee.assigneeRoleId || 
+                            assignee.street1 || assignee.city || assignee.addressState || assignee.zip;
+          return hasAnyData;
+        });
+
+        // Get existing loan assignees from petition details
+        const existingLoanAssignees = petition.details?.loanAssignees || [];
+        
+        // Map loan assignees data, ensuring new entries have id: null
+        const loanAssigneesData = validAssignees.map((assignee, index) => {
+          // Try to find matching assignee by id first, then by index
+          const existingAssignee = existingLoanAssignees.find(ea => ea.id === assignee.id) || existingLoanAssignees[index];
+          
+          // Determine assignee ID:
+          // - If existing assignee found, use its ID
+          // - If assignee.id is a number (temporary ID), it's a new entry, set id to null
+          // - If assignee.id is a UUID string but not found in existing, it's also new, set id to null
+          let assigneeId = null;
+          if (existingAssignee?.id) {
+            assigneeId = existingAssignee.id;
+          } else if (assignee.id && typeof assignee.id === 'string' && assignee.id.includes('-')) {
+            // It's a UUID string but not found in existing, treat as new
+            assigneeId = null;
+          } else if (assignee.id && typeof assignee.id === 'number') {
+            // It's a temporary ID (number), treat as new entry
+            assigneeId = null;
+          }
+          
+          return {
+            id: assigneeId,
+            assigneeName: assignee.assigneeName || "",
+            assigneeTypeId: assignee.assigneeTypeId && assignee.assigneeTypeId.trim() !== '' ? assignee.assigneeTypeId : null,
+            assigneeRoleId: assignee.assigneeRoleId && assignee.assigneeRoleId.trim() !== '' ? assignee.assigneeRoleId : null,
+            street1: assignee.street1 || "",
+            street2: assignee.street2 || "",
+            city: assignee.city || "",
+            addressState: assignee.addressState || "",
+            zip: assignee.zip || "",
+            licenseNumber: assignee.licenseNumber || "",
+            licenseState: assignee.licenseState || ""
+          };
+        });
+
+        // Call update loan assignees API
+        await petitionApiService.updateLoanAssignees(petition.id, loanAssigneesData);
+        
+        // Refresh the tab data to get updated petition
+        if (activeTabId && refreshTab) {
+          await refreshTab(activeTabId);
+        }
+        
+        // Call the callback to refresh the petitions list
+        if (onPetitionUpdated) {
+          setTimeout(() => {
+            onPetitionUpdated();
+          }, 200);
+        }
+        
+        // Clear field errors on success
+        setFieldErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors.loanAssignees;
+          // Clear loan assignee-specific errors
+          Object.keys(newErrors).forEach(key => {
+            if (key.startsWith('loanAssignees.')) {
+              delete newErrors[key];
+            }
+          });
+          return newErrors;
+        });
+        break;
+
+      case "signatures":
+        // Validate signature fields
+        if (!formData.signatures || !Array.isArray(formData.signatures) || formData.signatures.length === 0) {
+          setFieldErrors(prev => ({ ...prev, signatures: "At least one signature is required" }));
+          throw new Error("At least one signature is required");
+        }
+
+        // Validate that at least one signature has e-consent checked
+        const hasEconsent = formData.signatures.some((sig) => sig.esignConsent === true);
+        if (!hasEconsent) {
+          setFieldErrors(prev => ({ ...prev, esignConsent: "E-sign consent is required for at least one signature" }));
+          throw new Error("E-sign consent is required for at least one signature");
+        }
+
+        // Validate each signature entry
+        formData.signatures.forEach((signature, index) => {
+          if (!signature.signerFullName || signature.signerFullName.trim() === "") {
+            setFieldErrors(prev => ({ ...prev, [`signatures.${index}.signerFullName`]: "Required" }));
+            throw new Error(`Signature ${index + 1}: Signer full name is required`);
+          }
+          if (!signature.signerTitle || signature.signerTitle.trim() === "") {
+            setFieldErrors(prev => ({ ...prev, [`signatures.${index}.signerTitle`]: "Required" }));
+            throw new Error(`Signature ${index + 1}: Signer title is required`);
+          }
+          if (!signature.signerEmail || signature.signerEmail.trim() === "") {
+            setFieldErrors(prev => ({ ...prev, [`signatures.${index}.signerEmail`]: "Required" }));
+            throw new Error(`Signature ${index + 1}: Signer email is required`);
+          } else {
+            // Validate email format
+            const emailRegex = /.+@.+\..+/;
+            if (!emailRegex.test(signature.signerEmail.trim())) {
+              setFieldErrors(prev => ({ ...prev, [`signatures.${index}.signerEmail`]: "Invalid email format" }));
+              throw new Error(`Signature ${index + 1}: Invalid email format`);
+            }
+          }
+        });
+
+        // Get existing signatures from petition details
+        const existingSignatures = petition.details?.signatures || [];
+        
+        // Map signatures data, ensuring new entries have id: null
+        const signaturesData = formData.signatures.map((signature, index) => {
+          // Try to find matching signature by id first, then by index
+          const existingSignature = existingSignatures.find(es => es.id === signature.id) || existingSignatures[index];
+          
+          // Determine signature ID:
+          // - If existing signature found, use its ID
+          // - If signature.id is a number (temporary ID), it's a new entry, set id to null
+          // - If signature.id is a UUID string but not found in existing, it's also new, set id to null
+          let signatureId = null;
+          if (existingSignature?.id) {
+            signatureId = existingSignature.id;
+          } else if (signature.id && typeof signature.id === 'string' && signature.id.includes('-')) {
+            // It's a UUID string but not found in existing, treat as new
+            signatureId = null;
+          } else if (signature.id && typeof signature.id === 'number') {
+            // It's a temporary ID (number), treat as new entry
+            signatureId = null;
+          }
+          
+          return {
+            id: signatureId,
+            signerFullName: signature.signerFullName || "",
+            signerTitle: signature.signerTitle || "",
+            signerEmail: signature.signerEmail || "",
+            esignConsent: signature.esignConsent !== null && signature.esignConsent !== undefined ? signature.esignConsent : false,
+            signatureDrawnOrTyped: signature.signatureDrawnOrTyped || "",
+            signedAt: signature.signedAt && signature.signedAt.trim()
+              ? (signature.signedAt.includes('T') 
+                  ? signature.signedAt 
+                  : new Date(signature.signedAt + 'T00:00:00').toISOString())
+              : null,
+            signerIp: signature.signerIp || "",
+            otpCode: signature.otpCode || ""
+          };
+        });
+
+        // Call update signatures API
+        await petitionApiService.updateSignatures(petition.id, signaturesData);
+        
+        // Refresh the tab data to get updated petition
+        if (activeTabId && refreshTab) {
+          await refreshTab(activeTabId);
+        }
+        
+        // Call the callback to refresh the petitions list
+        if (onPetitionUpdated) {
+          setTimeout(() => {
+            onPetitionUpdated();
+          }, 200);
+        }
+        
+        // Clear field errors on success
+        setFieldErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors.signatures;
+          delete newErrors.esignConsent;
+          // Clear signature-specific errors
+          Object.keys(newErrors).forEach(key => {
+            if (key.startsWith('signatures.')) {
+              delete newErrors[key];
+            }
+          });
+          return newErrors;
+        });
+        break;
+
+      case "judgment":
+        // Validate judgment fields
+        if (!formData.judgment) {
+          setFieldErrors(prev => ({ ...prev, judgment: "Judgment data is required" }));
+          throw new Error("Judgment data is required");
+        }
+
+        const judgment = formData.judgment;
+        if (!judgment.judgmentDate || (typeof judgment.judgmentDate === 'string' && !judgment.judgmentDate.trim())) {
+          setFieldErrors(prev => ({ ...prev, judgmentDate: "Judgment date is required" }));
+          throw new Error("Judgment date is required");
+        }
+        
+        // Parse judgment amount (handle formatted currency with commas)
+        const parseCurrencyInput = (value) => {
+          if (!value) return "";
+          return String(value).replace(/[^\d.]/g, "");
+        };
+        const parsedAmount = parseCurrencyInput(judgment.judgmentAmount);
+        if (!parsedAmount || !parsedAmount.trim()) {
+          setFieldErrors(prev => ({ ...prev, judgmentAmount: "Judgment amount is required" }));
+          throw new Error("Judgment amount is required");
+        } else if (isNaN(parseFloat(parsedAmount)) || parseFloat(parsedAmount) <= 0) {
+          setFieldErrors(prev => ({ ...prev, judgmentAmount: "Judgment amount must be greater than 0" }));
+          throw new Error("Judgment amount must be greater than 0");
+        }
+        
+        if (judgment.judgmentType === "" || judgment.judgmentType === null || judgment.judgmentType === undefined) {
+          setFieldErrors(prev => ({ ...prev, judgmentType: "Judgment type is required" }));
+          throw new Error("Judgment type is required");
+        }
+        if (!judgment.courtInformation || (typeof judgment.courtInformation === 'string' && !judgment.courtInformation.trim())) {
+          setFieldErrors(prev => ({ ...prev, courtInformation: "Court information is required" }));
+          throw new Error("Court information is required");
+        }
+        if (!judgment.docketNumbers || (typeof judgment.docketNumbers === 'string' && !judgment.docketNumbers.trim())) {
+          setFieldErrors(prev => ({ ...prev, docketNumbers: "Docket numbers is required" }));
+          throw new Error("Docket numbers is required");
+        }
+
+        // Get judgment ID from petition details
+        const judgmentId = petition.details?.judgment?.id || null;
+        
+        // Prepare judgment data
+        const judgmentData = {
+          id: judgmentId,
+          petitionId: petition.id,
+          judgmentDate: judgment.judgmentDate && judgment.judgmentDate.trim()
+            ? (judgment.judgmentDate.includes('T') 
+                ? judgment.judgmentDate 
+                : new Date(judgment.judgmentDate + 'T00:00:00').toISOString())
+            : null,
+          judgmentAmount: parseFloat(parsedAmount) || 0,
+          judgmentType: judgment.judgmentType !== null && judgment.judgmentType !== undefined 
+            ? (typeof judgment.judgmentType === 'number' 
+                ? judgment.judgmentType 
+                : parseInt(judgment.judgmentType, 10))
+            : 0,
+          courtInformation: judgment.courtInformation || "",
+          docketNumbers: judgment.docketNumbers || ""
+        };
+
+        // Call update judgment API
+        await petitionApiService.updateJudgment(petition.id, judgmentData);
+        
+        // Refresh the tab data to get updated petition
+        if (activeTabId && refreshTab) {
+          await refreshTab(activeTabId);
+        }
+        
+        // Call the callback to refresh the petitions list
+        if (onPetitionUpdated) {
+          setTimeout(() => {
+            onPetitionUpdated();
+          }, 200);
+        }
+        
+        // Clear field errors on success
+        setFieldErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors.judgment;
+          delete newErrors.judgmentDate;
+          delete newErrors.judgmentAmount;
+          delete newErrors.judgmentType;
+          delete newErrors.courtInformation;
+          delete newErrors.docketNumbers;
+          return newErrors;
+        });
+        break;
+
+      case "foreclosure":
+        // Validate foreclosure fields
+        if (!formData.foreclosureSale) {
+          setFieldErrors(prev => ({ ...prev, foreclosureSale: "Foreclosure sale data is required" }));
+          throw new Error("Foreclosure sale data is required");
+        }
+
+        const foreclosureSale = formData.foreclosureSale;
+        if (!foreclosureSale.saleDate || !foreclosureSale.saleDate.trim()) {
+          setFieldErrors(prev => ({ ...prev, saleDate: "Sale date is required" }));
+          throw new Error("Sale date is required");
+        }
+        if (!foreclosureSale.soldToId || !foreclosureSale.soldToId.trim()) {
+          setFieldErrors(prev => ({ ...prev, soldToId: "Sold to is required" }));
+          throw new Error("Sold to is required");
+        }
+
+        // Check if soldToId is Mortgagee/Investor and validate required fields
+        const buyerTypes = getBuyerTypes();
+        const selectedBuyerType = findOptionByValue ? findOptionByValue(buyerTypes, foreclosureSale.soldToId) : null;
+        const isMortgageeInvestor = selectedBuyerType && (
+          selectedBuyerType.name?.toLowerCase().includes("mortgagee") ||
+          selectedBuyerType.name?.toLowerCase().includes("investor") ||
+          selectedBuyerType.value?.toLowerCase().includes("mortgagee") ||
+          selectedBuyerType.value?.toLowerCase().includes("investor")
+        );
+
+        if (isMortgageeInvestor) {
+          if (!foreclosureSale.vestingEntityName || !foreclosureSale.vestingEntityName.trim()) {
+            setFieldErrors(prev => ({ ...prev, vestingEntityName: "Vesting entity name is required" }));
+            throw new Error("Vesting entity name is required");
+          }
+          if (!foreclosureSale.reoContactFirstName || !foreclosureSale.reoContactFirstName.trim()) {
+            setFieldErrors(prev => ({ ...prev, reoContactFirstName: "REO contact first name is required" }));
+            throw new Error("REO contact first name is required");
+          }
+          if (!foreclosureSale.reoContactLastName || !foreclosureSale.reoContactLastName.trim()) {
+            setFieldErrors(prev => ({ ...prev, reoContactLastName: "REO contact last name is required" }));
+            throw new Error("REO contact last name is required");
+          }
+          if (!foreclosureSale.reoBusinessPhone || !foreclosureSale.reoBusinessPhone.trim()) {
+            setFieldErrors(prev => ({ ...prev, reoBusinessPhone: "REO business phone is required" }));
+            throw new Error("REO business phone is required");
+          }
+        }
+
+        // Get foreclosure ID from petition details
+        const foreclosureId = petition.details?.foreclosureSale?.id || null;
+        
+        // Prepare foreclosure data
+        const foreclosureData = {
+          id: foreclosureId,
+          saleDate: foreclosureSale.saleDate && foreclosureSale.saleDate.trim()
+            ? (foreclosureSale.saleDate.includes('T') 
+                ? foreclosureSale.saleDate 
+                : new Date(foreclosureSale.saleDate + 'T00:00:00').toISOString())
+            : null,
+          soldToId: foreclosureSale.soldToId && foreclosureSale.soldToId.trim() !== '' ? foreclosureSale.soldToId : null,
+          vestingEntityName: foreclosureSale.vestingEntityName || "",
+          reoEntityName: foreclosureSale.reoEntityName || "",
+          reoContactFirstName: foreclosureSale.reoContactFirstName || "",
+          reoContactLastName: foreclosureSale.reoContactLastName || "",
+          reoBusinessPhone: foreclosureSale.reoBusinessPhone || "",
+          reoEmergencyPhone: foreclosureSale.reoEmergencyPhone || ""
+        };
+
+        // Call update foreclosure API
+        await petitionApiService.updateForeclosure(petition.id, foreclosureData);
+        
+        // Refresh the tab data to get updated petition
+        if (activeTabId && refreshTab) {
+          await refreshTab(activeTabId);
+        }
+        
+        // Call the callback to refresh the petitions list
+        if (onPetitionUpdated) {
+          setTimeout(() => {
+            onPetitionUpdated();
+          }, 200);
+        }
+        
+        // Clear field errors on success
+        setFieldErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors.foreclosureSale;
+          delete newErrors.saleDate;
+          delete newErrors.soldToId;
+          delete newErrors.vestingEntityName;
+          delete newErrors.reoContactFirstName;
+          delete newErrors.reoContactLastName;
+          delete newErrors.reoBusinessPhone;
+          return newErrors;
+        });
+        break;
+      
+      default:
+        throw new Error(`Save handler not implemented for section: ${sectionId}`);
+    }
   };
 
   // Close dropdowns when clicking outside
@@ -1290,6 +2174,20 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
     }
 
     setFormData((prev) => {
+      // Handle nested objects (judgment, foreclosureSale)
+      if (name === "judgment" && typeof processedValue === 'object') {
+        return {
+          ...prev,
+          judgment: processedValue,
+        };
+      }
+      if (name === "foreclosureSale" && typeof processedValue === 'object') {
+        return {
+          ...prev,
+          foreclosureSale: processedValue,
+        };
+      }
+
       const newFormData = {
         ...prev,
         [name]: type === "checkbox" ? checked : processedValue,
@@ -1627,6 +2525,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
       loanAssignees: [
         ...prev.loanAssignees,
         {
+          id: null,
           assigneeName: "",
           assigneeTypeId: "",
           assigneeRoleId: "",
@@ -1805,9 +2704,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
   // Handle edit dropdown selection
   const handleEditOptionSelect = (option) => {
     setShowEditDropdown(false);
-    if (option === "filing") {
-      handleEditToggle();
-    } else if (option === "judgement") {
+    if (option === "judgement") {
       setShowJudgementModal(true);
     } else if (option === "foreclosure") {
       // Check if conditions are met before allowing foreclosure editing
@@ -1823,32 +2720,44 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
   // Handle saving judgment data
   const handleSaveJudgment = async (updatedFormData) => {
     try {
-      // Ensure organizationId is set from petition if not in formData
-      const dataToSave = {
-        ...updatedFormData,
-        organizationId: updatedFormData.organizationId || petition.organizationId || formData.organizationId,
+      const judgment = updatedFormData?.judgment;
+      if (!judgment) {
+        throw new Error("Judgment data is required");
+      }
+
+      // Get judgment ID from petition details (null if new)
+      const judgmentId = petition.details?.judgment?.id || null;
+
+      // Prepare judgment data for API
+      const judgmentData = {
+        id: judgmentId,
+        petitionId: petition.id,
+        judgmentDate: judgment.judgmentDate || "",
+        judgmentAmount: judgment.judgmentAmount || 0,
+        judgmentType: judgment.judgmentType !== null && judgment.judgmentType !== undefined 
+          ? (typeof judgment.judgmentType === 'number' 
+              ? judgment.judgmentType 
+              : parseInt(judgment.judgmentType, 10))
+          : 0,
+        courtInformation: judgment.courtInformation || "",
+        docketNumbers: judgment.docketNumbers || ""
       };
-      
-      // Get status string "JudgmentSubmitted" (value 3) from petition enums
-      const petitionStatuses = getPetitionStatuses();
-      const judgmentSubmittedStatus = petitionStatuses.find(status => status.value === 3);
-      const statusString = judgmentSubmittedStatus ? judgmentSubmittedStatus.name : null;
-      
-      // Suppress the default toast and show custom message, pass status string
-      await submitPetition(dataToSave, true, petition.id, true, statusString); // true = suppressToast, true = isDraft, statusString
+
+      // Call update judgment API
+      await petitionApiService.updateJudgment(petition.id, judgmentData);
       
       toast.success("Judgment saved successfully.");
       
-      // Update local formData state
-      setFormData(updatedFormData);
+      // Refresh the tab data to get updated petition
+      if (activeTabId && refreshTab) {
+        await refreshTab(activeTabId);
+      }
       
+      // Call the callback to refresh the petitions list
       if (onPetitionUpdated) {
         setTimeout(() => {
           onPetitionUpdated();
         }, 200);
-      }
-      if (activeTabId && refreshTab) {
-        await refreshTab(activeTabId);
       }
     } catch (error) {
       console.error("Error saving judgment:", error);
@@ -1892,30 +2801,47 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
   // Handle saving foreclosure data
   const handleSaveForeclosure = async (updatedFormData) => {
     try {
-      // Ensure organizationId is set from petition if not in formData
-      const dataToSave = {
-        ...updatedFormData,
-        organizationId: updatedFormData.organizationId || petition.organizationId || formData.organizationId,
+      const foreclosureSale = updatedFormData?.foreclosureSale;
+      if (!foreclosureSale) {
+        throw new Error("Foreclosure sale data is required");
+      }
+
+      // Get foreclosure ID from petition details (null if new)
+      const foreclosureId = petition.details?.foreclosureSale?.id || null;
+
+      // Prepare foreclosure data for API
+      const foreclosureData = {
+        id: foreclosureId,
+        saleDate: foreclosureSale.saleDate || "",
+        soldToId: foreclosureSale.soldToId || "",
+        vestingEntityName: foreclosureSale.vestingEntityName || "",
+        reoEntityName: foreclosureSale.reoEntityName || "",
+        reoContactFirstName: foreclosureSale.reoContactFirstName || "",
+        reoContactLastName: foreclosureSale.reoContactLastName || "",
+        reoBusinessPhone: foreclosureSale.reoBusinessPhone || "",
+        reoEmergencyPhone: foreclosureSale.reoEmergencyPhone || ""
       };
+
+      // Call update foreclosure API
+      await petitionApiService.updateForeclosure(petition.id, foreclosureData);
       
-      // Get status string "ForeclosureSaleInitiated" (value 2) from petition enums
-      const petitionStatuses = getPetitionStatuses();
-      const foreclosureSaleInitiatedStatus = petitionStatuses.find(status => status.value === 2);
-      const statusString = foreclosureSaleInitiatedStatus ? foreclosureSaleInitiatedStatus.name : null;
-      
-      // Suppress the default toast and show custom message, pass status string
-      await submitPetition(dataToSave, true, petition.id, true, statusString); // true = suppressToast, true = isDraft, statusString
       toast.success("Foreclosure saved successfully.");
+      
+      // Refresh the tab data to get updated petition
+      if (activeTabId && refreshTab) {
+        await refreshTab(activeTabId);
+      }
+      
+      // Call the callback to refresh the petitions list
       if (onPetitionUpdated) {
         setTimeout(() => {
           onPetitionUpdated();
         }, 200);
       }
-      if (activeTabId && refreshTab) {
-        await refreshTab(activeTabId);
-      }
     } catch (error) {
       console.error("Error saving foreclosure:", error);
+      const errorMessage = error?.response?.data?.message || error?.message || "Failed to save foreclosure. Please try again.";
+      toast.error(errorMessage);
       throw error;
     }
   };
@@ -2027,10 +2953,11 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
                     onClick={async () => {
                       try {
                         setIsSavingDraft(true);
-                        await handleSaveDraft();
+                        await handleSectionSave(sectionId);
                         toggleSectionEditing(sectionId);
                         toast.success(t("petitionTabContent.sectionSaved") || "Section saved successfully");
                       } catch (error) {
+                        console.error("Error saving section:", error);
                         toast.error(t("petitionTabContent.saveError") || "Error saving section");
                       } finally {
                         setIsSavingDraft(false);
@@ -2643,44 +3570,43 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
                           {t("petitionTabContent.edit")}
                         </button>
                       ) : (
-                        /* For non-draft petitions, show edit dropdown */
-                        <div className="dropdown edit-options-dropdown" style={{ position: "relative" }}>
-                          <button
-                            type="button"
-                            className={`dashboard-btn-create ${showEditDropdown ? 'active' : ''}`}
-                            onClick={() => setShowEditDropdown(!showEditDropdown)}
-                            title={t("petitionTabContent.editOptions")}
-                          >
-                            <i className="fas fa-edit me-1"></i>
-                            {t("petitionTabContent.edit")}
-                            <i className={`fas fa-chevron-down ms-1 transition-icon ${showEditDropdown ? 'rotate' : ''}`} style={{ fontSize: "0.7rem" }}></i>
-                          </button>
-                          {showEditDropdown && (
-                            <div className="edit-options-menu">
-                              <button
-                                className="edit-option-item"
-                                onClick={() => handleEditOptionSelect("filing")}
-                              >
-                                <i className="fas fa-edit edit-option-icon"></i>
-                                <span>{t("petitionTabContent.editFiling")}</span>
-                              </button>
-                              <button
-                                className="edit-option-item"
-                                onClick={() => handleEditOptionSelect("judgement")}
-                              >
-                                <i className="fas fa-edit edit-option-icon"></i>
-                                <span>{t("petitionTabContent.editJudgement")}</span>
-                              </button>
-                              <button
-                                className="edit-option-item"
-                                onClick={() => handleEditOptionSelect("foreclosure")}
-                              >
-                                <i className="fas fa-edit edit-option-icon"></i>
-                                <span>{t("petitionTabContent.editForeclosure")}</span>
-                              </button>
-                            </div>
-                          )}
-                        </div>
+                        /* For non-draft petitions, show actions dropdown only if judgment or foreclosure doesn't exist */
+                        (!hasJudgmentData() || !hasForeclosureSaleData()) && (
+                          <div className="dropdown edit-options-dropdown" style={{ position: "relative" }}>
+                            <button
+                              type="button"
+                              className={`dashboard-btn-create ${showEditDropdown ? 'active' : ''}`}
+                              onClick={() => setShowEditDropdown(!showEditDropdown)}
+                              title={t("petitionTabContent.actions")}
+                            >
+                              <i className="fas fa-edit me-1"></i>
+                              {t("petitionTabContent.actions")}
+                              <i className={`fas fa-chevron-down ms-1 transition-icon ${showEditDropdown ? 'rotate' : ''}`} style={{ fontSize: "0.7rem" }}></i>
+                            </button>
+                            {showEditDropdown && (
+                              <div className="edit-options-menu">
+                                {!hasJudgmentData() && (
+                                  <button
+                                    className="edit-option-item"
+                                    onClick={() => handleEditOptionSelect("judgement")}
+                                  >
+                                    <i className="fas fa-plus edit-option-icon"></i>
+                                    <span>{t("petitionTabContent.addJudgement")}</span>
+                                  </button>
+                                )}
+                                {!hasForeclosureSaleData() && (
+                                  <button
+                                    className="edit-option-item"
+                                    onClick={() => handleEditOptionSelect("foreclosure")}
+                                  >
+                                    <i className="fas fa-plus edit-option-icon"></i>
+                                    <span>{t("petitionTabContent.addForeclosure")}</span>
+                                  </button>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )
                       )}
                     {!isPublic && (
                       <div className="dropdown notes-options-dropdown" style={{ position: "relative" }}>
@@ -2729,72 +3655,8 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
                     </>
                   ) : (
                     <>
-                      {/* Only show Save as Draft for non-submitted petitions */}
-                      {(petition.status !== "Submitted" && 
-                        petition.status !== "Resubmitted" && 
-                        petition.status !== "Accepted" && 
-                        petition.status !== "Closed" &&
-                        petition.statusClass !== "Submitted" &&
-                        petition.statusClass !== "Resubmitted" &&
-                        petition.statusClass !== "Accepted" &&
-                        petition.statusClass !== "Closed") && (
-                        <button
-                          type="button"
-                          className="dashboard-btn-create"
-                          onClick={handleSaveDraft}
-                          disabled={isSavingDraft || isSubmitting}
-                          title={t("petitionTabContent.saveDraftTitle")}
-                        >
-                          {isSavingDraft ? (
-                            <>
-                              <span
-                                className="spinner-border spinner-border-sm me-1"
-                                role="status"
-                                aria-hidden="true"
-                              ></span>
-                              {t("petitionTabContent.saving")}
-                            </>
-                          ) : (
-                            <>
-                              <i className="fas fa-save me-1"></i>
-                              {t("petitionTabContent.saveAsDraft")}
-                            </>
-                          )}
-                        </button>
-                      )}
-                      <button
-                        type="button"
-                        className="dashboard-btn-create"
-                        onClick={handleFinalSubmit}
-                        disabled={isSavingDraft || isSubmitting}
-                        title={t("petitionTabContent.submitPetitionTitle")}
-                      >
-                        {isSubmitting ? (
-                          <>
-                            <span
-                              className="spinner-border spinner-border-sm me-1"
-                              role="status"
-                              aria-hidden="true"
-                            ></span>
-                            {t("petitionTabContent.submitting")}
-                          </>
-                        ) : (
-                          <>
-                            <i className="fas fa-paper-plane me-1"></i>
-                            {t("petitionTabContent.submitPetition")}
-                          </>
-                        )}
-                      </button>
-                      <button
-                        type="button"
-                        className="dashboard-btn-refresh"
-                        onClick={handleEditToggle}
-                        disabled={isSavingDraft || isSubmitting}
-                        title={t("petitionTabContent.cancelEditing")}
-                      >
-                        <i className="fas fa-times me-1"></i>
-                        {t("common.cancel")}
-                      </button>
+                      {/* When editing sections, no header buttons - each section has its own Save/Cancel */}
+                      {/* This section is intentionally left empty as section-level editing handles its own buttons */}
                     </>
                   )}
                 </div>
@@ -2966,28 +3828,44 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
                 />
               </div>
 
-              {/* Judgment Display Section - Read-only, only shows if data exists */}
-              <div ref={judgmentRef}>
-                <JudgmentDisplaySection
-                  SectionHeader={SectionHeader}
-                  formData={formData}
-                  getJudgmentTypes={getJudgmentTypes}
-                  findOptionByValue={findOptionByValue}
-                  formatDate={formatDate}
-                  formatCurrency={formatCurrency}
-                />
-              </div>
+              {/* Judgment Display Section - Editable if data exists */}
+              {hasJudgmentData() && (
+                <div ref={judgmentRef}>
+                  <JudgmentDisplaySection
+                    SectionHeader={(props) => <SectionHeader {...props} sectionId="judgment" />}
+                    isEditing={isSectionEditing("judgment")}
+                    formData={formData}
+                    fieldErrors={fieldErrors}
+                    handleInputChange={handleInputChange}
+                    handleDropdownChange={handleInputChange}
+                    getJudgmentTypes={getJudgmentTypes}
+                    findOptionByValue={findOptionByValue}
+                    formatDate={formatDate}
+                    formatCurrency={formatCurrency}
+                    onSave={() => handleSectionSave("judgment")}
+                    onCancel={() => toggleSectionEditing("judgment")}
+                  />
+                </div>
+              )}
 
-              {/* Foreclosure Sale Display Section - Read-only, only shows if data exists */}
-              <div ref={foreclosureSaleRef}>
-                <ForeclosureSaleDisplaySection
-                  SectionHeader={SectionHeader}
-                  formData={formData}
-                  getBuyerTypes={getBuyerTypes}
-                  findOptionByValue={findOptionByValue}
-                  formatDate={formatDate}
-                />
-              </div>
+              {/* Foreclosure Sale Display Section - Editable if data exists */}
+              {hasForeclosureSaleData() && (
+                <div ref={foreclosureSaleRef}>
+                  <ForeclosureSaleDisplaySection
+                    SectionHeader={(props) => <SectionHeader {...props} sectionId="foreclosure" />}
+                    isEditing={isSectionEditing("foreclosure")}
+                    formData={formData}
+                    fieldErrors={fieldErrors}
+                    handleInputChange={handleInputChange}
+                    handleDropdownChange={handleInputChange}
+                    getBuyerTypes={getBuyerTypes}
+                    findOptionByValue={findOptionByValue}
+                    formatDate={formatDate}
+                    onSave={() => handleSectionSave("foreclosure")}
+                    onCancel={() => toggleSectionEditing("foreclosure")}
+                  />
+                </div>
+              )}
             </form>
           </div>
         </div>
