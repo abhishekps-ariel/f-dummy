@@ -10,6 +10,7 @@ const EditForeclosureModal = ({
   formData,
   setFormData,
   getBuyerTypes,
+  getForeclosureAlternativeOptions,
   findOptionByValue,
   onSave,
 }) => {
@@ -23,6 +24,8 @@ const EditForeclosureModal = ({
     reoContactLastName: formData?.foreclosureSale?.reoContactLastName || "",
     reoBusinessPhone: formData?.foreclosureSale?.reoBusinessPhone || "",
     reoEmergencyPhone: formData?.foreclosureSale?.reoEmergencyPhone || "",
+    requestedAlternativeToForeclosure: formData?.foreclosureSale?.requestedAlternativeToForeclosure || false,
+    foreclosureAlternativeOption: formData?.foreclosureSale?.foreclosureAlternativeOption || null,
   });
   const [fieldErrors, setFieldErrors] = useState({});
   const [isSaving, setIsSaving] = useState(false);
@@ -38,6 +41,8 @@ const EditForeclosureModal = ({
         reoContactLastName: formData.foreclosureSale.reoContactLastName || "",
         reoBusinessPhone: formData.foreclosureSale.reoBusinessPhone || "",
         reoEmergencyPhone: formData.foreclosureSale.reoEmergencyPhone || "",
+        requestedAlternativeToForeclosure: formData.foreclosureSale.requestedAlternativeToForeclosure || false,
+        foreclosureAlternativeOption: formData.foreclosureSale.foreclosureAlternativeOption || null,
       });
       setFieldErrors({});
     }
@@ -106,6 +111,16 @@ const EditForeclosureModal = ({
       }
       if (!foreclosureData.reoBusinessPhone?.trim()) {
         errors.reoBusinessPhone = t("modals.editForeclosure.validation.reoBusinessPhoneRequired");
+      }
+    }
+    // Validate requested alternative to foreclosure (required)
+    if (foreclosureData.requestedAlternativeToForeclosure === null || foreclosureData.requestedAlternativeToForeclosure === undefined) {
+      errors.requestedAlternativeToForeclosure = "Please select if the borrower requested an alternative to foreclosure";
+    }
+    // Validate foreclosure alternative option (required if alternative was requested)
+    if (foreclosureData.requestedAlternativeToForeclosure === true) {
+      if (!foreclosureData.foreclosureAlternativeOption || foreclosureData.foreclosureAlternativeOption === "") {
+        errors.foreclosureAlternativeOption = "Alternative option is required";
       }
     }
     setFieldErrors(errors);
@@ -184,6 +199,81 @@ const EditForeclosureModal = ({
           </div>
           <div className="modal-body">
             <div className="row g-3">
+              {/* Foreclosure Alternative Fields - Moved to Top */}
+              <div className="col-md-6">
+                <label className="form-label">
+                  Did the borrower request an alternative to foreclosure?{"\u00A0"}
+                  <span style={{ whiteSpace: 'nowrap' }}>*</span>
+                </label>
+                {fieldErrors.requestedAlternativeToForeclosure && (
+                  <div className="text-danger small mt-1">
+                    {fieldErrors.requestedAlternativeToForeclosure}
+                  </div>
+                )}
+                <div className="d-flex gap-3">
+                  <div className="form-check">
+                    <input
+                      className="form-check-input"
+                      type="radio"
+                      name="requestedAlternativeToForeclosure"
+                      id="requestedAlternativeToForeclosureYes"
+                      value="yes"
+                      checked={foreclosureData.requestedAlternativeToForeclosure === true}
+                      onChange={(e) =>
+                        setForeclosureData((prev) => ({ ...prev, requestedAlternativeToForeclosure: true }))
+                      }
+                    />
+                    <label className="form-check-label" htmlFor="requestedAlternativeToForeclosureYes">
+                      Yes
+                    </label>
+                  </div>
+                  <div className="form-check">
+                    <input
+                      className="form-check-input"
+                      type="radio"
+                      name="requestedAlternativeToForeclosure"
+                      id="requestedAlternativeToForeclosureNo"
+                      value="no"
+                      checked={foreclosureData.requestedAlternativeToForeclosure === false}
+                      onChange={(e) =>
+                        setForeclosureData((prev) => ({ ...prev, requestedAlternativeToForeclosure: false, foreclosureAlternativeOption: null }))
+                      }
+                    />
+                    <label className="form-check-label" htmlFor="requestedAlternativeToForeclosureNo">
+                      No
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              {foreclosureData.requestedAlternativeToForeclosure === true && (
+                <div className="col-md-6">
+                  <label htmlFor="foreclosureAlternativeOption" className="form-label">
+                    Alternative Options *
+                  </label>
+                  <CustomDropdown
+                    id="foreclosureAlternativeOption"
+                    name="foreclosureAlternativeOption"
+                    value={foreclosureData.foreclosureAlternativeOption || ""}
+                    onChange={handleDropdownChange}
+                    placeholder="Select Alternative Option"
+                    error={!!fieldErrors.foreclosureAlternativeOption}
+                    options={[
+                      { value: "", label: "Select Alternative Option" },
+                      ...(getForeclosureAlternativeOptions ? getForeclosureAlternativeOptions().map((option) => ({
+                        value: option.value || option.id,
+                        label: option.description || option.name,
+                      })) : []),
+                    ]}
+                  />
+                  {fieldErrors.foreclosureAlternativeOption && (
+                    <div className="text-danger small mt-1">
+                      {fieldErrors.foreclosureAlternativeOption}
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="col-md-6">
                 <label htmlFor="saleDate" className="form-label">
                   {t("modals.editForeclosure.saleDate")} *

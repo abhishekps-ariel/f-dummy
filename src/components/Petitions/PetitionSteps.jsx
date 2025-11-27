@@ -1024,6 +1024,8 @@ const PetitionSteps = ({
       case 3: // Loan Details - check all required fields (matching validateLoanDetails)
         const hasMinApplicable = formData.isMinApplicable === "yes" || formData.isMinApplicable === "no";
         const hasMinNumberIfRequired = formData.isMinApplicable !== "yes" || (formData.isMinApplicable === "yes" && formData.minNumber?.trim());
+        const hasLoanModification = formData.borrowerRequestedLoanModification !== null && formData.borrowerRequestedLoanModification !== undefined;
+        const hasLoanModificationFinalized = formData.borrowerRequestedLoanModification !== true || (formData.borrowerRequestedLoanModification === true && (formData.loanModificationRequestFinalized !== null && formData.loanModificationRequestFinalized !== undefined));
         return !!(hasMinApplicable &&
                   hasMinNumberIfRequired &&
                   formData.loanNumber?.trim() && 
@@ -1042,7 +1044,9 @@ const PetitionSteps = ({
                   formData.monthlyPaymentAmount > 0 &&
                   formData.delinquencyDaysAtFiling != null &&
                   formData.delinquencyDaysAtFiling !== "" &&
-                  formData.delinquencyDaysAtFiling >= 0);
+                  formData.delinquencyDaysAtFiling >= 0 &&
+                  hasLoanModification &&
+                  hasLoanModificationFinalized);
       
       case 4: // Borrower Details - check if at least one borrower with required fields
         if (!formData.borrowers || !Array.isArray(formData.borrowers) || formData.borrowers.length === 0) {
@@ -1064,6 +1068,9 @@ const PetitionSteps = ({
             }
             // If notice was sent, check required fields
             if (rtc.noticeSent === true) {
+              const hasBorrowerResponse = rtc.borrowerRespondedWithin30Days !== null && rtc.borrowerRespondedWithin30Days !== undefined;
+              const hasBorrowerResponseDate = rtc.borrowerRespondedWithin30Days !== true || (rtc.borrowerRespondedWithin30Days === true && rtc.borrowerResponseDate?.trim());
+              const hasProceededWithCure = rtc.borrowerRespondedWithin30Days !== true || (rtc.borrowerRespondedWithin30Days === true && (rtc.proceededWithRightToCure !== null && rtc.proceededWithRightToCure !== undefined));
               return !!(rtc.noticeDate?.trim() &&
                         rtc.amountInDefault != null &&
                         rtc.amountInDefault >= 0 &&
@@ -1074,7 +1081,10 @@ const PetitionSteps = ({
                         rtc.noticeAddressStreet1?.trim() &&
                         rtc.noticeAddressCity?.trim() &&
                         rtc.noticeAddressState?.trim() &&
-                        rtc.noticeAddressZip?.trim());
+                        rtc.noticeAddressZip?.trim() &&
+                        hasBorrowerResponse &&
+                        hasBorrowerResponseDate &&
+                        hasProceededWithCure);
             }
             // If notice was not sent, check for acceleration date (manualOverrideReason)
             if (rtc.noticeSent === false) {
@@ -1089,6 +1099,9 @@ const PetitionSteps = ({
         }
         // If notice was sent, check required fields
         if (formData.noticeSent === true) {
+          const hasBorrowerResponse = formData.borrowerRespondedWithin30Days !== null && formData.borrowerRespondedWithin30Days !== undefined;
+          const hasBorrowerResponseDate = formData.borrowerRespondedWithin30Days !== true || (formData.borrowerRespondedWithin30Days === true && formData.borrowerResponseDate?.trim());
+          const hasProceededWithCure = formData.borrowerRespondedWithin30Days !== true || (formData.borrowerRespondedWithin30Days === true && (formData.proceededWithRightToCure !== null && formData.proceededWithRightToCure !== undefined));
           const hasRequiredFields = !!(formData.noticeDate?.trim() &&
                     formData.amountInDefault &&
                     formData.amountInDefault > 0 &&
@@ -1099,7 +1112,10 @@ const PetitionSteps = ({
                     formData.noticeAddressStreet1?.trim() &&
                     formData.noticeAddressCity?.trim() &&
                     formData.noticeAddressState?.trim() &&
-                    formData.noticeAddressZip?.trim());
+                    formData.noticeAddressZip?.trim() &&
+                    hasBorrowerResponse &&
+                    hasBorrowerResponseDate &&
+                    hasProceededWithCure);
           
           // If all required fields are present, check address verification
           // If address exists but not verified, still return true if fields are filled (for pre-filled data)
@@ -3854,6 +3870,20 @@ const PetitionSteps = ({
       hasErrors = true;
     }
 
+    // Validate borrower requested loan modification (required)
+    if (formData.borrowerRequestedLoanModification === null || formData.borrowerRequestedLoanModification === undefined) {
+      errors.borrowerRequestedLoanModification = "Please select if the borrower requested a loan modification";
+      hasErrors = true;
+    }
+
+    // Validate loan modification request finalized (required if modification was requested)
+    if (formData.borrowerRequestedLoanModification === true) {
+      if (formData.loanModificationRequestFinalized === null || formData.loanModificationRequestFinalized === undefined) {
+        errors.loanModificationRequestFinalized = "Please select if the loan modification request was finalized";
+        hasErrors = true;
+      }
+    }
+
     return { hasErrors, errors };
   };
 
@@ -4013,6 +4043,26 @@ const PetitionSteps = ({
         errors.noticeAddressZip = "ZIP code is required";
 
         hasErrors = true;
+      }
+
+      // Validate borrower responded within 30 days (required if notice was sent)
+      if (formData.borrowerRespondedWithin30Days === null || formData.borrowerRespondedWithin30Days === undefined) {
+        errors.borrowerRespondedWithin30Days = "Please select if the borrower responded to the notice within 30 days";
+        hasErrors = true;
+      }
+
+      // Validate borrower response date (required if borrower responded)
+      if (formData.borrowerRespondedWithin30Days === true) {
+        if (!formData.borrowerResponseDate || !formData.borrowerResponseDate.trim()) {
+          errors.borrowerResponseDate = "Date on which the borrower responded is required";
+          hasErrors = true;
+        }
+
+        // Validate proceeded with right to cure (required if borrower responded)
+        if (formData.proceededWithRightToCure === null || formData.proceededWithRightToCure === undefined) {
+          errors.proceededWithRightToCure = "Please select if the borrower proceeded with the right to cure";
+          hasErrors = true;
+        }
       }
     } else if (formData.noticeSent === false) {
       // Validate acceleration date for non-notice path

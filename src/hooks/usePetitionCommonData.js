@@ -8,7 +8,8 @@ export const usePetitionCommonData = () => {
       filingEntityRole: [],
       lienPosition: [],
       addressValidationStatus: [],
-      judgmentTypes: []
+      judgmentTypes: [],
+      foreclosureAlternativeOptions: []
     },
     loanTypes: [],
     assigneeTypes: [],
@@ -48,6 +49,7 @@ export const usePetitionCommonData = () => {
   const getLienPositions = () => data.enums.lienPosition || [];
   const getAddressValidationStatuses = () => data.enums.addressValidationStatus || [];
   const getJudgmentTypes = () => data.enums.judgmentTypes || [];
+  const getForeclosureAlternativeOptions = () => data.enums.foreclosureAlternativeOptions || [];
   const getLoanTypes = () => data.loanTypes || [];
   const getAssigneeTypes = () => data.assigneeTypes || [];
   const getAssigneeRoles = () => data.assigneeRoles || [];
@@ -75,6 +77,7 @@ export const usePetitionCommonData = () => {
     getLienPositions,
     getAddressValidationStatuses,
     getJudgmentTypes,
+    getForeclosureAlternativeOptions,
     getLoanTypes,
     getAssigneeTypes,
     getAssigneeRoles,

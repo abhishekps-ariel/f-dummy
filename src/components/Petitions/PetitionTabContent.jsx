@@ -44,6 +44,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
     getBuyerTypes,
     getLenderTypes,
     getJudgmentTypes,
+    getForeclosureAlternativeOptions,
     getPetitionStatuses,
     getOptionName,
     findOptionByValue,
@@ -609,6 +610,8 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
       mortgageBrokerLicenseNumber: details.loan?.mortgageBrokerLicenseNumber || "",
       mortgageLoanOriginatorLicenseNumber: details.loan?.mortgageLoanOriginatorLicenseNumber || "",
       lenderId: details.loan?.lenderId || "",
+      borrowerRequestedLoanModification: details.loan?.borrowerRequestedLoanModification !== undefined ? details.loan.borrowerRequestedLoanModification : null,
+      loanModificationRequestFinalized: details.loan?.loanModificationRequestFinalized !== undefined ? details.loan.loanModificationRequestFinalized : null,
 
       // Borrowers
       borrowers: mappedBorrowers,
@@ -644,6 +647,9 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
             noticeAddressState: rtc.noticeAddressState || "",
             noticeAddressZip: rtc.noticeAddressZip || "",
             manualOverrideReason: rtc.manualOverrideReason || "",
+            borrowerRespondedWithin30Days: rtc.borrowerRespondedWithin30Days !== undefined ? rtc.borrowerRespondedWithin30Days : null,
+            borrowerResponseDate: rtc.borrowerResponseDate ? rtc.borrowerResponseDate.split("T")[0] : "",
+            proceededWithRightToCure: rtc.proceededWithRightToCure !== undefined ? rtc.proceededWithRightToCure : null,
           }));
         }
         // Fallback to single rightToCure object (old format)
@@ -660,6 +666,9 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
             noticeAddressState: details.rightToCure.noticeAddressState || "",
             noticeAddressZip: details.rightToCure.noticeAddressZip || "",
             manualOverrideReason: details.rightToCure.manualOverrideReason || "",
+            borrowerRespondedWithin30Days: details.rightToCure.borrowerRespondedWithin30Days !== undefined ? details.rightToCure.borrowerRespondedWithin30Days : null,
+            borrowerResponseDate: details.rightToCure.borrowerResponseDate ? details.rightToCure.borrowerResponseDate.split("T")[0] : "",
+            proceededWithRightToCure: details.rightToCure.proceededWithRightToCure !== undefined ? details.rightToCure.proceededWithRightToCure : null,
           }];
         }
         // Return empty array if no data
@@ -681,6 +690,8 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
               details.foreclosureSale.reoContactLastName || "",
             reoBusinessPhone: details.foreclosureSale.reoBusinessPhone || "",
             reoEmergencyPhone: details.foreclosureSale.reoEmergencyPhone || "",
+            requestedAlternativeToForeclosure: details.foreclosureSale.requestedAlternativeToForeclosure !== undefined ? details.foreclosureSale.requestedAlternativeToForeclosure : null,
+            foreclosureAlternativeOption: details.foreclosureSale.foreclosureAlternativeOption !== undefined ? details.foreclosureSale.foreclosureAlternativeOption : null,
           }
         : (details.rightToCures && details.rightToCures.length > 0 && details.rightToCures.some(rtc => rtc.noticeSent === true)) ||
           (details.rightToCure?.noticeSent === true)
@@ -693,6 +704,8 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
             reoContactLastName: "",
             reoBusinessPhone: "",
             reoEmergencyPhone: "",
+            requestedAlternativeToForeclosure: null,
+            foreclosureAlternativeOption: null,
           }
         : null,
 
@@ -1136,6 +1149,18 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
           throw new Error("Lien position is required");
         }
 
+        // Validate loan modification fields (required)
+        if (formData.borrowerRequestedLoanModification === null || formData.borrowerRequestedLoanModification === undefined) {
+          setFieldErrors(prev => ({ ...prev, borrowerRequestedLoanModification: "Please select if the borrower requested a loan modification" }));
+          throw new Error("Please select if the borrower requested a loan modification");
+        }
+        if (formData.borrowerRequestedLoanModification === true) {
+          if (formData.loanModificationRequestFinalized === null || formData.loanModificationRequestFinalized === undefined) {
+            setFieldErrors(prev => ({ ...prev, loanModificationRequestFinalized: "Please select if the loan modification request was finalized" }));
+            throw new Error("Please select if the loan modification request was finalized");
+          }
+        }
+
         // Get loan ID from petition details
         const loanId = petition.details?.loan?.id || null;
         
@@ -1164,7 +1189,9 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
           delinquencyDaysAtFiling: parseInt(formData.delinquencyDaysAtFiling) || 0,
           mortgageBrokerLicenseNumber: formData.mortgageBrokerLicenseNumber || "",
           mortgageLoanOriginatorLicenseNumber: formData.mortgageLoanOriginatorLicenseNumber || "",
-          lenderId: formData.lenderId && formData.lenderId.trim() !== '' ? formData.lenderId : null
+          lenderId: formData.lenderId && formData.lenderId.trim() !== '' ? formData.lenderId : null,
+          borrowerRequestedLoanModification: formData.borrowerRequestedLoanModification !== null && formData.borrowerRequestedLoanModification !== undefined ? formData.borrowerRequestedLoanModification : false,
+          loanModificationRequestFinalized: formData.loanModificationRequestFinalized !== null && formData.loanModificationRequestFinalized !== undefined ? formData.loanModificationRequestFinalized : false
         };
 
         // Call update loan API
@@ -1434,6 +1461,26 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
             setFieldErrors(prev => ({ ...prev, [`rightToCure_${index}_noticeSent`]: "Please select whether the notice was sent" }));
             throw new Error(`Right to cure entry ${index + 1}: Please select whether the notice was sent`);
           }
+          
+          // Validate borrower response fields (required if notice was sent)
+          if (rtc.noticeSent === true) {
+            if (rtc.borrowerRespondedWithin30Days === null || rtc.borrowerRespondedWithin30Days === undefined) {
+              setFieldErrors(prev => ({ ...prev, [`rightToCures.${index}.borrowerRespondedWithin30Days`]: "Please select if the borrower responded to the notice within 30 days" }));
+              throw new Error(`Right to cure entry ${index + 1}: Please select if the borrower responded to the notice within 30 days`);
+            }
+            
+            if (rtc.borrowerRespondedWithin30Days === true) {
+              if (!rtc.borrowerResponseDate || !rtc.borrowerResponseDate.trim()) {
+                setFieldErrors(prev => ({ ...prev, [`rightToCures.${index}.borrowerResponseDate`]: "Date on which the borrower responded is required" }));
+                throw new Error(`Right to cure entry ${index + 1}: Date on which the borrower responded is required`);
+              }
+              
+              if (rtc.proceededWithRightToCure === null || rtc.proceededWithRightToCure === undefined) {
+                setFieldErrors(prev => ({ ...prev, [`rightToCures.${index}.proceededWithRightToCure`]: "Please select if the borrower proceeded with the right to cure" }));
+                throw new Error(`Right to cure entry ${index + 1}: Please select if the borrower proceeded with the right to cure`);
+              }
+            }
+          }
         });
 
         // Get existing right to cures from petition details
@@ -1478,7 +1525,14 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
             noticeAddressCity: rtc.noticeAddressCity || "",
             noticeAddressState: rtc.noticeAddressState || "",
             noticeAddressZip: rtc.noticeAddressZip || "",
-            manualOverrideReason: rtc.manualOverrideReason || ""
+            manualOverrideReason: rtc.manualOverrideReason || "",
+            borrowerRespondedWithin30Days: rtc.borrowerRespondedWithin30Days !== null && rtc.borrowerRespondedWithin30Days !== undefined ? rtc.borrowerRespondedWithin30Days : false,
+            borrowerResponseDate: rtc.borrowerResponseDate && rtc.borrowerResponseDate.trim()
+              ? (rtc.borrowerResponseDate.includes('T') 
+                  ? rtc.borrowerResponseDate 
+                  : new Date(rtc.borrowerResponseDate + 'T00:00:00').toISOString())
+              : null,
+            proceededWithRightToCure: rtc.proceededWithRightToCure !== null && rtc.proceededWithRightToCure !== undefined ? rtc.proceededWithRightToCure : false
           };
         });
 
@@ -1874,6 +1928,20 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
           }
         }
 
+        // Validate requested alternative to foreclosure (required)
+        if (foreclosureSale.requestedAlternativeToForeclosure === null || foreclosureSale.requestedAlternativeToForeclosure === undefined) {
+          setFieldErrors(prev => ({ ...prev, "foreclosureSale.requestedAlternativeToForeclosure": "Please select if the borrower requested an alternative to foreclosure" }));
+          throw new Error("Please select if the borrower requested an alternative to foreclosure");
+        }
+
+        // Validate foreclosure alternative option (required if alternative was requested)
+        if (foreclosureSale.requestedAlternativeToForeclosure === true) {
+          if (!foreclosureSale.foreclosureAlternativeOption || foreclosureSale.foreclosureAlternativeOption === "") {
+            setFieldErrors(prev => ({ ...prev, "foreclosureSale.foreclosureAlternativeOption": "Alternative option is required" }));
+            throw new Error("Alternative option is required");
+          }
+        }
+
         // Get foreclosure ID from petition details
         const foreclosureId = petition.details?.foreclosureSale?.id || null;
         
@@ -1891,7 +1959,13 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
           reoContactFirstName: foreclosureSale.reoContactFirstName || "",
           reoContactLastName: foreclosureSale.reoContactLastName || "",
           reoBusinessPhone: foreclosureSale.reoBusinessPhone || "",
-          reoEmergencyPhone: foreclosureSale.reoEmergencyPhone || ""
+          reoEmergencyPhone: foreclosureSale.reoEmergencyPhone || "",
+          requestedAlternativeToForeclosure: foreclosureSale.requestedAlternativeToForeclosure !== null && foreclosureSale.requestedAlternativeToForeclosure !== undefined ? foreclosureSale.requestedAlternativeToForeclosure : false,
+          foreclosureAlternativeOption: foreclosureSale.foreclosureAlternativeOption !== null && foreclosureSale.foreclosureAlternativeOption !== undefined 
+            ? (typeof foreclosureSale.foreclosureAlternativeOption === 'number' 
+                ? foreclosureSale.foreclosureAlternativeOption 
+                : parseInt(foreclosureSale.foreclosureAlternativeOption, 10))
+            : null
         };
 
         // Call update foreclosure API
@@ -2054,6 +2128,16 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
     // Note: lienPosition can be 0 (for "First"), so we check for null/undefined/empty string specifically
     if (formData.lienPosition == null || formData.lienPosition === "")
       errors.lienPosition = "Required";
+    
+    // Loan Modification fields (required)
+    if (formData.borrowerRequestedLoanModification === null || formData.borrowerRequestedLoanModification === undefined) {
+      errors.borrowerRequestedLoanModification = "Please select if the borrower requested a loan modification";
+    }
+    if (formData.borrowerRequestedLoanModification === true) {
+      if (formData.loanModificationRequestFinalized === null || formData.loanModificationRequestFinalized === undefined) {
+        errors.loanModificationRequestFinalized = "Please select if the loan modification request was finalized";
+      }
+    }
 
     // Borrowers: require at least one primary with name
     const primaryBorrower = (formData.borrowers || []).find(
@@ -2803,6 +2887,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
 
       // Get judgment ID from petition details (null if new)
       const judgmentId = petition.details?.judgment?.id || null;
+      const isFirstTime = judgmentId === null; // Check if this is the first time adding judgment
 
       // Prepare judgment data for API
       const judgmentData = {
@@ -2819,8 +2904,16 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
         docketNumbers: judgment.docketNumbers || ""
       };
 
-      // Call update judgment API
-      await petitionApiService.updateJudgment(petition.id, judgmentData);
+      // If first time adding judgment, call both APIs simultaneously
+      if (isFirstTime) {
+        await Promise.all([
+          petitionApiService.updateJudgment(petition.id, judgmentData),
+          petitionApiService.updateStatus(petition.id, "3") // Status value 3 (JudgmentSubmitted)
+        ]);
+      } else {
+        // Call update judgment API only
+        await petitionApiService.updateJudgment(petition.id, judgmentData);
+      }
       
       toast.success("Judgment saved successfully.");
       
@@ -2884,6 +2977,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
 
       // Get foreclosure ID from petition details (null if new)
       const foreclosureId = petition.details?.foreclosureSale?.id || null;
+      const isFirstTime = foreclosureId === null; // Check if this is the first time adding foreclosure
 
       // Prepare foreclosure data for API
       const foreclosureData = {
@@ -2895,11 +2989,25 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
         reoContactFirstName: foreclosureSale.reoContactFirstName || "",
         reoContactLastName: foreclosureSale.reoContactLastName || "",
         reoBusinessPhone: foreclosureSale.reoBusinessPhone || "",
-        reoEmergencyPhone: foreclosureSale.reoEmergencyPhone || ""
+        reoEmergencyPhone: foreclosureSale.reoEmergencyPhone || "",
+        requestedAlternativeToForeclosure: foreclosureSale.requestedAlternativeToForeclosure !== null && foreclosureSale.requestedAlternativeToForeclosure !== undefined ? foreclosureSale.requestedAlternativeToForeclosure : false,
+        foreclosureAlternativeOption: foreclosureSale.foreclosureAlternativeOption !== null && foreclosureSale.foreclosureAlternativeOption !== undefined 
+          ? (typeof foreclosureSale.foreclosureAlternativeOption === 'number' 
+              ? foreclosureSale.foreclosureAlternativeOption 
+              : parseInt(foreclosureSale.foreclosureAlternativeOption, 10))
+          : null
       };
 
-      // Call update foreclosure API
-      await petitionApiService.updateForeclosure(petition.id, foreclosureData);
+      // If first time adding foreclosure, call both APIs simultaneously
+      if (isFirstTime) {
+        await Promise.all([
+          petitionApiService.updateForeclosure(petition.id, foreclosureData),
+          petitionApiService.updateStatus(petition.id, "2") // Status value 2 (ForeclosureSaleInitiated)
+        ]);
+      } else {
+        // Call update foreclosure API only
+        await petitionApiService.updateForeclosure(petition.id, foreclosureData);
+      }
       
       toast.success("Foreclosure saved successfully.");
       
@@ -3941,6 +4049,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
                     handleInputChange={handleInputChange}
                     handleDropdownChange={handleInputChange}
                     getBuyerTypes={getBuyerTypes}
+                    getForeclosureAlternativeOptions={getForeclosureAlternativeOptions}
                     findOptionByValue={findOptionByValue}
                     formatDate={formatDate}
                     onSave={() => handleSectionSave("foreclosure")}
@@ -3973,6 +4082,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
         formData={formData}
         setFormData={setFormData}
         getBuyerTypes={getBuyerTypes}
+        getForeclosureAlternativeOptions={getForeclosureAlternativeOptions}
         findOptionByValue={findOptionByValue}
         onSave={handleSaveForeclosure}
       />

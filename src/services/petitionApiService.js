@@ -130,7 +130,9 @@ class PetitionApiService {
         delinquencyDaysAtFiling: parseInt(loanData.delinquencyDaysAtFiling) || 0,
         mortgageBrokerLicenseNumber: loanData.mortgageBrokerLicenseNumber || "",
         mortgageLoanOriginatorLicenseNumber: loanData.mortgageLoanOriginatorLicenseNumber || "",
-        lenderId: loanData.lenderId && loanData.lenderId.trim() !== '' ? loanData.lenderId : null
+        lenderId: loanData.lenderId && loanData.lenderId.trim() !== '' ? loanData.lenderId : null,
+        borrowerRequestedLoanModification: loanData.borrowerRequestedLoanModification !== null && loanData.borrowerRequestedLoanModification !== undefined ? loanData.borrowerRequestedLoanModification : false,
+        loanModificationRequestFinalized: loanData.loanModificationRequestFinalized !== null && loanData.loanModificationRequestFinalized !== undefined ? loanData.loanModificationRequestFinalized : false
       }
     };
     
@@ -307,7 +309,10 @@ class PetitionApiService {
         noticeAddressCity: rtc.noticeAddressCity || "",
         noticeAddressState: rtc.noticeAddressState || "",
         noticeAddressZip: rtc.noticeAddressZip || "",
-        manualOverrideReason: rtc.manualOverrideReason || ""
+        manualOverrideReason: rtc.manualOverrideReason || "",
+        borrowerRespondedWithin30Days: rtc.borrowerRespondedWithin30Days !== null && rtc.borrowerRespondedWithin30Days !== undefined ? rtc.borrowerRespondedWithin30Days : false,
+        borrowerResponseDate: safeDateConversion(rtc.borrowerResponseDate),
+        proceededWithRightToCure: rtc.proceededWithRightToCure !== null && rtc.proceededWithRightToCure !== undefined ? rtc.proceededWithRightToCure : false
       };
     });
 
@@ -457,7 +462,13 @@ class PetitionApiService {
         reoContactFirstName: foreclosureData.reoContactFirstName || "",
         reoContactLastName: foreclosureData.reoContactLastName || "",
         reoBusinessPhone: foreclosureData.reoBusinessPhone || "",
-        reoEmergencyPhone: foreclosureData.reoEmergencyPhone || ""
+        reoEmergencyPhone: foreclosureData.reoEmergencyPhone || "",
+        requestedAlternativeToForeclosure: foreclosureData.requestedAlternativeToForeclosure !== null && foreclosureData.requestedAlternativeToForeclosure !== undefined ? foreclosureData.requestedAlternativeToForeclosure : false,
+        foreclosureAlternativeOption: foreclosureData.foreclosureAlternativeOption !== null && foreclosureData.foreclosureAlternativeOption !== undefined 
+          ? (typeof foreclosureData.foreclosureAlternativeOption === 'number' 
+              ? foreclosureData.foreclosureAlternativeOption 
+              : parseInt(foreclosureData.foreclosureAlternativeOption, 10))
+          : null
       }
     };
     
@@ -507,6 +518,30 @@ class PetitionApiService {
     };
     
     const response = await axiosInstance.post(PETITION_ENDPOINTS.UPDATE_JUDGMENT, requestBody, {
+      headers: {
+        'Accept': '*/*',
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    return response.data;
+  }
+
+  // Update petition status
+  async updateStatus(petitionId, newStatus) {
+    if (!petitionId) {
+      throw new Error('Petition ID is required to update status.');
+    }
+    if (!newStatus) {
+      throw new Error('New status is required.');
+    }
+
+    const requestBody = {
+      petitionId: petitionId,
+      newStatus: newStatus
+    };
+    
+    const response = await axiosInstance.post(PETITION_ENDPOINTS.UPDATE_STATUS, requestBody, {
       headers: {
         'Accept': '*/*',
         'Content-Type': 'application/json'
@@ -674,7 +709,9 @@ class PetitionApiService {
         delinquencyDaysAtFiling: parseInt(formData.delinquencyDaysAtFiling) || 0,
         mortgageBrokerLicenseNumber: formData.mortgageBrokerLicenseNumber || null,
         mortgageLoanOriginatorLicenseNumber: formData.mortgageLoanOriginatorLicenseNumber || null,
-        lenderId: formData.lenderId && formData.lenderId.trim() !== '' ? formData.lenderId : null
+        lenderId: formData.lenderId && formData.lenderId.trim() !== '' ? formData.lenderId : null,
+        borrowerRequestedLoanModification: formData.borrowerRequestedLoanModification !== null && formData.borrowerRequestedLoanModification !== undefined ? formData.borrowerRequestedLoanModification : false,
+        loanModificationRequestFinalized: formData.loanModificationRequestFinalized !== null && formData.loanModificationRequestFinalized !== undefined ? formData.loanModificationRequestFinalized : false
       },
       rightToCures: (() => {
         // If rightToCures array exists and has entries, use it (from edit mode in PetitionTabContent)
@@ -690,7 +727,10 @@ class PetitionApiService {
             noticeAddressCity: rightToCure.noticeAddressCity || "",
             noticeAddressState: rightToCure.noticeAddressState || "",
             noticeAddressZip: rightToCure.noticeAddressZip || "",
-            manualOverrideReason: rightToCure.manualOverrideReason || ""
+            manualOverrideReason: rightToCure.manualOverrideReason || "",
+            borrowerRespondedWithin30Days: rightToCure.borrowerRespondedWithin30Days !== null && rightToCure.borrowerRespondedWithin30Days !== undefined ? rightToCure.borrowerRespondedWithin30Days : false,
+            borrowerResponseDate: safeDateConversion(rightToCure.borrowerResponseDate),
+            proceededWithRightToCure: rightToCure.proceededWithRightToCure !== null && rightToCure.proceededWithRightToCure !== undefined ? rightToCure.proceededWithRightToCure : false
           }));
         }
         // If old single-object format exists (from wizard form - first submission), convert to array with one object
@@ -706,7 +746,10 @@ class PetitionApiService {
             noticeAddressCity: formData.noticeAddressCity || "",
             noticeAddressState: formData.noticeAddressState || "",
             noticeAddressZip: formData.noticeAddressZip || "",
-            manualOverrideReason: formData.manualOverrideReason || ""
+            manualOverrideReason: formData.manualOverrideReason || "",
+            borrowerRespondedWithin30Days: formData.borrowerRespondedWithin30Days !== null && formData.borrowerRespondedWithin30Days !== undefined ? formData.borrowerRespondedWithin30Days : false,
+            borrowerResponseDate: safeDateConversion(formData.borrowerResponseDate),
+            proceededWithRightToCure: formData.proceededWithRightToCure !== null && formData.proceededWithRightToCure !== undefined ? formData.proceededWithRightToCure : false
           }];
         }
         // Return empty array if no rightToCure data exists
@@ -725,7 +768,13 @@ class PetitionApiService {
         reoContactFirstName: formData.foreclosureSale.reoContactFirstName || null,
         reoContactLastName: formData.foreclosureSale.reoContactLastName || null,
         reoBusinessPhone: formData.foreclosureSale.reoBusinessPhone || null,
-        reoEmergencyPhone: formData.foreclosureSale.reoEmergencyPhone || null
+        reoEmergencyPhone: formData.foreclosureSale.reoEmergencyPhone || null,
+        requestedAlternativeToForeclosure: formData.foreclosureSale.requestedAlternativeToForeclosure !== null && formData.foreclosureSale.requestedAlternativeToForeclosure !== undefined ? formData.foreclosureSale.requestedAlternativeToForeclosure : false,
+        foreclosureAlternativeOption: formData.foreclosureSale.foreclosureAlternativeOption !== null && formData.foreclosureSale.foreclosureAlternativeOption !== undefined 
+          ? (typeof formData.foreclosureSale.foreclosureAlternativeOption === 'number' 
+              ? formData.foreclosureSale.foreclosureAlternativeOption 
+              : parseInt(formData.foreclosureSale.foreclosureAlternativeOption, 10))
+          : null
       } : null;
       })(),
       // Include judgment - send null if no data (like foreclosureSale), or full object if data exists

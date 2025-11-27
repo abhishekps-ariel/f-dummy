@@ -75,6 +75,7 @@ export const PETITION_ENDPOINTS = {
   UPDATE_SIGNATURES: "/api/Petition/add-update-signature",
   UPDATE_FORECLOSURE: "/api/Petition/add-update-foreclosure",
   UPDATE_JUDGMENT: "/api/Petition/add-update-judgement",
+  UPDATE_STATUS: "/api/Petition/updateStatus",
 };
 
 export const CHAT_ENDPOINTS = {

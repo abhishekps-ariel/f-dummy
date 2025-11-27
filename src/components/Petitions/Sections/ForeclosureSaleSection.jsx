@@ -10,6 +10,7 @@ const ForeclosureSaleSection = ({
   fieldErrors,
   foreclosureSaleSectionRef,
   getBuyerTypes,
+  getForeclosureAlternativeOptions,
   findOptionByValue,
   updateForeclosureSale,
 }) => {
@@ -272,6 +273,101 @@ const ForeclosureSaleSection = ({
                           />
                         </div>
                       </div>
+
+                      {/* Foreclosure Alternative Fields */}
+                      <div className="col-md-6">
+                        <div className="form-group mb-3">
+                          <label className="form-label">Did the borrower request an alternative to foreclosure? *</label>
+                          {fieldErrors["foreclosureSale.requestedAlternativeToForeclosure"] && (
+                            <div className="text-danger small mt-1">
+                              {fieldErrors["foreclosureSale.requestedAlternativeToForeclosure"]}
+                            </div>
+                          )}
+                          {isEditing ? (
+                            <CustomDropdown
+                              name="requestedAlternativeToForeclosure"
+                              value={
+                                formData.foreclosureSale?.requestedAlternativeToForeclosure === null
+                                  ? ""
+                                  : formData.foreclosureSale?.requestedAlternativeToForeclosure
+                                  ? "true"
+                                  : "false"
+                              }
+                              onChange={(e) => {
+                                const value =
+                                  e.target.value === "true"
+                                    ? true
+                                    : e.target.value === "false"
+                                    ? false
+                                    : null;
+                                updateForeclosureSale("requestedAlternativeToForeclosure", value);
+                                if (value === false) {
+                                  updateForeclosureSale("foreclosureAlternativeOption", null);
+                                }
+                              }}
+                              placeholder="Select..."
+                              disabled={!isEditing}
+                              options={[
+                                { value: "", label: "Select..." },
+                                { value: "true", label: "Yes" },
+                                { value: "false", label: "No" },
+                              ]}
+                            />
+                          ) : (
+                            <input
+                              type="text"
+                              className="form-control"
+                              value={formData.foreclosureSale?.requestedAlternativeToForeclosure === true ? "Yes" : formData.foreclosureSale?.requestedAlternativeToForeclosure === false ? "No" : ""}
+                              readOnly
+                            />
+                          )}
+                        </div>
+                      </div>
+
+                      {formData.foreclosureSale?.requestedAlternativeToForeclosure === true && (
+                        <div className="col-md-6">
+                          <div className="form-group mb-3">
+                            <label className="form-label">Alternative Options *</label>
+                            {isEditing ? (
+                              <CustomDropdown
+                                name="foreclosureAlternativeOption"
+                                value={formData.foreclosureSale?.foreclosureAlternativeOption || ""}
+                                onChange={(e) =>
+                                  updateForeclosureSale("foreclosureAlternativeOption", e.target.value)
+                                }
+                                placeholder="Select Alternative Option"
+                                disabled={!isEditing}
+                                error={!!fieldErrors["foreclosureSale.foreclosureAlternativeOption"]}
+                                options={[
+                                  { value: "", label: "Select Alternative Option" },
+                                  ...(getForeclosureAlternativeOptions ? getForeclosureAlternativeOptions().map((option) => ({
+                                    value: option.value || option.id,
+                                    label: option.description || option.name,
+                                  })) : []),
+                                ]}
+                              />
+                            ) : (
+                              <input
+                                type="text"
+                                className="form-control"
+                                value={
+                                  (() => {
+                                    const options = getForeclosureAlternativeOptions ? getForeclosureAlternativeOptions() : [];
+                                    const selected = options.find(opt => (opt.value || opt.id) === formData.foreclosureSale?.foreclosureAlternativeOption);
+                                    return selected ? (selected.description || selected.name) : "";
+                                  })()
+                                }
+                                readOnly
+                              />
+                            )}
+                            {fieldErrors["foreclosureSale.foreclosureAlternativeOption"] && (
+                              <div className="text-danger small mt-1">
+                                {fieldErrors["foreclosureSale.foreclosureAlternativeOption"]}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   );
                 })()}
