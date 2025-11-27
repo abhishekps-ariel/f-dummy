@@ -26,11 +26,21 @@ export const PetitionWizardProvider = ({ children }) => {
   }, [user]);
 
   const markStepCompleted = useCallback((step) => {
-    setCompletedSteps(prev => new Set([...prev, step]));
+    setCompletedSteps(prev => {
+      // Only create a new Set if the step is not already completed
+      if (prev.has(step)) {
+        return prev; // Return the same Set to prevent unnecessary re-renders
+      }
+      return new Set([...prev, step]);
+    });
   }, []);
 
   const markStepIncomplete = useCallback((step) => {
     setCompletedSteps(prev => {
+      // Only create a new Set if the step is actually completed
+      if (!prev.has(step)) {
+        return prev; // Return the same Set to prevent unnecessary re-renders
+      }
       const newSet = new Set(prev);
       newSet.delete(step);
       return newSet;
@@ -49,11 +59,21 @@ export const PetitionWizardProvider = ({ children }) => {
   }, []);
 
   const markStepWithError = useCallback((step) => {
-    setStepsWithErrors(prev => new Set([...prev, step]));
+    setStepsWithErrors(prev => {
+      // Only create a new Set if the step doesn't already have an error
+      if (prev.has(step)) {
+        return prev; // Return the same Set to prevent unnecessary re-renders
+      }
+      return new Set([...prev, step]);
+    });
   }, []);
 
   const clearStepError = useCallback((step) => {
     setStepsWithErrors(prev => {
+      // Only create a new Set if the step actually has an error
+      if (!prev.has(step)) {
+        return prev; // Return the same Set to prevent unnecessary re-renders
+      }
       const newSet = new Set(prev);
       newSet.delete(step);
       return newSet;

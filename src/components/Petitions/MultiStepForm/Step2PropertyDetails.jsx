@@ -47,7 +47,7 @@ const Step1PropertyDetails = ({
                       className={`form-control ${
                         fieldErrors.propertyStreet1 ? "is-invalid" : ""
                       }`}
-                      value={formData.propertyStreet1}
+                      value={formData.propertyStreet1 || ""}
                       onChange={handleInputChange}
                       placeholder={t("petitionSteps.step2.placeholderManual")}
                       autoComplete="off"
@@ -73,7 +73,7 @@ const Step1PropertyDetails = ({
                       className={`form-control ${
                         fieldErrors.propertyStreet1 ? "is-invalid" : ""
                       }`}
-                      value={formData.propertyStreet1}
+                      value={formData.propertyStreet1 || ""}
                       onChange={(e) => {
                         handleInputChange(e);
 
@@ -194,7 +194,7 @@ const Step1PropertyDetails = ({
                   id="propertyStreet2"
                   name="propertyStreet2"
                   className="form-control"
-                  value={formData.propertyStreet2}
+                  value={formData.propertyStreet2 || ""}
                   onChange={handleInputChange}
                   placeholder={t("petitionSteps.step2.placeholderStreet2")}
                 />
@@ -212,7 +212,7 @@ const Step1PropertyDetails = ({
                   className={`form-control ${
                     fieldErrors.propertyCity ? "is-invalid" : ""
                   }`}
-                  value={formData.propertyCity}
+                  value={formData.propertyCity || ""}
                   onChange={handleInputChange}
                   placeholder={t("petitionSteps.step2.placeholderCity")}
                 />
@@ -235,7 +235,7 @@ const Step1PropertyDetails = ({
                   className={`form-select ${
                     fieldErrors.propertyState ? "is-invalid" : ""
                   }`}
-                  value={formData.propertyState}
+                  value={formData.propertyState || "MA"}
                   onChange={handleInputChange}
                   disabled
                 >
@@ -262,7 +262,7 @@ const Step1PropertyDetails = ({
                   className={`form-control ${
                     fieldErrors.propertyZip ? "is-invalid" : ""
                   }`}
-                  value={formData.propertyZip}
+                  value={formData.propertyZip || ""}
                   onChange={handleInputChange}
                   placeholder={t("petitionSteps.step2.placeholderZip")}
                 />
@@ -286,7 +286,7 @@ const Step1PropertyDetails = ({
                   className={`form-control ${
                     fieldErrors.propertyCounty ? "is-invalid" : ""
                   }`}
-                  value={formData.propertyCounty}
+                  value={formData.propertyCounty || ""}
                   onChange={handleInputChange}
                   placeholder={t("petitionSteps.step2.placeholderCounty")}
                 />
@@ -308,7 +308,7 @@ const Step1PropertyDetails = ({
                   id="assessorParcelId"
                   name="assessorParcelId"
                   className="form-control"
-                  value={formData.assessorParcelId}
+                  value={formData.assessorParcelId || ""}
                   onChange={handleInputChange}
                   placeholder={t("petitionSteps.step2.placeholderAssessorParcelId")}
                 />

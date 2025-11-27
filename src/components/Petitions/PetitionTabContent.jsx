@@ -1012,29 +1012,105 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
         };
 
         // Call update property API
-        const response = await petitionApiService.updateProperty(petition.id, propertyData);
-        
-        // Refresh the tab data to get updated petition
-        if (activeTabId && refreshTab) {
-          await refreshTab(activeTabId);
+        try {
+          const response = await petitionApiService.updateProperty(petition.id, propertyData);
+          
+          // Check if response indicates a duplicate petition (API may return success: false with isDuplicate)
+          if (response && !response.success && response.isDuplicate) {
+            const errorMessage = response.message || "A petition with the same property address already exists.";
+            // Set field error for property address
+            setFieldErrors(prev => ({ 
+              ...prev, 
+              propertyStreet1: errorMessage,
+              propertyCity: "",
+              propertyState: "",
+              propertyZip: ""
+            }));
+            // Create error with a flag to indicate toast was already shown
+            const duplicateError = new Error(errorMessage);
+            duplicateError.toastShown = true;
+            throw duplicateError;
+          }
+          
+          // Check if response is successful
+          if (response && !response.success) {
+            const errorMessage = response.message || "Failed to update property details.";
+            setFieldErrors(prev => ({ 
+              ...prev, 
+              propertyStreet1: errorMessage 
+            }));
+            // Create error with a flag to indicate toast was already shown
+            const apiError = new Error(errorMessage);
+            apiError.toastShown = true;
+            throw apiError;
+          }
+          
+          // Refresh the tab data to get updated petition
+          if (activeTabId && refreshTab) {
+            await refreshTab(activeTabId);
+          }
+          
+          // Call the callback to refresh the petitions list
+          if (onPetitionUpdated) {
+            setTimeout(() => {
+              onPetitionUpdated();
+            }, 200);
+          }
+          
+          // Clear field errors on success
+          setFieldErrors(prev => {
+            const newErrors = { ...prev };
+            delete newErrors.propertyStreet1;
+            delete newErrors.propertyCity;
+            delete newErrors.propertyState;
+            delete newErrors.propertyZip;
+            return newErrors;
+          });
+        } catch (error) {
+          // Handle axios errors (when API returns non-2xx status)
+          if (error.response && error.response.data) {
+            const errorData = error.response.data;
+            // Check if it's a duplicate error
+            if (errorData.isDuplicate) {
+              const errorMessage = errorData.message || "A petition with the same property address already exists.";
+              setFieldErrors(prev => ({ 
+                ...prev, 
+                propertyStreet1: errorMessage,
+                propertyCity: "",
+                propertyState: "",
+                propertyZip: ""
+              }));
+              // Create error with a flag to indicate toast was already shown
+              const duplicateError = new Error(errorMessage);
+              duplicateError.toastShown = true;
+              throw duplicateError;
+            } else {
+              // Other API errors
+              const errorMessage = errorData.message || error.message || "Failed to update property details.";
+              setFieldErrors(prev => ({ 
+                ...prev, 
+                propertyStreet1: errorMessage 
+              }));
+              // Create error with a flag to indicate toast was already shown
+              const apiError = new Error(errorMessage);
+              apiError.toastShown = true;
+              throw apiError;
+            }
+          } else if (error.message) {
+            // Re-throw validation errors or other errors that already have messages
+            // Don't set toastShown flag - let outer catch handle it
+            throw error;
+          } else {
+            // Unknown error
+            const errorMessage = "Failed to update property details. Please try again.";
+            setFieldErrors(prev => ({ 
+              ...prev, 
+              propertyStreet1: errorMessage 
+            }));
+            // Create error (toast will be shown in outer catch)
+            throw new Error(errorMessage);
+          }
         }
-        
-        // Call the callback to refresh the petitions list
-        if (onPetitionUpdated) {
-          setTimeout(() => {
-            onPetitionUpdated();
-          }, 200);
-        }
-        
-        // Clear field errors on success
-        setFieldErrors(prev => {
-          const newErrors = { ...prev };
-          delete newErrors.propertyStreet1;
-          delete newErrors.propertyCity;
-          delete newErrors.propertyState;
-          delete newErrors.propertyZip;
-          return newErrors;
-        });
         break;
 
       case "loan":
@@ -2958,7 +3034,13 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
                         toast.success(t("petitionTabContent.sectionSaved") || "Section saved successfully");
                       } catch (error) {
                         console.error("Error saving section:", error);
-                        toast.error(t("petitionTabContent.saveError") || "Error saving section");
+                        // Check if it's a duplicate error - show the specific message
+                        if (error.isDuplicate || (error.message && (error.message.toLowerCase().includes("duplicate") || error.message.toLowerCase().includes("same property")))) {
+                          toast.error(error.message || "A petition with the same property address already exists.");
+                        } else {
+                          // Show generic error for other errors
+                          toast.error(t("petitionTabContent.saveError") || "Error saving section");
+                        }
                       } finally {
                         setIsSavingDraft(false);
                       }

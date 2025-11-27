@@ -89,6 +89,17 @@ const PetitionSteps = ({
   const [currentStep, setCurrentStep] = useState(1);
   const [visitedSteps, setVisitedSteps] = useState(new Set([1])); // Track visited steps, start with step 1
   const hasInitializedStepsRef = useRef(false); // Track if we've initialized step completion for pre-filled data
+  const [isInitializingSteps, setIsInitializingSteps] = useState(false); // Loading state for step initialization
+  const lastProcessedStepsRef = useRef(new Set()); // Track last processed step states to prevent infinite loops
+  // Refs to track last processed state for each step to prevent infinite loops
+  const lastOrgStateRef = useRef(null);
+  const lastStep2StateRef = useRef(null);
+  const lastStep3StateRef = useRef(null);
+  const lastStep4StateRef = useRef(null);
+  const lastStep5StateRef = useRef(null);
+  const lastStep6StateRef = useRef(null);
+  const lastStep7StateRef = useRef(null);
+  const lastStep8StateRef = useRef(null);
 
   const totalSteps = 10;
 
@@ -124,21 +135,38 @@ const PetitionSteps = ({
       if (savedData) {
         try {
           const parsedData = JSON.parse(savedData);
-          setFormData(prev => ({ ...defaultFormData, ...parsedData }));
-          // Reset initialization flag when opening with new data
+          // Reset wizard state FIRST when opening with draft data to ensure clean initialization
+          if (typeof resetWizard === "function") {
+            resetWizard();
+          }
+          // Reset initialization flags when opening with new data
           hasInitializedStepsRef.current = false;
+          isInitializingSteps = false;
+          // Set formData AFTER resetting wizard to ensure initialization runs with fresh state
+          // Use setTimeout to ensure resetWizard completes before setting formData
+          setTimeout(() => {
+            setFormData(prev => ({ ...defaultFormData, ...parsedData }));
+          }, 0);
         } catch (error) {
           console.error("Error loading form data from localStorage:", error);
         }
       } else {
-        // No saved data, reset flag
+        // No saved data, reset wizard and flags
+        if (typeof resetWizard === "function") {
+          resetWizard();
+        }
         hasInitializedStepsRef.current = false;
+        isInitializingSteps = false;
       }
     } else {
-      // Modal closed, reset flag
+      // Modal closed, reset wizard and flags
+      if (typeof resetWizard === "function") {
+        resetWizard();
+      }
       hasInitializedStepsRef.current = false;
+      setIsInitializingSteps(false);
     }
-  }, [isOpen]);
+  }, [isOpen, resetWizard]);
 
   // Scroll to top when step changes
   useEffect(() => {
@@ -423,7 +451,7 @@ const PetitionSteps = ({
     stateLicenseNumber: "",
     stateLicenseState: "",
     // Step 6: Right-to-Cure
-    noticeSent: false,
+    noticeSent: null,
     noticeDate: "",
     amountInDefault: 0,
     daysDelinquentAtNotice: 0,
@@ -1027,6 +1055,35 @@ const PetitionSteps = ({
         return !!userFilingEntityType;
       
       case 6: // Right-to-Cure - check if noticeSent is set (required field)
+        // Check if rightToCures array exists (new format)
+        if (formData.rightToCures && Array.isArray(formData.rightToCures) && formData.rightToCures.length > 0) {
+          // Check if all right to cure entries have required fields
+          return formData.rightToCures.every(rtc => {
+            if (rtc.noticeSent === null || rtc.noticeSent === undefined) {
+              return false;
+            }
+            // If notice was sent, check required fields
+            if (rtc.noticeSent === true) {
+              return !!(rtc.noticeDate?.trim() &&
+                        rtc.amountInDefault != null &&
+                        rtc.amountInDefault >= 0 &&
+                        rtc.daysDelinquentAtNotice != null &&
+                        rtc.daysDelinquentAtNotice !== "" &&
+                        rtc.daysDelinquentAtNotice >= 0 &&
+                        rtc.cureExpirationDate?.trim() &&
+                        rtc.noticeAddressStreet1?.trim() &&
+                        rtc.noticeAddressCity?.trim() &&
+                        rtc.noticeAddressState?.trim() &&
+                        rtc.noticeAddressZip?.trim());
+            }
+            // If notice was not sent, check for acceleration date (manualOverrideReason)
+            if (rtc.noticeSent === false) {
+              return !!(rtc.manualOverrideReason?.trim());
+            }
+            return false;
+          });
+        }
+        // Fallback to old single-object format for backward compatibility
         if (formData.noticeSent === null || formData.noticeSent === undefined) {
           return false;
         }
@@ -1078,41 +1135,90 @@ const PetitionSteps = ({
     }
   }, [formData, userFilingEntityType, userProfile, isOrgAdmin, organizationId, selectedOrganizationId]);
 
+  // Reset initialization flag when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+        hasInitializedStepsRef.current = false;
+        setIsInitializingSteps(false);
+      // Reset all step state refs when modal closes
+      lastOrgStateRef.current = null;
+      lastStep2StateRef.current = null;
+      lastStep3StateRef.current = null;
+      lastStep4StateRef.current = null;
+      lastStep5StateRef.current = null;
+      lastStep6StateRef.current = null;
+      lastStep7StateRef.current = null;
+      lastStep8StateRef.current = null;
+    }
+  }, [isOpen]);
+
   // Initialize step completion status when formData is loaded from localStorage (only once)
   // This must be after checkStepHasRequiredFields is defined
+  // Wait for userProfile and userFilingEntityType to be loaded before initializing
   useEffect(() => {
-    if (isOpen && formData && Object.keys(formData).length > 0 && !hasInitializedStepsRef.current && checkStepHasRequiredFields) {
-      // Use requestAnimationFrame to ensure DOM is ready and avoid flickering
-      let timer;
-      const rafId = requestAnimationFrame(() => {
-        // Small delay to ensure all formData is properly set and other useEffects have run
-        timer = setTimeout(() => {
-          // Check and mark all steps that are complete based on pre-filled data
-          // Only mark steps as complete, don't unmark them (let other useEffects handle that)
-          for (let step = 1; step <= totalSteps; step++) {
-            try {
-              const isComplete = checkStepHasRequiredFields(step);
-              if (isComplete && !completedSteps.has(step)) {
-                markStepCompleted(step);
+    // Only initialize if:
+    // 1. Modal is open
+    // 2. formData exists and has data
+    // 3. We haven't initialized yet
+    // 4. checkStepHasRequiredFields is available
+    // 5. Profile is loaded (not loading)
+    if (
+      isOpen && 
+      formData && 
+      Object.keys(formData).length > 0 && 
+      !hasInitializedStepsRef.current && 
+      !isInitializingSteps &&
+      checkStepHasRequiredFields &&
+      !profileLoading // Wait for profile to finish loading (userProfile can be null/undefined)
+    ) {
+      // Initialize step completion immediately - no delays
+      if (!hasInitializedStepsRef.current) {
+        setIsInitializingSteps(true);
+        
+        // Use requestAnimationFrame to batch the updates
+        requestAnimationFrame(() => {
+          try {
+            // Batch all step completion checks in a single operation
+            const stepsToMark = [];
+            for (let step = 1; step <= totalSteps; step++) {
+              try {
+                const isComplete = checkStepHasRequiredFields(step);
+                if (isComplete) {
+                  stepsToMark.push(step);
+                }
+              } catch (error) {
+                // Silently handle errors for individual step checks
+                console.error(`Error checking step ${step}:`, error);
               }
-            } catch (error) {
-              // Silently handle errors for individual step checks
-              console.error(`Error checking step ${step}:`, error);
             }
+            
+            // Mark all completed steps at once using React's automatic batching
+            if (stepsToMark.length > 0) {
+              stepsToMark.forEach(step => {
+                markStepCompleted(step);
+              });
+            }
+            
+            // Mark initialization as complete
+            hasInitializedStepsRef.current = true;
+            setIsInitializingSteps(false);
+          } catch (error) {
+            console.error('Error during step completion check:', error);
+            setIsInitializingSteps(false);
           }
-          hasInitializedStepsRef.current = true;
-        }, 200); // Increased delay to let other useEffects settle
-      });
-      
-      return () => {
-        cancelAnimationFrame(rafId);
-        if (timer) clearTimeout(timer);
-      };
+        });
+      }
     }
-  }, [isOpen, formData, checkStepHasRequiredFields, completedSteps, markStepCompleted, totalSteps]);
+  }, [isOpen, formData, checkStepHasRequiredFields, totalSteps, profileLoading, markStepCompleted]); // Added markStepCompleted to dependencies
 
   // Track previous step for address validation prompt (moved here to access formData)
   useEffect(() => {
+    // Skip during initial load to prevent flickering
+    if ((!hasInitializedStepsRef.current || isInitializingSteps) && isOpen) {
+      previousStepRef.current = wizardCurrentStep;
+      return;
+    }
+    
     const prev = previousStepRef.current;
     const next = wizardCurrentStep;
     
@@ -1209,17 +1315,26 @@ const PetitionSteps = ({
       
       if (isStepComplete) {
         // Step is complete - mark as completed and clear any errors
-        if (!completedSteps.has(prev)) {
-          markStepCompleted(prev);
-        }
+        // markStepCompleted already checks if step is already completed, so safe to call
+        markStepCompleted(prev);
         if (stepsWithErrors.has(prev)) {
           clearStepError(prev);
         }
       } else {
-        // Step is not complete - unmark if it was previously completed
-        if (completedSteps.has(prev)) {
-          markStepIncomplete(prev);
+        // Step is not complete - but don't unmark if it's already marked and fields are still filled
+        // This prevents disappearing ticks when navigating between steps with prefilled data
+        // Simple logic: if step was completed and still has required fields, keep it marked
+        const wasCompleted = completedSteps.has(prev);
+        if (wasCompleted) {
+          // Check if required fields are still filled - if yes, keep it marked
+          const stillHasFields = checkStepHasRequiredFields(prev);
+          if (!stillHasFields) {
+            // Only unmark if fields are actually missing
+            markStepIncomplete(prev);
+          }
+          // If stillHasFields is true, keep it marked (don't call markStepIncomplete)
         }
+        // If step wasn't completed, don't do anything
       }
     }
     
@@ -1306,7 +1421,7 @@ const PetitionSteps = ({
   // When organization is selected, mark step 1 as completed
   useEffect(() => {
     // Skip during initial load to prevent flickering
-    if (!hasInitializedStepsRef.current && isOpen) {
+    if ((!hasInitializedStepsRef.current || isInitializingSteps) && isOpen) {
       return;
     }
     
@@ -1320,30 +1435,35 @@ const PetitionSteps = ({
       hasOrganization = !!selectedOrganizationId;
     }
     
+    // Only process if state actually changed
+    if (lastOrgStateRef.current === hasOrganization) {
+      return;
+    }
+    lastOrgStateRef.current = hasOrganization;
+    
     if (hasOrganization) {
-      if (!completedSteps.has(1)) {
+      // markStepCompleted already checks if step is completed, so safe to call
         markStepCompleted(1);
-      }
       if (stepsWithErrors.has(1)) {
         clearStepError(1);
       }
     } else {
       // If organization is removed or not selected, unmark step 1
-      if (completedSteps.has(1)) {
         markStepIncomplete(1);
       }
-    }
-  }, [selectedOrganizationId, organizationId, isOrgAdmin, completedSteps, stepsWithErrors, markStepCompleted, markStepIncomplete, clearStepError, isOpen]);
+  }, [selectedOrganizationId, organizationId, isOrgAdmin, stepsWithErrors, markStepCompleted, markStepIncomplete, clearStepError, isOpen]);
 
   // Track step 2 (Property Details) completion when formData changes
   useEffect(() => {
     // Skip during initial load to prevent flickering
-    if (!hasInitializedStepsRef.current && isOpen) {
+    if ((!hasInitializedStepsRef.current || isInitializingSteps) && isOpen) {
       return;
     }
     
     if (!formData) return;
     const addressValidation = validateAddressFields();
+    let shouldBeComplete = false;
+    
     if (!addressValidation.hasErrors) {
       // Check if all required address fields are filled
       const hasAllAddressFields = !!(formData?.propertyStreet1?.trim() && 
@@ -1351,82 +1471,110 @@ const PetitionSteps = ({
                                     formData?.propertyState?.trim() && 
                                     formData?.propertyZip?.trim() && 
                                     formData?.propertyCounty?.trim());
-      if (hasAllAddressFields) {
+      shouldBeComplete = hasAllAddressFields;
+    }
+    
+    // Only process if state actually changed
+    // Don't skip if we're navigating away from this step - allow re-check to ensure it stays marked
+    if (lastStep2StateRef.current === shouldBeComplete && wizardCurrentStep === 2) {
+      // Only skip if we're on step 2 and state hasn't changed
+      return;
+    }
+    lastStep2StateRef.current = shouldBeComplete;
+    
+    if (shouldBeComplete) {
         // Mark complete if all fields are filled, even if address isn't verified yet
         // Address verification will be handled when user navigates away from the step
-        if (!completedSteps.has(2)) {
           markStepCompleted(2);
-        }
         if (stepsWithErrors.has(2)) {
           clearStepError(2);
         }
       } else {
-        if (completedSteps.has(2)) {
+      // Validation has errors or fields not complete - mark incomplete
           markStepIncomplete(2);
         }
-      }
-    } else {
-      // Validation has errors - mark incomplete
-      if (completedSteps.has(2)) {
-        markStepIncomplete(2);
-      }
-    }
-  }, [formData, stepsWithErrors, completedSteps, markStepCompleted, markStepIncomplete, clearStepError, isOpen]);
+  }, [formData, stepsWithErrors, markStepCompleted, markStepIncomplete, clearStepError, isOpen]);
 
   // When filing entity address is verified, mark step 5 as completed if all fields are filled
   useEffect(() => {
-    if (isFilingEntityAddressVerified && formData?.filingEntityStreet1?.trim()) {
-      clearStepError(5);
+    // Skip during initial load to prevent flickering
+    if ((!hasInitializedStepsRef.current || isInitializingSteps) && isOpen) {
+      return;
+    }
+    
+    const shouldBeComplete = isFilingEntityAddressVerified && formData?.filingEntityStreet1?.trim() && userFilingEntityType;
+    
+    // Only process if state actually changed
+    if (lastStep5StateRef.current === shouldBeComplete) {
+      return;
+    }
+    lastStep5StateRef.current = shouldBeComplete;
+    
+    if (shouldBeComplete) {
       const filingEntityValidation = validateFilingEntity();
-      if (!filingEntityValidation.hasErrors && userFilingEntityType) {
-        if (!completedSteps.has(5)) {
+      if (!filingEntityValidation.hasErrors) {
           markStepCompleted(5);
-        }
         if (stepsWithErrors.has(5)) {
           clearStepError(5);
         }
       }
     }
-  }, [isFilingEntityAddressVerified, formData, stepsWithErrors, completedSteps, markStepCompleted, clearStepError, userFilingEntityType]);
+  }, [isFilingEntityAddressVerified, formData, stepsWithErrors, markStepCompleted, clearStepError, userFilingEntityType, isOpen]);
 
   // When all borrower addresses are verified, mark step 4 as completed if all fields are filled
   useEffect(() => {
-    const hasBorrowerAddresses = formData?.borrowers?.some(borrower => borrower.mailingStreet1?.trim());
-    if (hasBorrowerAddresses && formData?.borrowers) {
+    // Skip during initial load to prevent flickering
+    if ((!hasInitializedStepsRef.current || isInitializingSteps) && isOpen) {
+      return;
+    }
+    
+    if (!formData?.borrowers) return;
+    
+    const hasBorrowerAddresses = formData.borrowers.some(borrower => borrower.mailingStreet1?.trim());
+    let shouldBeComplete = false;
+    
+    if (hasBorrowerAddresses) {
       const allBorrowerAddressesVerified = formData.borrowers
         .filter(borrower => borrower.mailingStreet1?.trim())
         .every(borrower => borrowerAddressesVerified[borrower.id] === true);
       
       if (allBorrowerAddressesVerified) {
-        clearStepError(4);
         const borrowerValidation = validateBorrowerDetails();
-        if (!borrowerValidation.hasErrors) {
-          if (!completedSteps.has(4)) {
-            markStepCompleted(4);
-          }
-          if (stepsWithErrors.has(4)) {
-            clearStepError(4);
-          }
-        }
+        shouldBeComplete = !borrowerValidation.hasErrors;
       }
-    } else if (!hasBorrowerAddresses) {
+    } else {
       // No addresses to verify, just check if validation passes
       const borrowerValidation = validateBorrowerDetails();
-      if (!borrowerValidation.hasErrors) {
-        if (!completedSteps.has(4)) {
-          markStepCompleted(4);
-        }
+      shouldBeComplete = !borrowerValidation.hasErrors;
+    }
+    
+    // Only process if state actually changed
+    if (lastStep4StateRef.current === shouldBeComplete) {
+      return;
+    }
+    lastStep4StateRef.current = shouldBeComplete;
+    
+    if (shouldBeComplete) {
+      markStepCompleted(4);
         if (stepsWithErrors.has(4)) {
           clearStepError(4);
         }
-      }
+    } else {
+      markStepIncomplete(4);
     }
-  }, [borrowerAddressesVerified, formData, stepsWithErrors, completedSteps, markStepCompleted, markStepIncomplete, clearStepError]);
+  }, [borrowerAddressesVerified, formData, stepsWithErrors, markStepCompleted, markStepIncomplete, clearStepError, isOpen]);
 
   // Track step 8 (Loan Assignees) completion when formData changes
   useEffect(() => {
+    // Skip during initial load to prevent flickering
+    if ((!hasInitializedStepsRef.current || isInitializingSteps) && isOpen) {
+      return;
+    }
+    
     if (!formData) return;
     const loanAssigneesValidation = validateLoanAssignees();
+    let shouldBeComplete = false;
+    
     if (!loanAssigneesValidation.hasErrors) {
       const hasLoanAssigneeAddresses = formData?.loanAssignees?.some(assignee => assignee.street1?.trim());
       if (hasLoanAssigneeAddresses && formData?.loanAssignees) {
@@ -1435,52 +1583,36 @@ const PetitionSteps = ({
           .every((assignee, index) => loanAssigneeAddressesVerified[index] === true);
         
         if (allLoanAssigneeAddressesVerified) {
-          if (!completedSteps.has(8)) {
-            markStepCompleted(8);
-          }
-          if (stepsWithErrors.has(8)) {
-            clearStepError(8);
-          }
+          shouldBeComplete = true;
         } else {
           // Addresses exist but not verified - still mark complete if all required fields are filled
           // Address verification will be handled when user navigates away from the step
           const hasAllRequiredFields = checkStepHasRequiredFields(8);
           if (hasAllRequiredFields) {
-            if (!completedSteps.has(8)) {
-              markStepCompleted(8);
+            shouldBeComplete = true;
             }
-            if (stepsWithErrors.has(8)) {
-              clearStepError(8);
             }
           } else {
-            if (completedSteps.has(8)) {
-              markStepIncomplete(8);
-            }
-          }
-        }
-      } else if (!hasLoanAssigneeAddresses) {
         // No addresses to verify, just check if validation passes
-        const hasAllRequiredFields = checkStepHasRequiredFields(8);
-        if (hasAllRequiredFields) {
-          if (!completedSteps.has(8)) {
+        shouldBeComplete = true;
+      }
+    }
+    
+    // Only process if state actually changed
+    if (lastStep8StateRef.current === shouldBeComplete) {
+      return;
+    }
+    lastStep8StateRef.current = shouldBeComplete;
+    
+    if (shouldBeComplete) {
             markStepCompleted(8);
-          }
           if (stepsWithErrors.has(8)) {
             clearStepError(8);
           }
         } else {
-          if (completedSteps.has(8)) {
             markStepIncomplete(8);
           }
-        }
-      }
-    } else {
-      // Validation has errors - mark incomplete
-      if (completedSteps.has(8)) {
-        markStepIncomplete(8);
-      }
-    }
-  }, [loanAssigneeAddressesVerified, formData, stepsWithErrors, completedSteps, markStepCompleted, markStepIncomplete, clearStepError, checkStepHasRequiredFields]);
+  }, [loanAssigneeAddressesVerified, formData, stepsWithErrors, markStepCompleted, markStepIncomplete, clearStepError, checkStepHasRequiredFields, isOpen]);
 
   // When address is verified and there's a pending step change, allow navigation
   useEffect(() => {
@@ -2872,9 +3004,7 @@ const PetitionSteps = ({
                                         formData?.propertyZip?.trim() && 
                                         formData?.propertyCounty?.trim());
           if (hasAllAddressFields) {
-            if (!completedSteps.has(2)) {
-              markStepCompleted(2);
-            }
+            markStepCompleted(2);
             if (stepsWithErrors.has(2)) {
               clearStepError(2);
             }
@@ -2904,9 +3034,7 @@ const PetitionSteps = ({
           // Mark step as completed if all fields are valid
           const filingEntityValidation = validateFilingEntity();
           if (!filingEntityValidation.hasErrors && userFilingEntityType) {
-            if (!completedSteps.has(5)) {
-              markStepCompleted(5);
-            }
+            markStepCompleted(5);
           }
           const targetStep = pendingStepChange;
           setPendingStepChange(null);
@@ -2935,9 +3063,7 @@ const PetitionSteps = ({
           // Mark step as completed if all fields are valid
           const rightToCureValidation = validateRightToCureDetails();
           if (!rightToCureValidation.hasErrors) {
-            if (!completedSteps.has(6)) {
-              markStepCompleted(6);
-            }
+            markStepCompleted(6);
           }
           const targetStep = pendingStepChange;
           setPendingStepChange(null);
@@ -2972,9 +3098,7 @@ const PetitionSteps = ({
           // Mark step as completed if all fields are valid
           const borrowerValidation = validateBorrowerDetails();
           if (!borrowerValidation.hasErrors) {
-            if (!completedSteps.has(4)) {
-              markStepCompleted(4);
-            }
+            markStepCompleted(4);
           }
           const targetStep = pendingStepChange;
           setPendingStepChange(null);
@@ -3010,9 +3134,7 @@ const PetitionSteps = ({
           // Mark step as completed if all fields are valid
           const loanAssigneesValidation = validateLoanAssignees();
           if (!loanAssigneesValidation.hasErrors) {
-            if (!completedSteps.has(8)) {
-              markStepCompleted(8);
-            }
+            markStepCompleted(8);
           }
           const targetStep = pendingStepChange;
           setPendingStepChange(null);
@@ -3945,89 +4067,103 @@ const PetitionSteps = ({
 
   // Track step 3 (Loan Details) completion when formData changes
   useEffect(() => {
+    // Skip during initial load to prevent flickering
+    if ((!hasInitializedStepsRef.current || isInitializingSteps) && isOpen) {
+      return;
+    }
+    
     if (!formData) return;
     const loanValidation = validateLoanDetails();
-    if (!loanValidation.hasErrors) {
-      if (!completedSteps.has(3)) {
-        markStepCompleted(3);
-      }
+    const shouldBeComplete = !loanValidation.hasErrors;
+    
+    // Only process if state actually changed
+    // Don't skip if we're navigating away from this step - allow re-check to ensure it stays marked
+    if (lastStep3StateRef.current === shouldBeComplete && wizardCurrentStep === 3) {
+      // Only skip if we're on step 3 and state hasn't changed
+      return;
+    }
+    lastStep3StateRef.current = shouldBeComplete;
+    
+    if (shouldBeComplete) {
+      markStepCompleted(3);
       if (stepsWithErrors.has(3)) {
         clearStepError(3);
       }
     } else {
-      if (completedSteps.has(3)) {
-        markStepIncomplete(3);
-      }
+      markStepIncomplete(3);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formData, completedSteps, stepsWithErrors, markStepCompleted, markStepIncomplete, clearStepError]);
+  }, [formData, stepsWithErrors, markStepCompleted, markStepIncomplete, clearStepError, isOpen]);
 
   // Track step 6 (Right-to-Cure) completion when formData changes
   useEffect(() => {
+    // Skip during initial load to prevent flickering
+    if ((!hasInitializedStepsRef.current || isInitializingSteps) && isOpen) {
+      return;
+    }
+    
     if (!formData) return;
     const rightToCureValidation = validateRightToCureDetails();
+    let shouldBeComplete = false;
+    
     if (!rightToCureValidation.hasErrors) {
       // If there's a notice address, check if it's verified
       if (formData?.noticeAddressStreet1?.trim()) {
         if (isNoticeAddressVerified) {
-          if (!completedSteps.has(6)) {
-            markStepCompleted(6);
-          }
-          if (stepsWithErrors.has(6)) {
-            clearStepError(6);
-          }
+          shouldBeComplete = true;
         } else {
           // Address exists but not verified - still mark complete if all required fields are filled
           // Address verification will be handled when user navigates away from the step
           const hasAllRequiredFields = checkStepHasRequiredFields(6);
-          if (hasAllRequiredFields) {
-            if (!completedSteps.has(6)) {
-              markStepCompleted(6);
-            }
-            if (stepsWithErrors.has(6)) {
-              clearStepError(6);
-            }
-          } else {
-            if (completedSteps.has(6)) {
-              markStepIncomplete(6);
-            }
-          }
+          shouldBeComplete = hasAllRequiredFields;
         }
       } else {
         // No notice address required - mark complete if validation passes
-        if (!completedSteps.has(6)) {
-          markStepCompleted(6);
-        }
-        if (stepsWithErrors.has(6)) {
-          clearStepError(6);
-        }
-      }
-    } else {
-      if (completedSteps.has(6)) {
-        markStepIncomplete(6);
+        shouldBeComplete = true;
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isNoticeAddressVerified, formData, stepsWithErrors, completedSteps, markStepCompleted, markStepIncomplete, clearStepError, checkStepHasRequiredFields]);
+    
+    // Only process if state actually changed
+    if (lastStep6StateRef.current === shouldBeComplete) {
+      return;
+    }
+    lastStep6StateRef.current = shouldBeComplete;
+    
+    if (shouldBeComplete) {
+      markStepCompleted(6);
+      if (stepsWithErrors.has(6)) {
+        clearStepError(6);
+      }
+    } else {
+      markStepIncomplete(6);
+    }
+  }, [isNoticeAddressVerified, formData, stepsWithErrors, markStepCompleted, markStepIncomplete, clearStepError, checkStepHasRequiredFields, isOpen]);
 
   // Track step 7 (Form 35B Compliance) completion when formData changes
   useEffect(() => {
+    // Skip during initial load to prevent flickering
+    if ((!hasInitializedStepsRef.current || isInitializingSteps) && isOpen) {
+      return;
+    }
+    
     if (!formData) return;
     const form35BValidation = validateForm35BCompliance();
-    if (!form35BValidation.hasErrors) {
-      if (!completedSteps.has(7)) {
-        markStepCompleted(7);
-      }
+    const shouldBeComplete = !form35BValidation.hasErrors;
+    
+    // Only process if state actually changed
+    if (lastStep7StateRef.current === shouldBeComplete) {
+      return;
+    }
+    lastStep7StateRef.current = shouldBeComplete;
+    
+    if (shouldBeComplete) {
+      markStepCompleted(7);
       if (stepsWithErrors.has(7)) {
         clearStepError(7);
       }
     } else {
-      if (completedSteps.has(7)) {
-        markStepIncomplete(7);
-      }
+      markStepIncomplete(7);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formData, completedSteps, stepsWithErrors, markStepCompleted, markStepIncomplete, clearStepError]);
+  }, [formData, stepsWithErrors, markStepCompleted, markStepIncomplete, clearStepError, isOpen]);
 
   // Validate Filing Entity details
 
@@ -4739,9 +4875,7 @@ const PetitionSteps = ({
                                         formData.propertyZip?.trim() && 
                                         formData.propertyCounty?.trim());
           if (hasAllAddressFields) {
-            if (!completedSteps.has(2)) {
-              markStepCompleted(2);
-            }
+            markStepCompleted(2);
             if (stepsWithErrors.has(2)) {
               clearStepError(2);
             }
@@ -4774,9 +4908,7 @@ const PetitionSteps = ({
         // Mark step as completed if all fields are valid
         const filingEntityValidation = validateFilingEntity();
         if (!filingEntityValidation.hasErrors && userFilingEntityType) {
-          if (!completedSteps.has(5)) {
-            markStepCompleted(5);
-          }
+          markStepCompleted(5);
         }
         if (newStep >= 1 && newStep <= totalSteps) {
           await autoSaveCurrentStep();
@@ -4806,9 +4938,7 @@ const PetitionSteps = ({
         // Mark step as completed if all fields are valid
         const rightToCureValidation = validateRightToCureDetails();
         if (!rightToCureValidation.hasErrors) {
-          if (!completedSteps.has(6)) {
-            markStepCompleted(6);
-          }
+          markStepCompleted(6);
         }
         if (newStep >= 1 && newStep <= totalSteps) {
           await autoSaveCurrentStep();
@@ -4851,9 +4981,7 @@ const PetitionSteps = ({
             // Mark step as completed if all fields are valid
             const borrowerValidation = validateBorrowerDetails();
             if (!borrowerValidation.hasErrors) {
-              if (!completedSteps.has(4)) {
-                markStepCompleted(4);
-              }
+              markStepCompleted(4);
             }
             if (newStep >= 1 && newStep <= totalSteps) {
               await autoSaveCurrentStep();
@@ -4899,9 +5027,7 @@ const PetitionSteps = ({
             // Mark step as completed if all fields are valid
             const loanAssigneesValidation = validateLoanAssignees();
             if (!loanAssigneesValidation.hasErrors) {
-              if (!completedSteps.has(8)) {
-                markStepCompleted(8);
-              }
+              markStepCompleted(8);
             }
             if (newStep >= 1 && newStep <= totalSteps) {
               await autoSaveCurrentStep();
@@ -4932,14 +5058,30 @@ const PetitionSteps = ({
         // Use validation functions to check if step is complete
         switch (currentStep) {
           case 1:
-            const addressValidation = validateAddressFields();
-            isStepComplete = !addressValidation.hasErrors && isAddressVerified;
+            // Organization Selection - for org admins, check organizationId; for filers, require explicit selection
+            if (isOrgAdmin) {
+              isStepComplete = !!(organizationId || selectedOrganizationId);
+            } else {
+              isStepComplete = !!selectedOrganizationId;
+            }
             break;
           case 2:
+            // Property Details - check if address fields are filled and validated
+            const addressValidation = validateAddressFields();
+            const hasAllAddressFields = !!(formData?.propertyStreet1?.trim() && 
+                                          formData?.propertyCity?.trim() && 
+                                          formData?.propertyState?.trim() && 
+                                          formData?.propertyZip?.trim() && 
+                                          formData?.propertyCounty?.trim());
+            isStepComplete = !addressValidation.hasErrors && hasAllAddressFields;
+            break;
+          case 3:
+            // Loan Details
             const loanValidation = validateLoanDetails();
             isStepComplete = !loanValidation.hasErrors;
             break;
-          case 3:
+          case 4:
+            // Borrower Details
             const borrowerValidation = validateBorrowerDetails();
             if (!borrowerValidation.hasErrors) {
               const hasBorrowerAddresses = formData?.borrowers?.some(borrower => borrower.mailingStreet1?.trim());
@@ -4953,7 +5095,8 @@ const PetitionSteps = ({
               }
             }
             break;
-          case 4:
+          case 5:
+            // Filing Entity
             if (userFilingEntityType) {
               const filingEntityValidation = validateFilingEntity();
               if (!filingEntityValidation.hasErrors) {
@@ -4965,7 +5108,8 @@ const PetitionSteps = ({
               }
             }
             break;
-          case 5:
+          case 6:
+            // Right-to-Cure
             const rightToCureValidation = validateRightToCureDetails();
             if (!rightToCureValidation.hasErrors) {
               if (formData?.noticeAddressStreet1?.trim()) {
@@ -4975,11 +5119,13 @@ const PetitionSteps = ({
               }
             }
             break;
-          case 6:
+          case 7:
+            // Form 35B Compliance
             const form35BValidation = validateForm35BCompliance();
             isStepComplete = !form35BValidation.hasErrors;
             break;
-          case 7:
+          case 8:
+            // Loan Assignees
             const loanAssigneesValidation = validateLoanAssignees();
             if (!loanAssigneesValidation.hasErrors) {
               const hasLoanAssigneeAddresses = formData?.loanAssignees?.some(assignee => assignee.street1?.trim());
@@ -4993,7 +5139,8 @@ const PetitionSteps = ({
               }
             }
             break;
-          case 8:
+          case 9:
+            // Attestation & Signatures
             isStepComplete = !!(userProfile?.signatureUrl && formData?.certification_check);
             break;
           default:
@@ -5002,17 +5149,14 @@ const PetitionSteps = ({
         
         if (isStepComplete) {
           // Step is complete - mark as completed and clear any errors
-          if (!completedSteps.has(currentStep)) {
-            markStepCompleted(currentStep);
-          }
+          // markStepCompleted already checks if step is already completed, so safe to call
+          markStepCompleted(currentStep);
           if (stepsWithErrors.has(currentStep)) {
             clearStepError(currentStep);
           }
         } else {
           // Step is not complete - unmark if it was previously completed
-          if (completedSteps.has(currentStep)) {
-            markStepIncomplete(currentStep);
-          }
+          markStepIncomplete(currentStep);
         }
       }
 
@@ -6250,7 +6394,19 @@ const PetitionSteps = ({
 
               {/* Form Content */}
 
-              <div className="petition-steps-form" ref={formContainerRef}>
+              <div className="petition-steps-form position-relative" ref={formContainerRef}>
+                {/* Loading Overlay */}
+                {isInitializingSteps && (
+                  <div className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', zIndex: 1000, minHeight: '400px' }}>
+                    <div className="text-center">
+                      <div className="spinner-border text-primary mb-3" role="status" style={{ width: '3rem', height: '3rem' }}>
+                        <span className="visually-hidden">Loading...</span>
+                      </div>
+                      <p className="text-muted">Loading petition data...</p>
+                    </div>
+                  </div>
+                )}
+
                 <div className="container-fluid">
                   {/* Mobile Stepper */}
 

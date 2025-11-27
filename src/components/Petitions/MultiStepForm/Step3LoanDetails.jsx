@@ -121,7 +121,7 @@ const Step3LoanDetails = ({
                   className={`form-control ${
                     fieldErrors.loanNumber ? "is-invalid" : ""
                   }`}
-                  value={formData.loanNumber}
+                  value={formData.loanNumber || ""}
                   onChange={handleInputChange}
                   inputMode="numeric"
                   pattern="[0-9]*"
@@ -143,7 +143,7 @@ const Step3LoanDetails = ({
                 <CustomDropdown
                   id="petitionLoanTypeId"
                   name="petitionLoanTypeId"
-                  value={formData.petitionLoanTypeId}
+                  value={formData.petitionLoanTypeId || ""}
                   onChange={handleInputChange}
                   placeholder="Select Loan Type"
                   disabled={commonDataLoading}
@@ -179,7 +179,7 @@ const Step3LoanDetails = ({
                 <CustomDropdown
                   id="lienPosition"
                   name="lienPosition"
-                  value={formData.lienPosition}
+                  value={formData.lienPosition ?? ""}
                   onChange={handleInputChange}
                   placeholder="Select Position"
                   disabled={commonDataLoading}
@@ -219,7 +219,7 @@ const Step3LoanDetails = ({
                   className={`form-control ${
                     fieldErrors.originationDate ? "is-invalid" : ""
                   }`}
-                  value={formData.originationDate}
+                  value={formData.originationDate || ""}
                   onChange={handleInputChange}
                 />
 
@@ -289,7 +289,7 @@ const Step3LoanDetails = ({
                   className={`form-control ${
                     fieldErrors.interestRatePercent ? "is-invalid" : ""
                   }`}
-                  value={formData.interestRatePercent}
+                  value={formData.interestRatePercent ?? ""}
                   onChange={handleInputChange}
                 />
 

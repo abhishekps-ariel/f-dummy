@@ -16,6 +16,28 @@ import {
   markAsRead,
 } from '../../services/chatService';
 
+// Helper function to get two initials from a name (first letter of first name and first letter of last name)
+const getInitials = (name) => {
+  if (!name || typeof name !== 'string') return 'U';
+  
+  const trimmedName = name.trim();
+  if (!trimmedName) return 'U';
+  
+  const parts = trimmedName.split(/\s+/).filter(part => part.length > 0);
+  
+  if (parts.length === 0) return 'U';
+  
+  if (parts.length === 1) {
+    // Only one word, return first letter
+    return parts[0].charAt(0).toUpperCase();
+  }
+  
+  // Two or more words: return first letter of first word and first letter of last word
+  const firstInitial = parts[0].charAt(0).toUpperCase();
+  const lastInitial = parts[parts.length - 1].charAt(0).toUpperCase();
+  return `${firstInitial}${lastInitial}`;
+};
+
 const Messages = () => {
   const { t } = useTranslation();
   const { user, logout } = useAuth();
@@ -89,7 +111,7 @@ const Messages = () => {
           timestamp: formatTimestamp(chat.lastMessageTime),
           lastMessageTime: chat.lastMessageTime, // Store original timestamp for sorting
           userId: chat.userId,
-          avatar: chat.userName ? chat.userName.charAt(0).toUpperCase() : 'U',
+          avatar: getInitials(chat.userName),
           unread: chat.unreadCount || unreadCounts[chat.chatId] || 0, // Use API unread count or state
         }));
         
@@ -317,9 +339,7 @@ const Messages = () => {
                     timestamp: formatTimestamp(msgTime),
                     lastMessageTime: msgTime,
                     userId: isOwn ? msgReceiverId : msgSenderId,
-                    avatar: (msgAuthor?.User || msgAuthor?.user)
-                      ? (msgAuthor.User || msgAuthor.user).charAt(0).toUpperCase()
-                      : 'U',
+                    avatar: getInitials(msgAuthor?.User || msgAuthor?.user),
                     unread: newCount,
                   },
                   ...prevConvs,
@@ -516,7 +536,7 @@ const Messages = () => {
               timestamp: formatTimestamp(chat.lastMessageTime),
               lastMessageTime: chat.lastMessageTime,
               userId: chat.userId,
-              avatar: chat.userName ? chat.userName.charAt(0).toUpperCase() : 'U',
+              avatar: getInitials(chat.userName),
               unread: chat.unreadCount || 0,
             }));
             
@@ -631,7 +651,7 @@ const Messages = () => {
         timestamp: '',
         lastMessageTime: null,
         userId: user.userId || user.id,
-        avatar: (user.userName || user.name || 'U').charAt(0).toUpperCase(),
+        avatar: getInitials(user.userName || user.name),
         unread: 0,
       };
       

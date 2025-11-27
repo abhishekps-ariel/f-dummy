@@ -298,7 +298,7 @@ class PetitionApiService {
 
       return {
         id: rtcId,
-        noticeSent: rtc.noticeSent !== null && rtc.noticeSent !== undefined ? rtc.noticeSent : false,
+        noticeSent: rtc.noticeSent !== null && rtc.noticeSent !== undefined ? rtc.noticeSent : null,
         noticeDate: safeDateConversion(rtc.noticeDate),
         amountInDefault: parseFloat(rtc.amountInDefault) || 0,
         daysDelinquentAtNotice: parseInt(rtc.daysDelinquentAtNotice) || 0,
@@ -681,7 +681,7 @@ class PetitionApiService {
         if (formData.rightToCures && Array.isArray(formData.rightToCures) && formData.rightToCures.length > 0) {
           return formData.rightToCures.map(rightToCure => ({
             id: rightToCure.id || null,
-            noticeSent: rightToCure.noticeSent !== null && rightToCure.noticeSent !== undefined ? rightToCure.noticeSent : false,
+            noticeSent: rightToCure.noticeSent !== null && rightToCure.noticeSent !== undefined ? rightToCure.noticeSent : null,
             noticeDate: safeDateConversion(rightToCure.noticeDate),
             amountInDefault: parseFloat(rightToCure.amountInDefault) || 0,
             daysDelinquentAtNotice: parseInt(rightToCure.daysDelinquentAtNotice) || 0,
@@ -728,17 +728,15 @@ class PetitionApiService {
         reoEmergencyPhone: formData.foreclosureSale.reoEmergencyPhone || null
       } : null;
       })(),
-      // Include judgment object - send empty object if no data, or full object if data exists
+      // Include judgment - send null if no data (like foreclosureSale), or full object if data exists
       // For taken-over petitions, don't send judgment data as it needs to be redone
-      judgment: (formData.takeOverToUserId) ? {
-        id: null,
-        petitionId: petitionId || null,
-        judgmentDate: null,
-        judgmentAmount: 0,
-        judgmentType: 0,
-        courtInformation: "",
-        docketNumbers: ""
-      } : (formData.judgment ? {
+      judgment: (formData.takeOverToUserId) ? null : (formData.judgment && (
+        formData.judgment.judgmentDate || 
+        (formData.judgment.judgmentAmount && formData.judgment.judgmentAmount > 0) || 
+        (formData.judgment.judgmentType !== null && formData.judgment.judgmentType !== undefined && formData.judgment.judgmentType !== 0) ||
+        (formData.judgment.courtInformation && formData.judgment.courtInformation.trim()) || 
+        (formData.judgment.docketNumbers && formData.judgment.docketNumbers.trim())
+      )) ? {
         id: formData.judgment.id || null,
         petitionId: petitionId || null,
         judgmentDate: safeDateConversion(formData.judgment.judgmentDate),
@@ -752,17 +750,9 @@ class PetitionApiService {
               : 0),
         courtInformation: formData.judgment.courtInformation || "",
         docketNumbers: formData.judgment.docketNumbers || ""
-      } : {
-        id: null,
-        petitionId: petitionId || null,
-        judgmentDate: null,
-        judgmentAmount: 0,
-        judgmentType: 0,
-        courtInformation: "",
-        docketNumbers: ""
-      }),
+      } : null,
       affidavit: {
-        certainMortgageLoan: formData.certainMortgageLoan || false,
+        certainMortgageLoan: formData.certainMortgageLoan !== null && formData.certainMortgageLoan !== undefined ? formData.certainMortgageLoan : false,
         form35bComplianceAffidavitPdf: await fileToBase64(formData.form35bComplianceAffidavitPdf),
         form35bNonApplicabilityAffidavitPdf: await fileToBase64(formData.form35bNonApplicabilityAffidavitPdf),
         affiantName: formData.affiantName || "",
