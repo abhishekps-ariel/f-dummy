@@ -141,7 +141,7 @@ const PetitionSteps = ({
           }
           // Reset initialization flags when opening with new data
           hasInitializedStepsRef.current = false;
-          isInitializingSteps = false;
+          setIsInitializingSteps(false);
           // Set formData AFTER resetting wizard to ensure initialization runs with fresh state
           // Use setTimeout to ensure resetWizard completes before setting formData
           setTimeout(() => {
@@ -156,7 +156,7 @@ const PetitionSteps = ({
           resetWizard();
         }
         hasInitializedStepsRef.current = false;
-        isInitializingSteps = false;
+        setIsInitializingSteps(false);
       }
     } else {
       // Modal closed, reset wizard and flags
@@ -1188,41 +1188,36 @@ const PetitionSteps = ({
       !profileLoading // Wait for profile to finish loading (userProfile can be null/undefined)
     ) {
       // Initialize step completion immediately - no delays
-      if (!hasInitializedStepsRef.current) {
-        setIsInitializingSteps(true);
-        
-        // Use requestAnimationFrame to batch the updates
-        requestAnimationFrame(() => {
+      setIsInitializingSteps(true);
+      
+      try {
+        // Batch all step completion checks in a single operation - execute immediately
+        const stepsToMark = [];
+        for (let step = 1; step <= totalSteps; step++) {
           try {
-            // Batch all step completion checks in a single operation
-            const stepsToMark = [];
-            for (let step = 1; step <= totalSteps; step++) {
-              try {
-                const isComplete = checkStepHasRequiredFields(step);
-                if (isComplete) {
-                  stepsToMark.push(step);
-                }
-              } catch (error) {
-                // Silently handle errors for individual step checks
-                console.error(`Error checking step ${step}:`, error);
-              }
+            const isComplete = checkStepHasRequiredFields(step);
+            if (isComplete) {
+              stepsToMark.push(step);
             }
-            
-            // Mark all completed steps at once using React's automatic batching
-            if (stepsToMark.length > 0) {
-              stepsToMark.forEach(step => {
-                markStepCompleted(step);
-              });
-            }
-            
-            // Mark initialization as complete
-            hasInitializedStepsRef.current = true;
-            setIsInitializingSteps(false);
           } catch (error) {
-            console.error('Error during step completion check:', error);
-            setIsInitializingSteps(false);
+            // Silently handle errors for individual step checks
+            console.error(`Error checking step ${step}:`, error);
           }
-        });
+        }
+        
+        // Mark all completed steps at once using React's automatic batching
+        if (stepsToMark.length > 0) {
+          stepsToMark.forEach(step => {
+            markStepCompleted(step);
+          });
+        }
+        
+        // Mark initialization as complete
+        hasInitializedStepsRef.current = true;
+        setIsInitializingSteps(false);
+      } catch (error) {
+        console.error('Error during step completion check:', error);
+        setIsInitializingSteps(false);
       }
     }
   }, [isOpen, formData, checkStepHasRequiredFields, totalSteps, profileLoading, markStepCompleted]); // Added markStepCompleted to dependencies
@@ -1254,15 +1249,15 @@ const PetitionSteps = ({
           }
           break;
         case 2:
-          const addressValidation = validateAddressFields();
-          // Mark complete if validation passes and all required fields are filled
-          // Address verification will be handled when navigating away
+          // For step 2, check if all required fields are filled
+          // Don't require address validation to pass - just check if fields exist
+          // Address verification will be handled separately when navigating away
           const hasAllAddressFields = !!(formData?.propertyStreet1?.trim() && 
                                         formData?.propertyCity?.trim() && 
                                         formData?.propertyState?.trim() && 
                                         formData?.propertyZip?.trim() && 
                                         formData?.propertyCounty?.trim());
-          isStepComplete = !addressValidation.hasErrors && hasAllAddressFields;
+          isStepComplete = hasAllAddressFields;
           break;
         case 3:
           const loanValidation = validateLoanDetails();
@@ -1342,13 +1337,17 @@ const PetitionSteps = ({
         // Simple logic: if step was completed and still has required fields, keep it marked
         const wasCompleted = completedSteps.has(prev);
         if (wasCompleted) {
-          // Check if required fields are still filled - if yes, keep it marked
+          // Always check if required fields are still filled - if yes, keep it marked
+          // This is the source of truth - if fields are filled, step should remain marked
           const stillHasFields = checkStepHasRequiredFields(prev);
-          if (!stillHasFields) {
-            // Only unmark if fields are actually missing
+          if (stillHasFields) {
+            // Fields are still filled, ensure step remains marked (don't unmark)
+            // markStepCompleted is idempotent, safe to call again
+            markStepCompleted(prev);
+          } else {
+            // Fields are missing, unmark the step
             markStepIncomplete(prev);
           }
-          // If stillHasFields is true, keep it marked (don't call markStepIncomplete)
         }
         // If step wasn't completed, don't do anything
       }
