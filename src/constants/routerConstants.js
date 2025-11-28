@@ -8,6 +8,7 @@ export const ROUTES = {
   MESSAGES: '/messages',
   FAQ: '/faq',
   TRAINING: '/training',
+  FORM35: '/form35',
   ORGANIZATION_JOIN_REQUESTS: '/organization-join-requests',
     ORGANISATION_USERS: '/organisation-users',
   LOGIN: '/login',

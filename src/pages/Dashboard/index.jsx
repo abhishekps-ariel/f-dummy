@@ -274,59 +274,45 @@ function Dashboard() {
 
               {/* New Information Cards */}
               <div className="row mb-4">
-                {/* Organization Details Card */}
+                {/* Form 35B Compliance Card */}
                 <div className="col-md-4 mb-3">
                   <div className="stat-card h-100">
-                    {getUserRole(user)?.toLowerCase() === 'filer' ? (
-                      <>
-                        <h5 className="stat-count mb-3" style={{ fontSize: '1.2rem' }}>{t("dashboard.form35BCompliance")}</h5>
-                        <div className="d-flex align-items-center justify-content-center h-100" style={{ minHeight: '150px' }}>
-                          <p className="text-muted small mb-0 text-center">{t("dashboard.willBeImplementedLater")}</p>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <h5 className="stat-count mb-3" style={{ fontSize: '1.2rem' }}>{t("dashboard.organizationDetails")}</h5>
-                        {isLoadingOrgData ? (
-                      <div className="text-center py-3">
-                        <div className="spinner-border spinner-border-sm text-primary" role="status">
-                          <span className="visually-hidden">{t("common.loading")}</span>
-                        </div>
-                        <p className="mt-2 text-muted small">{t("dashboard.loadingOrganizationDetails")}</p>
+                    <h5 className="stat-count mb-3" style={{ fontSize: '1.2rem' }}>{t("dashboard.form35BCompliance")}</h5>
+                    <div className="d-flex flex-column justify-content-between h-100" style={{ minHeight: '150px' }}>
+                      <div className="mb-3">
+                        <p className="text-muted small mb-2">Notice sent: <strong>130</strong></p>
+                        <p className="text-muted small mb-2">Loan modification requested: <strong>300</strong></p>
+                        <p className="text-muted small mb-0">Foreclosure sale: <strong>200</strong></p>
                       </div>
-                    ) : displayOrganization ? (
-                      <div className="organization-info">
-                        <h6 className="mb-2 fw-bold">{displayOrganization.organizationName || displayOrganization.name}</h6>
-                        <p className="text-muted small mb-1">
-                          <i className="fa-solid fa-tag me-1"></i>
-                          {t("dashboard.type")}: {displayOrganization.organizationType || displayOrganization.type || t("header.nA")}
-                        </p>
-                        {(displayOrganization.organizationAddress || (displayOrganization.addressStreet1 || displayOrganization.addressCity)) && (
-                            <p className="text-muted small mb-1">
-                              <i className="fa-solid fa-location-dot me-1"></i>
-                            {t("dashboard.address")}: {displayOrganization.organizationAddress || 
-                                     `${displayOrganization.addressStreet1 || ''}${displayOrganization.addressStreet2 ? ', ' + displayOrganization.addressStreet2 : ''}, ${displayOrganization.addressCity || ''}, ${displayOrganization.addressState || ''} ${displayOrganization.addressZip || ''}`.replace(/^,\s*/, '').replace(/,\s*$/, '')}
-                            </p>
-                        )}
-                        {(displayOrganization.primaryContact || (displayOrganization.primaryContactName || displayOrganization.primaryContactEmail || displayOrganization.primaryContactPhone)) && (
-                            <p className="text-muted small mb-1">
-                              <i className="fa-solid fa-user me-1"></i>
-                            {t("dashboard.contact")}: {displayOrganization.primaryContact || 
-                                     `${displayOrganization.primaryContactName || ''}${displayOrganization.primaryContactEmail ? ', ' + displayOrganization.primaryContactEmail : ''}${displayOrganization.primaryContactPhone ? ', ' + displayOrganization.primaryContactPhone : ''}`.replace(/^,\s*/, '').replace(/,\s*$/, '')}
-                          </p>
-                        )}
-                        <span className="badge bg-success">
-                          <i className="fa-solid fa-check-circle me-1"></i>
-                          {t("dashboard.activeMember")}
-                            </span>
-                          </div>
-                        ) : (
-                          <div className="text-center">
-                            <p className="text-muted small mb-0">{t("dashboard.organizationDetailsNotAvailable")}</p>
-                          </div>
-                        )}
-                      </>
-                    )}
+                      <button 
+                        className="btn btn-sm w-100"
+                        onClick={() => navigate(ROUTES.FORM35)}
+                        style={{
+                          background: '#357a5b',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: '8px',
+                          padding: '8px 16px',
+                          fontSize: '0.875rem',
+                          fontWeight: '500',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '8px'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = '#2d6349';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = '#357a5b';
+                        }}
+                      >
+                        Form 35B Reporting
+                        <i className="fa-solid fa-arrow-right"></i>
+                      </button>
+                    </div>
                   </div>
                 </div>
 
