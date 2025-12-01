@@ -127,6 +127,10 @@ const Messages = () => {
         }
         const sortedConversations = sortConversationsByLatest(formattedConversations);
         setConversations(sortedConversations);
+        
+        // Update total unread count in localStorage for sidebar badge
+        const totalUnread = Object.values(initialUnreadCounts).reduce((sum, count) => sum + count, 0);
+        localStorage.setItem('messagesUnreadCount', totalUnread.toString());
       }
     } catch (error) {
       console.error('Error loading chat list:', error);
@@ -206,10 +210,18 @@ const Messages = () => {
           
           // Reset unread count when messages are loaded (conversation is opened)
           if (unreadCounts[chatId] > 0) {
-            setUnreadCounts((prev) => ({
-              ...prev,
-              [chatId]: 0,
-            }));
+            setUnreadCounts((prev) => {
+              const newCounts = {
+                ...prev,
+                [chatId]: 0,
+              };
+              // Update total unread count in localStorage
+              const totalUnread = Object.values(newCounts).reduce((sum, count) => sum + count, 0);
+              localStorage.setItem('messagesUnreadCount', totalUnread.toString());
+            return newCounts;
+          });
+          
+          return newCounts;
             // Update conversation unread count in conversations list
             setConversations((prev) =>
               prev.map((conv) =>
@@ -243,6 +255,8 @@ const Messages = () => {
   useEffect(() => {
     if (!user?.id) return;
     
+    // Check if global SignalR connection exists (from MessageContext)
+    // If it does, we can reuse it or create our own for Messages page-specific functionality
     if (signalRConnectionRef.current) {
       return;
     }
@@ -306,7 +320,10 @@ const Messages = () => {
           // Increment unread count
           setUnreadCounts((prev) => {
             const newCount = (prev[chatId] || 0) + 1;
-            
+            const newCounts = {
+              ...prev,
+              [chatId]: newCount,
+            };
             // Update conversations with the new unread count
             setConversations((prevConvs) => {
               const msgChatIdStr = chatId?.toString();
@@ -592,6 +609,12 @@ const Messages = () => {
             // Sort by latest message time
             return sortConversationsByLatest(updatedConversations);
           });
+          
+          // Update total unread count in localStorage
+          const totalUnread = Object.values(newCounts).reduce((sum, count) => sum + count, 0);
+          localStorage.setItem('messagesUnreadCount', totalUnread.toString());
+          
+          return newCounts;
         }
       }
     } catch (error) {
@@ -614,10 +637,16 @@ const Messages = () => {
       setSelectedConversation(conversation);
       // Reset unread count when conversation is opened
       if (conversation.chatId && unreadCounts[conversation.chatId] > 0) {
-        setUnreadCounts((prev) => ({
-          ...prev,
-          [conversation.chatId]: 0,
-        }));
+        setUnreadCounts((prev) => {
+          const newCounts = {
+            ...prev,
+            [conversation.chatId]: 0,
+          };
+          // Update total unread count in localStorage
+          const totalUnread = Object.values(newCounts).reduce((sum, count) => sum + count, 0);
+          localStorage.setItem('messagesUnreadCount', totalUnread.toString());
+          return newCounts;
+        });
         // Update conversation unread count in conversations list
         setConversations((prev) =>
           prev.map((conv) =>

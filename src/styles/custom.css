@@ -2249,8 +2249,39 @@ input, textarea, select {
     height: 7px;
     border-radius: 50%;
     position: absolute;
-    right: 5px;
-    top: 7px;
+}
+
+.sidebar-message-badge {
+    background: #EB5757;
+    color: white;
+    border-radius: 12px;
+    padding: 0.125rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    min-width: 20px;
+    height: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    line-height: 1;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+}
+
+.dashboard-sidebar.collapsed .sidebar-message-badge {
+    top: -6px;
+    right: -6px;
+    font-size: 0.65rem;
+    min-width: 18px;
+    height: 18px;
+    padding: 0.125rem 0.375rem;
+}
+
+.dashboard-nav-link i {
+    position: relative;
 }
 
 .notification-item-text small {

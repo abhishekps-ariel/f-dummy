@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import NotificationDropdown from "./NotificationDropdown";
 import ImpersonationBanner from "./ImpersonationBanner";
 import AccessibilityControls from "./AccessibilityControls";
 import LanguageSwitcher from "./LanguageSwitcher";
@@ -38,9 +37,6 @@ const Header = ({ user, pageTitle, showMobileMenu = true, onLogout }) => {
         <div className="d-none d-lg-block">
           <LanguageSwitcher variant="dropdown" className="text-secondary" />
         </div>
-
-        {/* Notification Dropdown */}
-        <NotificationDropdown />
 
         {/* Profile Dropdown */}
         <div className="dropdown">

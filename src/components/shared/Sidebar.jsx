@@ -4,6 +4,16 @@ import { useTranslation } from "react-i18next";
 import { ROUTES } from "../../constants/routerConstants";
 import loginImg from "../../assets/logo-sample.png";
 
+// Helper function to get unread message count from localStorage
+const getUnreadMessageCount = () => {
+  try {
+    const count = localStorage.getItem('messagesUnreadCount');
+    return count ? parseInt(count, 10) : 0;
+  } catch {
+    return 0;
+  }
+};
+
 const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -13,11 +23,46 @@ const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
     const savedState = localStorage.getItem('sidebarCollapsed');
     return savedState !== null ? savedState === 'true' : false;
   });
+  
+  const [unreadMessageCount, setUnreadMessageCount] = useState(getUnreadMessageCount);
 
   // Save collapsed state to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('sidebarCollapsed', isCollapsed.toString());
   }, [isCollapsed]);
+  
+  // Listen for changes to unread message count in localStorage
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setUnreadMessageCount(getUnreadMessageCount());
+    };
+    
+    const handleCustomEvent = (event) => {
+      // Update count from custom event detail or localStorage
+      const count = event.detail !== undefined ? event.detail : getUnreadMessageCount();
+      setUnreadMessageCount(count);
+    };
+    
+    // Listen for storage events (from other tabs/windows)
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Listen for custom event from MessageContext
+    window.addEventListener('messagesUnreadCountUpdated', handleCustomEvent);
+    
+    // Also check periodically for changes (for same-tab updates)
+    const interval = setInterval(() => {
+      const currentCount = getUnreadMessageCount();
+      if (currentCount !== unreadMessageCount) {
+        setUnreadMessageCount(currentCount);
+      }
+    }, 2000); // Check every 2 seconds
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('messagesUnreadCountUpdated', handleCustomEvent);
+      clearInterval(interval);
+    };
+  }, [unreadMessageCount]);
   
   const filerNavItems = [
     {
@@ -169,8 +214,11 @@ const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
                     }}
                     title={isCollapsed ? item.label : undefined}
                   >
-                    <i className={`fa-solid ${item.icon} ${isCollapsed ? '' : 'me-2'}`}></i>
+                    <i className={`fa-solid ${item.icon} ${isCollapsed ? '' : 'me-2'}`} style={{ position: 'relative' }}></i>
                     {!isCollapsed && <span>{item.label}</span>}
+                    {item.key === 'messages' && unreadMessageCount > 0 && (
+                      <span className="sidebar-message-badge">{unreadMessageCount > 99 ? '99+' : unreadMessageCount}</span>
+                    )}
                   </a>
                 </li>
               )
@@ -241,8 +289,11 @@ const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
                       }
                     }}
                   >
-                    <i className={`fa-solid ${item.icon} me-2`}></i>
+                    <i className={`fa-solid ${item.icon} me-2`} style={{ position: 'relative' }}></i>
                     <span>{item.label}</span>
+                    {item.key === 'messages' && unreadMessageCount > 0 && (
+                      <span className="sidebar-message-badge">{unreadMessageCount > 99 ? '99+' : unreadMessageCount}</span>
+                    )}
                   </a>
                 </li>
               )
