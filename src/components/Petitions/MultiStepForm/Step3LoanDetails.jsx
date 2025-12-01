@@ -55,7 +55,7 @@ const Step3LoanDetails = ({
                       checked={formData.isMinApplicable === "yes"}
                       onChange={handleInputChange}
                     />
-                    <label className="form-check-label" htmlFor="isMinApplicableYes">
+                    <label className="form-check-label" htmlFor="isMinApplicableYes" style={{ fontSize: '13px', fontWeight: '500', color: '#333' }}>
                       Yes
                     </label>
                   </div>
@@ -69,7 +69,7 @@ const Step3LoanDetails = ({
                       checked={formData.isMinApplicable === "no"}
                       onChange={handleInputChange}
                     />
-                    <label className="form-check-label" htmlFor="isMinApplicableNo">
+                    <label className="form-check-label" htmlFor="isMinApplicableNo" style={{ fontSize: '13px', fontWeight: '500', color: '#333' }}>
                       No
                     </label>
                   </div>
@@ -532,7 +532,7 @@ const Step3LoanDetails = ({
                         })
                       }
                     />
-                    <label className="form-check-label" htmlFor="borrowerRequestedLoanModificationYes">
+                    <label className="form-check-label" htmlFor="borrowerRequestedLoanModificationYes" style={{ fontSize: '13px', fontWeight: '500', color: '#333' }}>
                       Yes
                     </label>
                   </div>
@@ -553,7 +553,7 @@ const Step3LoanDetails = ({
                         })
                       }
                     />
-                    <label className="form-check-label" htmlFor="borrowerRequestedLoanModificationNo">
+                    <label className="form-check-label" htmlFor="borrowerRequestedLoanModificationNo" style={{ fontSize: '13px', fontWeight: '500', color: '#333' }}>
                       No
                     </label>
                   </div>
@@ -588,7 +588,7 @@ const Step3LoanDetails = ({
                           })
                         }
                       />
-                      <label className="form-check-label" htmlFor="loanModificationRequestFinalizedYes">
+                      <label className="form-check-label" htmlFor="loanModificationRequestFinalizedYes" style={{ fontSize: '13px', fontWeight: '500', color: '#333' }}>
                         Yes
                       </label>
                     </div>
@@ -609,7 +609,7 @@ const Step3LoanDetails = ({
                           })
                         }
                       />
-                      <label className="form-check-label" htmlFor="loanModificationRequestFinalizedNo">
+                      <label className="form-check-label" htmlFor="loanModificationRequestFinalizedNo" style={{ fontSize: '13px', fontWeight: '500', color: '#333' }}>
                         No
                       </label>
                     </div>

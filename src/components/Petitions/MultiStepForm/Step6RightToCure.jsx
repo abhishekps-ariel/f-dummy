@@ -61,6 +61,7 @@ const Step6RightToCure = ({
                     <label
                       className="form-check-label fw-medium"
                       htmlFor="noticeSentYes"
+                      style={{ fontSize: '13px', fontWeight: '500', color: '#333' }}
                     >
                       Yes
                     </label>
@@ -82,6 +83,7 @@ const Step6RightToCure = ({
                     <label
                       className="form-check-label fw-medium"
                       htmlFor="noticeSentNo"
+                      style={{ fontSize: '13px', fontWeight: '500', color: '#333' }}
                     >
                       No
                     </label>
@@ -446,7 +448,7 @@ const Step6RightToCure = ({
                             setFormData((prev) => ({ ...prev, borrowerRespondedWithin30Days: true }))
                           }
                         />
-                        <label className="form-check-label" htmlFor="borrowerRespondedWithin30DaysYes">
+                        <label className="form-check-label" htmlFor="borrowerRespondedWithin30DaysYes" style={{ fontSize: '13px', fontWeight: '500', color: '#333' }}>
                           Yes
                         </label>
                       </div>
@@ -462,7 +464,7 @@ const Step6RightToCure = ({
                             setFormData((prev) => ({ ...prev, borrowerRespondedWithin30Days: false, borrowerResponseDate: "" }))
                           }
                         />
-                        <label className="form-check-label" htmlFor="borrowerRespondedWithin30DaysNo">
+                        <label className="form-check-label" htmlFor="borrowerRespondedWithin30DaysNo" style={{ fontSize: '13px', fontWeight: '500', color: '#333' }}>
                           No
                         </label>
                       </div>
@@ -514,7 +516,7 @@ const Step6RightToCure = ({
                                 setFormData((prev) => ({ ...prev, proceededWithRightToCure: true }))
                               }
                             />
-                            <label className="form-check-label" htmlFor="proceededWithRightToCureYes">
+                            <label className="form-check-label" htmlFor="proceededWithRightToCureYes" style={{ fontSize: '13px', fontWeight: '500', color: '#333' }}>
                               Yes
                             </label>
                           </div>
@@ -530,7 +532,7 @@ const Step6RightToCure = ({
                                 setFormData((prev) => ({ ...prev, proceededWithRightToCure: false }))
                               }
                             />
-                            <label className="form-check-label" htmlFor="proceededWithRightToCureNo">
+                            <label className="form-check-label" htmlFor="proceededWithRightToCureNo" style={{ fontSize: '13px', fontWeight: '500', color: '#333' }}>
                               No
                             </label>
                           </div>

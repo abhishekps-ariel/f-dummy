@@ -63,6 +63,7 @@ const Step7Form35BCompliance = ({
                     <label
                       className="form-check-label fw-medium"
                       htmlFor="certainMortgageLoanYes"
+                      style={{ fontSize: '13px', fontWeight: '500', color: '#333' }}
                     >
                       Yes
                     </label>
@@ -88,6 +89,7 @@ const Step7Form35BCompliance = ({
                     <label
                       className="form-check-label fw-medium"
                       htmlFor="certainMortgageLoanNo"
+                      style={{ fontSize: '13px', fontWeight: '500', color: '#333' }}
                     >
                       No
                     </label>
