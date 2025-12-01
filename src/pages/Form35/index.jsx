@@ -707,7 +707,7 @@ const Form35 = () => {
                         onChange={handleInputChange}
                         placeholder="Select Year"
                         error={!!errors.reportingYear}
-                        minYear={2020}
+                        minYear={1990}
                       />
                       {errors.reportingYear && (
                         <div className="text-danger small mt-1">{errors.reportingYear}</div>

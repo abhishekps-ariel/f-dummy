@@ -14,7 +14,7 @@ const Step9PetitionAttestation = ({
    return (
           <div>
             <h2 className="theme-color font-med mb-1">
-              {t("petitionSteps.step9.title")}
+              {t("petitionSteps.step9.heading")}
             </h2>
 
             <p className="text-muted small mb-3">

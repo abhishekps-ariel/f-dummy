@@ -10,7 +10,7 @@ const YearPicker = ({
   error = false,
   id,
   name,
-  minYear = 2020,
+  minYear = 1990,
   maxYear = null,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -19,8 +19,9 @@ const YearPicker = ({
   const pickerRef = useRef(null);
   const menuRef = useRef(null);
 
-  const currentYear = maxYear || new Date().getFullYear();
-  const totalYears = (currentYear + 2) - minYear + 1;
+  const currentYear = new Date().getFullYear();
+  const maxAllowedYear = maxYear || currentYear;
+  const totalYears = maxAllowedYear - minYear + 1;
 
   // Initialize current range based on selected year or default
   useEffect(() => {
@@ -28,14 +29,16 @@ const YearPicker = ({
       const selectedYear = parseInt(value);
       if (!isNaN(selectedYear)) {
         const rangeStart = Math.floor((selectedYear - minYear) / 12) * 12 + minYear;
-        setCurrentRange({ start: rangeStart, end: rangeStart + 11 });
+        const rangeEnd = Math.min(rangeStart + 11, maxAllowedYear);
+        setCurrentRange({ start: rangeStart, end: rangeEnd });
       }
     } else {
       // Default to showing current year range
-      const rangeStart = Math.floor((currentYear - minYear) / 12) * 12 + minYear;
-      setCurrentRange({ start: rangeStart, end: rangeStart + 11 });
+      const rangeStart = Math.floor((Math.min(maxAllowedYear, currentYear) - minYear) / 12) * 12 + minYear;
+      const rangeEnd = Math.min(rangeStart + 11, maxAllowedYear);
+      setCurrentRange({ start: rangeStart, end: rangeEnd });
     }
-  }, [value, currentYear, minYear]);
+  }, [value, currentYear, minYear, maxAllowedYear]);
 
   // Generate years for current range (always 12 years)
   const getYearsForRange = () => {
@@ -45,7 +48,7 @@ const YearPicker = ({
     
     for (let year = start; year <= end; year++) {
       // Only include years within valid range
-      if (year >= minYear && year <= (currentYear + 2)) {
+      if (year >= minYear && year <= maxAllowedYear) {
         years.push(year);
       } else {
         years.push(null); // Placeholder for out-of-range years
@@ -126,13 +129,13 @@ const YearPicker = ({
 
   const handleNextRange = (e) => {
     e.stopPropagation();
-    const newEnd = Math.min(currentYear + 2, currentRange.end + 12);
+    const newEnd = Math.min(maxAllowedYear, currentRange.end + 12);
     const newStart = newEnd - 11;
     setCurrentRange({ start: newStart, end: newEnd });
   };
 
   const canGoPrev = currentRange.start > minYear;
-  const canGoNext = currentRange.end < (currentYear + 2);
+  const canGoNext = currentRange.end < maxAllowedYear;
 
   const years = getYearsForRange();
   const selectedYear = value ? parseInt(value) : null;
@@ -168,7 +171,7 @@ const YearPicker = ({
           <i className="fas fa-chevron-left"></i>
         </button>
         <div className="year-picker-range">
-          {Math.max(minYear, currentRange.start)} - {Math.min(currentYear + 2, currentRange.start + 11)}
+          {Math.max(minYear, currentRange.start)} - {Math.min(maxAllowedYear, currentRange.start + 11)}
         </div>
         <button
           type="button"

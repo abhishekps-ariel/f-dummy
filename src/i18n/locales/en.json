@@ -757,7 +757,7 @@
       "licenseState": "License State"
     },
     "step9": {
-      "title": "9. Petition Attestation & Certification",
+      "heading": "9. Petition Attestation & Certification",
       "description": "By completing this section, you formally certify the accuracy and completeness of the entire petition.",
       "attesterDetails": "Attester Details & Digital Signature",
       "firstName": "First Name",
