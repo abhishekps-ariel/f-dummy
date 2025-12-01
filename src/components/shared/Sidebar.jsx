@@ -214,9 +214,16 @@ const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
                     }}
                     title={isCollapsed ? item.label : undefined}
                   >
-                    <i className={`fa-solid ${item.icon} ${isCollapsed ? '' : 'me-2'}`} style={{ position: 'relative' }}></i>
-                    {!isCollapsed && <span>{item.label}</span>}
-                    {item.key === 'messages' && unreadMessageCount > 0 && (
+                    <i className={`fa-solid ${item.icon} ${isCollapsed ? '' : 'me-2'}`}></i>
+                    {!isCollapsed && (
+                      <span style={{ position: 'relative' }}>
+                        {item.label}
+                        {item.key === 'messages' && unreadMessageCount > 0 && (
+                          <span className="sidebar-message-badge">{unreadMessageCount > 99 ? '99+' : unreadMessageCount}</span>
+                        )}
+                      </span>
+                    )}
+                    {isCollapsed && item.key === 'messages' && unreadMessageCount > 0 && (
                       <span className="sidebar-message-badge">{unreadMessageCount > 99 ? '99+' : unreadMessageCount}</span>
                     )}
                   </a>
@@ -289,11 +296,13 @@ const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
                       }
                     }}
                   >
-                    <i className={`fa-solid ${item.icon} me-2`} style={{ position: 'relative' }}></i>
-                    <span>{item.label}</span>
-                    {item.key === 'messages' && unreadMessageCount > 0 && (
-                      <span className="sidebar-message-badge">{unreadMessageCount > 99 ? '99+' : unreadMessageCount}</span>
-                    )}
+                    <i className={`fa-solid ${item.icon} me-2`}></i>
+                    <span style={{ position: 'relative' }}>
+                      {item.label}
+                      {item.key === 'messages' && unreadMessageCount > 0 && (
+                        <span className="sidebar-message-badge">{unreadMessageCount > 99 ? '99+' : unreadMessageCount}</span>
+                      )}
+                    </span>
                   </a>
                 </li>
               )

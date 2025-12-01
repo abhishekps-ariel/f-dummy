@@ -41,26 +41,33 @@ const Header = ({ user, pageTitle, showMobileMenu = true, onLogout }) => {
         {/* Profile Dropdown */}
         <div className="dropdown">
           <button
-            className="btn p-0 d-flex align-items-center border-0"
+            className="btn p-0 d-flex align-items-center border-0 header-profile-btn"
             type="button"
             data-bs-toggle="dropdown"
             aria-expanded="false"
+            style={{
+              padding: '6px 12px',
+              borderRadius: '8px',
+              transition: 'all 0.2s ease',
+            }}
           >
-            <img
-              className="rounded-circle object-fit-cover me-3"
-              src="https://static.vecteezy.com/system/resources/thumbnails/003/337/584/small/default-avatar-photo-placeholder-profile-icon-vector.jpg"
-              alt="User Avatar"
-              style={{ width: "36px", height: "36px" }}
-            />
-            <div className="text-start d-none d-lg-block">
-              <p className="font-base mb-0 fw-medium">
+            <div className="header-profile-avatar-wrapper">
+              <img
+                className="rounded-circle object-fit-cover"
+                src="https://static.vecteezy.com/system/resources/thumbnails/003/337/584/small/default-avatar-photo-placeholder-profile-icon-vector.jpg"
+                alt="User Avatar"
+                style={{ width: "40px", height: "40px", border: '2px solid #e9ecef' }}
+              />
+            </div>
+            <div className="text-start d-none d-lg-block ms-3">
+              <p className="mb-0 fw-semibold" style={{ fontSize: '0.9rem', color: '#212529', lineHeight: '1.3' }}>
                 {user?.firstName} {user?.lastName}
               </p>
-              <p className="font-sm mb-0 text-gray-dark">
+              <p className="mb-0" style={{ fontSize: '0.75rem', color: '#6c757d', lineHeight: '1.3' }}>
                 {getUserRole(user) || t("header.nA")}
               </p>
             </div>
-            <i className="fas fa-chevron-down small ms-2 text-secondary d-none d-lg-block"></i>
+            <i className="fas fa-chevron-down ms-2 text-secondary d-none d-lg-block" style={{ fontSize: '0.75rem' }}></i>
           </button>
 
           {/* Dropdown Menu */}

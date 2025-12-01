@@ -279,13 +279,35 @@ function Dashboard() {
                   <div className="stat-card h-100">
                     <h5 className="stat-count mb-3" style={{ fontSize: '1.2rem' }}>{t("dashboard.form35BCompliance")}</h5>
                     <div className="d-flex flex-column justify-content-between h-100" style={{ minHeight: '150px' }}>
-                      <div className="mb-3">
-                        <p className="text-muted small mb-2">Notice sent: <strong>130</strong></p>
-                        <p className="text-muted small mb-2">Loan modification requested: <strong>300</strong></p>
-                        <p className="text-muted small mb-0">Foreclosure sale: <strong>200</strong></p>
+                      <div>
+                        <div className="mb-3 pb-2 border-bottom">
+                          <p className="text-muted small mb-0" style={{ fontSize: '0.75rem', fontWeight: '500' }}>
+                            Current Year: <strong style={{ color: '#333' }}>{new Date().getFullYear()}</strong>
+                          </p>
+                        </div>
+                        <div className="mb-2">
+                          <div className="d-flex align-items-center mb-2" style={{ gap: '12px' }}>
+                            <span className="text-muted small" style={{ fontSize: '0.8rem', flex: '1', minWidth: '140px' }}>
+                              January - June
+                            </span>
+                            <span style={{ color: '#357a5b', fontWeight: '600', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px', minWidth: '70px' }}>
+                              <i className="fa-solid fa-check-circle"></i>
+                              Ready
+                            </span>
+                          </div>
+                          <div className="d-flex align-items-center" style={{ gap: '12px' }}>
+                            <span className="text-muted small" style={{ fontSize: '0.8rem', flex: '1', minWidth: '140px' }}>
+                              July - December
+                            </span>
+                            <span style={{ color: '#dc3545', fontWeight: '600', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px', minWidth: '70px' }}>
+                              <i className="fa-solid fa-clock"></i>
+                              Due
+                            </span>
+                          </div>
+                        </div>
                       </div>
                       <button 
-                        className="btn btn-sm w-100"
+                        className="btn btn-sm w-100 mt-3"
                         onClick={() => navigate(ROUTES.FORM35)}
                         style={{
                           background: '#357a5b',
