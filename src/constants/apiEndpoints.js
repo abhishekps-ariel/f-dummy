@@ -51,6 +51,7 @@ export const COMMON_ENDPOINTS = {
   GET_FAQ_CATEGORIES: "/Common/get-faq-category",
   GET_JOIN_REQUEST_STATUS_ENUM: "/Common/join-request-status-enum",
   GET_MFA_TYPES_ENUM: "/Common/mfa-types-enum",
+  GET_35B_REPORTING_PERIOD: "/Common/get-35b-reporting-period",
 };
 
 export const FAQ_ENDPOINTS = {
@@ -85,5 +86,10 @@ export const CHAT_ENDPOINTS = {
   GET_CHAT_USER_LIST: (userId, searchText) => `/api/Chat/get-chat-user-list?userId=${userId}&searchText=${encodeURIComponent(searchText || '')}`,
   SIGNALR_HUB_URL: "/hubs/realtime-chat",
   MARK_AS_READ: (chatId, userId) => `/api/Chat/mark-as-read?chatId=${chatId}&userId=${userId}`,
+};
+
+export const FORM35B_ENDPOINTS = {
+  CALCULATE: "/api/Report35B/35b/calculate",
+  ADD_UPDATE: "/api/Report35B/add-update",
 };
 
