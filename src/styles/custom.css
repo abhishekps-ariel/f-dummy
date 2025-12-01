@@ -774,6 +774,10 @@ select.form-control {
 .logo-box{
     border-bottom: 1px solid #e8e8e8;
     padding-bottom: 20px;
+    display: flex;
+    align-items: flex-start;
+    box-sizing: border-box;
+    position: relative;
 }
 
 :root {
@@ -799,7 +803,13 @@ select.form-control {
 
 .dashboard-sidebar.collapsed .logo-box {
     padding: 0.8rem 0.5rem !important;
-    min-height: 60px;
+    height: 71px !important;
+    min-height: 71px !important;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    box-sizing: border-box;
+    position: relative;
 }
 
 .dashboard-sidebar.collapsed .dashboard-nav-link {
