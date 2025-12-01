@@ -88,8 +88,6 @@ const PetitionSteps = ({
 
   const [currentStep, setCurrentStep] = useState(1);
   const [visitedSteps, setVisitedSteps] = useState(new Set([1])); // Track visited steps, start with step 1
-  const hasInitializedStepsRef = useRef(false); // Track if we've initialized step completion for pre-filled data
-  const [isInitializingSteps, setIsInitializingSteps] = useState(false); // Loading state for step initialization
   const lastProcessedStepsRef = useRef(new Set()); // Track last processed step states to prevent infinite loops
   // Refs to track last processed state for each step to prevent infinite loops
   const lastOrgStateRef = useRef(null);
@@ -129,42 +127,33 @@ const PetitionSteps = ({
   }, [wizardCurrentStep]);
 
   // Reload form data from localStorage when modal opens (for editing drafts)
+  // Simple approach: just prefill formData like take over petition does
   useEffect(() => {
     if (isOpen) {
       const savedData = localStorage.getItem("petitionFormData");
       if (savedData) {
         try {
           const parsedData = JSON.parse(savedData);
-          // Reset wizard state FIRST when opening with draft data to ensure clean initialization
+          // Reset wizard state
           if (typeof resetWizard === "function") {
             resetWizard();
           }
-          // Reset initialization flags when opening with new data
-          hasInitializedStepsRef.current = false;
-          setIsInitializingSteps(false);
-          // Set formData AFTER resetting wizard to ensure initialization runs with fresh state
-          // Use setTimeout to ensure resetWizard completes before setting formData
-          setTimeout(() => {
-            setFormData(prev => ({ ...defaultFormData, ...parsedData }));
-          }, 0);
+          // Simply set formData - let natural step tracking handle marking steps
+          setFormData(prev => ({ ...defaultFormData, ...parsedData }));
         } catch (error) {
           console.error("Error loading form data from localStorage:", error);
         }
       } else {
-        // No saved data, reset wizard and flags
+        // No saved data, reset wizard
         if (typeof resetWizard === "function") {
           resetWizard();
         }
-        hasInitializedStepsRef.current = false;
-        setIsInitializingSteps(false);
       }
     } else {
-      // Modal closed, reset wizard and flags
+      // Modal closed, reset wizard
       if (typeof resetWizard === "function") {
         resetWizard();
       }
-      hasInitializedStepsRef.current = false;
-      setIsInitializingSteps(false);
     }
   }, [isOpen, resetWizard]);
 
@@ -1151,12 +1140,9 @@ const PetitionSteps = ({
     }
   }, [formData, userFilingEntityType, userProfile, isOrgAdmin, organizationId, selectedOrganizationId]);
 
-  // Reset initialization flag when modal closes
+  // Reset step state refs when modal closes
   useEffect(() => {
     if (!isOpen) {
-        hasInitializedStepsRef.current = false;
-        setIsInitializingSteps(false);
-      // Reset all step state refs when modal closes
       lastOrgStateRef.current = null;
       lastStep2StateRef.current = null;
       lastStep3StateRef.current = null;
@@ -1171,61 +1157,10 @@ const PetitionSteps = ({
   // Initialize step completion status when formData is loaded from localStorage (only once)
   // This must be after checkStepHasRequiredFields is defined
   // Wait for userProfile and userFilingEntityType to be loaded before initializing
-  useEffect(() => {
-    // Only initialize if:
-    // 1. Modal is open
-    // 2. formData exists and has data
-    // 3. We haven't initialized yet
-    // 4. checkStepHasRequiredFields is available
-    // 5. Profile is loaded (not loading)
-    if (
-      isOpen && 
-      formData && 
-      Object.keys(formData).length > 0 && 
-      !hasInitializedStepsRef.current && 
-      !isInitializingSteps &&
-      checkStepHasRequiredFields &&
-      !profileLoading // Wait for profile to finish loading (userProfile can be null/undefined)
-    ) {
-      // Initialize step completion immediately - no delays
-      setIsInitializingSteps(true);
-      
-      try {
-        // Batch all step completion checks in a single operation - execute immediately
-        const stepsToMark = [];
-        for (let step = 1; step <= totalSteps; step++) {
-          try {
-            const isComplete = checkStepHasRequiredFields(step);
-            if (isComplete) {
-              stepsToMark.push(step);
-            }
-          } catch (error) {
-            // Silently handle errors for individual step checks
-            console.error(`Error checking step ${step}:`, error);
-          }
-        }
-        
-        // Mark all completed steps at once using React's automatic batching
-        if (stepsToMark.length > 0) {
-          stepsToMark.forEach(step => {
-            markStepCompleted(step);
-          });
-        }
-        
-        // Mark initialization as complete
-        hasInitializedStepsRef.current = true;
-        setIsInitializingSteps(false);
-      } catch (error) {
-        console.error('Error during step completion check:', error);
-        setIsInitializingSteps(false);
-      }
-    }
-  }, [isOpen, formData, checkStepHasRequiredFields, totalSteps, profileLoading, markStepCompleted]); // Added markStepCompleted to dependencies
 
   // Track previous step for address validation prompt (moved here to access formData)
   useEffect(() => {
-    // Skip during initial load to prevent flickering
-    if ((!hasInitializedStepsRef.current || isInitializingSteps) && isOpen) {
+    if (!isOpen) {
       previousStepRef.current = wizardCurrentStep;
       return;
     }
@@ -1435,10 +1370,7 @@ const PetitionSteps = ({
 
   // When organization is selected, mark step 1 as completed
   useEffect(() => {
-    // Skip during initial load to prevent flickering
-    if ((!hasInitializedStepsRef.current || isInitializingSteps) && isOpen) {
-      return;
-    }
+    if (!isOpen) return;
     
     // For org admins, organization is pre-selected, so check organizationId
     // For filers, require explicit selection via selectedOrganizationId
@@ -1470,10 +1402,7 @@ const PetitionSteps = ({
 
   // Track step 2 (Property Details) completion when formData changes
   useEffect(() => {
-    // Skip during initial load to prevent flickering
-    if ((!hasInitializedStepsRef.current || isInitializingSteps) && isOpen) {
-      return;
-    }
+    if (!isOpen) return;
     
     if (!formData) return;
     const addressValidation = validateAddressFields();
@@ -1512,10 +1441,7 @@ const PetitionSteps = ({
 
   // When filing entity address is verified, mark step 5 as completed if all fields are filled
   useEffect(() => {
-    // Skip during initial load to prevent flickering
-    if ((!hasInitializedStepsRef.current || isInitializingSteps) && isOpen) {
-      return;
-    }
+    if (!isOpen) return;
     
     const shouldBeComplete = isFilingEntityAddressVerified && formData?.filingEntityStreet1?.trim() && userFilingEntityType;
     
@@ -1538,10 +1464,7 @@ const PetitionSteps = ({
 
   // When all borrower addresses are verified, mark step 4 as completed if all fields are filled
   useEffect(() => {
-    // Skip during initial load to prevent flickering
-    if ((!hasInitializedStepsRef.current || isInitializingSteps) && isOpen) {
-      return;
-    }
+    if (!isOpen) return;
     
     if (!formData?.borrowers) return;
     
@@ -1581,10 +1504,7 @@ const PetitionSteps = ({
 
   // Track step 8 (Loan Assignees) completion when formData changes
   useEffect(() => {
-    // Skip during initial load to prevent flickering
-    if ((!hasInitializedStepsRef.current || isInitializingSteps) && isOpen) {
-      return;
-    }
+    if (!isOpen) return;
     
     if (!formData) return;
     const loanAssigneesValidation = validateLoanAssignees();
@@ -4116,10 +4036,7 @@ const PetitionSteps = ({
 
   // Track step 3 (Loan Details) completion when formData changes
   useEffect(() => {
-    // Skip during initial load to prevent flickering
-    if ((!hasInitializedStepsRef.current || isInitializingSteps) && isOpen) {
-      return;
-    }
+    if (!isOpen) return;
     
     if (!formData) return;
     const loanValidation = validateLoanDetails();
@@ -4145,10 +4062,7 @@ const PetitionSteps = ({
 
   // Track step 6 (Right-to-Cure) completion when formData changes
   useEffect(() => {
-    // Skip during initial load to prevent flickering
-    if ((!hasInitializedStepsRef.current || isInitializingSteps) && isOpen) {
-      return;
-    }
+    if (!isOpen) return;
     
     if (!formData) return;
     const rightToCureValidation = validateRightToCureDetails();
@@ -4189,10 +4103,7 @@ const PetitionSteps = ({
 
   // Track step 7 (Form 35B Compliance) completion when formData changes
   useEffect(() => {
-    // Skip during initial load to prevent flickering
-    if ((!hasInitializedStepsRef.current || isInitializingSteps) && isOpen) {
-      return;
-    }
+    if (!isOpen) return;
     
     if (!formData) return;
     const form35BValidation = validateForm35BCompliance();
@@ -6444,17 +6355,6 @@ const PetitionSteps = ({
               {/* Form Content */}
 
               <div className="petition-steps-form position-relative" ref={formContainerRef}>
-                {/* Loading Overlay */}
-                {isInitializingSteps && (
-                  <div className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', zIndex: 1000, minHeight: '400px' }}>
-                    <div className="text-center">
-                      <div className="spinner-border text-primary mb-3" role="status" style={{ width: '3rem', height: '3rem' }}>
-                        <span className="visually-hidden">Loading...</span>
-                      </div>
-                      <p className="text-muted">Loading petition data...</p>
-                    </div>
-                  </div>
-                )}
 
                 <div className="container-fluid">
                   {/* Mobile Stepper */}
