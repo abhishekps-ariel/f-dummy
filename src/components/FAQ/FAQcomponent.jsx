@@ -26,7 +26,7 @@ const FAQcomponent = () => {
           // Auto-select first category
           setSelectedCategoryId(response.data[0].id);
         } else {
-          setError(t("faq.errors.noCategories") || "No FAQ categories available");
+          setError("No FAQ found");
         }
       } catch (err) {
         console.error("Error fetching FAQ categories:", err);

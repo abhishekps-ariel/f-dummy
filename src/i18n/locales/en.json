@@ -801,6 +801,7 @@
     },
     "editJudgment": {
       "title": "Edit Judgment",
+      "addTitle": "Add Judgment",
       "judgmentDate": "Judgment Date",
       "judgmentAmount": "Judgment Amount",
       "judgmentType": "Judgment Type",
@@ -848,6 +849,7 @@
     },
     "editForeclosure": {
       "title": "Edit Foreclosure",
+      "addTitle": "Add Foreclosure",
       "saleDate": "Sale Date",
       "soldTo": "Sold To?",
       "vestingEntityName": "Vesting Entity Name",

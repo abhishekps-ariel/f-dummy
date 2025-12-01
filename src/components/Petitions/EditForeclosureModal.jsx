@@ -189,7 +189,7 @@ const EditForeclosureModal = ({
       <div className="modal-dialog modal-dialog-centered modal-lg">
         <div className="modal-content">
           <div className="modal-header">
-            <h5 className="modal-title">{t("modals.editForeclosure.title")}</h5>
+            <h5 className="modal-title">{t("modals.editForeclosure.addTitle") || "Add Foreclosure"}</h5>
             <button
               type="button"
               className="btn-close"

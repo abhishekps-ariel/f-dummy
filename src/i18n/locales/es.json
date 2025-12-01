@@ -801,6 +801,7 @@
     },
     "editJudgment": {
       "title": "Editar Juicio",
+      "addTitle": "Agregar Juicio",
       "judgmentDate": "Fecha del Juicio",
       "judgmentAmount": "Monto del Juicio",
       "judgmentType": "Tipo de Juicio",
@@ -848,6 +849,7 @@
     },
     "editForeclosure": {
       "title": "Editar Ejecución Hipotecaria",
+      "addTitle": "Agregar Ejecución Hipotecaria",
       "saleDate": "Fecha de Venta",
       "soldTo": "¿Vendido A?",
       "vestingEntityName": "Nombre de Entidad de Titularidad",
