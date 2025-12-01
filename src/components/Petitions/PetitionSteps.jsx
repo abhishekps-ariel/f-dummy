@@ -2260,17 +2260,60 @@ const PetitionSteps = ({
 
         const fullAddress = `${streetNumber} ${route}`.trim();
 
-        setFormData((prev) => ({
-          ...prev,
-
-          noticeAddressStreet1: fullAddress,
-
-          noticeAddressCity: city,
-
-          noticeAddressState: state,
-
-          noticeAddressZip: zipCode,
-        }));
+        // Update rightToCures array format (new) or fallback to single-object format (old)
+        setFormData((prev) => {
+          const rightToCures = prev.rightToCures || [];
+          
+          if (rightToCures.length > 0) {
+            // Update array format - update first entry
+            return {
+              ...prev,
+              rightToCures: prev.rightToCures.map((rtc, idx) =>
+                idx === 0
+                  ? {
+                      ...rtc,
+                      noticeAddressStreet1: fullAddress,
+                      noticeAddressCity: city,
+                      noticeAddressState: state,
+                      noticeAddressZip: zipCode,
+                    }
+                  : rtc
+              ),
+              // Also update old format for backward compatibility
+              noticeAddressStreet1: fullAddress,
+              noticeAddressCity: city,
+              noticeAddressState: state,
+              noticeAddressZip: zipCode,
+            };
+          } else {
+            // Initialize rightToCures array with first entry if it doesn't exist
+            const newRTC = {
+              id: null,
+              noticeSent: prev.noticeSent,
+              noticeDate: prev.noticeDate || "",
+              amountInDefault: prev.amountInDefault || 0,
+              daysDelinquentAtNotice: prev.daysDelinquentAtNotice || 0,
+              cureExpirationDate: prev.cureExpirationDate || "",
+              noticeAddressStreet1: fullAddress,
+              noticeAddressCity: city,
+              noticeAddressState: state,
+              noticeAddressZip: zipCode,
+              manualOverrideReason: prev.manualOverrideReason || "",
+              borrowerRespondedWithin30Days: prev.borrowerRespondedWithin30Days,
+              borrowerResponseDate: prev.borrowerResponseDate || "",
+              proceededWithRightToCure: prev.proceededWithRightToCure,
+            };
+            return {
+              ...prev,
+              rightToCures: [newRTC],
+              // Also update old format for backward compatibility
+              noticeAddressStreet1: fullAddress,
+              noticeAddressCity: city,
+              noticeAddressState: state,
+              noticeAddressZip: zipCode,
+            };
+          }
+        });
 
         setShowNoticePredictions(false);
 
@@ -2817,16 +2860,25 @@ const PetitionSteps = ({
 
   // Validate Notice Address step
   const validateNoticeAddressStep = async () => {
-    if (!formData.noticeAddressStreet1?.trim()) {
+    // Check rightToCures array format (new) or fallback to single-object format (old)
+    const rightToCures = formData.rightToCures || [];
+    const currentRTC = rightToCures.length > 0 ? rightToCures[0] : null;
+    
+    const noticeAddressStreet1 = currentRTC ? currentRTC.noticeAddressStreet1 : formData.noticeAddressStreet1;
+    const noticeAddressCity = currentRTC ? currentRTC.noticeAddressCity : formData.noticeAddressCity;
+    const noticeAddressState = currentRTC ? currentRTC.noticeAddressState : formData.noticeAddressState;
+    const noticeAddressZip = currentRTC ? currentRTC.noticeAddressZip : formData.noticeAddressZip;
+    
+    if (!noticeAddressStreet1?.trim()) {
       return { isValid: true, errors: {} }; // No address to validate
     }
 
     const addressData = {
-      street1: formData.noticeAddressStreet1,
+      street1: noticeAddressStreet1,
       street2: "",
-      city: formData.noticeAddressCity || "",
-      state: formData.noticeAddressState || "MA",
-      zip: formData.noticeAddressZip || "",
+      city: noticeAddressCity || "",
+      state: noticeAddressState || "MA",
+      zip: noticeAddressZip || "",
     };
 
     const addressValidation = await validateAddressWithGeocodingGeneric(addressData);
@@ -3291,8 +3343,13 @@ const PetitionSteps = ({
     }
 
     // Real-time validation for cure expiration date - must be after notice date
-    if (name === "cureExpirationDate" && value.trim() && formData.noticeDate) {
-      const noticeDate = new Date(formData.noticeDate);
+    // Check both rightToCures array format and old single-object format
+    const currentNoticeDate = (formData.rightToCures && formData.rightToCures.length > 0) 
+      ? formData.rightToCures[0].noticeDate 
+      : formData.noticeDate;
+    
+    if (name === "cureExpirationDate" && value.trim() && currentNoticeDate) {
+      const noticeDate = new Date(currentNoticeDate);
       const cureExpirationDate = new Date(value);
       
       if (!isNaN(noticeDate.getTime()) && !isNaN(cureExpirationDate.getTime())) {
@@ -3316,9 +3373,13 @@ const PetitionSteps = ({
     }
 
     // Re-validate cure expiration date when notice date changes
-    if (name === "noticeDate" && formData.cureExpirationDate && value.trim()) {
+    const currentCureExpirationDate = (formData.rightToCures && formData.rightToCures.length > 0) 
+      ? formData.rightToCures[0].cureExpirationDate 
+      : formData.cureExpirationDate;
+    
+    if (name === "noticeDate" && currentCureExpirationDate && value.trim()) {
       const noticeDate = new Date(value);
-      const cureExpirationDate = new Date(formData.cureExpirationDate);
+      const cureExpirationDate = new Date(currentCureExpirationDate);
       
       if (!isNaN(noticeDate.getTime()) && !isNaN(cureExpirationDate.getTime())) {
         if (cureExpirationDate <= noticeDate) {
@@ -3365,7 +3426,12 @@ const PetitionSteps = ({
     }
 
     // Real-time validation for amount in default - must be positive if notice sent
-    if (name === "amountInDefault" && formData.noticeSent === true && value !== "" && value !== null && value !== undefined) {
+    // Check both rightToCures array format and old single-object format
+    const currentNoticeSent = (formData.rightToCures && formData.rightToCures.length > 0) 
+      ? formData.rightToCures[0].noticeSent 
+      : formData.noticeSent;
+    
+    if (name === "amountInDefault" && currentNoticeSent === true && value !== "" && value !== null && value !== undefined) {
       const amount = parseFloat(value) || 0;
       
       if (amount <= 0) {
@@ -5636,6 +5702,7 @@ const PetitionSteps = ({
             formData={formData}
             fieldErrors={fieldErrors}
             setFormData={setFormData}
+            setFieldErrors={setFieldErrors}
             handleInputChange={handleInputChange}
             handleNoticeAddressInput={handleNoticeAddressInput}
             handleNoticePredictionClick={handleNoticePredictionClick}

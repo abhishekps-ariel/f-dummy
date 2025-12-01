@@ -16,6 +16,7 @@ const Step6RightToCure = ({
   formData,
   fieldErrors,
   setFormData,
+  setFieldErrors,
   handleInputChange,
   handleNoticeAddressInput,
   handleNoticePredictionClick,
@@ -45,8 +46,145 @@ const Step6RightToCure = ({
     proceededWithRightToCure: formData.proceededWithRightToCure,
   };
 
-  // Helper to update rightToCures array or fallback to single-object format
+  // Helper to update rightToCures array or fallback to single-object format with real-time validation
   const updateRTCField = (field, value) => {
+    // Real-time validation
+    const validateField = (fieldName, fieldValue, currentRTCData) => {
+      const errors = {};
+      
+      // Validate notice date - must be in the past
+      if (fieldName === "noticeDate" && fieldValue && fieldValue.trim()) {
+        const noticeDate = new Date(fieldValue);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        if (!isNaN(noticeDate.getTime())) {
+          if (noticeDate >= today) {
+            errors.noticeDate = "Notice Date must be in the past";
+          }
+        }
+      }
+      
+      // Validate cure expiration date - must be after notice date
+      if (fieldName === "cureExpirationDate" && fieldValue && fieldValue.trim()) {
+        const noticeDate = currentRTCData.noticeDate || formData.noticeDate;
+        if (noticeDate && noticeDate.trim()) {
+          const noticeDateObj = new Date(noticeDate);
+          const cureExpirationDate = new Date(fieldValue);
+          
+          if (!isNaN(noticeDateObj.getTime()) && !isNaN(cureExpirationDate.getTime())) {
+            if (cureExpirationDate <= noticeDateObj) {
+              errors.cureExpirationDate = "Cure Expiration Date must be after Notice Date";
+            }
+          }
+        }
+      }
+      
+      // Validate acceleration date (manualOverrideReason) - must be in the past
+      if (fieldName === "manualOverrideReason" && fieldValue && fieldValue.trim()) {
+        const accelerationDate = new Date(fieldValue);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        if (!isNaN(accelerationDate.getTime())) {
+          if (accelerationDate >= today) {
+            errors.manualOverrideReason = "Acceleration Date must be in the past";
+          }
+        }
+      }
+      
+      // Validate amount in default - must be greater than 0
+      if (fieldName === "amountInDefault") {
+        const amount = parseFloat(fieldValue) || 0;
+        if (amount <= 0) {
+          errors.amountInDefault = "Amount in default must be greater than 0";
+        }
+      }
+      
+      // Validate days delinquent - must be 0 or greater
+      if (fieldName === "daysDelinquentAtNotice") {
+        const days = fieldValue === "" || fieldValue === null || fieldValue === undefined 
+          ? null 
+          : parseInt(fieldValue, 10);
+        if (days !== null && (isNaN(days) || days < 0)) {
+          errors.daysDelinquentAtNotice = "Days delinquent must be 0 or greater";
+        }
+      }
+      
+      // Validate borrower response date - must be in the past
+      if (fieldName === "borrowerResponseDate" && fieldValue && fieldValue.trim()) {
+        const responseDate = new Date(fieldValue);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        if (!isNaN(responseDate.getTime())) {
+          if (responseDate >= today) {
+            errors.borrowerResponseDate = "Borrower Response Date must be in the past";
+          }
+        }
+      }
+      
+      return errors;
+    };
+    
+    // Get current RTC data for validation
+    const currentRTCData = rightToCures.length > 0 ? rightToCures[0] : {
+      noticeSent: formData.noticeSent,
+      noticeDate: formData.noticeDate || "",
+      amountInDefault: formData.amountInDefault || 0,
+      daysDelinquentAtNotice: formData.daysDelinquentAtNotice || 0,
+      cureExpirationDate: formData.cureExpirationDate || "",
+      noticeAddressStreet1: formData.noticeAddressStreet1 || "",
+      noticeAddressCity: formData.noticeAddressCity || "",
+      noticeAddressState: formData.noticeAddressState || "",
+      noticeAddressZip: formData.noticeAddressZip || "",
+      manualOverrideReason: formData.manualOverrideReason || "",
+      borrowerRespondedWithin30Days: formData.borrowerRespondedWithin30Days,
+      borrowerResponseDate: formData.borrowerResponseDate || "",
+      proceededWithRightToCure: formData.proceededWithRightToCure,
+      [field]: value,
+    };
+    
+    // Perform real-time validation
+    const validationErrors = validateField(field, value, currentRTCData);
+    
+    // Update field errors
+    Object.keys(validationErrors).forEach(errorField => {
+      setFieldErrors((prev) => ({
+        ...prev,
+        [errorField]: validationErrors[errorField],
+      }));
+    });
+    
+    // Clear error if validation passes
+    if (Object.keys(validationErrors).length === 0 && fieldErrors[field]) {
+      setFieldErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
+    
+    // Also re-validate cure expiration date when notice date changes
+    if (field === "noticeDate" && currentRTCData.cureExpirationDate) {
+      const noticeDateObj = new Date(value);
+      const cureExpirationDateObj = new Date(currentRTCData.cureExpirationDate);
+      if (!isNaN(noticeDateObj.getTime()) && !isNaN(cureExpirationDateObj.getTime())) {
+        if (cureExpirationDateObj <= noticeDateObj) {
+          setFieldErrors((prev) => ({
+            ...prev,
+            cureExpirationDate: "Cure Expiration Date must be after Notice Date",
+          }));
+        } else if (fieldErrors.cureExpirationDate === "Cure Expiration Date must be after Notice Date") {
+          setFieldErrors((prev) => {
+            const newErrors = { ...prev };
+            delete newErrors.cureExpirationDate;
+            return newErrors;
+          });
+        }
+      }
+    }
+    
     if (rightToCures.length > 0) {
       // Update array format
       setFormData((prev) => ({
