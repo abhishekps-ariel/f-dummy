@@ -52,6 +52,7 @@ export const COMMON_ENDPOINTS = {
   GET_JOIN_REQUEST_STATUS_ENUM: "/Common/join-request-status-enum",
   GET_MFA_TYPES_ENUM: "/Common/mfa-types-enum",
   GET_35B_REPORTING_PERIOD: "/Common/get-35b-reporting-period",
+  GET_35B_ENTITY_TYPE: "/Common/get-35b-entitytype",
 };
 
 export const FAQ_ENDPOINTS = {

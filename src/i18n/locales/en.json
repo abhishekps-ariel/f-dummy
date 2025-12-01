@@ -330,7 +330,9 @@
     "messages": "Messages",
     "faq": "FAQ",
     "training": "Training",
-    "signOut": "Sign Out"
+    "signOut": "Sign Out",
+    "expand": "Expand sidebar",
+    "collapse": "Collapse sidebar"
   },
   "pageNotFound": {
     "title": "404 - Page not found",

@@ -330,7 +330,9 @@
     "messages": "Mensajes",
     "faq": "Preguntas Frecuentes",
     "training": "Capacitación",
-    "signOut": "Cerrar Sesión"
+    "signOut": "Cerrar Sesión",
+    "expand": "Expandir barra lateral",
+    "collapse": "Contraer barra lateral"
   },
   "pageNotFound": {
     "title": "404 - Página no encontrada",

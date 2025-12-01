@@ -81,3 +81,17 @@ export const get35BReportingPeriods = async () => {
   };
 };
 
+export const get35BEntityTypes = async () => {
+  const response = await client.get(COMMON_ENDPOINTS.GET_35B_ENTITY_TYPE, {
+    headers: {
+      Accept: "text/plain",
+    },
+  });
+
+  return {
+    isSuccess: response.data.success,
+    msg: response.data.message,
+    data: response.data.data,
+  };
+};
+

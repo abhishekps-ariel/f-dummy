@@ -8,7 +8,7 @@ import { clearAuthData, getAuthData } from '../../utils/storage';
 import { ROUTES } from '../../constants/routerConstants';
 import Sidebar from '../../components/shared/Sidebar';
 import Header from '../../components/shared/Header';
-import { get35BReportingPeriods, getFilingEntityTypes } from '../../services/commonService';
+import { get35BReportingPeriods, get35BEntityTypes } from '../../services/commonService';
 import Form35BAttestationModal from '../../components/Form35B/Form35BAttestationModal';
 import { getAllOrganizations, searchOrganizations } from '../../services/organizationService';
 import { useDebounce } from '../../hooks/useDebounce';
@@ -81,7 +81,7 @@ const Form35 = () => {
     const fetchEntityTypes = async () => {
       try {
         setLoadingEntityTypes(true);
-        const response = await getFilingEntityTypes();
+        const response = await get35BEntityTypes();
         if (response.isSuccess && response.data) {
           setEntityTypes(response.data);
         }
