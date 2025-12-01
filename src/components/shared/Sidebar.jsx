@@ -109,8 +109,6 @@ const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
                 justifyContent: "center",
                 alignItems: "center"
               }}
-              onMouseEnter={(e) => e.target.style.background = "#f5f5f5"}
-              onMouseLeave={(e) => e.target.style.background = "transparent"}
             >
               <i className="fas fa-bars" style={{ fontSize: "1.2rem" }}></i>
             </button>
@@ -134,8 +132,6 @@ const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
                   transition: "all 0.2s",
                   zIndex: 10
                 }}
-                onMouseEnter={(e) => e.target.style.background = "#f5f5f5"}
-                onMouseLeave={(e) => e.target.style.background = "transparent"}
               >
                 <i className="fas fa-chevron-left"></i>
               </button>
