@@ -115,125 +115,6 @@ const StepRightToCure = ({
                       </div>
                     </div>
 
-                    {/* Borrower Response Fields - At Top (after noticeSent) */}
-                    {rtc.noticeSent === true && (
-                      <>
-                        <div className="col-md-6">
-                          <div className="form-group mb-3">
-                            <label className="form-label">Did the borrower respond to the notice within 30 days? *</label>
-                            {(fieldErrors[`rightToCures.${index}.borrowerRespondedWithin30Days`] || fieldErrors.borrowerRespondedWithin30Days) && (
-                              <div className="text-danger small mt-1">
-                                {fieldErrors[`rightToCures.${index}.borrowerRespondedWithin30Days`] || fieldErrors.borrowerRespondedWithin30Days}
-                              </div>
-                            )}
-                            {isEditing ? (
-                              <CustomDropdown
-                                name={`rightToCures.${index}.borrowerRespondedWithin30Days`}
-                                value={
-                                  rtc.borrowerRespondedWithin30Days === null
-                                    ? ""
-                                    : rtc.borrowerRespondedWithin30Days
-                                    ? "true"
-                                    : "false"
-                                }
-                                onChange={(e) => {
-                                  const value =
-                                    e.target.value === "true"
-                                      ? true
-                                      : e.target.value === "false"
-                                      ? false
-                                      : null;
-                                  updateRightToCure(index, "borrowerRespondedWithin30Days", value);
-                                  if (value === false) {
-                                    updateRightToCure(index, "borrowerResponseDate", "");
-                                  }
-                                }}
-                                placeholder="Select..."
-                                disabled={!isEditing}
-                                options={[
-                                  { value: "", label: "Select..." },
-                                  { value: "true", label: "Yes" },
-                                  { value: "false", label: "No" },
-                                ]}
-                              />
-                            ) : (
-                              <input
-                                type="text"
-                                className="form-control"
-                                value={rtc.borrowerRespondedWithin30Days === true ? "Yes" : rtc.borrowerRespondedWithin30Days === false ? "No" : ""}
-                                readOnly
-                              />
-                            )}
-                          </div>
-                        </div>
-
-                        {rtc.borrowerRespondedWithin30Days === true && (
-                          <>
-                            <div className="col-md-6">
-                              <div className="form-group mb-3">
-                                <label className="form-label">Date on which the borrower responded *</label>
-                                <input
-                                  type="date"
-                                  className="form-control"
-                                  value={rtc.borrowerResponseDate || ""}
-                                  readOnly={!isEditing}
-                                  onChange={(e) =>
-                                    updateRightToCure(index, "borrowerResponseDate", e.target.value)
-                                  }
-                                />
-                              </div>
-                            </div>
-
-                            <div className="col-md-6">
-                              <div className="form-group mb-3">
-                                <label className="form-label">Did the borrower proceed with the right to cure? *</label>
-                                {(fieldErrors[`rightToCures.${index}.proceededWithRightToCure`] || fieldErrors.proceededWithRightToCure) && (
-                                  <div className="text-danger small mt-1">
-                                    {fieldErrors[`rightToCures.${index}.proceededWithRightToCure`] || fieldErrors.proceededWithRightToCure}
-                                  </div>
-                                )}
-                                {isEditing ? (
-                                  <CustomDropdown
-                                    name={`rightToCures.${index}.proceededWithRightToCure`}
-                                    value={
-                                      rtc.proceededWithRightToCure === null
-                                        ? ""
-                                        : rtc.proceededWithRightToCure
-                                        ? "true"
-                                        : "false"
-                                    }
-                                    onChange={(e) => {
-                                      const value =
-                                        e.target.value === "true"
-                                          ? true
-                                          : e.target.value === "false"
-                                          ? false
-                                          : null;
-                                      updateRightToCure(index, "proceededWithRightToCure", value);
-                                    }}
-                                    placeholder="Select..."
-                                    disabled={!isEditing}
-                                    options={[
-                                      { value: "", label: "Select..." },
-                                      { value: "true", label: "Yes" },
-                                      { value: "false", label: "No" },
-                                    ]}
-                                  />
-                                ) : (
-                                  <input
-                                    type="text"
-                                    className="form-control"
-                                    value={rtc.proceededWithRightToCure === true ? "Yes" : rtc.proceededWithRightToCure === false ? "No" : ""}
-                                    readOnly
-                                  />
-                                )}
-                              </div>
-                            </div>
-                          </>
-                        )}
-                      </>
-                    )}
-
                     {/* If Notice Sent === true */}
                     {rtc.noticeSent === true && (
                       <>
@@ -438,6 +319,125 @@ const StepRightToCure = ({
                           )}
                         </div>
                       </div>
+                    )}
+
+                    {/* Borrower Response Fields - Moved to Bottom */}
+                    {rtc.noticeSent === true && (
+                      <>
+                        <div className="col-md-6">
+                          <div className="form-group mb-3">
+                            <label className="form-label">Did the borrower respond to the notice within 30 days? *</label>
+                            {(fieldErrors[`rightToCures.${index}.borrowerRespondedWithin30Days`] || fieldErrors.borrowerRespondedWithin30Days) && (
+                              <div className="text-danger small mt-1">
+                                {fieldErrors[`rightToCures.${index}.borrowerRespondedWithin30Days`] || fieldErrors.borrowerRespondedWithin30Days}
+                              </div>
+                            )}
+                            {isEditing ? (
+                              <CustomDropdown
+                                name={`rightToCures.${index}.borrowerRespondedWithin30Days`}
+                                value={
+                                  rtc.borrowerRespondedWithin30Days === null
+                                    ? ""
+                                    : rtc.borrowerRespondedWithin30Days
+                                    ? "true"
+                                    : "false"
+                                }
+                                onChange={(e) => {
+                                  const value =
+                                    e.target.value === "true"
+                                      ? true
+                                      : e.target.value === "false"
+                                      ? false
+                                      : null;
+                                  updateRightToCure(index, "borrowerRespondedWithin30Days", value);
+                                  if (value === false) {
+                                    updateRightToCure(index, "borrowerResponseDate", "");
+                                  }
+                                }}
+                                placeholder="Select..."
+                                disabled={!isEditing}
+                                options={[
+                                  { value: "", label: "Select..." },
+                                  { value: "true", label: "Yes" },
+                                  { value: "false", label: "No" },
+                                ]}
+                              />
+                            ) : (
+                              <input
+                                type="text"
+                                className="form-control"
+                                value={rtc.borrowerRespondedWithin30Days === true ? "Yes" : rtc.borrowerRespondedWithin30Days === false ? "No" : ""}
+                                readOnly
+                              />
+                            )}
+                          </div>
+                        </div>
+
+                        {rtc.borrowerRespondedWithin30Days === true && (
+                          <>
+                            <div className="col-md-6">
+                              <div className="form-group mb-3">
+                                <label className="form-label">Date on which the borrower responded *</label>
+                                <input
+                                  type="date"
+                                  className="form-control"
+                                  value={rtc.borrowerResponseDate || ""}
+                                  readOnly={!isEditing}
+                                  onChange={(e) =>
+                                    updateRightToCure(index, "borrowerResponseDate", e.target.value)
+                                  }
+                                />
+                              </div>
+                            </div>
+
+                            <div className="col-md-6">
+                              <div className="form-group mb-3">
+                                <label className="form-label">Did the borrower proceed with the right to cure? *</label>
+                                {(fieldErrors[`rightToCures.${index}.proceededWithRightToCure`] || fieldErrors.proceededWithRightToCure) && (
+                                  <div className="text-danger small mt-1">
+                                    {fieldErrors[`rightToCures.${index}.proceededWithRightToCure`] || fieldErrors.proceededWithRightToCure}
+                                  </div>
+                                )}
+                                {isEditing ? (
+                                  <CustomDropdown
+                                    name={`rightToCures.${index}.proceededWithRightToCure`}
+                                    value={
+                                      rtc.proceededWithRightToCure === null
+                                        ? ""
+                                        : rtc.proceededWithRightToCure
+                                        ? "true"
+                                        : "false"
+                                    }
+                                    onChange={(e) => {
+                                      const value =
+                                        e.target.value === "true"
+                                          ? true
+                                          : e.target.value === "false"
+                                          ? false
+                                          : null;
+                                      updateRightToCure(index, "proceededWithRightToCure", value);
+                                    }}
+                                    placeholder="Select..."
+                                    disabled={!isEditing}
+                                    options={[
+                                      { value: "", label: "Select..." },
+                                      { value: "true", label: "Yes" },
+                                      { value: "false", label: "No" },
+                                    ]}
+                                  />
+                                ) : (
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    value={rtc.proceededWithRightToCure === true ? "Yes" : rtc.proceededWithRightToCure === false ? "No" : ""}
+                                    readOnly
+                                  />
+                                )}
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>

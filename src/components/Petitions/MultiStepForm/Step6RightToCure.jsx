@@ -95,126 +95,6 @@ const Step6RightToCure = ({
                 )}
               </div>
 
-              {/* Borrower Response Fields - Moved to Top (after noticeSent) */}
-              {formData.noticeSent === true && (
-                <>
-                  <div className="col-md-6">
-                    <label className="form-label">
-                      Did the borrower respond to the notice within 30 days? *
-                    </label>
-                    {fieldErrors.borrowerRespondedWithin30Days && (
-                      <div className="text-danger small mt-1">
-                        {fieldErrors.borrowerRespondedWithin30Days}
-                      </div>
-                    )}
-                    <div className="d-flex gap-3">
-                      <div className="form-check">
-                        <input
-                          className="form-check-input"
-                          type="radio"
-                          name="borrowerRespondedWithin30Days"
-                          id="borrowerRespondedWithin30DaysYes"
-                          value="yes"
-                          checked={formData.borrowerRespondedWithin30Days === true}
-                          onChange={(e) =>
-                            setFormData((prev) => ({ ...prev, borrowerRespondedWithin30Days: true }))
-                          }
-                        />
-                        <label className="form-check-label" htmlFor="borrowerRespondedWithin30DaysYes">
-                          Yes
-                        </label>
-                      </div>
-                      <div className="form-check">
-                        <input
-                          className="form-check-input"
-                          type="radio"
-                          name="borrowerRespondedWithin30Days"
-                          id="borrowerRespondedWithin30DaysNo"
-                          value="no"
-                          checked={formData.borrowerRespondedWithin30Days === false}
-                          onChange={(e) =>
-                            setFormData((prev) => ({ ...prev, borrowerRespondedWithin30Days: false, borrowerResponseDate: "" }))
-                          }
-                        />
-                        <label className="form-check-label" htmlFor="borrowerRespondedWithin30DaysNo">
-                          No
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-
-                  {formData.borrowerRespondedWithin30Days === true && (
-                    <>
-                      <div className="col-md-6">
-                        <label htmlFor="borrowerResponseDate" className="form-label">
-                          Date on which the borrower responded *
-                        </label>
-                        <input
-                          type="date"
-                          id="borrowerResponseDate"
-                          name="borrowerResponseDate"
-                          className={`form-control ${
-                            fieldErrors.borrowerResponseDate ? "is-invalid" : ""
-                          }`}
-                          value={formData.borrowerResponseDate || ""}
-                          onChange={handleInputChange}
-                        />
-                        {fieldErrors.borrowerResponseDate && (
-                          <div className="text-danger small mt-1">
-                            {fieldErrors.borrowerResponseDate}
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="col-md-6">
-                        <label className="form-label">
-                          Did the borrower proceed with the right to cure? *
-                        </label>
-                        {fieldErrors.proceededWithRightToCure && (
-                          <div className="text-danger small mt-1">
-                            {fieldErrors.proceededWithRightToCure}
-                          </div>
-                        )}
-                        <div className="d-flex gap-3">
-                          <div className="form-check">
-                            <input
-                              className="form-check-input"
-                              type="radio"
-                              name="proceededWithRightToCure"
-                              id="proceededWithRightToCureYes"
-                              value="yes"
-                              checked={formData.proceededWithRightToCure === true}
-                              onChange={(e) =>
-                                setFormData((prev) => ({ ...prev, proceededWithRightToCure: true }))
-                              }
-                            />
-                            <label className="form-check-label" htmlFor="proceededWithRightToCureYes">
-                              Yes
-                            </label>
-                          </div>
-                          <div className="form-check">
-                            <input
-                              className="form-check-input"
-                              type="radio"
-                              name="proceededWithRightToCure"
-                              id="proceededWithRightToCureNo"
-                              value="no"
-                              checked={formData.proceededWithRightToCure === false}
-                              onChange={(e) =>
-                                setFormData((prev) => ({ ...prev, proceededWithRightToCure: false }))
-                              }
-                            />
-                            <label className="form-check-label" htmlFor="proceededWithRightToCureNo">
-                              No
-                            </label>
-                          </div>
-                        </div>
-                      </div>
-                    </>
-                  )}
-                </>
-              )}
-
               {formData.noticeSent && (
                 <>
                   <div className="col-md-6">
@@ -539,6 +419,126 @@ const Step6RightToCure = ({
                     </div>
                   )}
                 </div>
+              )}
+
+              {/* Borrower Response Fields - Moved to Bottom */}
+              {formData.noticeSent === true && (
+                <>
+                  <div className="col-md-6">
+                    <label className="form-label">
+                      Did the borrower respond to the notice within 30 days? *
+                    </label>
+                    {fieldErrors.borrowerRespondedWithin30Days && (
+                      <div className="text-danger small mt-1">
+                        {fieldErrors.borrowerRespondedWithin30Days}
+                      </div>
+                    )}
+                    <div className="d-flex gap-3">
+                      <div className="form-check">
+                        <input
+                          className="form-check-input"
+                          type="radio"
+                          name="borrowerRespondedWithin30Days"
+                          id="borrowerRespondedWithin30DaysYes"
+                          value="yes"
+                          checked={formData.borrowerRespondedWithin30Days === true}
+                          onChange={(e) =>
+                            setFormData((prev) => ({ ...prev, borrowerRespondedWithin30Days: true }))
+                          }
+                        />
+                        <label className="form-check-label" htmlFor="borrowerRespondedWithin30DaysYes">
+                          Yes
+                        </label>
+                      </div>
+                      <div className="form-check">
+                        <input
+                          className="form-check-input"
+                          type="radio"
+                          name="borrowerRespondedWithin30Days"
+                          id="borrowerRespondedWithin30DaysNo"
+                          value="no"
+                          checked={formData.borrowerRespondedWithin30Days === false}
+                          onChange={(e) =>
+                            setFormData((prev) => ({ ...prev, borrowerRespondedWithin30Days: false, borrowerResponseDate: "" }))
+                          }
+                        />
+                        <label className="form-check-label" htmlFor="borrowerRespondedWithin30DaysNo">
+                          No
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  {formData.borrowerRespondedWithin30Days === true && (
+                    <>
+                      <div className="col-md-6">
+                        <label htmlFor="borrowerResponseDate" className="form-label">
+                          Date on which the borrower responded *
+                        </label>
+                        <input
+                          type="date"
+                          id="borrowerResponseDate"
+                          name="borrowerResponseDate"
+                          className={`form-control ${
+                            fieldErrors.borrowerResponseDate ? "is-invalid" : ""
+                          }`}
+                          value={formData.borrowerResponseDate || ""}
+                          onChange={handleInputChange}
+                        />
+                        {fieldErrors.borrowerResponseDate && (
+                          <div className="text-danger small mt-1">
+                            {fieldErrors.borrowerResponseDate}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="col-md-6">
+                        <label className="form-label">
+                          Did the borrower proceed with the right to cure? *
+                        </label>
+                        {fieldErrors.proceededWithRightToCure && (
+                          <div className="text-danger small mt-1">
+                            {fieldErrors.proceededWithRightToCure}
+                          </div>
+                        )}
+                        <div className="d-flex gap-3">
+                          <div className="form-check">
+                            <input
+                              className="form-check-input"
+                              type="radio"
+                              name="proceededWithRightToCure"
+                              id="proceededWithRightToCureYes"
+                              value="yes"
+                              checked={formData.proceededWithRightToCure === true}
+                              onChange={(e) =>
+                                setFormData((prev) => ({ ...prev, proceededWithRightToCure: true }))
+                              }
+                            />
+                            <label className="form-check-label" htmlFor="proceededWithRightToCureYes">
+                              Yes
+                            </label>
+                          </div>
+                          <div className="form-check">
+                            <input
+                              className="form-check-input"
+                              type="radio"
+                              name="proceededWithRightToCure"
+                              id="proceededWithRightToCureNo"
+                              value="no"
+                              checked={formData.proceededWithRightToCure === false}
+                              onChange={(e) =>
+                                setFormData((prev) => ({ ...prev, proceededWithRightToCure: false }))
+                              }
+                            />
+                            <label className="form-check-label" htmlFor="proceededWithRightToCureNo">
+                              No
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </>
               )}
             </div>
           </div>

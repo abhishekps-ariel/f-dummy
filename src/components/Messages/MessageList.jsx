@@ -99,22 +99,24 @@ const MessageList = ({
     const messagesLength = messages.length;
     const previousLength = previousMessagesLengthRef.current;
     
-    //scroll to bottom when new messages arriving via SignalR
+    // Scroll to bottom when new messages arriving via SignalR (instant, no animation)
     if (messagesLength > previousLength && shouldScrollToBottom) {
-      setTimeout(() => {
-        if (messagesEndRef.current) {
-          messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      // Use requestAnimationFrame for immediate positioning without animation
+      requestAnimationFrame(() => {
+        if (messagesListRef.current) {
+          messagesListRef.current.scrollTop = messagesListRef.current.scrollHeight;
         }
-      }, 100);
+      });
     }
     
-    // On initial load, scroll to bottom
+    // On initial load, scroll to bottom instantly
     if (previousLength === 0 && messagesLength > 0) {
-      setTimeout(() => {
-        if (messagesEndRef.current) {
-          messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      // Set scroll position immediately without animation
+      requestAnimationFrame(() => {
+        if (messagesListRef.current) {
+          messagesListRef.current.scrollTop = messagesListRef.current.scrollHeight;
         }
-      }, 100);
+      });
     }
     
     previousMessagesLengthRef.current = messagesLength;
@@ -149,48 +151,67 @@ const MessageList = ({
       const container = messagesListRef.current;
       const savedPosition = scrollPositionRef.current;
       
-      // After messages are loaded, adjust scroll position to maintain view
+      // After messages are loaded, adjust scroll position to maintain view (instant, no animation)
       requestAnimationFrame(() => {
         const newScrollHeight = container.scrollHeight;
         const scrollDifference = newScrollHeight - savedPosition.scrollHeight;
-        // Use smooth scroll for better UX
-        container.scrollTo({
-          top: savedPosition.scrollTop + scrollDifference,
-          behavior: 'smooth'
-        });
+        // Use instant scroll (no animation)
+        container.scrollTop = savedPosition.scrollTop + scrollDifference;
         scrollPositionRef.current = null;
       });
     }
   }, [messages, loadingMoreMessages]);
 
-  // Scroll to bottom when switching between conversations
+  // Scroll to bottom when switching between conversations (instant, no animation)
   useEffect(() => {
     if (conversationId !== undefined && conversationId !== previousConversationIdRef.current) {
-      // Conversation changed - scroll to bottom after messages are rendered
+      // Conversation changed - set scroll to bottom immediately
       const prevId = previousConversationIdRef.current;
       previousConversationIdRef.current = conversationId;
       setShouldScrollToBottom(true);
       
-      // Only scroll if this is an actual conversation change (not initial mount)
-      if (prevId !== null && prevId !== undefined) {
-        // Wait for messages to render, then scroll to bottom
-        // Use requestAnimationFrame for better timing
-        requestAnimationFrame(() => {
-          setTimeout(() => {
-            if (messagesEndRef.current) {
-              messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-            } else if (messagesListRef.current) {
-              // Fallback: scroll container to bottom with smooth behavior
-              messagesListRef.current.scrollTo({
-                top: messagesListRef.current.scrollHeight,
-                behavior: 'smooth'
-              });
-            }
-          }, 100);
-        });
+      // Reset previous messages length when conversation changes
+      previousMessagesLengthRef.current = 0;
+      
+      // Set scroll position to bottom immediately (before messages render)
+      // This ensures we start at the bottom without animation
+      if (messagesListRef.current) {
+        messagesListRef.current.scrollTop = messagesListRef.current.scrollHeight;
       }
     }
-  }, [conversationId, messages]);
+  }, [conversationId]);
+
+  // Ensure we're at bottom when messages first load for a conversation
+  useEffect(() => {
+    if (conversationId !== undefined && messages.length > 0 && previousMessagesLengthRef.current === 0) {
+      // Messages just loaded for this conversation - set to bottom instantly
+      requestAnimationFrame(() => {
+        if (messagesListRef.current) {
+          messagesListRef.current.scrollTop = messagesListRef.current.scrollHeight;
+        }
+      });
+    }
+  }, [conversationId, messages.length]);
+
+  // Ensure scroll is at bottom when component first mounts or conversation changes
+  useEffect(() => {
+    if (messagesListRef.current && conversationId !== undefined) {
+      // Set scroll to bottom immediately on mount or conversation change
+      const setScrollToBottom = () => {
+        if (messagesListRef.current) {
+          messagesListRef.current.scrollTop = messagesListRef.current.scrollHeight;
+        }
+      };
+      
+      // Set immediately
+      setScrollToBottom();
+      
+      // Also set after a brief delay to ensure DOM is ready
+      requestAnimationFrame(() => {
+        setScrollToBottom();
+      });
+    }
+  }, [conversationId]);
 
   return (
     <div 

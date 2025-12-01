@@ -724,9 +724,9 @@
   background: #adb5bd;
 }
 
-/* Smooth scrolling for messages list */
+/* Instant scrolling for messages list (no animation) */
 .messages-list {
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
 }
 
 .conversations-list {

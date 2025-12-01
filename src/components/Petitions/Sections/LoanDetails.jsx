@@ -33,109 +33,6 @@ const LoanDetails = ({
             <SectionHeader title={t("petitionTabContent.loanDetails")} />
             <div className="card-body">
               <div className="row">
-                {/* Loan Modification Fields - At Top */}
-                <div className="col-md-6">
-                  <div className="form-group mb-3">
-                    <label className="form-label">Did the borrower request a loan modification? *</label>
-                    {fieldErrors.borrowerRequestedLoanModification && (
-                      <div className="text-danger small mt-1">
-                        {fieldErrors.borrowerRequestedLoanModification}
-                      </div>
-                    )}
-                    {isEditing ? (
-                      <div className="d-flex gap-3">
-                        <div className="form-check">
-                          <input
-                            className="form-check-input"
-                            type="radio"
-                            name="borrowerRequestedLoanModification"
-                            id="borrowerRequestedLoanModificationYes"
-                            value="yes"
-                            checked={formData.borrowerRequestedLoanModification === true}
-                            onChange={handleInputChange}
-                          />
-                          <label className="form-check-label" htmlFor="borrowerRequestedLoanModificationYes">
-                            Yes
-                          </label>
-                        </div>
-                        <div className="form-check">
-                          <input
-                            className="form-check-input"
-                            type="radio"
-                            name="borrowerRequestedLoanModification"
-                            id="borrowerRequestedLoanModificationNo"
-                            value="no"
-                            checked={formData.borrowerRequestedLoanModification === false}
-                            onChange={handleInputChange}
-                          />
-                          <label className="form-check-label" htmlFor="borrowerRequestedLoanModificationNo">
-                            No
-                          </label>
-                        </div>
-                      </div>
-                    ) : (
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={formData.borrowerRequestedLoanModification === true ? "Yes" : formData.borrowerRequestedLoanModification === false ? "No" : ""}
-                        readOnly
-                      />
-                    )}
-                  </div>
-                </div>
-
-                {formData.borrowerRequestedLoanModification === true && (
-                  <div className="col-md-6">
-                    <div className="form-group mb-3">
-                      <label className="form-label">Loan modification request finalized? *</label>
-                      {fieldErrors.loanModificationRequestFinalized && (
-                        <div className="text-danger small mt-1">
-                          {fieldErrors.loanModificationRequestFinalized}
-                        </div>
-                      )}
-                      {isEditing ? (
-                        <div className="d-flex gap-3">
-                          <div className="form-check">
-                            <input
-                              className="form-check-input"
-                              type="radio"
-                              name="loanModificationRequestFinalized"
-                              id="loanModificationRequestFinalizedYes"
-                              value="yes"
-                              checked={formData.loanModificationRequestFinalized === true}
-                              onChange={handleInputChange}
-                            />
-                            <label className="form-check-label" htmlFor="loanModificationRequestFinalizedYes">
-                              Yes
-                            </label>
-                          </div>
-                          <div className="form-check">
-                            <input
-                              className="form-check-input"
-                              type="radio"
-                              name="loanModificationRequestFinalized"
-                              id="loanModificationRequestFinalizedNo"
-                              value="no"
-                              checked={formData.loanModificationRequestFinalized === false}
-                              onChange={handleInputChange}
-                            />
-                            <label className="form-check-label" htmlFor="loanModificationRequestFinalizedNo">
-                              No
-                            </label>
-                          </div>
-                        </div>
-                      ) : (
-                        <input
-                          type="text"
-                          className="form-control"
-                          value={formData.loanModificationRequestFinalized === true ? "Yes" : formData.loanModificationRequestFinalized === false ? "No" : ""}
-                          readOnly
-                        />
-                      )}
-                    </div>
-                  </div>
-                )}
-
                 <div className="col-md-6">
                   <div className="form-group mb-3">
                     <label className="form-label">Is MIN Applicable? *</label>
@@ -519,6 +416,109 @@ const LoanDetails = ({
                     </div>
                   </div>
                 </div>
+
+                {/* Loan Modification Fields - Moved to Bottom */}
+                <div className="col-md-6">
+                  <div className="form-group mb-3">
+                    <label className="form-label">Did the borrower request a loan modification? *</label>
+                    {fieldErrors.borrowerRequestedLoanModification && (
+                      <div className="text-danger small mt-1">
+                        {fieldErrors.borrowerRequestedLoanModification}
+                      </div>
+                    )}
+                    {isEditing ? (
+                      <div className="d-flex gap-3">
+                        <div className="form-check">
+                          <input
+                            className="form-check-input"
+                            type="radio"
+                            name="borrowerRequestedLoanModification"
+                            id="borrowerRequestedLoanModificationYes"
+                            value="yes"
+                            checked={formData.borrowerRequestedLoanModification === true}
+                            onChange={handleInputChange}
+                          />
+                          <label className="form-check-label" htmlFor="borrowerRequestedLoanModificationYes">
+                            Yes
+                          </label>
+                        </div>
+                        <div className="form-check">
+                          <input
+                            className="form-check-input"
+                            type="radio"
+                            name="borrowerRequestedLoanModification"
+                            id="borrowerRequestedLoanModificationNo"
+                            value="no"
+                            checked={formData.borrowerRequestedLoanModification === false}
+                            onChange={handleInputChange}
+                          />
+                          <label className="form-check-label" htmlFor="borrowerRequestedLoanModificationNo">
+                            No
+                          </label>
+                        </div>
+                      </div>
+                    ) : (
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={formData.borrowerRequestedLoanModification === true ? "Yes" : formData.borrowerRequestedLoanModification === false ? "No" : ""}
+                        readOnly
+                      />
+                    )}
+                  </div>
+                </div>
+
+                {formData.borrowerRequestedLoanModification === true && (
+                  <div className="col-md-6">
+                    <div className="form-group mb-3">
+                      <label className="form-label">Loan modification request finalized? *</label>
+                      {fieldErrors.loanModificationRequestFinalized && (
+                        <div className="text-danger small mt-1">
+                          {fieldErrors.loanModificationRequestFinalized}
+                        </div>
+                      )}
+                      {isEditing ? (
+                        <div className="d-flex gap-3">
+                          <div className="form-check">
+                            <input
+                              className="form-check-input"
+                              type="radio"
+                              name="loanModificationRequestFinalized"
+                              id="loanModificationRequestFinalizedYes"
+                              value="yes"
+                              checked={formData.loanModificationRequestFinalized === true}
+                              onChange={handleInputChange}
+                            />
+                            <label className="form-check-label" htmlFor="loanModificationRequestFinalizedYes">
+                              Yes
+                            </label>
+                          </div>
+                          <div className="form-check">
+                            <input
+                              className="form-check-input"
+                              type="radio"
+                              name="loanModificationRequestFinalized"
+                              id="loanModificationRequestFinalizedNo"
+                              value="no"
+                              checked={formData.loanModificationRequestFinalized === false}
+                              onChange={handleInputChange}
+                            />
+                            <label className="form-check-label" htmlFor="loanModificationRequestFinalizedNo">
+                              No
+                            </label>
+                          </div>
+                        </div>
+                      ) : (
+                        <input
+                          type="text"
+                          className="form-control"
+                          value={formData.loanModificationRequestFinalized === true ? "Yes" : formData.loanModificationRequestFinalized === false ? "No" : ""}
+                          readOnly
+                        />
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
