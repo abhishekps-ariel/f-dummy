@@ -27,6 +27,77 @@ const Step6RightToCure = ({
   selectedNoticePredictionIndex,
   setSelectedNoticePredictionIndex,
 }) => {
+  // Handle rightToCures array format (new) or single-object format (old) for backward compatibility
+  const rightToCures = formData.rightToCures || [];
+  const currentRTC = rightToCures.length > 0 ? rightToCures[0] : {
+    noticeSent: formData.noticeSent,
+    noticeDate: formData.noticeDate || "",
+    amountInDefault: formData.amountInDefault || 0,
+    daysDelinquentAtNotice: formData.daysDelinquentAtNotice || 0,
+    cureExpirationDate: formData.cureExpirationDate || "",
+    noticeAddressStreet1: formData.noticeAddressStreet1 || "",
+    noticeAddressCity: formData.noticeAddressCity || "",
+    noticeAddressState: formData.noticeAddressState || "",
+    noticeAddressZip: formData.noticeAddressZip || "",
+    manualOverrideReason: formData.manualOverrideReason || "",
+    borrowerRespondedWithin30Days: formData.borrowerRespondedWithin30Days,
+    borrowerResponseDate: formData.borrowerResponseDate || "",
+    proceededWithRightToCure: formData.proceededWithRightToCure,
+  };
+
+  // Helper to update rightToCures array or fallback to single-object format
+  const updateRTCField = (field, value) => {
+    if (rightToCures.length > 0) {
+      // Update array format
+      setFormData((prev) => ({
+        ...prev,
+        rightToCures: prev.rightToCures.map((rtc, idx) =>
+          idx === 0 ? { ...rtc, [field]: value } : rtc
+        ),
+      }));
+    } else {
+      // Initialize rightToCures array with first entry if it doesn't exist
+      setFormData((prev) => {
+        const newRTC = {
+          id: null,
+          noticeSent: prev.noticeSent,
+          noticeDate: prev.noticeDate || "",
+          amountInDefault: prev.amountInDefault || 0,
+          daysDelinquentAtNotice: prev.daysDelinquentAtNotice || 0,
+          cureExpirationDate: prev.cureExpirationDate || "",
+          noticeAddressStreet1: prev.noticeAddressStreet1 || "",
+          noticeAddressCity: prev.noticeAddressCity || "",
+          noticeAddressState: prev.noticeAddressState || "",
+          noticeAddressZip: prev.noticeAddressZip || "",
+          manualOverrideReason: prev.manualOverrideReason || "",
+          borrowerRespondedWithin30Days: prev.borrowerRespondedWithin30Days,
+          borrowerResponseDate: prev.borrowerResponseDate || "",
+          proceededWithRightToCure: prev.proceededWithRightToCure,
+          [field]: value,
+        };
+        return {
+          ...prev,
+          rightToCures: [newRTC],
+          [field]: value, // Keep for backward compatibility
+        };
+      });
+    }
+  };
+
+  const noticeSent = currentRTC.noticeSent;
+  const noticeDate = currentRTC.noticeDate || "";
+  const amountInDefault = currentRTC.amountInDefault || 0;
+  const daysDelinquentAtNotice = currentRTC.daysDelinquentAtNotice || 0;
+  const cureExpirationDate = currentRTC.cureExpirationDate || "";
+  const noticeAddressStreet1 = currentRTC.noticeAddressStreet1 || "";
+  const noticeAddressCity = currentRTC.noticeAddressCity || "";
+  const noticeAddressState = currentRTC.noticeAddressState || "";
+  const noticeAddressZip = currentRTC.noticeAddressZip || "";
+  const manualOverrideReason = currentRTC.manualOverrideReason || "";
+  const borrowerRespondedWithin30Days = currentRTC.borrowerRespondedWithin30Days;
+  const borrowerResponseDate = currentRTC.borrowerResponseDate || "";
+  const proceededWithRightToCure = currentRTC.proceededWithRightToCure;
+
    return (
           <div>
             <h2 className="theme-color font-med mb-1">
@@ -52,10 +123,8 @@ const Step6RightToCure = ({
                       id="noticeSentYes"
                       name="noticeSent"
                       value="yes"
-                      checked={formData.noticeSent === true}
-                      onChange={(e) =>
-                        setFormData((prev) => ({ ...prev, noticeSent: true }))
-                      }
+                      checked={noticeSent === true}
+                      onChange={(e) => updateRTCField("noticeSent", true)}
                     />
 
                     <label
@@ -74,10 +143,8 @@ const Step6RightToCure = ({
                       id="noticeSentNo"
                       name="noticeSent"
                       value="no"
-                      checked={formData.noticeSent === false}
-                      onChange={(e) =>
-                        setFormData((prev) => ({ ...prev, noticeSent: false }))
-                      }
+                      checked={noticeSent === false}
+                      onChange={(e) => updateRTCField("noticeSent", false)}
                     />
 
                     <label
@@ -97,7 +164,7 @@ const Step6RightToCure = ({
                 )}
               </div>
 
-              {formData.noticeSent && (
+              {noticeSent === true && (
                 <>
                   <div className="col-md-6">
                     <label htmlFor="noticeDate" className="form-label">
@@ -111,8 +178,8 @@ const Step6RightToCure = ({
                       className={`form-control ${
                         fieldErrors.noticeDate ? "is-invalid" : ""
                       }`}
-                      value={formData.noticeDate}
-                      onChange={handleInputChange}
+                      value={noticeDate}
+                      onChange={(e) => updateRTCField("noticeDate", e.target.value)}
                     />
 
                     {fieldErrors.noticeDate && (
@@ -139,17 +206,17 @@ const Step6RightToCure = ({
                         fieldErrors.daysDelinquentAtNotice ? "is-invalid" : ""
                       }`}
                       value={
-                        formData.daysDelinquentAtNotice === "" ||
-                        formData.daysDelinquentAtNotice === null ||
-                        formData.daysDelinquentAtNotice === undefined
+                        daysDelinquentAtNotice === "" ||
+                        daysDelinquentAtNotice === null ||
+                        daysDelinquentAtNotice === undefined
                           ? ""
                           : String(
                               Math.floor(
-                                Number(formData.daysDelinquentAtNotice)
+                                Number(daysDelinquentAtNotice)
                               )
                             )
                       }
-                      onChange={handleInputChange}
+                      onChange={(e) => updateRTCField("daysDelinquentAtNotice", e.target.value === "" ? "" : Number(e.target.value))}
                     />
 
                     {fieldErrors.daysDelinquentAtNotice && (
@@ -171,8 +238,11 @@ const Step6RightToCure = ({
                       className={`form-control ${
                         fieldErrors.amountInDefault ? "is-invalid" : ""
                       }`}
-                      value={formatCurrencyDisplay(formData.amountInDefault)}
-                      onChange={handleInputChange}
+                      value={formatCurrencyDisplay(amountInDefault)}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/[^\d.]/g, "");
+                        updateRTCField("amountInDefault", value === "" ? 0 : parseFloat(value) || 0);
+                      }}
                     />
 
                     {fieldErrors.amountInDefault && (
@@ -194,8 +264,8 @@ const Step6RightToCure = ({
                       className={`form-control ${
                         fieldErrors.cureExpirationDate ? "is-invalid" : ""
                       }`}
-                      value={formData.cureExpirationDate}
-                      onChange={handleInputChange}
+                      value={cureExpirationDate}
+                      onChange={(e) => updateRTCField("cureExpirationDate", e.target.value)}
                     />
 
                     {fieldErrors.cureExpirationDate && (
@@ -224,10 +294,9 @@ const Step6RightToCure = ({
                             ? "is-invalid"
                             : ""
                         }`}
-                        value={formData.noticeAddressStreet1}
+                        value={noticeAddressStreet1}
                         onChange={(e) => {
-                          handleInputChange(e);
-
+                          updateRTCField("noticeAddressStreet1", e.target.value);
                           handleNoticeAddressInput(e.target.value);
                         }}
                         onBlur={() => {
@@ -339,8 +408,8 @@ const Step6RightToCure = ({
                       className={`form-control ${
                         fieldErrors.noticeAddressCity ? "is-invalid" : ""
                       }`}
-                      value={formData.noticeAddressCity}
-                      onChange={handleInputChange}
+                      value={noticeAddressCity}
+                      onChange={(e) => updateRTCField("noticeAddressCity", e.target.value)}
                     />
 
                     {fieldErrors.noticeAddressCity && (
@@ -362,8 +431,8 @@ const Step6RightToCure = ({
                       className={`form-control ${
                         fieldErrors.noticeAddressState ? "is-invalid" : ""
                       }`}
-                      value={formData.noticeAddressState}
-                      onChange={handleInputChange}
+                      value={noticeAddressState}
+                      onChange={(e) => updateRTCField("noticeAddressState", e.target.value)}
                     />
 
                     {fieldErrors.noticeAddressState && (
@@ -385,8 +454,8 @@ const Step6RightToCure = ({
                       className={`form-control ${
                         fieldErrors.noticeAddressZip ? "is-invalid" : ""
                       }`}
-                      value={formData.noticeAddressZip}
-                      onChange={handleInputChange}
+                      value={noticeAddressZip}
+                      onChange={(e) => updateRTCField("noticeAddressZip", e.target.value)}
                     />
 
                     {fieldErrors.noticeAddressZip && (
@@ -398,7 +467,7 @@ const Step6RightToCure = ({
                 </>
               )}
 
-              {formData.noticeSent === false && (
+              {noticeSent === false && (
                 <div className="col-12">
                   <label htmlFor="manualOverrideReason" className="form-label">
                     Acceleration Date *
@@ -411,8 +480,8 @@ const Step6RightToCure = ({
                     className={`form-control ${
                       fieldErrors.manualOverrideReason ? "is-invalid" : ""
                     }`}
-                    value={formData.manualOverrideReason}
-                    onChange={handleInputChange}
+                    value={manualOverrideReason}
+                    onChange={(e) => updateRTCField("manualOverrideReason", e.target.value)}
                   />
 
                   {fieldErrors.manualOverrideReason && (
@@ -424,7 +493,7 @@ const Step6RightToCure = ({
               )}
 
               {/* Borrower Response Fields - Moved to Bottom */}
-              {formData.noticeSent === true && (
+              {noticeSent === true && (
                 <>
                   <div className="col-md-6">
                     <label className="form-label">
@@ -443,10 +512,10 @@ const Step6RightToCure = ({
                           name="borrowerRespondedWithin30Days"
                           id="borrowerRespondedWithin30DaysYes"
                           value="yes"
-                          checked={formData.borrowerRespondedWithin30Days === true}
-                          onChange={(e) =>
-                            setFormData((prev) => ({ ...prev, borrowerRespondedWithin30Days: true }))
-                          }
+                          checked={borrowerRespondedWithin30Days === true}
+                          onChange={(e) => {
+                            updateRTCField("borrowerRespondedWithin30Days", true);
+                          }}
                         />
                         <label className="form-check-label" htmlFor="borrowerRespondedWithin30DaysYes" style={{ fontSize: '13px', fontWeight: '500', color: '#333' }}>
                           Yes
@@ -459,10 +528,11 @@ const Step6RightToCure = ({
                           name="borrowerRespondedWithin30Days"
                           id="borrowerRespondedWithin30DaysNo"
                           value="no"
-                          checked={formData.borrowerRespondedWithin30Days === false}
-                          onChange={(e) =>
-                            setFormData((prev) => ({ ...prev, borrowerRespondedWithin30Days: false, borrowerResponseDate: "" }))
-                          }
+                          checked={borrowerRespondedWithin30Days === false}
+                          onChange={(e) => {
+                            updateRTCField("borrowerRespondedWithin30Days", false);
+                            updateRTCField("borrowerResponseDate", "");
+                          }}
                         />
                         <label className="form-check-label" htmlFor="borrowerRespondedWithin30DaysNo" style={{ fontSize: '13px', fontWeight: '500', color: '#333' }}>
                           No
@@ -471,7 +541,7 @@ const Step6RightToCure = ({
                     </div>
                   </div>
 
-                  {formData.borrowerRespondedWithin30Days === true && (
+                  {borrowerRespondedWithin30Days === true && (
                     <>
                       <div className="col-md-6">
                         <label htmlFor="borrowerResponseDate" className="form-label">
@@ -484,8 +554,8 @@ const Step6RightToCure = ({
                           className={`form-control ${
                             fieldErrors.borrowerResponseDate ? "is-invalid" : ""
                           }`}
-                          value={formData.borrowerResponseDate || ""}
-                          onChange={handleInputChange}
+                          value={borrowerResponseDate}
+                          onChange={(e) => updateRTCField("borrowerResponseDate", e.target.value)}
                         />
                         {fieldErrors.borrowerResponseDate && (
                           <div className="text-danger small mt-1">
@@ -511,10 +581,8 @@ const Step6RightToCure = ({
                               name="proceededWithRightToCure"
                               id="proceededWithRightToCureYes"
                               value="yes"
-                              checked={formData.proceededWithRightToCure === true}
-                              onChange={(e) =>
-                                setFormData((prev) => ({ ...prev, proceededWithRightToCure: true }))
-                              }
+                              checked={proceededWithRightToCure === true}
+                              onChange={(e) => updateRTCField("proceededWithRightToCure", true)}
                             />
                             <label className="form-check-label" htmlFor="proceededWithRightToCureYes" style={{ fontSize: '13px', fontWeight: '500', color: '#333' }}>
                               Yes
@@ -527,10 +595,8 @@ const Step6RightToCure = ({
                               name="proceededWithRightToCure"
                               id="proceededWithRightToCureNo"
                               value="no"
-                              checked={formData.proceededWithRightToCure === false}
-                              onChange={(e) =>
-                                setFormData((prev) => ({ ...prev, proceededWithRightToCure: false }))
-                              }
+                              checked={proceededWithRightToCure === false}
+                              onChange={(e) => updateRTCField("proceededWithRightToCure", false)}
                             />
                             <label className="form-check-label" htmlFor="proceededWithRightToCureNo" style={{ fontSize: '13px', fontWeight: '500', color: '#333' }}>
                               No

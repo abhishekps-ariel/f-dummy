@@ -439,7 +439,9 @@ const PetitionSteps = ({
     nmlsLicenseNumber: "",
     stateLicenseNumber: "",
     stateLicenseState: "",
-    // Step 6: Right-to-Cure
+    // Step 6: Right-to-Cure (new array format)
+    rightToCures: [],
+    // Legacy fields for backward compatibility
     noticeSent: null,
     noticeDate: "",
     amountInDefault: 0,
@@ -1439,68 +1441,66 @@ const PetitionSteps = ({
         }
   }, [formData, stepsWithErrors, markStepCompleted, markStepIncomplete, clearStepError, isOpen]);
 
-  // When filing entity address is verified, mark step 5 as completed if all fields are filled
+  // Track step 5 (Filing Entity) completion when formData changes
   useEffect(() => {
     if (!isOpen) return;
     
-    const shouldBeComplete = isFilingEntityAddressVerified && formData?.filingEntityStreet1?.trim() && userFilingEntityType;
+    if (!formData || !userFilingEntityType) return;
+    const filingEntityValidation = validateFilingEntity();
+    let shouldBeComplete = false;
+    
+    if (!filingEntityValidation.hasErrors) {
+      // Check if all required fields are filled
+      // Address verification will be handled when user navigates away from the step
+      shouldBeComplete = true;
+    }
     
     // Only process if state actually changed
-    if (lastStep5StateRef.current === shouldBeComplete) {
+    if (lastStep5StateRef.current === shouldBeComplete && wizardCurrentStep === 5) {
       return;
     }
     lastStep5StateRef.current = shouldBeComplete;
     
     if (shouldBeComplete) {
-      const filingEntityValidation = validateFilingEntity();
-      if (!filingEntityValidation.hasErrors) {
-          markStepCompleted(5);
-        if (stepsWithErrors.has(5)) {
-          clearStepError(5);
-        }
+      markStepCompleted(5);
+      if (stepsWithErrors.has(5)) {
+        clearStepError(5);
       }
+    } else {
+      markStepIncomplete(5);
     }
-  }, [isFilingEntityAddressVerified, formData, stepsWithErrors, markStepCompleted, clearStepError, userFilingEntityType, isOpen]);
+  }, [formData, userFilingEntityType, stepsWithErrors, markStepCompleted, markStepIncomplete, clearStepError, isOpen, wizardCurrentStep]);
 
-  // When all borrower addresses are verified, mark step 4 as completed if all fields are filled
+  // Track step 4 (Borrower Details) completion when formData changes
   useEffect(() => {
     if (!isOpen) return;
     
     if (!formData?.borrowers) return;
     
-    const hasBorrowerAddresses = formData.borrowers.some(borrower => borrower.mailingStreet1?.trim());
+    const borrowerValidation = validateBorrowerDetails();
     let shouldBeComplete = false;
     
-    if (hasBorrowerAddresses) {
-      const allBorrowerAddressesVerified = formData.borrowers
-        .filter(borrower => borrower.mailingStreet1?.trim())
-        .every(borrower => borrowerAddressesVerified[borrower.id] === true);
-      
-      if (allBorrowerAddressesVerified) {
-        const borrowerValidation = validateBorrowerDetails();
-        shouldBeComplete = !borrowerValidation.hasErrors;
-      }
-    } else {
-      // No addresses to verify, just check if validation passes
-      const borrowerValidation = validateBorrowerDetails();
-      shouldBeComplete = !borrowerValidation.hasErrors;
+    if (!borrowerValidation.hasErrors) {
+      // Check if all required fields are filled
+      // Address verification will be handled when user navigates away from the step
+      shouldBeComplete = true;
     }
     
     // Only process if state actually changed
-    if (lastStep4StateRef.current === shouldBeComplete) {
+    if (lastStep4StateRef.current === shouldBeComplete && wizardCurrentStep === 4) {
       return;
     }
     lastStep4StateRef.current = shouldBeComplete;
     
     if (shouldBeComplete) {
       markStepCompleted(4);
-        if (stepsWithErrors.has(4)) {
-          clearStepError(4);
-        }
+      if (stepsWithErrors.has(4)) {
+        clearStepError(4);
+      }
     } else {
       markStepIncomplete(4);
     }
-  }, [borrowerAddressesVerified, formData, stepsWithErrors, markStepCompleted, markStepIncomplete, clearStepError, isOpen]);
+  }, [formData, stepsWithErrors, markStepCompleted, markStepIncomplete, clearStepError, isOpen, wizardCurrentStep]);
 
   // Track step 8 (Loan Assignees) completion when formData changes
   useEffect(() => {
@@ -1511,43 +1511,26 @@ const PetitionSteps = ({
     let shouldBeComplete = false;
     
     if (!loanAssigneesValidation.hasErrors) {
-      const hasLoanAssigneeAddresses = formData?.loanAssignees?.some(assignee => assignee.street1?.trim());
-      if (hasLoanAssigneeAddresses && formData?.loanAssignees) {
-        const allLoanAssigneeAddressesVerified = formData.loanAssignees
-          .filter(assignee => assignee.street1?.trim())
-          .every((assignee, index) => loanAssigneeAddressesVerified[index] === true);
-        
-        if (allLoanAssigneeAddressesVerified) {
-          shouldBeComplete = true;
-        } else {
-          // Addresses exist but not verified - still mark complete if all required fields are filled
-          // Address verification will be handled when user navigates away from the step
-          const hasAllRequiredFields = checkStepHasRequiredFields(8);
-          if (hasAllRequiredFields) {
-            shouldBeComplete = true;
-            }
-            }
-          } else {
-        // No addresses to verify, just check if validation passes
-        shouldBeComplete = true;
-      }
+      // Check if all required fields are filled
+      // Address verification will be handled when user navigates away from the step
+      shouldBeComplete = true;
     }
     
     // Only process if state actually changed
-    if (lastStep8StateRef.current === shouldBeComplete) {
+    if (lastStep8StateRef.current === shouldBeComplete && wizardCurrentStep === 8) {
       return;
     }
     lastStep8StateRef.current = shouldBeComplete;
     
     if (shouldBeComplete) {
-            markStepCompleted(8);
-          if (stepsWithErrors.has(8)) {
-            clearStepError(8);
-          }
-        } else {
-            markStepIncomplete(8);
-          }
-  }, [loanAssigneeAddressesVerified, formData, stepsWithErrors, markStepCompleted, markStepIncomplete, clearStepError, checkStepHasRequiredFields, isOpen]);
+      markStepCompleted(8);
+      if (stepsWithErrors.has(8)) {
+        clearStepError(8);
+      }
+    } else {
+      markStepIncomplete(8);
+    }
+  }, [formData, stepsWithErrors, markStepCompleted, markStepIncomplete, clearStepError, isOpen, wizardCurrentStep]);
 
   // When address is verified and there's a pending step change, allow navigation
   useEffect(() => {
@@ -3882,124 +3865,125 @@ const PetitionSteps = ({
 
     let hasErrors = false;
 
-    // Validate notice sent selection
+    // Check if rightToCures array exists (new format)
+    const rightToCures = formData.rightToCures || [];
+    const currentRTC = rightToCures.length > 0 ? rightToCures[0] : null;
+    
+    // Use rightToCures array data if available, otherwise fallback to single-object format
+    const noticeSent = currentRTC ? currentRTC.noticeSent : formData.noticeSent;
+    const noticeDate = currentRTC ? currentRTC.noticeDate : formData.noticeDate;
+    const amountInDefault = currentRTC ? currentRTC.amountInDefault : formData.amountInDefault;
+    const daysDelinquentAtNotice = currentRTC ? currentRTC.daysDelinquentAtNotice : formData.daysDelinquentAtNotice;
+    const cureExpirationDate = currentRTC ? currentRTC.cureExpirationDate : formData.cureExpirationDate;
+    const noticeAddressStreet1 = currentRTC ? currentRTC.noticeAddressStreet1 : formData.noticeAddressStreet1;
+    const noticeAddressCity = currentRTC ? currentRTC.noticeAddressCity : formData.noticeAddressCity;
+    const noticeAddressState = currentRTC ? currentRTC.noticeAddressState : formData.noticeAddressState;
+    const noticeAddressZip = currentRTC ? currentRTC.noticeAddressZip : formData.noticeAddressZip;
+    const manualOverrideReason = currentRTC ? currentRTC.manualOverrideReason : formData.manualOverrideReason;
+    const borrowerRespondedWithin30Days = currentRTC ? currentRTC.borrowerRespondedWithin30Days : formData.borrowerRespondedWithin30Days;
+    const borrowerResponseDate = currentRTC ? currentRTC.borrowerResponseDate : formData.borrowerResponseDate;
+    const proceededWithRightToCure = currentRTC ? currentRTC.proceededWithRightToCure : formData.proceededWithRightToCure;
 
-    if (formData.noticeSent === null || formData.noticeSent === undefined) {
+    // Validate notice sent selection
+    if (noticeSent === null || noticeSent === undefined) {
       errors.noticeSent =
         "Please select whether the Right-to-Cure notice was sent";
 
       hasErrors = true;
     }
 
-    if (formData.noticeSent === true) {
+    if (noticeSent === true) {
       // Validate notice date
-
-      if (!formData.noticeDate.trim()) {
+      if (!noticeDate || !noticeDate.trim()) {
         errors.noticeDate = "Notice date is required";
-
         hasErrors = true;
       }
 
       // Validate amount in default
-
-      if (!formData.amountInDefault || formData.amountInDefault <= 0) {
+      if (!amountInDefault || amountInDefault <= 0) {
         errors.amountInDefault =
           "Amount in default is required and must be greater than 0";
-
         hasErrors = true;
       }
 
       // Validate days delinquent
-
       if (
-        formData.daysDelinquentAtNotice === "" ||
-        formData.daysDelinquentAtNotice < 0
+        daysDelinquentAtNotice === "" ||
+        daysDelinquentAtNotice === null ||
+        daysDelinquentAtNotice === undefined ||
+        daysDelinquentAtNotice < 0
       ) {
         errors.daysDelinquentAtNotice =
           "Days delinquent is required and must be 0 or greater";
-
         hasErrors = true;
       }
 
       // Validate cure expiration date
-
-      if (!formData.cureExpirationDate.trim()) {
+      if (!cureExpirationDate || !cureExpirationDate.trim()) {
         errors.cureExpirationDate = "Cure expiration date is required";
-
         hasErrors = true;
       } else if (
-        formData.noticeDate &&
-        formData.cureExpirationDate &&
-        new Date(formData.cureExpirationDate) <= new Date(formData.noticeDate)
+        noticeDate &&
+        cureExpirationDate &&
+        new Date(cureExpirationDate) <= new Date(noticeDate)
       ) {
         errors.cureExpirationDate =
           "Cure expiration date must be after notice date";
-
         hasErrors = true;
       }
 
       // Validate notice address
-
-      if (!formData.noticeAddressStreet1.trim()) {
+      if (!noticeAddressStreet1 || !noticeAddressStreet1.trim()) {
         errors.noticeAddressStreet1 = "Notice mailing address is required";
-
         hasErrors = true;
       }
 
-      if (!formData.noticeAddressCity.trim()) {
+      if (!noticeAddressCity || !noticeAddressCity.trim()) {
         errors.noticeAddressCity = "City is required";
-
         hasErrors = true;
       }
 
-      if (!formData.noticeAddressState.trim()) {
+      if (!noticeAddressState || !noticeAddressState.trim()) {
         errors.noticeAddressState = "State is required";
-
         hasErrors = true;
       }
 
-      if (!formData.noticeAddressZip.trim()) {
+      if (!noticeAddressZip || !noticeAddressZip.trim()) {
         errors.noticeAddressZip = "ZIP code is required";
-
         hasErrors = true;
       }
 
       // Validate borrower responded within 30 days (required if notice was sent)
-      if (formData.borrowerRespondedWithin30Days === null || formData.borrowerRespondedWithin30Days === undefined) {
+      if (borrowerRespondedWithin30Days === null || borrowerRespondedWithin30Days === undefined) {
         errors.borrowerRespondedWithin30Days = "Please select if the borrower responded to the notice within 30 days";
         hasErrors = true;
       }
 
       // Validate borrower response date (required if borrower responded)
-      if (formData.borrowerRespondedWithin30Days === true) {
-        if (!formData.borrowerResponseDate || !formData.borrowerResponseDate.trim()) {
+      if (borrowerRespondedWithin30Days === true) {
+        if (!borrowerResponseDate || !borrowerResponseDate.trim()) {
           errors.borrowerResponseDate = "Date on which the borrower responded is required";
           hasErrors = true;
         }
 
         // Validate proceeded with right to cure (required if borrower responded)
-        if (formData.proceededWithRightToCure === null || formData.proceededWithRightToCure === undefined) {
+        if (proceededWithRightToCure === null || proceededWithRightToCure === undefined) {
           errors.proceededWithRightToCure = "Please select if the borrower proceeded with the right to cure";
           hasErrors = true;
         }
       }
-    } else if (formData.noticeSent === false) {
+    } else if (noticeSent === false) {
       // Validate acceleration date for non-notice path
-
-      if (!formData.manualOverrideReason.trim()) {
+      if (!manualOverrideReason || !manualOverrideReason.trim()) {
         errors.manualOverrideReason = "Acceleration date is required";
-
         hasErrors = true;
       } else {
-        const accelerationDate = new Date(formData.manualOverrideReason);
-
+        const accelerationDate = new Date(manualOverrideReason);
         const today = new Date();
-
         today.setHours(0, 0, 0, 0); // Reset time to start of day for comparison
 
         if (accelerationDate >= today) {
           errors.manualOverrideReason = "Acceleration date must be in the past";
-
           hasErrors = true;
         }
       }
@@ -4069,24 +4053,13 @@ const PetitionSteps = ({
     let shouldBeComplete = false;
     
     if (!rightToCureValidation.hasErrors) {
-      // If there's a notice address, check if it's verified
-      if (formData?.noticeAddressStreet1?.trim()) {
-        if (isNoticeAddressVerified) {
-          shouldBeComplete = true;
-        } else {
-          // Address exists but not verified - still mark complete if all required fields are filled
-          // Address verification will be handled when user navigates away from the step
-          const hasAllRequiredFields = checkStepHasRequiredFields(6);
-          shouldBeComplete = hasAllRequiredFields;
-        }
-      } else {
-        // No notice address required - mark complete if validation passes
-        shouldBeComplete = true;
-      }
+      // Check if all required fields are filled
+      // Address verification will be handled when user navigates away from the step
+      shouldBeComplete = true;
     }
     
     // Only process if state actually changed
-    if (lastStep6StateRef.current === shouldBeComplete) {
+    if (lastStep6StateRef.current === shouldBeComplete && wizardCurrentStep === 6) {
       return;
     }
     lastStep6StateRef.current = shouldBeComplete;
@@ -4099,7 +4072,7 @@ const PetitionSteps = ({
     } else {
       markStepIncomplete(6);
     }
-  }, [isNoticeAddressVerified, formData, stepsWithErrors, markStepCompleted, markStepIncomplete, clearStepError, checkStepHasRequiredFields, isOpen]);
+  }, [formData, stepsWithErrors, markStepCompleted, markStepIncomplete, clearStepError, isOpen, wizardCurrentStep]);
 
   // Track step 7 (Form 35B Compliance) completion when formData changes
   useEffect(() => {
@@ -4110,7 +4083,7 @@ const PetitionSteps = ({
     const shouldBeComplete = !form35BValidation.hasErrors;
     
     // Only process if state actually changed
-    if (lastStep7StateRef.current === shouldBeComplete) {
+    if (lastStep7StateRef.current === shouldBeComplete && wizardCurrentStep === 7) {
       return;
     }
     lastStep7StateRef.current = shouldBeComplete;
@@ -4123,7 +4096,7 @@ const PetitionSteps = ({
     } else {
       markStepIncomplete(7);
     }
-  }, [formData, stepsWithErrors, markStepCompleted, markStepIncomplete, clearStepError, isOpen]);
+  }, [formData, stepsWithErrors, markStepCompleted, markStepIncomplete, clearStepError, isOpen, wizardCurrentStep]);
 
   // Validate Filing Entity details
 
