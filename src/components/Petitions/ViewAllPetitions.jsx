@@ -251,13 +251,16 @@ const ViewAllPetitions = ({ onBack }) => {
         setPetitions(transformedPetitions);
 
         // Update pagination info from API response
+        // Use totalRecords from API response, which should be the total count across all pages
+        const totalRecords = response.totalRecords ?? 0;
+        const pageSize = 10;
+        const calculatedTotalPages = totalRecords > 0 ? Math.ceil(totalRecords / pageSize) : 1;
+        
         setPagination((prev) => ({
           ...prev,
           currentPage: page,
-          totalPages: Math.ceil(
-            (response.totalRecords || response.data?.length || 0) / 10
-          ),
-          totalCount: response.totalRecords || response.data?.length || 0,
+          totalPages: calculatedTotalPages,
+          totalCount: totalRecords,
         }));
       } else {
         toast.error(response.message || t("viewAllPetitions.failedFetchPetitions"));
@@ -1386,25 +1389,48 @@ const ViewAllPetitions = ({ onBack }) => {
                       </button>
 
                       <div className="pagination-pages">
-                        {Array.from(
-                          { length: Math.min(pagination.totalPages, 5) },
-                          (_, i) => {
-                            const page = i + 1;
-                            return (
-                              <button
-                                key={page}
-                                className={`pagination-page ${
-                                  page === pagination.currentPage
-                                    ? "active"
-                                    : ""
-                                }`}
-                                onClick={() => fetchPetitions(page)}
-                              >
-                                {page}
-                              </button>
-                            );
+                        {(() => {
+                          // Calculate which pages to show
+                          // Show up to 7 pages with a sliding window around current page
+                          const maxVisiblePages = 7;
+                          const currentPage = pagination.currentPage;
+                          const totalPages = pagination.totalPages;
+                          
+                          let startPage = 1;
+                          let endPage = Math.min(totalPages, maxVisiblePages);
+                          
+                          // If we have more pages than maxVisiblePages, show a window around current page
+                          if (totalPages > maxVisiblePages) {
+                            // Calculate start and end to center current page when possible
+                            const halfVisible = Math.floor(maxVisiblePages / 2);
+                            startPage = Math.max(1, currentPage - halfVisible);
+                            endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+                            
+                            // Adjust start if we're near the end
+                            if (endPage - startPage < maxVisiblePages - 1) {
+                              startPage = Math.max(1, endPage - maxVisiblePages + 1);
+                            }
                           }
-                        )}
+                          
+                          const pages = [];
+                          for (let i = startPage; i <= endPage; i++) {
+                            pages.push(i);
+                          }
+                          
+                          return pages.map((page) => (
+                            <button
+                              key={page}
+                              className={`pagination-page ${
+                                page === pagination.currentPage
+                                  ? "active"
+                                  : ""
+                              }`}
+                              onClick={() => fetchPetitions(page)}
+                            >
+                              {page}
+                            </button>
+                          ));
+                        })()}
                       </div>
 
                       <button

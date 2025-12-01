@@ -825,6 +825,13 @@ select.form-control {
     padding: 16px 12px;
 }
 
+.dashboard-nav-item {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
 .dashboard-nav-link {
     text-decoration: none;
     border-radius: 8px;
@@ -834,6 +841,16 @@ select.form-control {
     color: #666;
     font-size: var(--text-sm);
     transition: all 0.2s;
+    cursor: pointer;
+    width: 100%;
+    box-sizing: border-box;
+    position: relative;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.dashboard-nav-link * {
+    pointer-events: none;
 }
 
 .dashboard-active-link, .dashboard-nav-link:hover {
