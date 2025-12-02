@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
-import { useAuth } from './AuthContext';
+import AuthContext from './AuthContext';
 import { createSignalRConnection, getChatList } from '../services/chatService';
 
 const MessageContext = createContext();
@@ -13,7 +13,9 @@ export const useMessages = () => {
 };
 
 export const MessageProvider = ({ children }) => {
-  const { user } = useAuth();
+  // Safely get auth context with fallback
+  const authContext = useContext(AuthContext);
+  const user = authContext?.user || null;
   const signalRConnectionRef = useRef(null);
   const [isConnected, setIsConnected] = useState(false);
   const isInitializedRef = useRef(false);
@@ -52,8 +54,6 @@ export const MessageProvider = ({ children }) => {
 
     // Set up message handler
     conn.on('chatmessages', (msg) => {
-      console.log('SignalR message received (global):', msg);
-      
       const isOwn = msg.SendbyYou !== undefined ? msg.SendbyYou : (msg.sendbyYou || false);
       const chatId = msg.ChatId || msg.chatId;
       
@@ -74,17 +74,14 @@ export const MessageProvider = ({ children }) => {
 
     // Handle connection events
     conn.onclose(() => {
-      console.log('SignalR connection closed (global)');
       setIsConnected(false);
     });
 
     conn.onreconnecting(() => {
-      console.log('SignalR reconnecting (global)');
       setIsConnected(false);
     });
 
     conn.onreconnected(() => {
-      console.log('SignalR reconnected (global)');
       setIsConnected(true);
       // Refresh unread count after reconnection
       updateUnreadCountInStorage();
@@ -93,7 +90,6 @@ export const MessageProvider = ({ children }) => {
     // Start connection
     conn.start()
       .then(() => {
-        console.log('SignalR connected successfully (global)');
         setIsConnected(true);
         // Load initial unread count
         updateUnreadCountInStorage();
@@ -108,7 +104,6 @@ export const MessageProvider = ({ children }) => {
       if (signalRConnectionRef.current) {
         signalRConnectionRef.current.stop()
           .then(() => {
-            console.log('SignalR connection stopped (global)');
           })
           .catch((error) => {
             console.error('Error stopping SignalR connection (global):', error);

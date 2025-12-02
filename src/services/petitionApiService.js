@@ -840,12 +840,6 @@ class PetitionApiService {
         email: borrower.email
       })),
       loanAssignees: (formData.loanAssignees || []).map(assignee => {
-        // Debug logging for assignee data
-        console.log('Processing assignee:', assignee);
-        console.log('assigneeName:', assignee.assigneeName, 'Type:', typeof assignee.assigneeName);
-        console.log('assigneeTypeId:', assignee.assigneeTypeId, 'Type:', typeof assignee.assigneeTypeId);
-        console.log('assigneeRoleId:', assignee.assigneeRoleId, 'Type:', typeof assignee.assigneeRoleId);
-        
         return {
           assigneeName: assignee.assigneeName && assignee.assigneeName.trim() !== '' ? assignee.assigneeName : null,
           assigneeTypeId: assignee.assigneeTypeId && assignee.assigneeTypeId.trim() !== '' ? assignee.assigneeTypeId : null,

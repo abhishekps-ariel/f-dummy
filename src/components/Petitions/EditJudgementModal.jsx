@@ -157,8 +157,6 @@ const EditJudgementModal = ({ isOpen, onClose, petition, onSave, formData, setFo
   };
 
   const handleSave = async () => {
-    console.log("Save Judgment button clicked");
-    
     if (!validate()) {
       toast.error(t("modals.editJudgment.validation.fillAllRequired"));
       return;
@@ -199,16 +197,12 @@ const EditJudgementModal = ({ isOpen, onClose, petition, onSave, formData, setFo
         },
       };
       
-      console.log("Updated formData with judgment:", updatedFormData.judgment);
-      
       // Update local state first
       setFormData(updatedFormData);
 
       // Then save to backend
       if (onSave) {
-        console.log("Calling onSave function");
         await onSave(updatedFormData);
-        console.log("onSave completed successfully");
       } else {
         console.error("onSave function is not provided!");
         toast.error(t("modals.editJudgment.saveFunctionNotAvailable"));

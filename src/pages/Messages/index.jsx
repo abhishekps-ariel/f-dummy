@@ -269,8 +269,6 @@ const Messages = () => {
     conn.on('chatmessages', (msg) => {
       if (!isMounted) return;
       
-      console.log('SignalR message received:', msg);
-      
       const chatId = msg.ChatId || msg.chatId;
       const messageId = msg.Id || msg.id;
       const isOwn = msg.SendbyYou !== undefined ? msg.SendbyYou : (msg.sendbyYou || false);
@@ -433,7 +431,6 @@ const Messages = () => {
 
     conn.start()
       .then(() => {
-        console.log('SignalR connected successfully');
         if (!isMounted) {
           conn.stop().catch(() => {});
         }

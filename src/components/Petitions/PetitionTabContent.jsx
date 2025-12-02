@@ -2207,28 +2207,6 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
     // Users can edit foreclosure sale independently without blocking main form submission
 
     if (Object.keys(errors).length) {
-      // Log validation errors for debugging
-      console.log("Validation errors found:", errors);
-      console.log("Form data state:", {
-        propertyStreet1: formData.propertyStreet1,
-        propertyCity: formData.propertyCity,
-        propertyState: formData.propertyState,
-        propertyZip: formData.propertyZip,
-        loanNumber: formData.loanNumber,
-        petitionLoanTypeId: formData.petitionLoanTypeId,
-        lienPosition: formData.lienPosition,
-        filingEntityLegalName: formData.filingEntityLegalName,
-        filingEntityStreet1: formData.filingEntityStreet1,
-        filingEntityCity: formData.filingEntityCity,
-        filingEntityState: formData.filingEntityState,
-        filingEntityZip: formData.filingEntityZip,
-        filingContactName: formData.filingContactName,
-        filingContactEmail: formData.filingContactEmail,
-        borrowers: formData.borrowers,
-        loanAssignees: formData.loanAssignees,
-        signatures: formData.signatures,
-      });
-      
       setFieldErrors((prev) => ({ ...prev, ...errors }));
       
       // Special handling for e-consent error - scroll to signature section if it's present

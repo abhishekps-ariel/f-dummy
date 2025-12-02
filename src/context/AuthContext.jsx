@@ -8,7 +8,25 @@ import {
 } from '../utils/storage';
 import { getOrganizationById, getUserJoinRequests } from '../services/organizationService';
 
-const AuthContext = createContext();
+// Default context value to prevent errors during initialization
+const defaultAuthValue = {
+  isAuthenticated: false,
+  user: null,
+  isLoading: true,
+  organization: null,
+  organizations: [],
+  activeOrganizationId: null,
+  login: async () => {},
+  logout: () => {},
+  updateOrganization: () => {},
+  updateUserSignature: () => {},
+  setActiveOrganization: () => {},
+  syncUserData: () => {},
+  isTokenExpired: () => true,
+  setOrganization: () => {},
+};
+
+const AuthContext = createContext(defaultAuthValue);
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {

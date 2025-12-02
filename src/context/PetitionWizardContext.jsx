@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
-import { useAuth } from './AuthContext';
+import AuthContext from './AuthContext';
 
 const PetitionWizardContext = createContext();
 
@@ -15,7 +15,10 @@ export const PetitionWizardProvider = ({ children }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [completedSteps, setCompletedSteps] = useState(new Set());
   const [stepsWithErrors, setStepsWithErrors] = useState(new Set());
-  const { user } = useAuth();
+  
+  // Safely get auth context with fallback
+  const authContext = useContext(AuthContext);
+  const user = authContext?.user || null;
 
   // Reset wizard when user logs out
   useEffect(() => {

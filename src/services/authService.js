@@ -479,7 +479,6 @@ export const performExitImpersonation = async () => {
 
 
 export const getorganisationUsersList = async (payload) => {
-  console.log("Payload sent:", payload);
   const response = await client.post(
     AUTH_ENDPOINTS.ORGANISATION_USERS_API,
     payload,
@@ -487,8 +486,6 @@ export const getorganisationUsersList = async (payload) => {
       headers: { Accept: "application/json" },
     }
   );
- 
-  console.log("API Raw Response:", response.data);
  
   return {
     isSuccess: response.data.success,

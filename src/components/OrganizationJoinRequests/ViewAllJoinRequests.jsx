@@ -99,9 +99,7 @@ const ViewAllJoinRequests = ({ organizationId, onRefresh }) => {
         endDate: overrideFilters.endDate !== undefined ? overrideFilters.endDate : getToDate(),
       };
 
-      console.log("Loading join requests with filters:", { organizationId, filters });
       const response = await getAllOrganizationJoinRequests(organizationId, filters);
-      console.log("Join requests response:", response);
       
       if (response.isSuccess) {
         const requestsData = Array.isArray(response.data) ? response.data : [];

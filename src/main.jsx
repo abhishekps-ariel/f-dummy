@@ -19,7 +19,6 @@ window.addEventListener('error', (event) => {
     // Prevent default error handling
     event.preventDefault();
     // Reload the page to get fresh assets
-    console.log('Chunk load error detected. Reloading page...');
     setTimeout(() => {
       window.location.reload(true);
     }, 100);
@@ -36,7 +35,6 @@ window.addEventListener('unhandledrejection', (event) => {
   ) {
     // Prevent default error handling
     event.preventDefault();
-    console.log('Chunk load error detected in promise. Reloading page...');
     setTimeout(() => {
       window.location.reload(true);
     }, 100);

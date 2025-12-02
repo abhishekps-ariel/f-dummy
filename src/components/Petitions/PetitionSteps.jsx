@@ -1840,19 +1840,8 @@ const PetitionSteps = ({
 
         let county = "";
 
-        // Debug: Log address components to console
-
-        console.log("Address components:", addressComponents);
-
         addressComponents.forEach((component) => {
           const types = component.types;
-
-          console.log(
-            "Component types:",
-            types,
-            "Long name:",
-            component.long_name
-          );
 
           if (types.includes("street_number")) {
             streetNumber = component.long_name;
@@ -1864,30 +1853,13 @@ const PetitionSteps = ({
             state = component.short_name;
           } else if (types.includes("postal_code")) {
             zipCode = component.long_name;
-
-            console.log("Found postal code:", zipCode);
           } else if (types.includes("administrative_area_level_2")) {
             // County information is typically found in administrative_area_level_2
-
             county = component.long_name;
           }
         });
 
         const fullAddress = `${streetNumber} ${route}`.trim();
-
-        // Debug: Log extracted values
-
-        console.log("Extracted values:", {
-          fullAddress,
-
-          city,
-
-          state,
-
-          zipCode,
-
-          county,
-        });
 
         setFormData((prev) => ({
           ...prev,
