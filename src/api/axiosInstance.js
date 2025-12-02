@@ -53,6 +53,7 @@ const refreshTokenIfNeeded = async () => {
       const response = await refreshToken(storedRefreshToken);
       
       if (response.isSuccess && response.data) {
+        // Update both access token and refresh token (both are returned in the response)
         localStorage.setItem('token', response.data.token);
         if (response.data.refreshToken) {
           localStorage.setItem('refreshToken', response.data.refreshToken);
@@ -143,6 +144,7 @@ client.interceptors.response.use(
                 const response = await refreshToken(storedRefreshToken);
                 
                 if (response.isSuccess && response.data) {
+                  // Update both access token and refresh token (both are returned in the response)
                   localStorage.setItem('token', response.data.token);
                   if (response.data.refreshToken) {
                     localStorage.setItem('refreshToken', response.data.refreshToken);
