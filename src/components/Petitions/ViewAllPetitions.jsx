@@ -1036,7 +1036,7 @@ const ViewAllPetitions = ({ onBack }) => {
                           )}
                         </th>
                         <th
-                          style={{ width: "11%", minWidth: "90px" }}
+                          style={{ width: "15%", minWidth: "180px" }}
                           className="sortable-header"
                           onClick={() => handleSort("status")}
                         >
@@ -1119,7 +1119,11 @@ const ViewAllPetitions = ({ onBack }) => {
                                   petition.statusClass
                                 )}
                               >
-                                {petition.status}
+                                {petition.status === "Foreclosure Sale Initiated" 
+                                  ? <>Foreclosure Sale<br />Initiated</>
+                                  : petition.status === "Judgment Submitted"
+                                  ? <>Judgment<br />Submitted</>
+                                  : petition.status}
                               </span>
                             </td>
                             <td>{petition.filingDate}</td>

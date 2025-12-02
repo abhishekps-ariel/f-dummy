@@ -254,6 +254,7 @@ text-decoration: underline;
 .petition-table-container .table th:nth-child(4) {
     white-space: nowrap;
     text-align: center;
+    min-width: 180px; /* Allow enough space for full status text */
 }
 
 /* Dashboard table specific - Status column (4th column in dashboard) */
@@ -261,11 +262,15 @@ text-decoration: underline;
 .dashboard-petition-table .table th:nth-child(4) {
     white-space: nowrap;
     text-align: center;
+    min-width: 180px; /* Allow enough space for full status text */
 }
 
 .dashboard-petition-table .table td:nth-child(4) .status-badge {
     display: inline-block;
     margin: 0 auto;
+    overflow: visible;
+    text-overflow: clip;
+    max-width: none;
 }
 
 /* Minimal Pagination Styles */

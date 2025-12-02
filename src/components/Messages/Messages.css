@@ -735,6 +735,14 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
+  .messages-main-area {
+    padding-top: 60px !important;
+  }
+
+  .messages-page-content {
+    height: calc(100vh - 60px);
+  }
+
   .messages-container {
     height: calc(100vh - 150px);
   }

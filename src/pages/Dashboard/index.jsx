@@ -386,7 +386,7 @@ function Dashboard() {
                       <th style={{ width: '20%' }}>{t("dashboard.petitionNumber")}</th>
                       <th style={{ width: '25%' }}>{t("dashboard.propertyAddress")}</th>
                       <th style={{ width: '16%' }}>{t("dashboard.borrower")}</th>
-                      <th style={{ width: '12%' }}>{t("dashboard.status")}</th>
+                      <th style={{ width: '15%', minWidth: '180px' }}>{t("dashboard.status")}</th>
                       <th style={{ width: '13%' }}>{t("dashboard.filingDate")}</th>
                       <th style={{ width: '14%' }}>{t("dashboard.lastUpdated")}</th>
                     </tr>
@@ -410,7 +410,11 @@ function Dashboard() {
                           <td>{petition.borrower}</td>
                           <td>
                             <span className={`status-badge status-${petition.statusClass || petition.status.toLowerCase().replace(' ', '-')}`}>
-                              {petition.status}
+                              {petition.status === "Foreclosure Sale Initiated" 
+                                ? <>Foreclosure Sale<br />Initiated</>
+                                : petition.status === "Judgment Submitted"
+                                ? <>Judgment<br />Submitted</>
+                                : petition.status}
                             </span>
                           </td>
                           <td>{petition.filingDate}</td>

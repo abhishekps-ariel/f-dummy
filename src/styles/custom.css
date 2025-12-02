@@ -119,12 +119,18 @@ body {
   line-height: 1.4;
 }
 
-/* Status badges */
-.petition-table-container .status-badge {
+/* Status badges in tables - show full text */
+.petition-table-container .status-badge,
+.dashboard-petition-table .status-badge {
   font-size: 0.75rem;
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
   font-weight: 600;
+  white-space: nowrap;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  max-width: none !important;
+  min-width: fit-content;
 }
 
 /* Mobile Table Responsive Styles */
@@ -2151,22 +2157,47 @@ input, textarea, select {
     background-color: #D1C4E9;
     color: #6f42c1;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
     line-height: 1.3;
     min-width: 100px;
-    max-width: 100%;
 }
+
+/* Override for table badges - allow wrapping to two lines with "Initiated" on second line */
+.petition-table-container .status-ForeclosureSaleInitiated,
+.dashboard-petition-table .status-ForeclosureSaleInitiated {
+    overflow: visible;
+    text-overflow: clip;
+    max-width: 140px;
+    white-space: normal;
+    word-break: normal;
+    line-height: 1.3;
+    padding: 6px 10px;
+    text-align: center;
+    display: inline-block;
+    min-height: 40px;
+}
+
 /* JudgmentSubmitted: Teal */
 .status-JudgmentSubmitted {
     background-color: #B2DFDB;
     color: #00897B;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
     line-height: 1.3;
     min-width: 100px;
-    max-width: 100%;
+}
+
+/* Override for table badges - allow wrapping to two lines with "Submitted" on second line */
+.petition-table-container .status-JudgmentSubmitted,
+.dashboard-petition-table .status-JudgmentSubmitted {
+    overflow: visible;
+    text-overflow: clip;
+    max-width: 140px;
+    white-space: normal;
+    word-break: normal;
+    line-height: 1.3;
+    padding: 6px 10px;
+    text-align: center;
+    display: inline-block;
+    min-height: 40px;
 }
 /* Returned: Orange */
 .status-Returned {
@@ -2213,11 +2244,38 @@ input, textarea, select {
     color: #6f42c1;
     font-weight: 600;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
     line-height: 1.3;
     min-width: 100px;
-    max-width: 100%;
+}
+
+/* Override for table badges - allow wrapping to two lines with "Initiated" on second line */
+.petition-table-container .status-foreclosuresaleinitiated,
+.dashboard-petition-table .status-foreclosuresaleinitiated {
+    overflow: visible;
+    text-overflow: clip;
+    max-width: 140px;
+    white-space: normal;
+    word-break: normal;
+    line-height: 1.3;
+    padding: 6px 10px;
+    text-align: center;
+    display: inline-block;
+    min-height: 40px;
+}
+
+/* Override for table badges - allow wrapping to two lines with "Submitted" on second line */
+.petition-table-container .status-judgmentsubmitted,
+.dashboard-petition-table .status-judgmentsubmitted {
+    overflow: visible;
+    text-overflow: clip;
+    max-width: 140px;
+    white-space: normal;
+    word-break: normal;
+    line-height: 1.3;
+    padding: 6px 10px;
+    text-align: center;
+    display: inline-block;
+    min-height: 40px;
 }
 
 .status-judgmentsubmitted {
@@ -2225,11 +2283,16 @@ input, textarea, select {
     color: #00897B;
     font-weight: 600;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
     line-height: 1.3;
     min-width: 100px;
-    max-width: 100%;
+}
+
+/* Override for table badges - show full text */
+.petition-table-container .status-judgmentsubmitted,
+.dashboard-petition-table .status-judgmentsubmitted {
+    overflow: visible;
+    text-overflow: clip;
+    max-width: none;
 }
 
 .status-returned {
