@@ -145,6 +145,98 @@
   width: 100%;
 }
 
+/* Prevent horizontal scroll in filter row */
+.petitions-filters-row {
+  overflow-x: hidden;
+  max-width: 100%;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+.petitions-filters-row > [class*="col-"] {
+  min-width: 0;
+  max-width: 100%;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+}
+
+/* Ensure custom dropdown doesn't overflow */
+.custom-dropdown {
+  max-width: 100%;
+  min-width: 0;
+}
+
+.custom-dropdown-selected {
+  max-width: calc(100% - 30px);
+}
+
+/* Mobile responsive adjustments for filters */
+@media (max-width: 991.98px) {
+  .petitions-filters-row {
+    margin-left: -0.5rem !important;
+    margin-right: -0.5rem !important;
+  }
+  
+  .petitions-filters-row > [class*="col-"] {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .petitions-filters-row > [class*="col-"]:last-child {
+    margin-bottom: 0;
+  }
+  
+  .petitions-search-column .input-group {
+    width: 100%;
+  }
+  
+  .petitions-search-column .input-group-text,
+  .petitions-search-column .form-control {
+    height: 46px;
+  }
+}
+
+/* Mobile card spacing improvements */
+@media (max-width: 991.98px) {
+  .petition-mobile-card {
+    margin-bottom: 0;
+  }
+  
+  .row.g-3 > .col-12:last-child .petition-mobile-card {
+    margin-bottom: 0;
+  }
+  
+  .petitions-results-summary {
+    margin-bottom: 1rem !important;
+    padding: 0 0.5rem;
+  }
+  
+  .petitions-results-summary .text-muted {
+    font-size: 0.85rem;
+  }
+  
+  /* Mobile header section alignment */
+  .d-md-none .row.g-2 {
+    margin-left: 0;
+    margin-right: 0;
+  }
+  
+  .d-md-none .row.g-2 > [class*="col-"] {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+  
+  /* Ensure consistent button heights on mobile */
+  .d-md-none .dashboard-btn-create,
+  .d-md-none .dashboard-btn-refresh {
+    height: 46px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
 .petition-header-layout {
   display: flex;
   justify-content: space-between;

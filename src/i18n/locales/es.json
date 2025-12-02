@@ -419,6 +419,8 @@
     "accepted": "Aceptado",
     "returned": "Devuelto",
     "closed": "Cerrado",
+    "judgmentSubmitted": "Juicio Enviado",
+    "foreclosureSaleInitiated": "Venta de Ejecución Hipotecaria Iniciada",
     "dateFilter": "Filtro de Fecha",
     "allDates": "Todas las Fechas",
     "today": "Hoy",

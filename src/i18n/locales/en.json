@@ -419,6 +419,8 @@
     "accepted": "Accepted",
     "returned": "Returned",
     "closed": "Closed",
+    "judgmentSubmitted": "Judgment Submitted",
+    "foreclosureSaleInitiated": "Foreclosure Sale Initiated",
     "dateFilter": "Date Filter",
     "allDates": "All Dates",
     "today": "Today",

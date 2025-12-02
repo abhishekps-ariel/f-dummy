@@ -290,6 +290,8 @@ const ViewAllPetitions = ({ onBack }) => {
       accepted: 4,
       returned: 2,
       closed: 5,
+      judgmentSubmitted: 3,
+      foreclosureSaleInitiated: 2,
     };
     return statusMap[status] !== undefined ? statusMap[status] : null;
   };
@@ -850,8 +852,8 @@ const ViewAllPetitions = ({ onBack }) => {
                   </div>
                 </div>
                 {/* Search and Filter Controls */}
-                <div className="row mb-4 g-3">
-                  <div className="col-12 col-md petitions-search-column">
+                <div className="row mb-4 g-3 petitions-filters-row">
+                  <div className="col-12 col-lg-4 col-xl-5 petitions-search-column">
                     <div className="input-group">
                       <span className="input-group-text bg-white border-end-0">
                         <i className="fas fa-search"></i>
@@ -865,7 +867,7 @@ const ViewAllPetitions = ({ onBack }) => {
                       />
                     </div>
                   </div>
-                  <div className="col-6 col-md-2">
+                  <div className="col-12 col-sm-6 col-lg-2 col-xl-2">
                     <CustomDropdown
                       name="statusFilter"
                       value={statusFilter}
@@ -879,10 +881,12 @@ const ViewAllPetitions = ({ onBack }) => {
                         { value: "accepted", label: t("viewAllPetitions.accepted") },
                         { value: "returned", label: t("viewAllPetitions.returned") },
                         { value: "closed", label: t("viewAllPetitions.closed") },
+                        { value: "judgmentSubmitted", label: t("viewAllPetitions.judgmentSubmitted") },
+                        { value: "foreclosureSaleInitiated", label: t("viewAllPetitions.foreclosureSaleInitiated") },
                       ]}
                     />
                   </div>
-                  <div className="col-6 col-md-2">
+                  <div className="col-12 col-sm-6 col-lg-2 col-xl-2">
                     <CustomDropdown
                       name="dateFilter"
                       value={dateFilter}
@@ -899,7 +903,7 @@ const ViewAllPetitions = ({ onBack }) => {
                       ]}
                     />
                   </div>
-                  <div className="col-12 col-md-3">
+                  <div className="col-12 col-lg-4 col-xl-3">
                     <CustomDropdown
                       name="sortBy"
                       value={`${sortBy}-${sortOrder}`}
@@ -977,9 +981,9 @@ const ViewAllPetitions = ({ onBack }) => {
                 )}
 
                 {/* Results Summary */}
-                <div className="d-flex justify-content-between align-items-center mb-3">
+                <div className="d-flex justify-content-between align-items-center mb-3 petitions-results-summary">
                   <div>
-                    <span className="text-muted">
+                    <span className="text-muted small">
                       {(() => {
                         const startIndex =
                           (pagination.currentPage - 1) * pagination.pageSize +
@@ -1209,47 +1213,25 @@ const ViewAllPetitions = ({ onBack }) => {
                       {petitions.map((petition) => (
                         <div key={petition.id} className="col-12">
                           <div 
-                            className="petition-mobile-row"
+                            className="petition-mobile-card"
                             onClick={() => handlePetitionClick(petition)}
                             style={{ cursor: "pointer" }}
                           >
-                            <div className="d-flex justify-content-between align-items-center">
-                              <div className="petition-main-info">
-                                <div className="d-flex align-items-center gap-2 mb-1">
-                                  <span className="fw-medium petition-number" style={{ color: "#015080" }}>
-                                    {petition.petitionNumber}
-                                  </span>
-                                  <span
-                                    className={getStatusBadgeClass(
-                                      petition.status,
-                                      petition.statusClass
-                                    )}
-                                  >
-                                    {petition.status}
-                                  </span>
-                                </div>
-                                <div className="petition-details-row">
-                                  <span className="small text-muted">
-                                    {petition.propertyAddress}
-                                  </span>
-                                  <span className="small text-muted">
-                                    • {petition.borrower}
-                                  </span>
-                                  <span className="small text-muted">
-                                    • {petition.filingDate}
-                                  </span>
-                                </div>
-                              </div>
+                            <div className="petition-card-header">
+                              <span className="fw-semibold petition-number" style={{ color: "#015080", fontSize: "0.95rem" }}>
+                                {petition.petitionNumber}
+                              </span>
                               <div 
                                 className="petition-action-expansion"
                                 onClick={(e) => e.stopPropagation()}
                               >
                                 <button
-                                  className="btn btn-sm border-0"
+                                  className="btn btn-sm border-0 p-1"
                                   type="button"
                                   style={{
                                     background: "transparent",
                                     color: "#6c757d",
+                                    minWidth: "auto",
                                   }}
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -1288,6 +1270,32 @@ const ViewAllPetitions = ({ onBack }) => {
                                     </button>
                                   </div>
                                 )}
+                              </div>
+                            </div>
+                            <div className="petition-card-status">
+                              <span
+                                className={getStatusBadgeClass(
+                                  petition.status,
+                                  petition.statusClass
+                                )}
+                              >
+                                {petition.status}
+                              </span>
+                            </div>
+                            <div className="petition-card-body">
+                              <div className="petition-card-detail">
+                                <i className="fas fa-map-marker-alt text-muted me-2" style={{ fontSize: "0.75rem" }}></i>
+                                <span className="small text-muted">{petition.propertyAddress}</span>
+                              </div>
+                              {petition.borrower && (
+                                <div className="petition-card-detail">
+                                  <i className="fas fa-user text-muted me-2" style={{ fontSize: "0.75rem" }}></i>
+                                  <span className="small text-muted">{petition.borrower}</span>
+                                </div>
+                              )}
+                              <div className="petition-card-detail">
+                                <i className="fas fa-calendar text-muted me-2" style={{ fontSize: "0.75rem" }}></i>
+                                <span className="small text-muted">{petition.filingDate}</span>
                               </div>
                             </div>
                           </div>
@@ -1385,51 +1393,81 @@ const ViewAllPetitions = ({ onBack }) => {
                             strokeLinejoin="round"
                           />
                         </svg>
-                        {t("viewAllPetitions.previous")}
+                        <span className="pagination-btn-text d-none d-md-inline">
+                          {t("viewAllPetitions.previous")}
+                        </span>
                       </button>
 
                       <div className="pagination-pages">
                         {(() => {
-                          // Calculate which pages to show
-                          // Show up to 7 pages with a sliding window around current page
-                          const maxVisiblePages = 7;
                           const currentPage = pagination.currentPage;
                           const totalPages = pagination.totalPages;
+                          const maxVisiblePages = 5; // Maximum 5 page numbers to show
                           
-                          let startPage = 1;
-                          let endPage = Math.min(totalPages, maxVisiblePages);
-                          
-                          // If we have more pages than maxVisiblePages, show a window around current page
-                          if (totalPages > maxVisiblePages) {
-                            // Calculate start and end to center current page when possible
-                            const halfVisible = Math.floor(maxVisiblePages / 2);
-                            startPage = Math.max(1, currentPage - halfVisible);
-                            endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-                            
-                            // Adjust start if we're near the end
-                            if (endPage - startPage < maxVisiblePages - 1) {
-                              startPage = Math.max(1, endPage - maxVisiblePages + 1);
-                            }
+                          if (totalPages <= maxVisiblePages) {
+                            // If total pages is 5 or less, show all pages
+                            return Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                              <button
+                                key={page}
+                                className={`pagination-page ${
+                                  page === currentPage ? "active" : ""
+                                }`}
+                                onClick={() => fetchPetitions(page)}
+                              >
+                                {page}
+                              </button>
+                            ));
                           }
                           
+                          // For many pages, show exactly 5 page numbers with ellipsis
                           const pages = [];
-                          for (let i = startPage; i <= endPage; i++) {
-                            pages.push(i);
+                          
+                          if (currentPage <= 3) {
+                            // Near the beginning: show 1, 2, 3, 4, ... last
+                            for (let i = 1; i <= 4; i++) {
+                              pages.push(i);
+                            }
+                            pages.push('ellipsis-end');
+                            pages.push(totalPages);
+                          } else if (currentPage >= totalPages - 2) {
+                            // Near the end: show 1, ... , last-3, last-2, last-1, last
+                            pages.push(1);
+                            pages.push('ellipsis-start');
+                            for (let i = totalPages - 3; i <= totalPages; i++) {
+                              pages.push(i);
+                            }
+                          } else {
+                            // In the middle: show 1, ... , current-1, current, current+1, ... last
+                            pages.push(1);
+                            pages.push('ellipsis-start');
+                            // Show current page and 1 page on each side (total 3 pages) to keep total at 5
+                            for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+                              pages.push(i);
+                            }
+                            pages.push('ellipsis-end');
+                            pages.push(totalPages);
                           }
                           
-                          return pages.map((page) => (
-                            <button
-                              key={page}
-                              className={`pagination-page ${
-                                page === pagination.currentPage
-                                  ? "active"
-                                  : ""
-                              }`}
-                              onClick={() => fetchPetitions(page)}
-                            >
-                              {page}
-                            </button>
-                          ));
+                          return pages.map((page, index) => {
+                            if (page === 'ellipsis-start' || page === 'ellipsis-end') {
+                              return (
+                                <span key={`ellipsis-${index}`} className="pagination-ellipsis">
+                                  ...
+                                </span>
+                              );
+                            }
+                            return (
+                              <button
+                                key={page}
+                                className={`pagination-page ${
+                                  page === currentPage ? "active" : ""
+                                }`}
+                                onClick={() => fetchPetitions(page)}
+                              >
+                                {page}
+                              </button>
+                            );
+                          });
                         })()}
                       </div>
 
@@ -1448,7 +1486,9 @@ const ViewAllPetitions = ({ onBack }) => {
                           pagination.currentPage >= pagination.totalPages
                         }
                       >
-                        {t("viewAllPetitions.next")}
+                        <span className="pagination-btn-text d-none d-md-inline">
+                          {t("viewAllPetitions.next")}
+                        </span>
                         <svg
                           width="16"
                           height="16"

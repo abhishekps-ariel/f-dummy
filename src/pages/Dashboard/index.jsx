@@ -437,22 +437,31 @@ function Dashboard() {
                       .slice(0, 5)
                       .map((petition) => (
                       <div key={petition.id} className="col-12">
-                        <div className="petition-mobile-row">
-                          <div className="d-flex justify-content-between align-items-center">
-                            <div className="petition-main-info">
-                              <div className="d-flex align-items-center gap-2 mb-1">
-                                <span className="fw-medium petition-number">
-                                  {petition.petitionNumber}
-                                </span>
-                                <span className={`badge status-${petition.statusClass || petition.status.toLowerCase().replace(' ', '-')}`}>
-                                  {petition.status}
-                                </span>
+                        <div className="petition-mobile-card">
+                          <div className="petition-card-header">
+                            <span className="fw-semibold petition-number" style={{ color: "#015080", fontSize: "0.95rem" }}>
+                              {petition.petitionNumber}
+                            </span>
+                          </div>
+                          <div className="petition-card-status">
+                            <span className={`status-badge status-${petition.statusClass || petition.status.toLowerCase().replace(' ', '-')}`}>
+                              {petition.status}
+                            </span>
+                          </div>
+                          <div className="petition-card-body">
+                            <div className="petition-card-detail">
+                              <i className="fas fa-map-marker-alt text-muted me-2" style={{ fontSize: "0.75rem" }}></i>
+                              <span className="small text-muted">{petition.propertyAddress}</span>
+                            </div>
+                            {petition.borrower && (
+                              <div className="petition-card-detail">
+                                <i className="fas fa-user text-muted me-2" style={{ fontSize: "0.75rem" }}></i>
+                                <span className="small text-muted">{petition.borrower}</span>
                               </div>
-                              <div className="petition-details-row">
-                                <span className="small text-muted">{petition.propertyAddress}</span>
-                                <span className="small text-muted">• {petition.borrower}</span>
-                                <span className="small text-muted">• {petition.filingDate}</span>
-                              </div>
+                            )}
+                            <div className="petition-card-detail">
+                              <i className="fas fa-calendar text-muted me-2" style={{ fontSize: "0.75rem" }}></i>
+                              <span className="small text-muted">{petition.filingDate}</span>
                             </div>
                           </div>
                         </div>

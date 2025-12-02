@@ -296,6 +296,19 @@ text-decoration: underline;
     text-decoration: none;
 }
 
+/* Mobile: Show only icons, adjust padding */
+@media (max-width: 767.98px) {
+    .pagination-btn {
+        padding: 8px;
+        min-width: 40px;
+        justify-content: center;
+    }
+    
+    .pagination-btn svg {
+        margin: 0;
+    }
+}
+
 .pagination-btn:hover:not(.disabled) {
     background: #f8f9fa;
     border-color: var(--theme-color);
@@ -347,6 +360,19 @@ text-decoration: underline;
     background: #015080;
     border-color: #015080;
     color: #ffffff;
+}
+
+.pagination-ellipsis {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    color: #6c757d;
+    font-size: 0.875rem;
+    font-weight: 500;
+    user-select: none;
+    pointer-events: none;
 }
 
 /* Sortable Table Headers */

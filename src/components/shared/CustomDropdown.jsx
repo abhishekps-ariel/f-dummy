@@ -42,10 +42,17 @@ const CustomDropdown = ({
       setIsOpen(false);
     };
 
+    const handleResize = () => {
+      if (isOpen) {
+        updatePosition();
+      }
+    };
+
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside);
       document.addEventListener('keydown', handleEscape);
       window.addEventListener('scroll', handleScroll, true);
+      window.addEventListener('resize', handleResize);
       updatePosition();
     }
 
@@ -53,6 +60,7 @@ const CustomDropdown = ({
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleEscape);
       window.removeEventListener('scroll', handleScroll, true);
+      window.removeEventListener('resize', handleResize);
     };
   }, [isOpen]);
 
@@ -60,8 +68,8 @@ const CustomDropdown = ({
     if (dropdownRef.current) {
       const rect = dropdownRef.current.getBoundingClientRect();
       setPosition({
-        top: rect.bottom + window.scrollY,
-        left: rect.left + window.scrollX,
+        top: rect.bottom,
+        left: rect.left,
         width: rect.width,
       });
     }
@@ -88,7 +96,7 @@ const CustomDropdown = ({
       ref={menuRef}
       className="custom-dropdown-menu"
       style={{
-        position: 'absolute',
+        position: 'fixed',
         top: `${position.top}px`,
         left: `${position.left}px`,
         width: `${position.width}px`,
