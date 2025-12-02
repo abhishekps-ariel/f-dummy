@@ -70,12 +70,10 @@ export const useAuthCheck = () => {
           try {
             const response = await refreshToken(storedRefreshToken);
             
-            if (response.isSuccess && response.data) {
-              // Update stored tokens
+            if (response.isSuccess && response.data && response.data.token && response.data.refreshToken) {
+              // Update stored tokens (both are always returned in the response)
               localStorage.setItem('token', response.data.token);
-              if (response.data.refreshToken) {
-                localStorage.setItem('refreshToken', response.data.refreshToken);
-              }
+              localStorage.setItem('refreshToken', response.data.refreshToken);
               
               setAuthStatus('authenticated');
               setIsChecking(false);
