@@ -310,19 +310,19 @@ const Form35 = () => {
     const newErrors = {};
     
     if (!formData.companyName.trim() || !formData.companyOrganizationId) {
-      newErrors.companyName = 'Company Name is required';
+      newErrors.companyName = t("form35B.validation.companyNameRequired");
     }
     if (!formData.entityType) {
-      newErrors.entityType = 'Entity Type is required';
+      newErrors.entityType = t("form35B.validation.entityTypeRequired");
     }
     if (!formData.reportingYear || formData.reportingYear.trim() === '') {
-      newErrors.reportingYear = 'Reporting Year is required';
+      newErrors.reportingYear = t("form35B.validation.reportingYearRequired");
     }
     if (!formData.reportingPeriod) {
-      newErrors.reportingPeriod = 'Reporting Period is required';
+      newErrors.reportingPeriod = t("form35B.validation.reportingPeriodRequired");
     }
     if (!formData.municipality.trim()) {
-      newErrors.municipality = 'Municipality is required';
+      newErrors.municipality = t("form35B.validation.municipalityRequired");
     }
     
     // Validate numeric fields - they should be numbers or 0
@@ -341,11 +341,11 @@ const Form35 = () => {
     numericFields.forEach(field => {
       const value = formData[field];
       if (!value || value.trim() === '') {
-        newErrors[field] = 'This field is required';
+        newErrors[field] = t("form35B.validation.fieldRequired");
       } else {
         const numValue = parseFloat(value);
         if (isNaN(numValue) || numValue < 0) {
-          newErrors[field] = 'Please enter a valid number (0 or greater)';
+          newErrors[field] = t("form35B.validation.validNumber");
         }
       }
     });
@@ -400,7 +400,7 @@ const Form35 = () => {
       const response = await form35BService.submitForm35B(submissionData);
 
       if (response.isSuccess) {
-        toast.success('Form 35B submitted');
+        toast.success(t("form35B.submitted"));
         
         // Reset form after successful submission
         setFormData({
@@ -423,11 +423,11 @@ const Form35 = () => {
         setErrors({});
         setSelectedOrganization(null);
       } else {
-        toast.error(response.msg || 'Failed to submit Form 35B. Please try again.');
+        toast.error(response.msg || t("form35B.failedSubmit"));
       }
     } catch (error) {
       console.error('Error submitting Form 35B:', error);
-      const errorMessage = error.response?.data?.message || error.message || 'An error occurred while submitting the form. Please try again.';
+      const errorMessage = error.response?.data?.message || error.message || t("form35B.errorSubmitting");
       toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -459,7 +459,7 @@ const Form35 = () => {
       <main className="dashboard-main-area container-fluid">
         <Header 
           user={user}
-          pageTitle="Form 35B Compliance"
+          pageTitle={t("form35B.title")}
           onLogout={handleLogout}
         />
 
@@ -470,21 +470,21 @@ const Form35 = () => {
               {/* Header Card */}
               <div className="card mb-4">
                 <div className="card-body">
-                  <h1 className="h4 mb-2 fw-bold theme-color">35B Reporting Process</h1>
+                  <h1 className="h4 mb-2 fw-bold theme-color">{t("form35B.pageTitle")}</h1>
                   <h2 className="h6 text-muted mb-3">
-                    Notice of Right to Pursue Modified Mortgage Filing Process (Begin Submission Below)
+                    {t("form35B.subtitle")}
                   </h2>
                   <hr className="my-3" />
                   
                   <div className="mb-0">
                     <p className="mb-2">
-                      Please be advised that the Division has changed its reporting process for the Semi-Annual 35B Modification form commencing with the reporting period <strong>January-June 2022</strong>.
+                      {t("form35B.intro1")} <strong>January-June 2022</strong>.
                     </p>
                     <p className="mb-2">
-                      The new process will require filers to adhere to the <strong>online form below</strong>. Filers should <strong>ONLY</strong> report 35B activity initiated and concluded within the six month period being reported. 35B modifications which are initiated but not completed will <strong>NOT</strong> be accepted.
+                      {t("form35B.intro2")} <strong>{t("form35B.intro3")}</strong>. {t("form35B.intro4")} <strong>{t("form35B.intro5")}</strong> {t("form35B.intro6")} <strong>{t("form35B.intro7")}</strong> {t("form35B.intro8")}
                     </p>
                     <p className="mb-0">
-                      If you experience technical problems or have any questions regarding this form, please email <a href="mailto:35Breporting@mass.gov" className="theme-color"><strong>35Breporting@mass.gov</strong></a>.
+                      {t("form35B.intro9")} <a href="mailto:35Breporting@mass.gov" className="theme-color"><strong>35Breporting@mass.gov</strong></a>.
                     </p>
                   </div>
                 </div>
@@ -496,17 +496,17 @@ const Form35 = () => {
                   <form onSubmit={handleSubmit}>
                     <div className="mb-3">
                       <p className="text-muted small mb-2">
-                        A <span className="text-danger">*</span> indicates a required field.
+                        {t("form35B.requiredFieldNote")} <span className="text-danger">*</span> {t("form35B.requiredFieldNote2")}
                       </p>
                       <p className="text-muted small mb-3">
-                        Please enter a valid numeric value in questions 5-13. If there are no loans in the category, please enter zero (0).
+                        {t("form35B.numericValueNote")}
                       </p>
                     </div>
 
                     {/* Company Name - Organization Selection */}
                     <div className="form-group mb-3">
                       <label className="form-label fw-medium">
-                        Company Name <span className="text-danger">*</span>
+                        {t("form35B.companyName")} <span className="text-danger">*</span>
                       </label>
                       
                       {selectedOrganization ? (
@@ -549,7 +549,7 @@ const Form35 = () => {
                               type="button"
                               className="selected-org-remove"
                               onClick={handleRemoveOrganization}
-                              title="Remove selection"
+                              title={t("form35B.removeSelection")}
                             >
                               <i className="fa-solid fa-times"></i>
                             </button>
@@ -561,7 +561,7 @@ const Form35 = () => {
                             <input
                               className={`form-control ${errors.companyName ? "is-invalid" : ""}`}
                               type="search"
-                              placeholder="Search for organization..."
+                              placeholder={t("form35B.searchOrganization")}
                               aria-label="Search"
                               value={searchTerm}
                               onChange={(e) => {
@@ -589,9 +589,9 @@ const Form35 = () => {
                                     className="spinner-border spinner-border-sm text-primary me-2"
                                     role="status"
                                   >
-                                    <span className="visually-hidden">Loading</span>
+                                    <span className="visually-hidden">{t("common.loading")}</span>
                                   </div>
-                                  <span>Loading organizations...</span>
+                                  <span>{t("form35B.loadingOrganizations")}</span>
                                 </div>
                               ) : organizations.length > 0 ? (
                                 <div className="org-search-results">
@@ -655,7 +655,7 @@ const Form35 = () => {
                               ) : (
                                 <div className="org-search-no-results">
                                   <i className="fa-solid fa-search me-2"></i>
-                                  No organizations found
+                                  {t("form35B.noOrganizationsFound")}
                                 </div>
                               )}
                             </div>
@@ -667,10 +667,10 @@ const Form35 = () => {
                     {/* Entity Type */}
                     <div className="form-group mb-3">
                       <label className="form-label fw-medium">
-                        1. Entity Type <span className="text-danger">*</span>
+                        1. {t("form35B.entityType")} <span className="text-danger">*</span>
                       </label>
                       {loadingEntityTypes ? (
-                        <div className="text-muted small">Loading entity types...</div>
+                        <div className="text-muted small">{t("form35B.loadingEntityTypes")}</div>
                       ) : (
                         <div className="d-flex flex-column gap-2">
                           {entityTypes.map((entityType) => (
@@ -699,13 +699,13 @@ const Form35 = () => {
                     {/* Reporting Year */}
                     <div className="form-group mb-3">
                       <label className="form-label fw-medium">
-                        2. Reporting Year <span className="text-danger">*</span>
+                        2. {t("form35B.reportingYear")} <span className="text-danger">*</span>
                       </label>
                       <YearPicker
                         name="reportingYear"
                         value={formData.reportingYear}
                         onChange={handleInputChange}
-                        placeholder="Select Year"
+                        placeholder={t("form35B.selectYear")}
                         error={!!errors.reportingYear}
                         minYear={1990}
                       />
@@ -717,10 +717,10 @@ const Form35 = () => {
                     {/* Reporting Period */}
                     <div className="form-group mb-3">
                       <label className="form-label fw-medium">
-                        3. Reporting Period <span className="text-danger">*</span>
+                        3. {t("form35B.reportingPeriod")} <span className="text-danger">*</span>
                       </label>
                       {loadingReportingPeriods ? (
-                        <div className="text-muted small">Loading reporting periods...</div>
+                        <div className="text-muted small">{t("form35B.loadingReportingPeriods")}</div>
                       ) : (
                         <div className="d-flex gap-4">
                           {reportingPeriods.map((period) => (
@@ -749,7 +749,7 @@ const Form35 = () => {
                     {/* Municipality */}
                     <div className="form-group mb-4">
                       <label className="form-label fw-medium">
-                        Enter the Municipality <span className="text-danger">*</span>
+                        {t("form35B.municipality")} <span className="text-danger">*</span>
                       </label>
                       <input
                         type="text"
@@ -766,11 +766,11 @@ const Form35 = () => {
                     {/* Instruction note */}
                     <div className="alert alert-info mb-4" role="alert">
                       <small>
-                        Fields 5-13 will be auto-populated based on your selected organization, reporting year, and reporting period. These fields are editable.
+                        {t("form35B.autoPopulatedNote")}
                         {isCalculatingData && (
                           <span className="ms-2">
                             <i className="spinner-border spinner-border-sm me-1"></i>
-                            Calculating...
+                            {t("form35B.calculating")}
                           </span>
                         )}
                       </small>
@@ -779,7 +779,7 @@ const Form35 = () => {
                     {/* Question 5 */}
                     <div className="form-group mb-3">
                       <label className="form-label fw-medium">
-                        5. Number of CML/Certain Mortgage Loan Borrowers Who Were Sent a 35B Notice <span className="text-danger">*</span>
+                        5. {t("form35B.question5")} <span className="text-danger">*</span>
                       </label>
                       <input
                         type="text"
@@ -796,7 +796,7 @@ const Form35 = () => {
                     {/* Question 6 */}
                     <div className="form-group mb-3">
                       <label className="form-label fw-medium">
-                        6. Number of CML Borrowers Who Responded to Notice w/in 30 day <span className="text-danger">*</span>
+                        6. {t("form35B.question6")} <span className="text-danger">*</span>
                       </label>
                       <input
                         type="text"
@@ -813,7 +813,7 @@ const Form35 = () => {
                     {/* Question 7 */}
                     <div className="form-group mb-3">
                       <label className="form-label fw-medium">
-                        7. Number of CML Borrowers Who Requested a Modification <span className="text-danger">*</span>
+                        7. {t("form35B.question7")} <span className="text-danger">*</span>
                       </label>
                       <input
                         type="text"
@@ -830,7 +830,7 @@ const Form35 = () => {
                     {/* Question 8 */}
                     <div className="form-group mb-3">
                       <label className="form-label fw-medium">
-                        8. Number of CML Borrowers Who Requested an Alternative to Foreclosure (short sale, deed-in-lieu, etc.) <span className="text-danger">*</span>
+                        8. {t("form35B.question8")} <span className="text-danger">*</span>
                       </label>
                       <input
                         type="text"
@@ -847,7 +847,7 @@ const Form35 = () => {
                     {/* Question 9 */}
                     <div className="form-group mb-3">
                       <label className="form-label fw-medium">
-                        9. Number of Borrowers Who Chose Not to Pursue a Modification, but Proceed with RTC <span className="text-danger">*</span>
+                        9. {t("form35B.question9")} <span className="text-danger">*</span>
                       </label>
                       <input
                         type="text"
@@ -864,7 +864,7 @@ const Form35 = () => {
                     {/* Question 10 */}
                     <div className="form-group mb-3">
                       <label className="form-label fw-medium">
-                        10. Number of CML Borrowers Who Chose to Waive Right to Cure and Proceed to Foreclosure <span className="text-danger">*</span>
+                        10. {t("form35B.question10")} <span className="text-danger">*</span>
                       </label>
                       <input
                         type="text"
@@ -881,7 +881,7 @@ const Form35 = () => {
                     {/* Question 11 */}
                     <div className="form-group mb-3">
                       <label className="form-label fw-medium">
-                        11. Number of Borrowers Who Did Not Respond within 30 days <span className="text-danger">*</span>
+                        11. {t("form35B.question11")} <span className="text-danger">*</span>
                       </label>
                       <input
                         type="text"
@@ -898,7 +898,7 @@ const Form35 = () => {
                     {/* Question 12 */}
                     <div className="form-group mb-3">
                       <label className="form-label fw-medium">
-                        12. Number of Loan Modification Requests Finalized <span className="text-danger">*</span>
+                        12. {t("form35B.question12")} <span className="text-danger">*</span>
                       </label>
                       <input
                         type="text"
@@ -915,7 +915,7 @@ const Form35 = () => {
                     {/* Question 13 */}
                     <div className="form-group mb-4">
                       <label className="form-label fw-medium">
-                        13. Number of Loan Modification Requests Denied <span className="text-danger">*</span>
+                        13. {t("form35B.question13")} <span className="text-danger">*</span>
                       </label>
                       <input
                         type="text"
@@ -932,7 +932,7 @@ const Form35 = () => {
                     {/* Submit Button */}
                     <div className="d-flex justify-content-end mt-4">
                       <button type="submit" className="dashboard-btn-create">
-                        Submit
+                        {t("form35B.submit")}
                       </button>
                   </div>
                   </form>

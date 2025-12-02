@@ -50,20 +50,20 @@ const Form35BAttestationModal = ({
     const newErrors = {};
     
     if (!attestationData.submitterFirstName.trim()) {
-      newErrors.submitterFirstName = 'First Name is required';
+      newErrors.submitterFirstName = t("form35B.attestation.validation.firstNameRequired");
     }
     if (!attestationData.submitterLastName.trim()) {
-      newErrors.submitterLastName = 'Last Name is required';
+      newErrors.submitterLastName = t("form35B.attestation.validation.lastNameRequired");
     }
     if (!attestationData.submitterTitle.trim()) {
-      newErrors.submitterTitle = 'Title is required';
+      newErrors.submitterTitle = t("form35B.attestation.validation.titleRequired");
     }
     if (!attestationData.submitterEmail.trim()) {
-      newErrors.submitterEmail = 'Email is required';
+      newErrors.submitterEmail = t("form35B.attestation.validation.emailRequired");
     } else {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(attestationData.submitterEmail.trim())) {
-        newErrors.submitterEmail = 'Please enter a valid email address';
+        newErrors.submitterEmail = t("form35B.attestation.validation.emailInvalid");
       }
     }
 
@@ -95,30 +95,30 @@ const Form35BAttestationModal = ({
           <div className="modal-header">
             <h5 className="modal-title fw-bold theme-color">
               <i className="fas fa-signature me-2"></i>
-              Form 35B Submission Attestation
+              {t("form35B.attestation.title")}
             </h5>
             <button
               type="button"
               className="btn-close"
               onClick={onClose}
-              aria-label="Close"
+              aria-label={t("common.close")}
             ></button>
           </div>
           <div className="modal-body">
             <p className="text-muted mb-4">
-              Please review and confirm your attestation details before submitting Form 35B.
+              {t("form35B.attestation.description")}
             </p>
 
             <div className="p-4 border border-info bg-info-subtle rounded mb-4">
               <h5 className="fw-bold font-base mb-3">
                 <i className="fas fa-user me-2"></i>
-                Submitter Information
+                {t("form35B.attestation.submitterInformation")}
               </h5>
 
               <div className="row g-3">
                 <div className="col-md-6">
                   <label htmlFor="submitterFirstName" className="form-label fw-medium">
-                    First Name <span className="text-danger">*</span>
+                    {t("form35B.attestation.firstName")} <span className="text-danger">*</span>
                   </label>
                   <input
                     type="text"
@@ -132,13 +132,13 @@ const Form35BAttestationModal = ({
                     <div className="invalid-feedback">{errors.submitterFirstName}</div>
                   )}
                   <small className="text-muted">
-                    Prefilled from your profile
+                    {t("form35B.attestation.prefilledFromProfile")}
                   </small>
                 </div>
 
                 <div className="col-md-6">
                   <label htmlFor="submitterLastName" className="form-label fw-medium">
-                    Last Name <span className="text-danger">*</span>
+                    {t("form35B.attestation.lastName")} <span className="text-danger">*</span>
                   </label>
                   <input
                     type="text"
@@ -152,13 +152,13 @@ const Form35BAttestationModal = ({
                     <div className="invalid-feedback">{errors.submitterLastName}</div>
                   )}
                   <small className="text-muted">
-                    Prefilled from your profile
+                    {t("form35B.attestation.prefilledFromProfile")}
                   </small>
                 </div>
 
                 <div className="col-md-6">
                   <label htmlFor="submitterTitle" className="form-label fw-medium">
-                    Title <span className="text-danger">*</span>
+                    {t("form35B.attestation.title")} <span className="text-danger">*</span>
                   </label>
                   <input
                     type="text"
@@ -172,13 +172,13 @@ const Form35BAttestationModal = ({
                     <div className="invalid-feedback">{errors.submitterTitle}</div>
                   )}
                   <small className="text-muted">
-                    Prefilled from your profile
+                    {t("form35B.attestation.prefilledFromProfile")}
                   </small>
                 </div>
 
                 <div className="col-md-6">
                   <label htmlFor="submitterEmail" className="form-label fw-medium">
-                    Email Address <span className="text-danger">*</span>
+                    {t("form35B.attestation.emailAddress")} <span className="text-danger">*</span>
                   </label>
                   <input
                     type="email"
@@ -192,7 +192,7 @@ const Form35BAttestationModal = ({
                     <div className="invalid-feedback">{errors.submitterEmail}</div>
                   )}
                   <small className="text-muted">
-                    Prefilled from your profile
+                    {t("form35B.attestation.prefilledFromProfile")}
                   </small>
                 </div>
               </div>
@@ -200,7 +200,7 @@ const Form35BAttestationModal = ({
 
             <div className="border-top pt-3 text-muted small">
               <p className="mb-0">
-                By confirming, you attest that the information provided in this form is accurate and complete.
+                {t("form35B.attestation.attestationText")}
               </p>
             </div>
           </div>
@@ -212,7 +212,7 @@ const Form35BAttestationModal = ({
               disabled={isSubmitting}
               style={{ minWidth: '80px' }}
             >
-              Cancel
+              {t("form35B.attestation.cancel")}
             </button>
             <button
               type="button"
@@ -223,12 +223,12 @@ const Form35BAttestationModal = ({
               {isSubmitting ? (
                 <>
                   <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                  Submitting...
+                  {t("form35B.attestation.submitting")}
                 </>
               ) : (
                 <>
                   <i className="fas fa-check me-2"></i>
-                  Confirm & Submit
+                  {t("form35B.attestation.confirmSubmit")}
                 </>
               )}
             </button>
