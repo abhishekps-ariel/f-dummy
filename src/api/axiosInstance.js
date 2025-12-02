@@ -3,6 +3,9 @@ import { clearAuthData, getAuthData } from '../utils/storage';
 import { refreshToken } from '../services/authService';
 import Config from '../config/index';
 
+// Refresh token lock to prevent concurrent refresh calls
+let refreshTokenPromise = null;
+
 // Function to check if token is expired or about to expire (within 5 minutes)
 const isTokenExpired = (token) => {
   if (!token) return true;
@@ -19,11 +22,33 @@ const isTokenExpired = (token) => {
   }
 };
 
-// Function to proactively refresh token
+// Function to proactively refresh token with lock mechanism
 const refreshTokenIfNeeded = async () => {
   const { token, refreshToken: storedRefreshToken } = getAuthData();
   
-  if (isTokenExpired(token) && storedRefreshToken) {
+  // If token is still valid, return it immediately
+  if (!isTokenExpired(token)) {
+    return token;
+  }
+  
+  // If no refresh token available, return current token
+  if (!storedRefreshToken) {
+    return token;
+  }
+  
+  // If a refresh is already in progress, wait for it
+  if (refreshTokenPromise) {
+    try {
+      const newToken = await refreshTokenPromise;
+      return newToken || token;
+    } catch (error) {
+      // If refresh failed, return current token
+      return token;
+    }
+  }
+  
+  // Start a new refresh
+  refreshTokenPromise = (async () => {
     try {
       const response = await refreshToken(storedRefreshToken);
       
@@ -34,11 +59,22 @@ const refreshTokenIfNeeded = async () => {
         }
         return response.data.token;
       }
+      throw new Error('Refresh token failed');
     } catch (error) {
+      // Clear the promise on error so next request can retry
+      throw error;
+    } finally {
+      // Clear the promise after completion (success or failure)
+      refreshTokenPromise = null;
     }
-  }
+  })();
   
-  return token;
+  try {
+    const newToken = await refreshTokenPromise;
+    return newToken || token;
+  } catch (error) {
+    return token;
+  }
 };
 
 const client = axios.create({
@@ -91,17 +127,46 @@ client.interceptors.response.use(
         const { refreshToken: storedRefreshToken } = getAuthData();
         
         if (storedRefreshToken) {
-          const response = await refreshToken(storedRefreshToken);
+          let newToken;
           
-          if (response.isSuccess && response.data) {
-            // Update the stored tokens
-            localStorage.setItem('token', response.data.token);
-            if (response.data.refreshToken) {
-              localStorage.setItem('refreshToken', response.data.refreshToken);
+          // If a refresh is already in progress, wait for it
+          if (refreshTokenPromise) {
+            try {
+              newToken = await refreshTokenPromise;
+            } catch (refreshError) {
+              // Refresh failed, will handle below
             }
+          } else {
+            // Start a new refresh
+            refreshTokenPromise = (async () => {
+              try {
+                const response = await refreshToken(storedRefreshToken);
+                
+                if (response.isSuccess && response.data) {
+                  localStorage.setItem('token', response.data.token);
+                  if (response.data.refreshToken) {
+                    localStorage.setItem('refreshToken', response.data.refreshToken);
+                  }
+                  return response.data.token;
+                }
+                throw new Error('Refresh token failed');
+              } catch (error) {
+                throw error;
+              } finally {
+                refreshTokenPromise = null;
+              }
+            })();
             
+            try {
+              newToken = await refreshTokenPromise;
+            } catch (refreshError) {
+              // Refresh failed, will handle below
+            }
+          }
+          
+          if (newToken) {
             // Retry the original request with the new token
-            originalRequest.headers.Authorization = `Bearer ${response.data.token}`;
+            originalRequest.headers.Authorization = `Bearer ${newToken}`;
             return client(originalRequest);
           }
         }
