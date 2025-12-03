@@ -2849,9 +2849,9 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
   const handleOpenDraftWizard = () => {
     // Store the pre-filled form data in localStorage so PetitionSteps can load it
     if (initialFormData) {
-      localStorage.setItem("petitionFormData", JSON.stringify(initialFormData));
+      sessionStorage.setItem("petitionFormData", JSON.stringify(initialFormData));
       // Also store the petition ID so we can update it when saving
-      localStorage.setItem("editingPetitionId", petition.id);
+      sessionStorage.setItem("editingPetitionId", petition.id);
     }
     setShowPetitionWizard(true);
   };
@@ -4194,8 +4194,8 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
           onClose={() => {
             setShowPetitionWizard(false);
             // Clear localStorage when closing
-            localStorage.removeItem("petitionFormData");
-            localStorage.removeItem("editingPetitionId");
+            sessionStorage.removeItem("petitionFormData");
+            sessionStorage.removeItem("editingPetitionId");
             // Refresh the petition data
             if (onPetitionUpdated) {
               setTimeout(() => {
@@ -4210,8 +4210,8 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
           onPetitionSubmitted={() => {
             setShowPetitionWizard(false);
             // Clear localStorage
-            localStorage.removeItem("petitionFormData");
-            localStorage.removeItem("editingPetitionId");
+            sessionStorage.removeItem("petitionFormData");
+            sessionStorage.removeItem("editingPetitionId");
             // Refresh the petition data
             if (onPetitionUpdated) {
               setTimeout(() => {

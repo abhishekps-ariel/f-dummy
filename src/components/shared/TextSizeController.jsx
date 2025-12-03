@@ -18,7 +18,7 @@ const TextSizeController = () => {
 
   // Initialize with saved text size preference or default to 'normal'
   const getInitialTextSize = () => {
-    const savedTextSize = localStorage.getItem('accessibilityTextSize');
+    const savedTextSize = sessionStorage.getItem('accessibilityTextSize');
     if (savedTextSize && ['small', 'normal', 'large'].includes(savedTextSize)) {
       return savedTextSize;
     }
@@ -61,7 +61,7 @@ const TextSizeController = () => {
 
   useEffect(() => {
     // Apply saved text size on mount
-    const savedTextSize = localStorage.getItem('accessibilityTextSize');
+    const savedTextSize = sessionStorage.getItem('accessibilityTextSize');
     if (savedTextSize && ['small', 'normal', 'large'].includes(savedTextSize)) {
       const size = fontSizeMap[savedTextSize];
       document.documentElement.style.fontSize = `${size}px`;
@@ -117,9 +117,9 @@ const TextSizeController = () => {
     updateCSSVariables(size);
     
     // Save to localStorage
-    localStorage.setItem('accessibilityTextSize', option.value);
+    sessionStorage.setItem('accessibilityTextSize', option.value);
     // Also update the old key for backward compatibility
-    localStorage.setItem('accessibilityFontSize', size.toString());
+    sessionStorage.setItem('accessibilityFontSize', size.toString());
     
     setIsOpen(false);
   };

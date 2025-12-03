@@ -7,7 +7,7 @@ import loginImg from "../../assets/logo-sample.png";
 // Helper function to get unread message count from localStorage
 const getUnreadMessageCount = () => {
   try {
-    const count = localStorage.getItem('messagesUnreadCount');
+    const count = sessionStorage.getItem('messagesUnreadCount');
     return count ? parseInt(count, 10) : 0;
   } catch {
     return 0;
@@ -20,7 +20,7 @@ const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
   const location = useLocation();
   // Initialize from localStorage immediately to prevent flash of wrong state
   const [isCollapsed, setIsCollapsed] = useState(() => {
-    const savedState = localStorage.getItem('sidebarCollapsed');
+    const savedState = sessionStorage.getItem('sidebarCollapsed');
     return savedState !== null ? savedState === 'true' : false;
   });
   
@@ -28,7 +28,7 @@ const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
 
   // Save collapsed state to localStorage whenever it changes
   useEffect(() => {
-    localStorage.setItem('sidebarCollapsed', isCollapsed.toString());
+    sessionStorage.setItem('sidebarCollapsed', isCollapsed.toString());
   }, [isCollapsed]);
   
   // Listen for changes to unread message count in localStorage

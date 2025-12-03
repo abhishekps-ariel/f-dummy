@@ -30,7 +30,7 @@ export const MessageProvider = ({ children }) => {
         const totalUnread = response.data.reduce((sum, chat) => {
           return sum + (chat.unreadCount || 0);
         }, 0);
-        localStorage.setItem('messagesUnreadCount', totalUnread.toString());
+        sessionStorage.setItem('messagesUnreadCount', totalUnread.toString());
         // Dispatch a custom event to notify other components
         window.dispatchEvent(new CustomEvent('messagesUnreadCountUpdated', { detail: totalUnread }));
       }
@@ -60,9 +60,9 @@ export const MessageProvider = ({ children }) => {
       // Only increment unread count if message is not from current user
       if (!isOwn) {
         // Get current unread counts from localStorage or fetch fresh
-        const currentCount = parseInt(localStorage.getItem('messagesUnreadCount') || '0', 10);
+        const currentCount = parseInt(sessionStorage.getItem('messagesUnreadCount') || '0', 10);
         const newCount = currentCount + 1;
-        localStorage.setItem('messagesUnreadCount', newCount.toString());
+        sessionStorage.setItem('messagesUnreadCount', newCount.toString());
         
         // Dispatch custom event immediately for instant UI update
         window.dispatchEvent(new CustomEvent('messagesUnreadCountUpdated', { detail: newCount }));

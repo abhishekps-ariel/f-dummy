@@ -185,7 +185,7 @@ function Profile() {
       
       // Clear petition form data from localStorage on logout
       try {
-        localStorage.removeItem('petitionFormData');
+        sessionStorage.removeItem('petitionFormData');
       } catch (error) {
         console.error('Error clearing petition form data on logout:', error);
       }

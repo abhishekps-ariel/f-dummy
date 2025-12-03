@@ -130,7 +130,7 @@ const Messages = () => {
         
         // Update total unread count in localStorage for sidebar badge
         const totalUnread = Object.values(initialUnreadCounts).reduce((sum, count) => sum + count, 0);
-        localStorage.setItem('messagesUnreadCount', totalUnread.toString());
+        sessionStorage.setItem('messagesUnreadCount', totalUnread.toString());
       }
     } catch (error) {
       console.error('Error loading chat list:', error);
@@ -217,7 +217,7 @@ const Messages = () => {
               };
               // Update total unread count in localStorage
               const totalUnread = Object.values(newCounts).reduce((sum, count) => sum + count, 0);
-              localStorage.setItem('messagesUnreadCount', totalUnread.toString());
+              sessionStorage.setItem('messagesUnreadCount', totalUnread.toString());
             return newCounts;
           });
           
@@ -609,7 +609,7 @@ const Messages = () => {
           
           // Update total unread count in localStorage
           const totalUnread = Object.values(newCounts).reduce((sum, count) => sum + count, 0);
-          localStorage.setItem('messagesUnreadCount', totalUnread.toString());
+          sessionStorage.setItem('messagesUnreadCount', totalUnread.toString());
           
           return newCounts;
         }
@@ -641,7 +641,7 @@ const Messages = () => {
           };
           // Update total unread count in localStorage
           const totalUnread = Object.values(newCounts).reduce((sum, count) => sum + count, 0);
-          localStorage.setItem('messagesUnreadCount', totalUnread.toString());
+          sessionStorage.setItem('messagesUnreadCount', totalUnread.toString());
           return newCounts;
         });
         // Update conversation unread count in conversations list

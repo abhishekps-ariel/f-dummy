@@ -470,7 +470,7 @@ const PetitionSteps = ({
   // Load form data from localStorage on component mount
   const loadFormDataFromStorage = () => {
     try {
-      const savedData = localStorage.getItem("petitionFormData");
+      const savedData = sessionStorage.getItem("petitionFormData");
       if (savedData) {
         const parsedData = JSON.parse(savedData);
         return { ...defaultFormData, ...parsedData };
@@ -557,8 +557,8 @@ const PetitionSteps = ({
   // Moved here after user is defined to avoid initialization errors
   useEffect(() => {
     if (isOpen) {
-      const savedData = localStorage.getItem("petitionFormData");
-      const editingPetitionId = localStorage.getItem("editingPetitionId");
+      const savedData = sessionStorage.getItem("petitionFormData");
+      const editingPetitionId = sessionStorage.getItem("editingPetitionId");
       const isEditingDraft = !!editingPetitionId;
       
       if (savedData) {
@@ -962,7 +962,7 @@ const PetitionSteps = ({
     const loadSavedDrafts = () => {
       try {
         const savedDrafts = JSON.parse(
-          localStorage.getItem("petitionDrafts") || "[]"
+          sessionStorage.getItem("petitionDrafts") || "[]"
         );
 
         if (savedDrafts.length > 0) {
@@ -1015,7 +1015,7 @@ const PetitionSteps = ({
     if (isOpen) {
       // Clear any existing drafts to prevent interference
 
-      localStorage.removeItem("petitionDrafts");
+      sessionStorage.removeItem("petitionDrafts");
 
       loadSavedDrafts();
     }
@@ -1025,7 +1025,7 @@ const PetitionSteps = ({
 
   const saveFormDataToStorage = (data) => {
     try {
-      localStorage.setItem("petitionFormData", JSON.stringify(data));
+      sessionStorage.setItem("petitionFormData", JSON.stringify(data));
     } catch (error) {
       console.error("Error saving form data to localStorage:", error);
     }
@@ -1035,7 +1035,7 @@ const PetitionSteps = ({
 
   const clearFormDataFromStorage = () => {
     try {
-      localStorage.removeItem("petitionFormData");
+      sessionStorage.removeItem("petitionFormData");
     } catch (error) {
       console.error("Error clearing form data from localStorage:", error);
     }
@@ -1712,8 +1712,8 @@ const PetitionSteps = ({
 
       setFormData({ ...defaultFormData, ...orgPrefill, ...userPrefill });
       clearFormDataFromStorage();
-      localStorage.removeItem("petitionDrafts");
-      localStorage.removeItem("editingPetitionId");
+      sessionStorage.removeItem("petitionDrafts");
+      sessionStorage.removeItem("editingPetitionId");
       setFieldErrors({});
       setHasSavedDraft(false);
       
@@ -4806,7 +4806,7 @@ const PetitionSteps = ({
       // Store in localStorage for now (in real app, this would be API call)
 
       const existingDrafts = JSON.parse(
-        localStorage.getItem("petitionDrafts") || "[]"
+        sessionStorage.getItem("petitionDrafts") || "[]"
       );
 
       const draftIndex = existingDrafts.findIndex(
@@ -4819,7 +4819,7 @@ const PetitionSteps = ({
         existingDrafts.push(saveData);
       }
 
-      localStorage.setItem("petitionDrafts", JSON.stringify(existingDrafts));
+      sessionStorage.setItem("petitionDrafts", JSON.stringify(existingDrafts));
 
       setHasSavedDraft(true);
     } catch (error) {
@@ -4845,7 +4845,7 @@ const PetitionSteps = ({
 
       // Prepare petition data with isAllStepsCompleted: false for draft
       // Check if we're editing an existing draft - if so, use current user's signature details
-      const editingPetitionId = localStorage.getItem("editingPetitionId");
+      const editingPetitionId = sessionStorage.getItem("editingPetitionId");
       const isEditingDraft = !!editingPetitionId;
 
       // Get current user's signature details (similar to takeover)
@@ -5639,7 +5639,7 @@ const PetitionSteps = ({
       // Prepare petition data with signature information
       // For final submit, use certification_check to set esignConsent
       // Check if we're editing an existing draft - if so, use current user's signature details
-      const editingPetitionId = localStorage.getItem("editingPetitionId");
+      const editingPetitionId = sessionStorage.getItem("editingPetitionId");
       const isEditingDraft = !!editingPetitionId;
 
       // Get current user's signature details (similar to takeover)

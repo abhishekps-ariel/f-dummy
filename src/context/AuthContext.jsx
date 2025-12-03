@@ -46,8 +46,8 @@ export const AuthProvider = ({ children }) => {
 
   const resetPetitionTabsAfterOrgSwitch = () => {
     try {
-      localStorage.removeItem('petitionTabs');
-      localStorage.removeItem('activePetitionTab');
+      sessionStorage.removeItem('petitionTabs');
+      sessionStorage.removeItem('activePetitionTab');
     } catch (error) {
       // Failed to clear petition tabs from storage
     }
@@ -303,7 +303,7 @@ export const AuthProvider = ({ children }) => {
 
     // Clear petition form data from localStorage on logout
     try {
-      localStorage.removeItem('petitionFormData');
+      sessionStorage.removeItem('petitionFormData');
     } catch (error) {
       // Error clearing petition form data on logout
     }

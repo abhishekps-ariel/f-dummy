@@ -14,8 +14,8 @@ export const useJoinRequestTabs = () => {
 // Helper function to load initial state from localStorage
 const loadInitialState = () => {
   try {
-    const savedTabs = localStorage.getItem('joinRequestTabs');
-    const savedActiveTab = localStorage.getItem('activeJoinRequestTab');
+    const savedTabs = sessionStorage.getItem('joinRequestTabs');
+    const savedActiveTab = sessionStorage.getItem('activeJoinRequestTab');
     
     if (savedTabs) {
       const parsedTabs = JSON.parse(savedTabs);
@@ -42,8 +42,8 @@ const loadInitialState = () => {
         data: null,
         isClosable: false
       }];
-      localStorage.setItem('joinRequestTabs', JSON.stringify(defaultTabs));
-      localStorage.setItem('activeJoinRequestTab', 'all-join-requests');
+      sessionStorage.setItem('joinRequestTabs', JSON.stringify(defaultTabs));
+      sessionStorage.setItem('activeJoinRequestTab', 'all-join-requests');
       return { tabs: defaultTabs, activeTabId: 'all-join-requests' };
     }
   } catch (error) {
@@ -66,25 +66,25 @@ export const JoinRequestTabProvider = ({ children }) => {
   const [loadingTabs, setLoadingTabs] = useState(new Set());
   const hasRefreshedOnMount = useRef(false);
 
-  // Save tabs to localStorage whenever tabs change (including data)
+  // Save tabs to sessionStorage whenever tabs change (including data)
   useEffect(() => {
     if (tabs.length > 0) {
       try {
-        // Save tabs with their data to localStorage
-        localStorage.setItem('joinRequestTabs', JSON.stringify(tabs));
+        // Save tabs with their data to sessionStorage
+        sessionStorage.setItem('joinRequestTabs', JSON.stringify(tabs));
       } catch (error) {
-        // Ignore localStorage errors
+        // Ignore sessionStorage errors
       }
     }
   }, [tabs]);
 
-  // Save active tab to localStorage whenever it changes
+  // Save active tab to sessionStorage whenever it changes
   useEffect(() => {
     if (activeTabId) {
       try {
-        localStorage.setItem('activeJoinRequestTab', activeTabId);
+        sessionStorage.setItem('activeJoinRequestTab', activeTabId);
       } catch (error) {
-        // Ignore localStorage errors
+        // Ignore sessionStorage errors
       }
     }
   }, [activeTabId]);

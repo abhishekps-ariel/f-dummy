@@ -56,7 +56,7 @@ function ForgotPassword() {
           response.msg || t("forgotPassword.passwordResetEmailSent")
         );
         // Store email in localStorage for resend functionality
-        localStorage.setItem("resetEmail", email);
+        sessionStorage.setItem("resetEmail", email);
         // Navigate to password email sent page
         window.location.href = "/password-email-sent";
       } else {

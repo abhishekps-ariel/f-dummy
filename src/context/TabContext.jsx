@@ -32,19 +32,19 @@ export const TabProvider = ({ children }) => {
     setActiveTabId(DEFAULT_TAB_ID);
     setLoadingTabs(new Set());
     try {
-      localStorage.setItem('petitionTabs', JSON.stringify(defaultTabs));
-      localStorage.setItem('activePetitionTab', DEFAULT_TAB_ID);
+      sessionStorage.setItem('petitionTabs', JSON.stringify(defaultTabs));
+      sessionStorage.setItem('activePetitionTab', DEFAULT_TAB_ID);
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error('Failed to reset petition tabs in storage:', error);
     }
   }, []);
 
-  // Load tabs from localStorage on mount
+  // Load tabs from sessionStorage on mount
   useEffect(() => {
     try {
-      const savedTabs = localStorage.getItem('petitionTabs');
-      const savedActiveTab = localStorage.getItem('activePetitionTab');
+      const savedTabs = sessionStorage.getItem('petitionTabs');
+      const savedActiveTab = sessionStorage.getItem('activePetitionTab');
       
       if (savedTabs) {
         const parsedTabs = JSON.parse(savedTabs);
@@ -82,7 +82,7 @@ export const TabProvider = ({ children }) => {
     };
   }, [resetTabsState]);
 
-  // Save tabs to localStorage whenever tabs change (without data to avoid stale data)
+  // Save tabs to sessionStorage whenever tabs change (without data to avoid stale data)
   useEffect(() => {
     if (tabs.length > 0) {
       try {
@@ -94,17 +94,17 @@ export const TabProvider = ({ children }) => {
           isClosable: tab.isClosable,
           petitionId: tab.type === 'petition' ? tab.id.replace('petition-', '') : null
         }));
-        localStorage.setItem('petitionTabs', JSON.stringify(tabsToSave));
+        sessionStorage.setItem('petitionTabs', JSON.stringify(tabsToSave));
       } catch (error) {
       }
     }
   }, [tabs]);
 
-  // Save active tab to localStorage whenever it changes
+  // Save active tab to sessionStorage whenever it changes
   useEffect(() => {
     if (activeTabId) {
       try {
-        localStorage.setItem('activePetitionTab', activeTabId);
+        sessionStorage.setItem('activePetitionTab', activeTabId);
       } catch (error) {
       }
     }

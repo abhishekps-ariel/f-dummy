@@ -10,7 +10,7 @@ function PasswordEmailSent() {
   const [isResending, setIsResending] = useState(false);
 
   useEffect(() => {
-    const storedEmail = localStorage.getItem("resetEmail");
+    const storedEmail = sessionStorage.getItem("resetEmail");
     if (storedEmail) {
       setEmail(storedEmail);
     }

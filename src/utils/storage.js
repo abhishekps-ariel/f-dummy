@@ -4,6 +4,7 @@ const resolveOrganizationId = (organization) =>
 export const storeAuthData = (authData) => {
   // Clear all existing data before storing new user data
   localStorage.clear();
+  sessionStorage.clear();
 
   const { token, refreshToken, user } = authData;
   localStorage.setItem("token", token);
@@ -40,36 +41,32 @@ export const getAuthData = () => {
 };
 
 export const clearAuthData = () => {
-  // Clear authentication data
+  // Clear authentication data from localStorage
   localStorage.removeItem("token");
   localStorage.removeItem("refreshToken");
   localStorage.removeItem("user");
   localStorage.removeItem("activeOrganizationId");
 
-  // Clear petition-related data
-  localStorage.removeItem("petitionTabs");
-  localStorage.removeItem("activePetitionTab");
-  localStorage.removeItem("petitionDrafts");
-
-  // Clear any other user-specific data
-  localStorage.removeItem("resetEmail");
-
+  // Clear all sessionStorage data
+  sessionStorage.clear();
+  
+  // Clear localStorage completely (in case there are any other items)
   localStorage.clear();
 };
 
 export const setImpersonationState = (isImpersonating, impersonatedUserName = '') => {
   if (isImpersonating) {
-    localStorage.setItem('isImpersonating', 'true');
-    if (impersonatedUserName) localStorage.setItem('impersonatedUserName', impersonatedUserName);
+    sessionStorage.setItem('isImpersonating', 'true');
+    if (impersonatedUserName) sessionStorage.setItem('impersonatedUserName', impersonatedUserName);
   } else {
-    localStorage.removeItem('isImpersonating');
-    localStorage.removeItem('impersonatedUserName');
+    sessionStorage.removeItem('isImpersonating');
+    sessionStorage.removeItem('impersonatedUserName');
   }
 };
 
 export const getImpersonationState = () => {
-  const isImpersonating = localStorage.getItem("isImpersonating") === "true";
-  const impersonatedUserName = localStorage.getItem("impersonatedUserName") || "";
+  const isImpersonating = sessionStorage.getItem("isImpersonating") === "true";
+  const impersonatedUserName = sessionStorage.getItem("impersonatedUserName") || "";
   return { isImpersonating, impersonatedUserName };
 };
 
