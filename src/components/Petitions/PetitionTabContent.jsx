@@ -3294,6 +3294,26 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
           t("petitionTabContent.lenderType"),
           getOptionName(getLenderTypes(), petition.details?.loan?.lenderId) || t("common.nA"),
         ],
+        [
+          t("petitionTabContent.mortgageBrokerLicenseNumber"),
+          petition.details?.loan?.mortgageBrokerLicenseNumber || t("common.nA"),
+        ],
+        [
+          t("petitionTabContent.mortgageLoanOriginatorLicenseNumber"),
+          petition.details?.loan?.mortgageLoanOriginatorLicenseNumber || t("common.nA"),
+        ],
+        [
+          t("petitionTabContent.borrowerRequestedLoanModification"),
+          petition.details?.loan?.borrowerRequestedLoanModification !== null && petition.details?.loan?.borrowerRequestedLoanModification !== undefined
+            ? (petition.details.loan.borrowerRequestedLoanModification ? t("common.yes") : t("common.no"))
+            : t("common.nA"),
+        ],
+        [
+          t("petitionTabContent.loanModificationRequestFinalized"),
+          petition.details?.loan?.loanModificationRequestFinalized !== null && petition.details?.loan?.loanModificationRequestFinalized !== undefined
+            ? (petition.details.loan.loanModificationRequestFinalized ? t("common.yes") : t("common.no"))
+            : t("common.nA"),
+        ],
       ];
 
       autoTable(doc, {
@@ -3429,20 +3449,22 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
           const rightToCureData = [
             [
               t("petitionTabContent.noticeSent"),
-              rtc.noticeSent ? t("common.yes") : t("common.no"),
+              rtc.noticeSent !== null && rtc.noticeSent !== undefined 
+                ? (rtc.noticeSent ? t("common.yes") : t("common.no"))
+                : t("common.nA"),
             ],
-            [t("petitionTabContent.noticeDate"), formatDate(rtc.noticeDate)],
+            [t("petitionTabContent.noticeDate"), formatDate(rtc.noticeDate) || t("common.nA")],
             [
               t("petitionTabContent.daysDelinquent"),
               rtc.daysDelinquentAtNotice || t("common.nA"),
             ],
             [
               t("petitionTabContent.amountInDefault"),
-              formatCurrency(rtc.amountInDefault),
+              formatCurrency(rtc.amountInDefault) || t("common.nA"),
             ],
             [
               t("petitionTabContent.cureExpiration"),
-              formatDate(rtc.cureExpirationDate),
+              formatDate(rtc.cureExpirationDate) || t("common.nA"),
             ],
             [
               t("petitionTabContent.overrideReason"),
@@ -3464,7 +3486,27 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
               t("petitionTabContent.noticeZip"),
               rtc.noticeAddressZip || t("common.nA"),
             ],
+            [
+              t("petitionTabContent.borrowerRespondedWithin30Days"),
+              rtc.borrowerRespondedWithin30Days !== null && rtc.borrowerRespondedWithin30Days !== undefined
+                ? (rtc.borrowerRespondedWithin30Days ? t("common.yes") : t("common.no"))
+                : t("common.nA"),
+            ],
           ];
+
+          // Add borrower response date if borrower responded
+          if (rtc.borrowerRespondedWithin30Days === true) {
+            rightToCureData.push([
+              t("petitionTabContent.borrowerResponseDate"),
+              formatDate(rtc.borrowerResponseDate) || t("common.nA"),
+            ]);
+            rightToCureData.push([
+              t("petitionTabContent.proceededWithRightToCure"),
+              rtc.proceededWithRightToCure !== null && rtc.proceededWithRightToCure !== undefined
+                ? (rtc.proceededWithRightToCure ? t("common.yes") : t("common.no"))
+                : t("common.nA"),
+            ]);
+          }
 
           autoTable(doc, {
             startY: yPosition,
@@ -3542,6 +3584,9 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
            foreclosureSale.saleDate !== '' && typeof foreclosureSale.saleDate === 'string' && foreclosureSale.saleDate.trim() !== '') ||
           (foreclosureSale.soldToId !== null && foreclosureSale.soldToId !== undefined && 
            foreclosureSale.soldToId !== '' && ((typeof foreclosureSale.soldToId === 'string' && foreclosureSale.soldToId.trim() !== '') || (typeof foreclosureSale.soldToId !== 'string'))) ||
+          (foreclosureSale.requestedAlternativeToForeclosure !== null && foreclosureSale.requestedAlternativeToForeclosure !== undefined) ||
+          (foreclosureSale.foreclosureAlternativeOption !== null && foreclosureSale.foreclosureAlternativeOption !== undefined && 
+           foreclosureSale.foreclosureAlternativeOption !== '' && foreclosureSale.foreclosureAlternativeOption !== 0) ||
           (foreclosureSale.vestingEntityName !== null && foreclosureSale.vestingEntityName !== undefined && 
            foreclosureSale.vestingEntityName !== '' && typeof foreclosureSale.vestingEntityName === 'string' && foreclosureSale.vestingEntityName.trim() !== '') ||
           (foreclosureSale.reoEntityName !== null && foreclosureSale.reoEntityName !== undefined && 
@@ -3569,16 +3614,42 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
             soldToName = selectedBuyerType ? (selectedBuyerType.name || selectedBuyerType.value || t("common.nA")) : t("common.nA");
           }
 
+          // Get foreclosure alternative option name
+          let alternativeOptionName = t("common.nA");
+          if (foreclosureSale.foreclosureAlternativeOption !== null && foreclosureSale.foreclosureAlternativeOption !== undefined && foreclosureSale.foreclosureAlternativeOption !== '') {
+            const alternativeOptions = getForeclosureAlternativeOptions ? getForeclosureAlternativeOptions() : [];
+            const selectedOption = findOptionByValue ? findOptionByValue(alternativeOptions, foreclosureSale.foreclosureAlternativeOption) : null;
+            alternativeOptionName = selectedOption ? (selectedOption.name || selectedOption.description || selectedOption.value || t("common.nA")) : t("common.nA");
+          }
+
           const foreclosureSaleData = [
             [t("petitionTabContent.saleDate"), formatDate(foreclosureSale.saleDate) || t("common.nA")],
             [t("petitionTabContent.soldTo"), soldToName],
+            [
+              t("petitionTabContent.requestedAlternativeToForeclosure"),
+              foreclosureSale.requestedAlternativeToForeclosure !== null && foreclosureSale.requestedAlternativeToForeclosure !== undefined
+                ? (foreclosureSale.requestedAlternativeToForeclosure ? t("common.yes") : t("common.no"))
+                : t("common.nA"),
+            ],
+          ];
+
+          // Add alternative option only if borrower requested an alternative
+          if (foreclosureSale.requestedAlternativeToForeclosure === true) {
+            foreclosureSaleData.push([
+              t("petitionTabContent.foreclosureAlternativeOption"),
+              alternativeOptionName,
+            ]);
+          }
+
+          // Add remaining fields
+          foreclosureSaleData.push(
             [t("petitionTabContent.vestingEntityName"), foreclosureSale.vestingEntityName || t("common.nA")],
             [t("petitionTabContent.reoEntityName"), foreclosureSale.reoEntityName || t("common.nA")],
             [t("petitionTabContent.reoContactFirstName"), foreclosureSale.reoContactFirstName || t("common.nA")],
             [t("petitionTabContent.reoContactLastName"), foreclosureSale.reoContactLastName || t("common.nA")],
             [t("petitionTabContent.reoBusinessPhone"), foreclosureSale.reoBusinessPhone || t("common.nA")],
-            [t("petitionTabContent.reoEmergencyPhone"), foreclosureSale.reoEmergencyPhone || t("common.nA")],
-          ];
+            [t("petitionTabContent.reoEmergencyPhone"), foreclosureSale.reoEmergencyPhone || t("common.nA")]
+          );
 
           autoTable(doc, {
             startY: yPosition,
@@ -3604,9 +3675,31 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
         const affidavitData = [
           [
             t("petitionTabContent.certainMortgageLoan"),
-            petition.details.affidavit.certainMortgageLoan ? t("common.yes") : t("common.no"),
+            petition.details.affidavit.certainMortgageLoan !== null && petition.details.affidavit.certainMortgageLoan !== undefined
+              ? (petition.details.affidavit.certainMortgageLoan ? t("common.yes") : t("common.no"))
+              : t("common.nA"),
           ],
         ];
+
+        // Add additional affidavit fields if they exist
+        if (petition.details.affidavit.affiantName) {
+          affidavitData.push([
+            t("petitionTabContent.affiantName"),
+            petition.details.affidavit.affiantName || t("common.nA"),
+          ]);
+        }
+        if (petition.details.affidavit.affiantTitle) {
+          affidavitData.push([
+            t("petitionTabContent.affiantTitle"),
+            petition.details.affidavit.affiantTitle || t("common.nA"),
+          ]);
+        }
+        if (petition.details.affidavit.affidavitExecutionDate) {
+          affidavitData.push([
+            t("petitionTabContent.affidavitExecutionDate"),
+            formatDate(petition.details.affidavit.affidavitExecutionDate) || t("common.nA"),
+          ]);
+        }
 
         autoTable(doc, {
           startY: yPosition,
