@@ -172,14 +172,27 @@
 
 /* Mobile responsive adjustments for filters */
 @media (max-width: 991.98px) {
+  /* Ensure consistent right alignment for all mobile elements */
+  .org-search-box {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+  
+  .petitions-header-section {
+    margin-left: 0;
+    margin-right: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  
   .petitions-filters-row {
-    margin-left: -0.5rem !important;
-    margin-right: -0.5rem !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
   }
   
   .petitions-filters-row > [class*="col-"] {
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
+    padding-left: 0;
+    padding-right: 0;
     margin-bottom: 0.75rem;
   }
   
@@ -194,6 +207,42 @@
   .petitions-search-column .input-group-text,
   .petitions-search-column .form-control {
     height: 46px;
+  }
+  
+  /* Mobile header section alignment - ensure buttons align with filters */
+  .d-md-none .row.g-2 {
+    margin-left: 0;
+    margin-right: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  
+  .d-md-none .row.g-2 > [class*="col-"] {
+    padding-left: 0;
+    padding-right: 0;
+  }
+  
+  /* Ensure title row aligns */
+  .d-md-none .mb-3 {
+    margin-left: 0;
+    margin-right: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  
+  /* Ensure buttons row aligns with search bar - same right edge */
+  .d-md-none .row.g-2 {
+    width: 100%;
+  }
+  
+  .d-md-none .row.g-2 .col-6,
+  .d-md-none .row.g-2 .col-3 {
+    padding-right: 0;
+  }
+  
+  /* Ensure buttons align to same right edge as search bar */
+  .d-md-none .row.g-2 > [class*="col-"]:last-child {
+    padding-right: 0 !important;
   }
 }
 

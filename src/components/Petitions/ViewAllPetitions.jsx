@@ -773,19 +773,12 @@ const ViewAllPetitions = ({ onBack }) => {
 
                   {/* Mobile Layout */}
                   <div className="d-md-none">
-                    <div className="d-flex align-items-center justify-content-between mb-3">
+                    <div className="mb-3">
                       <h2 className="font-med mb-0">{t("viewAllPetitions.title")}</h2>
-                      <button
-                        className="dashboard-btn-refresh"
-                        onClick={handleRefresh}
-                        title={t("viewAllPetitions.refreshPetitions")}
-                      >
-                        <i className="fa-solid fa-sync-alt"></i>
-                      </button>
                     </div>
 
                     <div className="row g-2">
-                      <div className="col-7">
+                      <div className="col-6">
                         <button
                           className="dashboard-btn-create w-100"
                           onClick={handleCreateNewPetition}
@@ -793,7 +786,7 @@ const ViewAllPetitions = ({ onBack }) => {
                           <i className="fa-solid fa-plus me-1"></i> {t("viewAllPetitions.createNewPetition")}
                         </button>
                       </div>
-                      <div className="col-4">
+                      <div className="col-3">
                         <div className="dropdown w-100" style={{ position: "relative" }}>
                           <button
                             className={`dashboard-btn-refresh w-100 ${showExportDropdown ? 'active' : ''}`}
@@ -850,6 +843,15 @@ const ViewAllPetitions = ({ onBack }) => {
                             </div>
                           )}
                         </div>
+                      </div>
+                      <div className="col-3">
+                        <button
+                          className="dashboard-btn-refresh w-100"
+                          onClick={handleRefresh}
+                          title={t("viewAllPetitions.refreshPetitions")}
+                        >
+                          <i className="fa-solid fa-sync-alt"></i>
+                        </button>
                       </div>
                     </div>
                   </div>
