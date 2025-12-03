@@ -275,7 +275,7 @@ const ForeclosureSaleSection = ({
                       </div>
 
                       {/* Foreclosure Alternative Fields */}
-                      <div className="col-md-6">
+                      <div className="col-12">
                         <div className="form-group mb-3">
                           <label className="form-label">Did the borrower request an alternative to foreclosure? *</label>
                           {fieldErrors["foreclosureSale.requestedAlternativeToForeclosure"] && (
@@ -325,7 +325,7 @@ const ForeclosureSaleSection = ({
                       </div>
 
                       {formData.foreclosureSale?.requestedAlternativeToForeclosure === true && (
-                        <div className="col-md-6">
+                        <div className="col-12">
                           <div className="form-group mb-3">
                             <label className="form-label">Alternative Options *</label>
                             {isEditing ? (

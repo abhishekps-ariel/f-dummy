@@ -418,7 +418,7 @@ const LoanDetails = ({
                 </div>
 
                 {/* Loan Modification Fields - Moved to Bottom */}
-                <div className="col-md-6">
+                <div className="col-12">
                   <div className="form-group mb-3">
                     <label className="form-label">Did the borrower request a loan modification? *</label>
                     {fieldErrors.borrowerRequestedLoanModification && (
@@ -469,7 +469,7 @@ const LoanDetails = ({
                 </div>
 
                 {formData.borrowerRequestedLoanModification === true && (
-                  <div className="col-md-6">
+                  <div className="col-12">
                     <div className="form-group mb-3">
                       <label className="form-label">Loan modification request finalized? *</label>
                       {fieldErrors.loanModificationRequestFinalized && (

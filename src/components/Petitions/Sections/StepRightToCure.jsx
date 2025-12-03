@@ -324,7 +324,7 @@ const StepRightToCure = ({
                     {/* Borrower Response Fields - Moved to Bottom */}
                     {rtc.noticeSent === true && (
                       <>
-                        <div className="col-md-6">
+                        <div className="col-12">
                           <div className="form-group mb-3">
                             <label className="form-label">Did the borrower respond to the notice within 30 days? *</label>
                             {(fieldErrors[`rightToCures.${index}.borrowerRespondedWithin30Days`] || fieldErrors.borrowerRespondedWithin30Days) && (
@@ -390,7 +390,7 @@ const StepRightToCure = ({
                               </div>
                             </div>
 
-                            <div className="col-md-6">
+                            <div className="col-12">
                               <div className="form-group mb-3">
                                 <label className="form-label">Did the borrower proceed with the right to cure? *</label>
                                 {(fieldErrors[`rightToCures.${index}.proceededWithRightToCure`] || fieldErrors.proceededWithRightToCure) && (

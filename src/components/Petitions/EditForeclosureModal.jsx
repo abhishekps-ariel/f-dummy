@@ -377,7 +377,7 @@ const EditForeclosureModal = ({
               </div>
 
               {/* Foreclosure Alternative Fields - Moved to Bottom */}
-              <div className="col-md-6">
+              <div className="col-12">
                 <label className="form-label">
                   Did the borrower request an alternative to foreclosure?{"\u00A0"}
                   <span style={{ whiteSpace: 'nowrap' }}>*</span>
@@ -424,7 +424,7 @@ const EditForeclosureModal = ({
               </div>
 
               {foreclosureData.requestedAlternativeToForeclosure === true && (
-                <div className="col-md-6">
+                <div className="col-12">
                   <label htmlFor="foreclosureAlternativeOption" className="form-label">
                     Alternative Options *
                   </label>
