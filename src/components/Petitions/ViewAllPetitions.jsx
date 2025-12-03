@@ -778,7 +778,7 @@ const ViewAllPetitions = ({ onBack }) => {
                     </div>
 
                     <div className="row g-2">
-                      <div className="col-6">
+                      <div className="col-8">
                         <button
                           className="dashboard-btn-create w-100"
                           onClick={handleCreateNewPetition}
@@ -786,10 +786,10 @@ const ViewAllPetitions = ({ onBack }) => {
                           <i className="fa-solid fa-plus me-1"></i> {t("viewAllPetitions.createNewPetition")}
                         </button>
                       </div>
-                      <div className="col-3">
+                      <div className="col-2">
                         <div className="dropdown w-100" style={{ position: "relative" }}>
                           <button
-                            className={`dashboard-btn-refresh w-100 ${showExportDropdown ? 'active' : ''}`}
+                            className={`dashboard-btn-refresh w-100 mobile-square-btn ${showExportDropdown ? 'active' : ''}`}
                             type="button"
                             onClick={() => setShowExportDropdown(!showExportDropdown)}
                             title={t("viewAllPetitions.exportPetitions")}
@@ -798,21 +798,14 @@ const ViewAllPetitions = ({ onBack }) => {
                             {exporting ? (
                               <>
                                 <span
-                                  className="spinner-border spinner-border-sm me-1"
+                                  className="spinner-border spinner-border-sm"
                                   role="status"
                                   aria-hidden="true"
                                 ></span>
-                                <span className="d-none d-sm-inline">
-                                  {t("viewAllPetitions.exporting")}
-                                </span>
                               </>
                             ) : (
                               <>
-                                <i className="fa-solid fa-download me-1"></i>
-                                <span className="d-none d-sm-inline">
-                                  {t("viewAllPetitions.export")}
-                                </span>
-                                <i className={`fas fa-chevron-down ms-1 transition-icon ${showExportDropdown ? 'rotate' : ''}`} style={{ fontSize: "0.7rem" }}></i>
+                                <i className="fa-solid fa-download"></i>
                               </>
                             )}
                           </button>
@@ -844,9 +837,9 @@ const ViewAllPetitions = ({ onBack }) => {
                           )}
                         </div>
                       </div>
-                      <div className="col-3">
+                      <div className="col-2">
                         <button
-                          className="dashboard-btn-refresh w-100"
+                          className="dashboard-btn-refresh w-100 mobile-square-btn"
                           onClick={handleRefresh}
                           title={t("viewAllPetitions.refreshPetitions")}
                         >
