@@ -2969,6 +2969,92 @@ input, textarea, select {
     border: 1px solid #dee2e6;
     border-radius: 4px;
     cursor: crosshair;
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* Signature Modal Mobile Styles */
+@media (max-width: 768px) {
+    .signature-modal {
+        padding: 0 !important;
+    }
+
+    .signature-modal-dialog {
+        max-width: 100vw;
+        width: 100vw;
+        height: 100vh;
+        margin: 0;
+        padding: 0;
+    }
+
+    .signature-modal-content {
+        height: 100vh;
+        border-radius: 0;
+        display: flex;
+        flex-direction: column;
+        border: none;
+    }
+
+    .signature-modal-header {
+        flex-shrink: 0;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .signature-modal-body {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        padding: 1rem;
+    }
+
+    .signature-modal-body > div {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+    }
+
+    .signature-canvas-wrapper {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 0;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        padding: 0;
+        background: #fff;
+        overflow: hidden;
+    }
+
+    .signature-canvas-wrapper .signature-canvas {
+        width: 100% !important;
+        height: 100% !important;
+        border: none;
+        border-radius: 0;
+    }
+
+    .signature-modal-footer {
+        flex-shrink: 0;
+        border-top: 1px solid #dee2e6;
+        padding: 1rem;
+        display: flex;
+        gap: 0.5rem;
+        justify-content: space-between;
+    }
+
+    .signature-modal-footer button {
+        flex: 1;
+        font-size: 0.9rem;
+        padding: 0.75rem;
+    }
+
+    .signature-mode-toggle {
+        flex-shrink: 0;
+        margin-bottom: 1rem;
+    }
 }
 
 .signature-preview img {

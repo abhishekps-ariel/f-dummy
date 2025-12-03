@@ -12,6 +12,7 @@ const SignatureCapture = ({ isOpen, onClose, onSave, isUploading = false }) => {
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [signatureData, setSignatureData] = useState(null);
   const [typedSignature, setTypedSignature] = useState('');
+  const [canvasDimensions, setCanvasDimensions] = useState({ width: 500, height: 200 });
 
   // Reset when modal opens
   useEffect(() => {
@@ -24,6 +25,31 @@ const SignatureCapture = ({ isOpen, onClose, onSave, isUploading = false }) => {
       }
     }
   }, [isOpen]);
+
+  // Calculate canvas dimensions for mobile
+  useEffect(() => {
+    const updateCanvasDimensions = () => {
+      if (window.innerWidth <= 768) {
+        // Mobile: full screen minus header and footer
+        const headerHeight = 60; // Approximate header height
+        const footerHeight = 80; // Approximate footer height
+        const modeToggleHeight = 60; // Mode toggle height
+        const padding = 40; // Padding
+        const availableHeight = window.innerHeight - headerHeight - footerHeight - modeToggleHeight - padding;
+        setCanvasDimensions({
+          width: window.innerWidth - 40, // Full width minus padding
+          height: Math.max(300, availableHeight) // Minimum 300px height
+        });
+      } else {
+        // Desktop: original dimensions
+        setCanvasDimensions({ width: 500, height: 200 });
+      }
+    };
+
+    updateCanvasDimensions();
+    window.addEventListener('resize', updateCanvasDimensions);
+    return () => window.removeEventListener('resize', updateCanvasDimensions);
+  }, []);
 
   // Render typed signature to canvas when text changes
   const renderTypedSignature = useCallback(() => {
@@ -142,10 +168,10 @@ const SignatureCapture = ({ isOpen, onClose, onSave, isUploading = false }) => {
 
   return (
     <>
-      <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-        <div className="modal-dialog modal-lg modal-dialog-centered">
-          <div className="modal-content">
-            <div className="modal-header">
+      <div className="modal fade show d-block signature-modal" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+        <div className="modal-dialog modal-lg modal-dialog-centered signature-modal-dialog">
+          <div className="modal-content signature-modal-content">
+            <div className="modal-header signature-modal-header">
               <h5 className="modal-title">
                 <i className="fas fa-signature me-2"></i>
                 {t("signature.captureDigitalSignature")}
@@ -157,7 +183,7 @@ const SignatureCapture = ({ isOpen, onClose, onSave, isUploading = false }) => {
                 aria-label={t("common.close")}
               ></button>
             </div>
-            <div className="modal-body">
+            <div className="modal-body signature-modal-body">
               <div className="mb-3">
                 {/* Mode Toggle */}
                 <div className="mb-3">
@@ -183,17 +209,17 @@ const SignatureCapture = ({ isOpen, onClose, onSave, isUploading = false }) => {
 
                 {mode === 'draw' ? (
                   <>
-                    <p className="text-muted small mb-3">
+                    <p className="text-muted small mb-3 d-none d-md-block">
                       {t("signature.drawSignatureDesc")}
                     </p>
                     
                     {/* Signature Canvas */}
-                    <div className="border rounded p-2" style={{ backgroundColor: '#fff' }}>
+                    <div className="signature-canvas-wrapper">
                       <SignatureCanvas
                         ref={signatureRef}
                         canvasProps={{
-                          width: 500,
-                          height: 200,
+                          width: canvasDimensions.width,
+                          height: canvasDimensions.height,
                           className: 'signature-canvas'
                         }}
                         onBegin={handleBegin}
@@ -204,7 +230,7 @@ const SignatureCapture = ({ isOpen, onClose, onSave, isUploading = false }) => {
                     </div>
                     
                     {/* Instructions */}
-                    <div className="mt-2">
+                    <div className="mt-2 d-none d-md-block">
                       <small className="text-muted">
                         <i className="fas fa-info-circle me-1"></i>
                         {t("signature.useMouseToSign")}
@@ -255,7 +281,7 @@ const SignatureCapture = ({ isOpen, onClose, onSave, isUploading = false }) => {
                 )}
               </div>
             </div>
-            <div className="modal-footer">
+            <div className="modal-footer signature-modal-footer">
               <button 
                 type="button" 
                 className="dashboard-btn-refresh" 
@@ -277,7 +303,7 @@ const SignatureCapture = ({ isOpen, onClose, onSave, isUploading = false }) => {
               </button>
               <button 
                 type="button" 
-                className="dashboard-btn-create" 
+                className="dashboard-btn-create signature-upload-btn" 
                 onClick={handleSave}
                 disabled={!isCaptured || isUploading}
                 style={{ minWidth: '120px' }}
@@ -285,12 +311,14 @@ const SignatureCapture = ({ isOpen, onClose, onSave, isUploading = false }) => {
                 {isUploading ? (
                   <>
                     <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                    {t("signature.uploading")}
+                    <span className="d-none d-md-inline">{t("signature.uploading")}</span>
+                    <span className="d-md-none">{t("signature.uploading")}</span>
                   </>
                 ) : (
                   <>
                     <i className="fas fa-upload me-1"></i>
-                    {t("signature.uploadSignature")}
+                    <span className="d-none d-md-inline">{t("signature.uploadSignature")}</span>
+                    <span className="d-md-none">{t("signature.upload")}</span>
                   </>
                 )}
               </button>
