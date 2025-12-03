@@ -212,12 +212,6 @@
     padding-left: 24px;
     padding-right: 24px;
   }
-
-  /* Petition tab content specific - remove padding for org-search-box only in petition detail view, not in "All Petitions" */
-  .petition-tab-content .org-search-box,
-  .petition-content-scrollable .org-search-box {
-    padding: 0 !important;
-  }
   
   .petitions-header-section {
     margin-left: 0;
@@ -373,6 +367,19 @@
     white-space: nowrap;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+  }
+
+  /* Petition tab content specific - remove padding for org-search-box only in petition detail view, not in "All Petitions" */
+  /* The org-search-box is a wrapper around PetitionTabContent, so target it when it contains petition-tab-content */
+  .org-search-box:has(.petition-tab-content),
+  .shadow-custom.bg-white.org-search-box:has(.petition-tab-content),
+  .org-search-box:has(#petition-detail-content),
+  .shadow-custom.bg-white.org-search-box:has(#petition-detail-content) {
+    padding: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
   }
 
   /* Fix status badge - keep on one line when possible */

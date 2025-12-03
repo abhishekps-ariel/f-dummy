@@ -433,6 +433,21 @@ text-decoration: underline;
     padding: 1.5rem;
 }
 
+/* Override padding for petition detail view on mobile */
+/* The org-search-box is a wrapper around PetitionTabContent, so target it when it contains petition-tab-content */
+@media (max-width: 991.98px) {
+    .org-search-box:has(.petition-tab-content),
+    .shadow-custom.bg-white.org-search-box:has(.petition-tab-content),
+    .org-search-box:has(#petition-detail-content),
+    .shadow-custom.bg-white.org-search-box:has(#petition-detail-content) {
+        padding: 0 !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+    }
+}
+
 /* Table header styling */
 .petition-table-container .table thead th {
     background-color: #f8f9fa;
