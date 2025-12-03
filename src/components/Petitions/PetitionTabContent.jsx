@@ -1473,6 +1473,23 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
               if (!rtc.borrowerResponseDate || !rtc.borrowerResponseDate.trim()) {
                 setFieldErrors(prev => ({ ...prev, [`rightToCures.${index}.borrowerResponseDate`]: "Date on which the borrower responded is required" }));
                 throw new Error(`Right to cure entry ${index + 1}: Date on which the borrower responded is required`);
+              } else {
+                // Validate borrower response date must be on or after notice date
+                if (rtc.noticeDate && rtc.noticeDate.trim()) {
+                  const noticeDate = new Date(rtc.noticeDate);
+                  const responseDate = new Date(rtc.borrowerResponseDate);
+                  
+                  if (!isNaN(noticeDate.getTime()) && !isNaN(responseDate.getTime())) {
+                    // Set time to midnight for accurate date comparison
+                    noticeDate.setHours(0, 0, 0, 0);
+                    responseDate.setHours(0, 0, 0, 0);
+                    
+                    if (responseDate < noticeDate) {
+                      setFieldErrors(prev => ({ ...prev, [`rightToCures.${index}.borrowerResponseDate`]: "Borrower Response Date must be on or after Notice Date" }));
+                      throw new Error(`Right to cure entry ${index + 1}: Borrower Response Date must be on or after Notice Date`);
+                    }
+                  }
+                }
               }
               
               if (rtc.proceededWithRightToCure === null || rtc.proceededWithRightToCure === undefined) {

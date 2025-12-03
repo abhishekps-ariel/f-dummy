@@ -126,37 +126,6 @@ const PetitionSteps = ({
     setCurrentStep(wizardCurrentStep);
   }, [wizardCurrentStep]);
 
-  // Reload form data from localStorage when modal opens (for editing drafts)
-  // Simple approach: just prefill formData like take over petition does
-  useEffect(() => {
-    if (isOpen) {
-      const savedData = localStorage.getItem("petitionFormData");
-      if (savedData) {
-        try {
-          const parsedData = JSON.parse(savedData);
-          // Reset wizard state
-          if (typeof resetWizard === "function") {
-            resetWizard();
-          }
-          // Simply set formData - let natural step tracking handle marking steps
-          setFormData(prev => ({ ...defaultFormData, ...parsedData }));
-        } catch (error) {
-          console.error("Error loading form data from localStorage:", error);
-        }
-      } else {
-        // No saved data, reset wizard
-        if (typeof resetWizard === "function") {
-          resetWizard();
-        }
-      }
-    } else {
-      // Modal closed, reset wizard
-      if (typeof resetWizard === "function") {
-        resetWizard();
-      }
-    }
-  }, [isOpen, resetWizard]);
-
   // Scroll to top when step changes
   useEffect(() => {
     if (isOpen && currentStep) {
@@ -582,6 +551,85 @@ const PetitionSteps = ({
 
     loadUserProfileAndTypes();
   }, [user?.id]);
+
+  // Reload form data from localStorage when modal opens (for editing drafts)
+  // Simple approach: just prefill formData like take over petition does
+  // Moved here after user is defined to avoid initialization errors
+  useEffect(() => {
+    if (isOpen) {
+      const savedData = localStorage.getItem("petitionFormData");
+      const editingPetitionId = localStorage.getItem("editingPetitionId");
+      const isEditingDraft = !!editingPetitionId;
+      
+      if (savedData) {
+        try {
+          const parsedData = JSON.parse(savedData);
+          // Reset wizard state
+          if (typeof resetWizard === "function") {
+            resetWizard();
+          }
+          
+          // If editing a draft, update signature fields with current user's details (like takeover)
+          let updatedData = { ...defaultFormData, ...parsedData };
+          
+          if (isEditingDraft && user) {
+            const signerFirstName = user.firstName || "";
+            const signerMiddleInitial = user.middleName
+              ? user.middleName.charAt(0).toUpperCase()
+              : "";
+            const signerLastName = user.lastName || "";
+            const signerEmail = user.email || "";
+            const signerTitle = getUserRole(user) || "User";
+            const signerFullName = [
+              signerFirstName,
+              signerMiddleInitial,
+              signerLastName,
+            ]
+              .filter(Boolean)
+              .join(" ")
+              .replace(/\s+/g, " ")
+              .trim();
+
+            // Update signer fields with current user's details
+            updatedData.signerFirstName = signerFirstName;
+            updatedData.signerMiddleInitial = signerMiddleInitial;
+            updatedData.signerLastName = signerLastName;
+            updatedData.signerEmail = signerEmail;
+            updatedData.signerTitle = signerTitle;
+            
+            // Update signatures array with current user's details
+            updatedData.signatures = [
+              {
+                signerFullName,
+                signerTitle,
+                signerEmail,
+                esignConsent: parsedData.certification_check ?? false,
+                signatureDrawnOrTyped: userProfile?.signatureImageName || "",
+                signedAt: "",
+                signerIp: "",
+                otpCode: "",
+              },
+            ];
+          }
+          
+          // Simply set formData - let natural step tracking handle marking steps
+          setFormData(updatedData);
+        } catch (error) {
+          console.error("Error loading form data from localStorage:", error);
+        }
+      } else {
+        // No saved data, reset wizard
+        if (typeof resetWizard === "function") {
+          resetWizard();
+        }
+      }
+    } else {
+      // Modal closed, reset wizard
+      if (typeof resetWizard === "function") {
+        resetWizard();
+      }
+    }
+  }, [isOpen, resetWizard, user, userProfile]);
 
   // Load organization details and prefill filing entity fields
   // Only prefill for org admins or when filer explicitly selects an organization
@@ -3378,6 +3426,64 @@ const PetitionSteps = ({
       }
     }
 
+    // Real-time validation for borrower response date - must be on or after notice date
+    const currentBorrowerResponseDate = (formData.rightToCures && formData.rightToCures.length > 0) 
+      ? formData.rightToCures[0].borrowerResponseDate 
+      : formData.borrowerResponseDate;
+    
+    if (name === "borrowerResponseDate" && value.trim() && currentNoticeDate) {
+      const noticeDate = new Date(currentNoticeDate);
+      const responseDate = new Date(value);
+      
+      if (!isNaN(noticeDate.getTime()) && !isNaN(responseDate.getTime())) {
+        // Set time to midnight for accurate date comparison
+        noticeDate.setHours(0, 0, 0, 0);
+        responseDate.setHours(0, 0, 0, 0);
+        
+        if (responseDate < noticeDate) {
+          setFieldErrors((prev) => ({
+            ...prev,
+            borrowerResponseDate: "Borrower Response Date must be on or after Notice Date",
+          }));
+        } else if (
+          fieldErrors.borrowerResponseDate === "Borrower Response Date must be on or after Notice Date"
+        ) {
+          setFieldErrors((prev) => {
+            const newErrors = { ...prev };
+            delete newErrors.borrowerResponseDate;
+            return newErrors;
+          });
+        }
+      }
+    }
+
+    // Re-validate borrower response date when notice date changes
+    if (name === "noticeDate" && currentBorrowerResponseDate && value.trim()) {
+      const noticeDate = new Date(value);
+      const responseDate = new Date(currentBorrowerResponseDate);
+      
+      if (!isNaN(noticeDate.getTime()) && !isNaN(responseDate.getTime())) {
+        // Set time to midnight for accurate date comparison
+        noticeDate.setHours(0, 0, 0, 0);
+        responseDate.setHours(0, 0, 0, 0);
+        
+        if (responseDate < noticeDate) {
+          setFieldErrors((prev) => ({
+            ...prev,
+            borrowerResponseDate: "Borrower Response Date must be on or after Notice Date",
+          }));
+        } else if (
+          fieldErrors.borrowerResponseDate === "Borrower Response Date must be on or after Notice Date"
+        ) {
+          setFieldErrors((prev) => {
+            const newErrors = { ...prev };
+            delete newErrors.borrowerResponseDate;
+            return newErrors;
+          });
+        }
+      }
+    }
+
     // Real-time validation for acceleration date (manualOverrideReason) - must be in the past
     if (name === "manualOverrideReason" && value.trim()) {
       const accelerationDate = new Date(value);
@@ -4007,6 +4113,23 @@ const PetitionSteps = ({
         if (!borrowerResponseDate || !borrowerResponseDate.trim()) {
           errors.borrowerResponseDate = "Date on which the borrower responded is required";
           hasErrors = true;
+        } else {
+          // Validate borrower response date must be on or after notice date
+          if (noticeDate && noticeDate.trim()) {
+            const noticeDateObj = new Date(noticeDate);
+            const responseDate = new Date(borrowerResponseDate);
+            
+            if (!isNaN(noticeDateObj.getTime()) && !isNaN(responseDate.getTime())) {
+              // Set time to midnight for accurate date comparison
+              noticeDateObj.setHours(0, 0, 0, 0);
+              responseDate.setHours(0, 0, 0, 0);
+              
+              if (responseDate < noticeDateObj) {
+                errors.borrowerResponseDate = "Borrower Response Date must be on or after Notice Date";
+                hasErrors = true;
+              }
+            }
+          }
         }
 
         // Validate proceeded with right to cure (required if borrower responded)
@@ -4721,7 +4844,27 @@ const PetitionSteps = ({
       }
 
       // Prepare petition data with isAllStepsCompleted: false for draft
-      // For drafts, preserve existing signature data if available, otherwise create new
+      // Check if we're editing an existing draft - if so, use current user's signature details
+      const editingPetitionId = localStorage.getItem("editingPetitionId");
+      const isEditingDraft = !!editingPetitionId;
+
+      // Get current user's signature details (similar to takeover)
+      const signerFirstName = isEditingDraft ? (user?.firstName || "") : (formData.signerFirstName || "");
+      const signerMiddleInitial = isEditingDraft 
+        ? (user?.middleName ? user.middleName.charAt(0).toUpperCase() : "")
+        : (formData.signerMiddleInitial || "");
+      const signerLastName = isEditingDraft ? (user?.lastName || "") : (formData.signerLastName || "");
+      const signerEmail = isEditingDraft ? (user?.email || "") : (formData.signerEmail || "");
+      const signerTitle = isEditingDraft ? (getUserRole(user) || "User") : (formData.signerTitle || getUserRole(user) || "User");
+      const signerFullName = [
+        signerFirstName,
+        signerMiddleInitial,
+        signerLastName,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .replace(/\s+/g, " ")
+        .trim();
 
       const existingSignature = formData.signatures && formData.signatures.length > 0 
         ? formData.signatures[0] 
@@ -4732,25 +4875,25 @@ const PetitionSteps = ({
 
         signatures: [
           {
-            signerFullName: `${formData.signerFirstName || ""} ${
-              formData.signerMiddleInitial || ""
-            } ${formData.signerLastName || ""}`.trim(),
+            signerFullName: signerFullName,
 
-            signerTitle: formData.signerTitle || getUserRole(user) || "User",
+            signerTitle: signerTitle,
 
-            signerEmail: formData.signerEmail || "",
+            signerEmail: signerEmail,
 
             // For drafts, use certification_check if available, otherwise preserve existing esignConsent value
             // This way if user checks the box and saves draft, it's preserved
             esignConsent: formData.certification_check ?? existingSignature?.esignConsent ?? false,
 
-            signatureDrawnOrTyped: existingSignature?.signatureDrawnOrTyped || userProfile?.signatureImageName || "",
+            signatureDrawnOrTyped: isEditingDraft 
+              ? (userProfile?.signatureImageName || "") 
+              : (existingSignature?.signatureDrawnOrTyped || userProfile?.signatureImageName || ""),
 
-            signedAt: existingSignature?.signedAt || (existingSignature ? "" : new Date().toISOString()),
+            signedAt: isEditingDraft ? "" : (existingSignature?.signedAt || (existingSignature ? "" : new Date().toISOString())),
 
-            signerIp: existingSignature?.signerIp || "", // Will be filled by backend
+            signerIp: "", // Will be filled by backend
 
-            otpCode: existingSignature?.otpCode || "", // Will be filled by backend
+            otpCode: "", // Will be filled by backend
           },
         ],
       };
@@ -4772,8 +4915,7 @@ const PetitionSteps = ({
         finalDraftData.id = takenOverPetitionId; // Include the original petition ID
       }
 
-      // Check if we're editing an existing petition (from localStorage)
-      const editingPetitionId = localStorage.getItem("editingPetitionId");
+      // Use the editingPetitionId we already retrieved above
       const petitionIdToUse = editingPetitionId || (isTakenOverPetition ? takenOverPetitionId : null);
 
       // Submit petition as draft using API
@@ -5496,6 +5638,27 @@ const PetitionSteps = ({
     try {
       // Prepare petition data with signature information
       // For final submit, use certification_check to set esignConsent
+      // Check if we're editing an existing draft - if so, use current user's signature details
+      const editingPetitionId = localStorage.getItem("editingPetitionId");
+      const isEditingDraft = !!editingPetitionId;
+
+      // Get current user's signature details (similar to takeover)
+      const signerFirstName = isEditingDraft ? (user?.firstName || "") : (formData.signerFirstName || "");
+      const signerMiddleInitial = isEditingDraft 
+        ? (user?.middleName ? user.middleName.charAt(0).toUpperCase() : "")
+        : (formData.signerMiddleInitial || "");
+      const signerLastName = isEditingDraft ? (user?.lastName || "") : (formData.signerLastName || "");
+      const signerEmail = isEditingDraft ? (user?.email || "") : (formData.signerEmail || "");
+      const signerTitle = isEditingDraft ? (getUserRole(user) || "User") : (formData.signerTitle || getUserRole(user) || "User");
+      const signerFullName = [
+        signerFirstName,
+        signerMiddleInitial,
+        signerLastName,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .replace(/\s+/g, " ")
+        .trim();
 
       const existingSignature = formData.signatures && formData.signatures.length > 0 
         ? formData.signatures[0] 
@@ -5509,18 +5672,18 @@ const PetitionSteps = ({
 
         signatures: [
           {
-            signerFullName: `${formData.signerFirstName || ""} ${
-              formData.signerMiddleInitial || ""
-            } ${formData.signerLastName || ""}`.trim(),
+            signerFullName: signerFullName,
 
-            signerTitle: formData.signerTitle || getUserRole(user) || "User",
+            signerTitle: signerTitle,
 
-            signerEmail: formData.signerEmail || "",
+            signerEmail: signerEmail,
 
             // Use certification_check value for esignConsent (user must have checked it to get here)
             esignConsent: formData.certification_check || false,
 
-            signatureDrawnOrTyped: existingSignature?.signatureDrawnOrTyped || userProfile?.signatureImageName || "",
+            signatureDrawnOrTyped: isEditingDraft 
+              ? (userProfile?.signatureImageName || "") 
+              : (existingSignature?.signatureDrawnOrTyped || userProfile?.signatureImageName || ""),
 
             signedAt: new Date().toISOString(),
 
@@ -5548,8 +5711,7 @@ const PetitionSteps = ({
         finalPetitionData.isAllStepsCompleted = true; // Ensure it's still true for taken over petitions
       }
 
-      // Check if we're editing an existing petition (from localStorage)
-      const editingPetitionId = localStorage.getItem("editingPetitionId");
+      // Use the editingPetitionId we already retrieved above
       const petitionIdToUse = editingPetitionId || (isTakenOverPetition ? takenOverPetitionId : null);
 
       // Submit petition using API - false means NOT a draft (final submission)

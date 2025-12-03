@@ -111,15 +111,21 @@ const Step6RightToCure = ({
         }
       }
       
-      // Validate borrower response date - must be in the past
+      // Validate borrower response date - must be on or after notice date
       if (fieldName === "borrowerResponseDate" && fieldValue && fieldValue.trim()) {
-        const responseDate = new Date(fieldValue);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        
-        if (!isNaN(responseDate.getTime())) {
-          if (responseDate >= today) {
-            errors.borrowerResponseDate = "Borrower Response Date must be in the past";
+        const noticeDate = currentRTCData.noticeDate || formData.noticeDate;
+        if (noticeDate && noticeDate.trim()) {
+          const noticeDateObj = new Date(noticeDate);
+          const responseDate = new Date(fieldValue);
+          
+          if (!isNaN(noticeDateObj.getTime()) && !isNaN(responseDate.getTime())) {
+            // Set time to midnight for accurate date comparison
+            noticeDateObj.setHours(0, 0, 0, 0);
+            responseDate.setHours(0, 0, 0, 0);
+            
+            if (responseDate < noticeDateObj) {
+              errors.borrowerResponseDate = "Borrower Response Date must be on or after Notice Date";
+            }
           }
         }
       }
