@@ -28,18 +28,26 @@
   gap: 0.5rem;
 }
 
+/* Reduce gap between Save and Cancel buttons */
+.section-save-btn + .section-cancel-btn {
+  margin-left: 0.25rem;
+}
+
 .section-edit-btn,
 .section-save-btn,
 .section-cancel-btn {
-  font-size: 0.85rem;
-  padding: 0.4rem 0.8rem;
-  border-radius: 4px;
+  font-size: 0.875rem;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
   font-weight: 500;
   transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .section-edit-btn {
-  background: white;
+  background: #ffffff;
   border: 1px solid #dee2e6;
   color: #495057;
 }
@@ -51,25 +59,36 @@
 }
 
 .section-save-btn {
-  background: #28a745;
-  border: 1px solid #28a745;
-  color: white;
+  background: var(--theme-color, #0265A3);
+  border: 1px solid var(--theme-color, #0265A3);
+  color: #ffffff;
 }
 
-.section-save-btn:hover {
-  background: #218838;
-  border-color: #218838;
+.section-save-btn:hover:not(:disabled) {
+  background: #015080;
+  border-color: #015080;
+}
+
+.section-save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .section-cancel-btn {
-  background: #6c757d;
-  border: 1px solid #6c757d;
-  color: white;
+  background: #ffffff;
+  border: 1px solid #dee2e6;
+  color: #495057;
 }
 
 .section-cancel-btn:hover {
-  background: #5a6268;
-  border-color: #5a6268;
+  background: #f8f9fa;
+  border-color: #dee2e6;
+  color: #212529;
+}
+
+/* Override Bootstrap margin if present - reduce gap between Save and Cancel */
+.section-save-btn.me-2 {
+  margin-right: 0.25rem !important;
 }
 
 /* Responsive Design */

@@ -3128,7 +3128,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
                 <>
                   <button
                     type="button"
-                    className="btn btn-sm btn-success section-save-btn me-2"
+                    className="btn btn-sm btn-success section-save-btn"
                     onClick={async () => {
                       try {
                         setIsSavingDraft(true);
