@@ -401,6 +401,16 @@
     padding-bottom: 0 !important;
   }
 
+  /* FAQ page - remove padding for org-search-box on mobile, similar to petition tabs */
+  .org-search-box:has(.faq-container),
+  .shadow-custom.bg-white.org-search-box:has(.faq-container) {
+    padding: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+
   /* Fix status badge - keep on one line when possible */
   .petition-header-left {
     width: 100%;
