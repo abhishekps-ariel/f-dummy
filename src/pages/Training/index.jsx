@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { logout as logoutApi } from '../../services/authService';
 import { clearAuthData, getAuthData } from '../../utils/storage';
@@ -8,6 +9,7 @@ import Sidebar from '../../components/shared/Sidebar';
 import Header from '../../components/shared/Header';
 
 const Training = () => {
+  const { t } = useTranslation();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState('training');
@@ -53,7 +55,7 @@ const Training = () => {
       <main className="dashboard-main-area container-fluid">
         <Header 
           user={user}
-          pageTitle="Training"
+          pageTitle={t("training.title")}
           onLogout={handleLogout}
         />
 
@@ -61,8 +63,8 @@ const Training = () => {
         <div className="dashboard-content-section">
           <div className="shadow-custom bg-white org-search-box">
             <div className="p-4">
-              <h2 className="h4 mb-3 fw-bold theme-color">Training Center</h2>
-              <p className="text-muted mb-4">Access training materials and resources to learn about the FILIR system.</p>
+              <h2 className="h4 mb-3 fw-bold theme-color">{t("training.trainingCenter")}</h2>
+              <p className="text-muted mb-4">{t("training.description")}</p>
               
               {/* Placeholder content */}
               <div className="row">
@@ -70,9 +72,9 @@ const Training = () => {
                   <div className="card">
                     <div className="card-body text-center py-5">
                       <i className="fa-solid fa-graduation-cap fa-3x text-muted mb-3"></i>
-                      <h5 className="card-title">Training Resources</h5>
+                      <h5 className="card-title">{t("training.trainingResources")}</h5>
                       <p className="card-text text-muted">
-                        This section will contain training materials and educational resources.
+                        {t("training.placeholderText")}
                       </p>
                     </div>
                   </div>

@@ -968,6 +968,13 @@
         "emailInvalid": "Por favor ingrese una dirección de correo electrónico válida"
       }
     }
+  },
+  "training": {
+    "title": "Capacitación",
+    "trainingCenter": "Centro de Capacitación",
+    "description": "Acceda a materiales de capacitación y recursos para aprender sobre el sistema FILIR.",
+    "trainingResources": "Recursos de Capacitación",
+    "placeholderText": "Esta sección contendrá materiales de capacitación y recursos educativos."
   }
 }
 

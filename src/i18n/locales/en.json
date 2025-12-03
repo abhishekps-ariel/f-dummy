@@ -968,6 +968,13 @@
         "emailInvalid": "Please enter a valid email address"
       }
     }
+  },
+  "training": {
+    "title": "Training",
+    "trainingCenter": "Training Center",
+    "description": "Access training materials and resources to learn about the FILIR system.",
+    "trainingResources": "Training Resources",
+    "placeholderText": "This section will contain training materials and educational resources."
   }
 }
 
