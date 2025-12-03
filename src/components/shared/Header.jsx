@@ -30,13 +30,13 @@ const Header = ({ user, pageTitle, showMobileMenu = true, onLogout }) => {
       </div>
 
       <div className="d-flex align-items-center gap-3">
-        {/* Accessibility Controls */}
-        <AccessibilityControls />
-
-        {/* Language Dropdown (Hidden on small screens) */}
+        {/* Accessibility Controls - Hidden on mobile */}
         <div className="d-none d-lg-block">
-          <LanguageSwitcher variant="dropdown" className="text-secondary" />
+          <AccessibilityControls />
         </div>
+
+        {/* Language Dropdown - Show on all screens */}
+        <LanguageSwitcher variant="dropdown" className="text-secondary" />
 
         {/* Profile Dropdown */}
         <div className="dropdown">
