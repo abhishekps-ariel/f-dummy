@@ -160,6 +160,32 @@
   padding-right: 0.75rem;
 }
 
+/* Desktop alignment - align filters with header section */
+@media (min-width: 768px) {
+  .petitions-filters-row {
+    margin-left: 0;
+    margin-right: 0;
+  }
+  
+  /* Remove left padding from first column to align with "Petitions" title */
+  .petitions-filters-row > [class*="col-"]:first-child {
+    padding-left: 0;
+  }
+  
+  /* Remove right padding from last column to align with refresh button */
+  .petitions-filters-row > [class*="col-"]:last-child {
+    padding-right: 0;
+  }
+  
+  /* Ensure header section and filters row align */
+  .petitions-header-section {
+    margin-left: 0;
+    margin-right: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
 /* Ensure custom dropdown doesn't overflow */
 .custom-dropdown {
   max-width: 100%;
