@@ -128,25 +128,9 @@
 /* Scrollbar styling removed - sidebar shows all sections at once */
 
 /* Responsive Design */
-@media (max-width: 992px) {
+@media (max-width: 991.98px) {
   .petition-content-sidebar {
-    position: relative;
-    top: 0;
-    width: 100%;
-    max-height: none;
-    margin-right: 0;
-    margin-bottom: 1rem;
-  }
-
-  .sidebar-nav-list {
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-
-  .sidebar-nav-link {
-    flex: 1 1 auto;
-    min-width: 120px;
+    display: none;
   }
 }
 

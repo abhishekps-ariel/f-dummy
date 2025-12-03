@@ -137,6 +137,15 @@
   margin-bottom: 12px !important;
 }
 
+/* Mobile: Remove sticky positioning */
+@media (max-width: 991.98px) {
+  .petition-header-sticky {
+    position: relative;
+    top: 0;
+    margin-bottom: 1rem !important;
+  }
+}
+
 .petitions-search-column {
   display: flex;
 }
@@ -202,6 +211,12 @@
   .org-search-box {
     padding-left: 24px;
     padding-right: 24px;
+  }
+
+  /* Petition tab content specific - remove padding for org-search-box only in petition detail view, not in "All Petitions" */
+  .petition-tab-content .org-search-box,
+  .petition-content-scrollable .org-search-box {
+    padding: 0 !important;
   }
   
   .petitions-header-section {
@@ -340,6 +355,73 @@
   align-items: center;
   font-size: 0.85rem;
   margin: 0;
+}
+
+.petition-meta-separator {
+  display: none;
+}
+
+/* Mobile: Keep dates on separate lines but prevent wrapping within each line */
+@media (max-width: 991.98px) {
+  .petition-header-meta {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .petition-header-meta .petition-meta-line {
+    font-size: 0.8rem;
+    white-space: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Fix status badge - keep on one line when possible */
+  .petition-header-left {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .petition-header-left > div:first-child {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .petition-number-badge {
+    font-size: 1rem;
+    flex-shrink: 1;
+    min-width: 0;
+  }
+
+  .status-badge {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.5rem;
+    white-space: nowrap;
+    flex-shrink: 1;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: inline-block;
+  }
+}
+
+/* Very small screens - allow wrapping to two lines only when screen is too narrow */
+@media (max-width: 576px) {
+  .petition-header-left > div:first-child {
+    flex-wrap: wrap;
+  }
+
+  .status-badge {
+    white-space: normal;
+    word-break: break-word;
+    line-height: 1.3;
+    overflow: visible;
+    text-overflow: clip;
+    max-width: 100%;
+    display: inline-block;
+  }
 }
 
 .petition-header-actions {
