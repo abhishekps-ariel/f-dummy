@@ -367,6 +367,27 @@ export const getSignatureById = async (userId) => {
   };
 };
 
+export const getBase64ByS3Key = async (s3Key) => {
+  const response = await client.post(
+    AUTH_ENDPOINTS.GET_BASE64_BY_S3KEY,
+    {
+      s3Key: s3Key,
+    },
+    {
+      headers: {
+        Accept: "text/plain",
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  return {
+    isSuccess: response.data.success,
+    msg: response.data.message,
+    data: response.data.data,
+  };
+};
+
 export const sendSignatureOtp = async (userId) => {
   const response = await client.post(
     AUTH_ENDPOINTS.SEND_SIGNATURE_OTP,

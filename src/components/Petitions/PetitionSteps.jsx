@@ -549,13 +549,18 @@ const PetitionSteps = ({
 
           if (signatureResponse.isSuccess && signatureResponse.data) {
             // Update user profile with signature data
+            const signatureData = signatureResponse.data;
+            // Convert signatureBase64 to data URL for display
+            const signatureUrl = signatureData.signatureBase64 
+              ? `data:image/png;base64,${signatureData.signatureBase64}` 
+              : signatureData.signatureUrl;
 
             setUserProfile((prev) => ({
               ...prev,
 
-              signatureImageName: signatureResponse.data.signatureImageName,
-
-              signatureUrl: signatureResponse.data.signatureUrl,
+              signatureImageName: signatureData.signatureImageName,
+              signatureBase64: signatureData.signatureBase64,
+              signatureUrl: signatureUrl, // Use converted data URL or fallback to old URL
             }));
           } else {
           }
@@ -1135,7 +1140,7 @@ const PetitionSteps = ({
         );
       
       case 9: // Attestation & Signatures
-        return !!(userProfile?.signatureUrl && formData?.certification_check);
+        return !!(userProfile?.signatureImageName && formData?.certification_check);
       
       default:
         return false;
@@ -4739,7 +4744,7 @@ const PetitionSteps = ({
             // This way if user checks the box and saves draft, it's preserved
             esignConsent: formData.certification_check ?? existingSignature?.esignConsent ?? false,
 
-            signatureDrawnOrTyped: existingSignature?.signatureDrawnOrTyped || userProfile?.signatureUrl || "",
+            signatureDrawnOrTyped: existingSignature?.signatureDrawnOrTyped || userProfile?.signatureImageName || "",
 
             signedAt: existingSignature?.signedAt || (existingSignature ? "" : new Date().toISOString()),
 
@@ -5337,7 +5342,7 @@ const PetitionSteps = ({
         return true; // No addresses to verify, step is complete if validation passes
       
       case 9: // Attestation & Signatures
-        return userProfile?.signatureUrl && formData?.certification_check;
+        return userProfile?.signatureImageName && formData?.certification_check;
       
       default:
         return false;
@@ -5431,7 +5436,7 @@ const PetitionSteps = ({
     }
 
     // Step 9: Attestation & Signatures
-    if (!userProfile?.signatureUrl) {
+    if (!userProfile?.signatureImageName) {
       stepsWithValidationErrors.add(9);
       allFieldErrors.signature = "Signature is required";
     }
@@ -5515,7 +5520,7 @@ const PetitionSteps = ({
             // Use certification_check value for esignConsent (user must have checked it to get here)
             esignConsent: formData.certification_check || false,
 
-            signatureDrawnOrTyped: existingSignature?.signatureDrawnOrTyped || userProfile?.signatureUrl || "",
+            signatureDrawnOrTyped: existingSignature?.signatureDrawnOrTyped || userProfile?.signatureImageName || "",
 
             signedAt: new Date().toISOString(),
 
@@ -6082,7 +6087,7 @@ const PetitionSteps = ({
             signerTitle: formData.signerTitle || getUserRole(user) || "User",
             signerEmail: formData.signerEmail || "",
             esignConsent: formData.certification_check ?? existingSignature?.esignConsent ?? false,
-            signatureDrawnOrTyped: existingSignature?.signatureDrawnOrTyped || userProfile?.signatureUrl || "",
+            signatureDrawnOrTyped: existingSignature?.signatureDrawnOrTyped || userProfile?.signatureImageName || "",
             signedAt: existingSignature?.signedAt || (existingSignature ? "" : new Date().toISOString()),
             signerIp: existingSignature?.signerIp || "",
             otpCode: existingSignature?.otpCode || "",
@@ -6143,7 +6148,7 @@ const PetitionSteps = ({
             signerTitle: formData.signerTitle || getUserRole(user) || "User",
             signerEmail: formData.signerEmail || "",
             esignConsent: formData.certification_check || false,
-            signatureDrawnOrTyped: existingSignature?.signatureDrawnOrTyped || userProfile?.signatureUrl || "",
+            signatureDrawnOrTyped: existingSignature?.signatureDrawnOrTyped || userProfile?.signatureImageName || "",
             signedAt: new Date().toISOString(),
             signerIp: "",
             otpCode: "",

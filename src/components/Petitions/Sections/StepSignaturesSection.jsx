@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { getBase64ByS3Key } from "../../../services/authService";
 
 
 const StepSignaturesSection = ({
@@ -14,6 +15,47 @@ const StepSignaturesSection = ({
   formatDate,
 }) => {
   const { t } = useTranslation();
+  const [signatureImages, setSignatureImages] = useState({});
+  const [loadingSignatures, setLoadingSignatures] = useState({});
+
+  // Fetch signature base64 when displaying (not editing)
+  useEffect(() => {
+    if (!isEditing) {
+      const signatures = petition.details?.signatures || [];
+      signatures.forEach((signature, index) => {
+        const signatureValue = signature.signatureDrawnOrTyped;
+        if (signatureValue && signatureValue.trim() !== "") {
+          // Check if it's already a data URL (base64 image)
+          if (signatureValue.startsWith('data:image/')) {
+            setSignatureImages(prev => ({
+              ...prev,
+              [index]: signatureValue
+            }));
+          } else {
+            // It's an S3 key, fetch the base64
+            setLoadingSignatures(prev => ({ ...prev, [index]: true }));
+            getBase64ByS3Key(signatureValue)
+              .then(response => {
+                if (response.isSuccess && response.data?.signatureBase64) {
+                  const dataUrl = `data:image/png;base64,${response.data.signatureBase64}`;
+                  setSignatureImages(prev => ({
+                    ...prev,
+                    [index]: dataUrl
+                  }));
+                }
+              })
+              .catch(error => {
+                console.error('Error fetching signature:', error);
+              })
+              .finally(() => {
+                setLoadingSignatures(prev => ({ ...prev, [index]: false }));
+              });
+          }
+        }
+      });
+    }
+  }, [isEditing, petition.details?.signatures]);
+
   return (
     <>
       <div 
@@ -136,26 +178,35 @@ const StepSignaturesSection = ({
                           />
                         </div>
                       </div>
-                      {signature.signatureDrawnOrTyped && (
+                      {(signature.signatureDrawnOrTyped || signatureImages[index]) && (
                         <div className="col-12">
                           <div className="form-group mb-3">
                             <label className="form-label">
                               Signature Preview
                             </label>
                             <div className="signature-preview-container p-3 border rounded bg-light">
-                              <img
-                                src={signature.signatureDrawnOrTyped}
-                                alt="Digital Signature"
-                                className="signature-preview-img"
-                                style={{
-                                  maxWidth: "100%",
-                                  maxHeight: "120px",
-                                  objectFit: "contain",
-                                  border: "1px solid #dee2e6",
-                                  borderRadius: "4px",
-                                  backgroundColor: "white",
-                                }}
-                              />
+                              {loadingSignatures[index] ? (
+                                <div className="text-center py-2">
+                                  <div className="spinner-border spinner-border-sm text-primary" role="status">
+                                    <span className="visually-hidden">Loading signature...</span>
+                                  </div>
+                                  <p className="mt-1 text-muted small">Loading signature...</p>
+                                </div>
+                              ) : (
+                                <img
+                                  src={signatureImages[index] || signature.signatureDrawnOrTyped}
+                                  alt="Digital Signature"
+                                  className="signature-preview-img"
+                                  style={{
+                                    maxWidth: "100%",
+                                    maxHeight: "120px",
+                                    objectFit: "contain",
+                                    border: "1px solid #dee2e6",
+                                    borderRadius: "4px",
+                                    backgroundColor: "white",
+                                  }}
+                                />
+                              )}
                             </div>
                           </div>
                         </div>

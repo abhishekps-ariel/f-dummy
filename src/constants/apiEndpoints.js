@@ -15,6 +15,7 @@ export const AUTH_ENDPOINTS = {
   GET_USER_BY_ID: (userId) => `/api/Account/get-user-by-id/${userId}`,
   UPLOAD_USER_SIGNATURE: "/api/Account/upload-user-signature",
   GET_SIGNATURE_BY_ID: (userId) => `/api/Account/get-signature-by-id/${userId}`,
+  GET_BASE64_BY_S3KEY: "/api/Account/get-base64-by-s3key",
   SEND_SIGNATURE_OTP: "/api/Account/send-signature-otp",
   VERIFY_SIGNATURE_OTP: "/api/Account/verify-signature-otp",
   ORGANISATION_USERS_API: "/api/Account/list",

@@ -5,7 +5,7 @@ import { getAuthData, clearAuthData, getUserRole } from "../../utils/storage";
 import { useAuth } from "../../context/AuthContext";
 import { usePetitionWizard } from "../../context/PetitionWizardContext";
 import { ROUTES } from "../../constants/routerConstants";
-import { logout as logoutApi, updateUser, getUserById, uploadUserSignature, getSignatureById } from "../../services/authService";
+import { logout as logoutApi, updateUser, getUserById, uploadUserSignature, getSignatureById, getBase64ByS3Key } from "../../services/authService";
 import { getFilingEntityTypes } from "../../services/commonService";
 import { toast } from "react-toastify";
 import Sidebar from "../../components/shared/Sidebar";
@@ -71,10 +71,18 @@ function Profile() {
       });
       
       // Check for existing signature data
-      // Only set as saved if both signatureUrl is non-empty and signatureImageName is not null/empty
-      if (userData.signatureUrl && 
+      // New format: signatureBase64 and signatureImageName instead of signatureUrl
+      if (userData.signatureBase64 && 
+          userData.signatureBase64.trim() !== "" && 
+          userData.signatureImageName) {
+        const dataUrl = `data:image/png;base64,${userData.signatureBase64}`;
+        setSignatureStatus('saved');
+        setSignatureData(dataUrl);
+        setIsImageLoading(true);
+      } else if (userData.signatureUrl && 
           userData.signatureUrl.trim() !== "" && 
           userData.signatureImageName) {
+        // Fallback for old format
         setSignatureStatus('saved');
         setSignatureData(userData.signatureUrl);
         setIsImageLoading(true);
@@ -122,14 +130,21 @@ function Profile() {
       if (response.isSuccess && response.data) {
         const signatureData = response.data;
         // Check if signature actually exists (not empty/null)
-        if (signatureData.signatureUrl && 
-            signatureData.signatureUrl.trim() !== "" && 
+        // New format: signatureBase64 and signatureImageName instead of signatureUrl
+        if (signatureData.signatureBase64 && 
+            signatureData.signatureBase64.trim() !== "" && 
             signatureData.signatureImageName) {
-          setSignatureData(signatureData.signatureUrl);
+          // Convert base64 to data URL for display
+          const dataUrl = `data:image/png;base64,${signatureData.signatureBase64}`;
+          setSignatureData(dataUrl);
           setSignatureStatus('saved');
           
-          // Update context only - don't update local user state to avoid infinite loop
-          updateUserSignature(signatureData);
+          // Update context with new format (include both base64 and imageName for compatibility)
+          const updatedSignatureData = {
+            ...signatureData,
+            signatureUrl: dataUrl, // Keep for backward compatibility
+          };
+          updateUserSignature(updatedSignatureData);
           
           return true;
         } else {
@@ -305,6 +320,11 @@ function Profile() {
 
     setIsUploadingSignature(true);
     try {
+      // Show preview immediately using the captured signature data URL
+      setSignatureData(signatureDataUrl);
+      setSignatureStatus('saved');
+      setIsImageLoading(false);
+      
       // Convert data URL to blob
       const response = await fetch(signatureDataUrl);
       const blob = await response.blob();
@@ -316,18 +336,28 @@ function Profile() {
       const uploadResponse = await uploadUserSignature(user.id, file);
       
       if (uploadResponse.isSuccess) {
-        // Update local state with the API response URL
-        setSignatureData(uploadResponse.data.signatureUrl);
-        setSignatureStatus('saved');
+        // Extract base64 from the data URL for storage
+        const base64Match = signatureDataUrl.match(/data:image\/[^;]+;base64,(.+)/);
+        const signatureBase64 = base64Match ? base64Match[1] : null;
+        
+        // Get signatureImageName (S3 key) from API response
+        const signatureImageName = uploadResponse.data.signatureImageName;
         
         // Update user data in context and storage
         const updatedUser = {
           ...user,
-          signatureImageName: uploadResponse.data.signatureImageName,
-          signatureUrl: uploadResponse.data.signatureUrl,
+          signatureImageName: signatureImageName,
+          signatureBase64: signatureBase64,
+          signatureUrl: signatureDataUrl, // Use the captured data URL for immediate display
         };
         setUser(updatedUser);
-        updateUserSignature(uploadResponse.data);
+        
+        // Update context with signature data
+        updateUserSignature({
+          signatureImageName: signatureImageName,
+          signatureBase64: signatureBase64,
+          signatureUrl: signatureDataUrl,
+        });
         
         // Update storage
         const { token } = getAuthData();
@@ -335,12 +365,46 @@ function Profile() {
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(updatedUser));
         
+        // Optionally fetch the signature base64 from server using the S3 key
+        // This ensures we have the server's version, but preview is already showing
+        if (signatureImageName) {
+          try {
+            const signatureResponse = await getBase64ByS3Key(signatureImageName);
+            if (signatureResponse.isSuccess && signatureResponse.data?.signatureBase64) {
+              const serverBase64 = signatureResponse.data.signatureBase64;
+              const serverDataUrl = `data:image/png;base64,${serverBase64}`;
+              setSignatureData(serverDataUrl);
+              const finalUpdatedUser = {
+                ...updatedUser,
+                signatureBase64: serverBase64,
+                signatureUrl: serverDataUrl,
+              };
+              setUser(finalUpdatedUser);
+              updateUserSignature({
+                signatureImageName: signatureImageName,
+                signatureBase64: serverBase64,
+                signatureUrl: serverDataUrl,
+              });
+              localStorage.setItem('user', JSON.stringify(finalUpdatedUser));
+            }
+          } catch (fetchError) {
+            // If fetching fails, we still have the preview from the upload
+            console.log('Could not fetch signature from server, using uploaded version');
+          }
+        }
+        
         toast.success(t("profile.signatureUploadedSuccess"));
         setShowSignatureModal(false);
       } else {
+        // If upload fails, reset the preview
+        setSignatureData(null);
+        setSignatureStatus('pending');
         toast.error(uploadResponse.msg || t("profile.failedUploadSignature"));
       }
     } catch (error) {
+      // If upload fails, reset the preview
+      setSignatureData(null);
+      setSignatureStatus('pending');
       toast.error(t("profile.failedUploadSignatureRetry"));
     } finally {
       setIsUploadingSignature(false);

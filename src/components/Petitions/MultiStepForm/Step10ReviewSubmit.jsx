@@ -465,7 +465,7 @@ const Step10ReviewSubmit = ({
                 <div className="review-content">
                   {/* Signature Preview - Moved to bottom */}
 
-                  {userProfile?.signatureUrl && (
+                  {(userProfile?.signatureImageName || userProfile?.signatureUrl || userProfile?.signatureBase64) && (
                     <div className="row g-3 mt-3">
                       <div className="col-12">
                         <strong>Signature Preview:</strong>
@@ -475,7 +475,10 @@ const Step10ReviewSubmit = ({
                           style={{ maxWidth: "400px" }}
                         >
                           <img
-                            src={userProfile.signatureUrl}
+                            src={
+                              userProfile?.signatureUrl || 
+                              (userProfile?.signatureBase64 ? `data:image/png;base64,${userProfile.signatureBase64}` : '')
+                            }
                             alt="Digital Signature"
                             className="signature-preview-img"
                             style={{

@@ -98,7 +98,10 @@ const ViewAllPetitions = ({ onBack }) => {
       // Check if signature is uploaded
       try {
         const signatureResponse = await getSignatureById(user.id);
-        if (!signatureResponse.isSuccess || !signatureResponse.data || !signatureResponse.data.signatureUrl) {
+        // Check for new format: signatureBase64 and signatureImageName
+        // Also support old format: signatureUrl for backward compatibility
+        if (!signatureResponse.isSuccess || !signatureResponse.data || 
+            (!signatureResponse.data.signatureImageName && !signatureResponse.data.signatureUrl)) {
           errors.missingSignature = true;
           hasErrors = true;
         }

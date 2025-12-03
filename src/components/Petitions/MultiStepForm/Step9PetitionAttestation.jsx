@@ -135,7 +135,7 @@ const Step9PetitionAttestation = ({
                   <label className="form-label">{t("petitionSteps.step9.digitalSignatureStatus")}</label>
 
                   <div className="d-flex align-items-center">
-                    {userProfile?.signatureUrl ? (
+                    {userProfile?.signatureImageName ? (
                       <span className="badge bg-success fs-6 me-2">
                         <i className="fa-solid fa-check-circle me-1"></i>
                         {t("petitionSteps.step9.available")}
@@ -149,7 +149,7 @@ const Step9PetitionAttestation = ({
                   </div>
                 </div>
 
-                {userProfile?.signatureUrl && (
+                {(userProfile?.signatureImageName || userProfile?.signatureUrl || userProfile?.signatureBase64) && (
                   <div className="col-12">
                     <label className="form-label">{t("petitionSteps.step9.signaturePreview")}</label>
 
@@ -158,7 +158,10 @@ const Step9PetitionAttestation = ({
                       style={{ maxWidth: "400px" }}
                     >
                       <img
-                        src={userProfile.signatureUrl}
+                        src={
+                          userProfile?.signatureUrl || 
+                          (userProfile?.signatureBase64 ? `data:image/png;base64,${userProfile.signatureBase64}` : '')
+                        }
                         alt={t("petitionSteps.step9.digitalSignature")}
                         className="signature-preview-img"
                         style={{
@@ -183,7 +186,7 @@ const Step9PetitionAttestation = ({
 
             {/* Digital Signature Requirement */}
 
-            {!userProfile?.signatureUrl ? (
+            {!userProfile?.signatureImageName ? (
               <div className="p-4 border border-danger bg-danger-subtle rounded mb-4">
                 <div className="d-flex align-items-center">
                   <i
@@ -244,7 +247,7 @@ const Step9PetitionAttestation = ({
                 name="certification_check"
                 checked={formData.certification_check}
                 onChange={handleInputChange}
-                disabled={!userProfile?.signatureUrl}
+                disabled={!userProfile?.signatureImageName}
               />
 
               <label
@@ -252,7 +255,7 @@ const Step9PetitionAttestation = ({
                 htmlFor="certification_check"
               >
                 {t("petitionSteps.step9.electronicCertification")}
-                {!userProfile?.signatureUrl && (
+                {!userProfile?.signatureImageName && (
                   <span className="text-danger ms-2">({t("petitionSteps.step9.signatureRequired")})</span>
                 )}
               </label>

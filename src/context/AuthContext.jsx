@@ -361,7 +361,8 @@ export const AuthProvider = ({ children }) => {
       const updatedUser = {
         ...user,
         signatureImageName: signatureData.signatureImageName,
-        signatureUrl: signatureData.signatureUrl,
+        signatureBase64: signatureData.signatureBase64,
+        signatureUrl: signatureData.signatureUrl, // Keep for backward compatibility
       };
       setUser(updatedUser);
       updateStoredUser(updatedUser);
