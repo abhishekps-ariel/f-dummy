@@ -1734,6 +1734,7 @@ input, textarea, select {
     .dashboard-main-area {
         margin-left: 0;
         width: 100%;
+        padding: 60px 24px 24px;
     }
     
     .dashboard-header {
