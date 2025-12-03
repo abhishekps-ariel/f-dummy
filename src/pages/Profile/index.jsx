@@ -448,290 +448,250 @@ function Profile() {
         {/* Main Profile Content */}
         <div className="dashboard-content-section">
           {/* Profile Dashboard Section */}
-          <div className="shadow-custom bg-white org-search-box">
-            <h2 className="font-med mb-4 fw-medium">{t("profile.title")}</h2>
-            
-
+          <div className="profile-page-container">
             {/* Profile Header Card */}
-            <div className="row mb-4">
-              <div className="col-12">
-                <div className="stat-card p-4">
-                  <div className="d-flex flex-column flex-md-row align-items-center gap-4">
-                    <div className="profile-avatar-large">
-                      <img
-                        className="rounded-circle object-fit-cover"
-                        src="https://static.vecteezy.com/system/resources/thumbnails/003/337/584/small/default-avatar-photo-placeholder-profile-icon-vector.jpg"
-                        alt="User Avatar"
-                        style={{ width: "120px", height: "120px" }}
-                      />
+            <div className="profile-header-card">
+              <div className="profile-header-content">
+                <div className="profile-avatar-wrapper">
+                  <img
+                    className="profile-avatar"
+                    src="https://static.vecteezy.com/system/resources/thumbnails/003/337/584/small/default-avatar-photo-placeholder-profile-icon-vector.jpg"
+                    alt="User Avatar"
+                  />
+                </div>
+                <div className="profile-header-info">
+                  <h3 className="profile-user-name">
+                    {user.firstName} {user.lastName}
+                  </h3>
+                  <div className="profile-user-details">
+                    <span className="profile-detail-item">
+                      <i className="fas fa-envelope"></i>
+                      {user.email}
+                    </span>
+                  </div>
+                  <div className="profile-header-badges">
+                    <div className="profile-header-badge-item">
+                      <label className="profile-field-label">{t("profile.role")}</label>
+                      <span className="profile-badge profile-badge-primary">{getUserRole(user) || t("header.nA")}</span>
                     </div>
-                    <div className="text-center text-md-start flex-grow-1">
-                      <h3 className="fw-medium mb-2">
-                        {user.firstName} {user.lastName}
-                      </h3>
-                      <p className="text-muted mb-2">
-                        <i className="fas fa-envelope me-2"></i>
-                        {user.email}
-                      </p>
-                      <p className="text-muted mb-0">
-                        <i className="fas fa-user-tag me-2"></i>
-                        {getUserRole(user) || t("header.nA")}
-                      </p>
-                    </div>
-                    <div className="d-flex gap-2">
-                      {isEditMode ? (
-                        <>
-                          <button 
-                            className="dashboard-btn-create" 
-                            onClick={handleSave}
-                            disabled={isSaving}
-                            style={{ minHeight: '40px', padding: '10px 20px' }}
-                          >
-                            {isSaving ? (
-                              <>
-                                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                {t("profile.saving")}
-                              </>
-                            ) : (
-                              <>
-                                <i className="fa-solid fa-save me-1"></i> {t("common.save")}
-                              </>
-                            )}
-                          </button>
-                          <button 
-                            className="dashboard-btn-refresh" 
-                            onClick={handleCancel}
-                            style={{ minWidth: '80px' }}
-                          >
-                            {t("common.cancel")}
-                          </button>
-                        </>
-                      ) : (
-                        <button 
-                          className="dashboard-btn-create" 
-                          onClick={handleEditProfile}
-                          style={{ minHeight: '40px', padding: '10px 20px' }}
-                        >
-                          <i className="fa-solid fa-edit me-1"></i> {t("profile.editProfile")}
-                        </button>
-                      )}
+                    <div className="profile-header-badge-item">
+                      <label className="profile-field-label">{t("profile.accountStatus")}</label>
+                      <span className="profile-badge profile-badge-success">{t("profile.active")}</span>
                     </div>
                   </div>
+                </div>
+                <div className="profile-header-actions">
+                  {isEditMode ? (
+                    <>
+                      <button 
+                        className="profile-btn profile-btn-primary" 
+                        onClick={handleSave}
+                        disabled={isSaving}
+                      >
+                        {isSaving ? (
+                          <>
+                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            {t("profile.saving")}
+                          </>
+                        ) : (
+                          <>
+                            <i className="fa-solid fa-save me-1"></i> {t("common.save")}
+                          </>
+                        )}
+                      </button>
+                      <button 
+                        className="profile-btn profile-btn-secondary" 
+                        onClick={handleCancel}
+                      >
+                        {t("common.cancel")}
+                      </button>
+                    </>
+                  ) : (
+                    <button 
+                      className="profile-btn profile-btn-primary" 
+                      onClick={handleEditProfile}
+                    >
+                      <i className="fa-solid fa-edit me-1"></i> {t("profile.editProfile")}
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
 
             {/* Profile Information Cards */}
-            <div className="row mb-4">
+            <div className="profile-sections-grid">
               {/* Filing Entity Type Card */}
-              <div className="col-12 mb-3">
-                <div className="stat-card p-4">
-                  <h4 className="fw-medium mb-4">
-                    <i className="fas fa-building me-2 text-secondary"></i>
-                    {t("profile.filingEntityType")}
-                  </h4>
-                  <div className="row g-3">
-                    <div className="col-12">
-                      <label className="form-label text-muted small">{t("profile.entityType")}</label>
-                      {isEditMode ? (
-                        isLoadingEntityTypes ? (
-                          <div className="d-flex align-items-center">
-                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                            <span className="text-muted">{t("profile.loadingEntityTypes")}</span>
-                          </div>
-                        ) : (
-                          <CustomDropdown
-                            name="filingEntityTypeId"
-                            value={selectedFilingEntityType}
-                            onChange={handleFilingEntityTypeChange}
-                            placeholder={t("profile.selectFilingEntityType")}
-                            options={[
-                              { value: "", label: t("profile.selectFilingEntityType") },
-                              ...filingEntityTypes.map((entityType) => ({
-                                value: entityType.id,
-                                label: entityType.name,
-                              })),
-                            ]}
-                          />
-                        )
+              <div className="profile-section-card">
+                <div className="profile-section-header">
+                  <i className="fas fa-building profile-section-icon"></i>
+                  <h4 className="profile-section-title">{t("profile.filingEntityType")}</h4>
+                </div>
+                <div className="profile-section-content">
+                  <div className="profile-field">
+                    <label className="profile-field-label">{t("profile.entityType")}</label>
+                    {isEditMode ? (
+                      isLoadingEntityTypes ? (
+                        <div className="profile-loading">
+                          <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                          <span className="text-muted">{t("profile.loadingEntityTypes")}</span>
+                        </div>
                       ) : (
-                        <p className="fw-medium mb-0">
-                          {isLoadingEntityTypes ? (
-                            <span className="text-muted">{t("common.loading")}</span>
-                          ) : selectedFilingEntityType ? (
-                            filingEntityTypes.find(et => et.id === selectedFilingEntityType)?.name || t("profile.notSet")
-                          ) : (
-                            t("profile.notSet")
-                          )}
-                        </p>
-                      )}
-                    </div>
+                        <CustomDropdown
+                          name="filingEntityTypeId"
+                          value={selectedFilingEntityType}
+                          onChange={handleFilingEntityTypeChange}
+                          placeholder={t("profile.selectFilingEntityType")}
+                          options={[
+                            { value: "", label: t("profile.selectFilingEntityType") },
+                            ...filingEntityTypes.map((entityType) => ({
+                              value: entityType.id,
+                              label: entityType.name,
+                            })),
+                          ]}
+                        />
+                      )
+                    ) : (
+                      <p className="profile-field-value">
+                        {isLoadingEntityTypes ? (
+                          <span className="text-muted">{t("common.loading")}</span>
+                        ) : selectedFilingEntityType ? (
+                          filingEntityTypes.find(et => et.id === selectedFilingEntityType)?.name || t("profile.notSet")
+                        ) : (
+                          t("profile.notSet")
+                        )}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
 
-              <div className="col-12 mb-3">
-                <div className="stat-card p-4">
-                  <h4 className="fw-medium mb-4">
-                    <i className="fas fa-user me-2 text-secondary"></i>
-                    {t("profile.personalInformation")}
-                  </h4>
-                  <div className="row g-3">
-                    <div className="col-sm-6">
-                      <label className="form-label text-muted small">{t("profile.firstName")}</label>
+              {/* Personal Information Card */}
+              <div className="profile-section-card">
+                <div className="profile-section-header">
+                  <i className="fas fa-user profile-section-icon"></i>
+                  <h4 className="profile-section-title">{t("profile.personalInformation")}</h4>
+                </div>
+                <div className="profile-section-content">
+                  <div className="profile-fields-grid">
+                    <div className="profile-field">
+                      <label className="profile-field-label">{t("profile.firstName")}</label>
                       {isEditMode ? (
                         <input
                           type="text"
                           name="firstName"
-                          className="form-control"
+                          className="form-control profile-input"
                           value={editFormData.firstName}
                           onChange={handleFormInputChange}
                           placeholder={t("profile.enterFirstName")}
                         />
                       ) : (
-                        <p className="fw-medium mb-0">{user.firstName}</p>
+                        <p className="profile-field-value">{user.firstName}</p>
                       )}
                     </div>
-                    <div className="col-sm-6">
-                      <label className="form-label text-muted small">{t("profile.lastName")}</label>
+                    <div className="profile-field">
+                      <label className="profile-field-label">{t("profile.lastName")}</label>
                       {isEditMode ? (
                         <input
                           type="text"
                           name="lastName"
-                          className="form-control"
+                          className="form-control profile-input"
                           value={editFormData.lastName}
                           onChange={handleFormInputChange}
                           placeholder={t("profile.enterLastName")}
                         />
                       ) : (
-                        <p className="fw-medium mb-0">{user.lastName}</p>
+                        <p className="profile-field-value">{user.lastName}</p>
                       )}
                     </div>
-                    <div className="col-12">
-                      <label className="form-label text-muted small">{t("profile.emailAddress")}</label>
-                      <p className="fw-medium mb-0">{user.email}</p>
+                    <div className="profile-field profile-field-full">
+                      <label className="profile-field-label">{t("profile.emailAddress")}</label>
+                      <p className="profile-field-value">{user.email}</p>
                     </div>
                     {user.phone && (
-                      <div className="col-12">
-                        <label className="form-label text-muted small">{t("profile.phoneNumber")}</label>
-                        <p className="fw-medium mb-0">{user.phone}</p>
+                      <div className="profile-field profile-field-full">
+                        <label className="profile-field-label">{t("profile.phoneNumber")}</label>
+                        <p className="profile-field-value">{user.phone}</p>
                       </div>
                     )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="col-12 mb-3">
-                <div className="stat-card p-4">
-                  <h4 className="fw-medium mb-4">
-                    <i className="fas fa-id-card me-2 text-secondary"></i>
-                    {t("profile.accountDetails")}
-                  </h4>
-                  <div className="row g-3">
-                    <div className="col-sm-6">
-                      <label className="form-label text-muted small">{t("profile.role")}</label>
-                      <p className="fw-medium mb-0">
-                        <span className="badge bg-primary fs-6">{getUserRole(user) || t("header.nA")}</span>
-                      </p>
-                    </div>
-                    <div className="col-sm-6">
-                      <label className="form-label text-muted small">{t("profile.accountStatus")}</label>
-                      <p className="fw-medium mb-0">
-                        <span className="badge bg-success fs-6">{t("profile.active")}</span>
-                      </p>
-                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Digital Signature Section */}
-              <div className="col-12 mb-3">
-                <div className="stat-card p-4">
-                  <h4 className="fw-medium mb-4">
-                    <i className="fas fa-signature me-2 text-secondary"></i>
-                     {t("profile.signature")}
-                  </h4>
-                  <div className="row g-3">
-                    <div className="col-12">
-                      <label className="form-label text-muted small">{t("profile.signatureStatus")}</label>
-                      <p className="fw-medium mb-0">
-                        {signatureStatus === 'saved' ? (
-                          <span className="badge bg-success fs-6">
-                            <i className="fa-solid fa-check-circle me-1"></i>
-                            {t("profile.captured")}
-                          </span>
-                        ) : (
-                          <span className="badge bg-warning fs-6">
-                            <i className="fa-solid fa-clock me-1"></i>
-                            {t("profile.pending")}
-                          </span>
-                        )}
-                      </p>
-                    </div>
-                    
-                    {/* Signature Preview */}
-                    {signatureStatus === 'saved' && signatureData && (
-                      <div className="col-12">
-                        <label className="form-label text-muted small">{t("profile.signaturePreview")}</label>
-                        <div className="signature-preview-container p-3 border rounded bg-light">
-                          <img 
-                            src={signatureData} 
-                            alt={t("profile.digitalSignature")} 
-                            className="signature-preview-img"
-                            style={{
-                              maxWidth: '100%',
-                              maxHeight: '120px',
-                              objectFit: 'contain',
-                              border: '1px solid #dee2e6',
-                              borderRadius: '4px',
-                              backgroundColor: 'white'
-                            }}
-                            onLoad={() => setIsImageLoading(false)}
-                            onError={() => {
-                              setIsImageLoading(false);
-                            }}
-                          />
-                          {isImageLoading && (
-                            <div className="text-center py-2">
-                              <div className="spinner-border spinner-border-sm text-primary" role="status">
-                                <span className="visually-hidden">Loading signature...</span>
-                              </div>
-                              <p className="mt-1 text-muted small">{t("profile.loadingSignature")}</p>
-                            </div>
-                          )}
-                        </div>
-                      </div>
+              <div className="profile-section-card profile-section-card-full">
+                <div className="profile-section-header">
+                  <i className="fas fa-signature profile-section-icon"></i>
+                  <h4 className="profile-section-title">{t("profile.signature")}</h4>
+                </div>
+                <div className="profile-section-content">
+                  <div className="profile-field">
+                    <label className="profile-field-label">{t("profile.signatureStatus")}</label>
+                    {signatureStatus === 'saved' ? (
+                      <span className="profile-badge profile-badge-success">
+                        <i className="fa-solid fa-check-circle me-1"></i>
+                        {t("profile.captured")}
+                      </span>
+                    ) : (
+                      <span className="profile-badge profile-badge-warning">
+                        <i className="fa-solid fa-clock me-1"></i>
+                        {t("profile.pending")}
+                      </span>
                     )}
-                    
-                    <div className="col-12">
-                      <label className="form-label text-muted small">Last Updated</label>
-                      <p className="fw-medium mb-0 text-muted small">
-                        {signatureStatus === 'saved' ? new Date().toLocaleDateString() : 'Never'}
-                      </p>
-                    </div>
-                    <div className="col-12 mt-3">
-                      <button 
-                        className="dashboard-btn-create w-100"
-                        onClick={handleSignatureCapture}
-                        disabled={isUploadingSignature}
-                      >
-                        {isUploadingSignature ? (
-                          <>
-                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                            {t("profile.uploadingSignature")}
-                          </>
-                        ) : (
-                          <>
-                            <i className="fa-solid fa-pen-to-square me-1"></i>
-                            {signatureStatus === 'saved' ? t("profile.updateDigitalSignature") : t("profile.captureDigitalSignature")}
-                          </>
+                  </div>
+                  
+                  {/* Signature Preview */}
+                  {signatureStatus === 'saved' && signatureData && (
+                    <div className="profile-field">
+                      <label className="profile-field-label">{t("profile.signaturePreview")}</label>
+                      <div className="signature-preview-wrapper">
+                        <img 
+                          src={signatureData} 
+                          alt={t("profile.digitalSignature")} 
+                          className="signature-preview-image"
+                          onLoad={() => setIsImageLoading(false)}
+                          onError={() => {
+                            setIsImageLoading(false);
+                          }}
+                        />
+                        {isImageLoading && (
+                          <div className="signature-loading">
+                            <div className="spinner-border spinner-border-sm text-primary" role="status">
+                              <span className="visually-hidden">Loading signature...</span>
+                            </div>
+                            <p className="mt-1 text-muted small">{t("profile.loadingSignature")}</p>
+                          </div>
                         )}
-                      </button>
+                      </div>
                     </div>
+                  )}
+                  
+                  <div className="profile-field">
+                    <label className="profile-field-label">Last Updated</label>
+                    <p className="profile-field-value profile-field-value-muted">
+                      {signatureStatus === 'saved' ? new Date().toLocaleDateString() : 'Never'}
+                    </p>
+                  </div>
+                  <div className="profile-signature-action">
+                    <button 
+                      className="profile-btn profile-btn-primary profile-btn-full"
+                      onClick={handleSignatureCapture}
+                      disabled={isUploadingSignature}
+                    >
+                      {isUploadingSignature ? (
+                        <>
+                          <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                          {t("profile.uploadingSignature")}
+                        </>
+                      ) : (
+                        <>
+                          <i className="fa-solid fa-pen-to-square me-1"></i>
+                          {signatureStatus === 'saved' ? t("profile.updateDigitalSignature") : t("profile.captureDigitalSignature")}
+                        </>
+                      )}
+                    </button>
                   </div>
                 </div>
               </div>
-
             </div>
 
           </div>

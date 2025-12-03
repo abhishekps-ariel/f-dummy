@@ -3106,13 +3106,15 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
   const SectionHeader = ({ title, sectionId }) => {
     // For draft petitions, don't show section-level edit buttons (they should use the wizard)
     const canEdit = !isPublic && petition?.status?.toLowerCase() !== "closed" && !isDraftPetition();
+    // Don't allow editing signatures section
+    const showEditButton = canEdit && sectionId && sectionId !== "signatures";
     const sectionEditing = sectionId ? isSectionEditing(sectionId) : false;
     
     return (
       <div className="card-header">
         <div className="d-flex justify-content-between align-items-center">
           <h5 className="mb-0">{title}</h5>
-          {canEdit && sectionId && (
+          {showEditButton && (
             <div className="section-header-actions">
               {!sectionEditing ? (
                 <button
