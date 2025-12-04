@@ -63,14 +63,14 @@ const StepRightToCure = ({
                 <div key={index} className="right-to-cure-entry mb-4 p-3 border rounded">
                   {displayRightToCures.length > 1 && (
                     <div className="d-flex justify-content-between align-items-center mb-3">
-                      <h6 className="mb-0">Right to Cure Entry #{index + 1}</h6>
+                      <h6 className="mb-0">{t("petitionTabContent.rightToCureEntry")} #{index + 1}</h6>
                       {isEditing && (
                         <button
                           type="button"
                           className="btn btn-sm btn-danger"
                           onClick={() => removeRightToCure(index)}
                         >
-                          <i className="fas fa-trash me-1"></i>Remove
+                          <i className="fas fa-trash me-1"></i>{t("petitionTabContent.remove")}
                         </button>
                       )}
                     </div>
@@ -79,7 +79,7 @@ const StepRightToCure = ({
                   <div className="row">
                     <div className="col-md-6">
                       <div className="form-group mb-3">
-                        <label className="form-label">Notice Sent *</label>
+                        <label className="form-label">{t("petitionTabContent.noticeSent")} *</label>
                         <CustomDropdown
                           name={`rightToCures.${index}.noticeSent`}
                           value={
@@ -98,13 +98,13 @@ const StepRightToCure = ({
                                 : null;
                             updateRightToCure(index, "noticeSent", value);
                           }}
-                          placeholder="Select..."
+                          placeholder={t("petitionTabContent.select")}
                           disabled={!isEditing}
                           error={!!(fieldErrors[`rightToCures.${index}.noticeSent`] || fieldErrors.noticeSent)}
                           options={[
-                            { value: "", label: "Select..." },
-                            { value: "true", label: "Yes" },
-                            { value: "false", label: "No" },
+                            { value: "", label: t("petitionTabContent.select") },
+                            { value: "true", label: t("petitionTabContent.yes") },
+                            { value: "false", label: t("petitionTabContent.no") },
                           ]}
                         />
                         {(fieldErrors[`rightToCures.${index}.noticeSent`] || fieldErrors.noticeSent) && (
@@ -120,7 +120,7 @@ const StepRightToCure = ({
                       <>
                         <div className="col-md-6">
                           <div className="form-group mb-3">
-                            <label className="form-label">Notice Date *</label>
+                            <label className="form-label">{t("petitionTabContent.noticeDate")} *</label>
                             <input
                               type="date"
                               name={`rightToCures.${index}.noticeDate`}
@@ -142,7 +142,7 @@ const StepRightToCure = ({
                         <div className="col-md-6">
                           <div className="form-group mb-3">
                             <label className="form-label">
-                              Days Delinquent at Notice *
+                              {t("petitionTabContent.daysDelinquentAtNotice")} *
                             </label>
                             <input
                               type="number"
@@ -167,7 +167,7 @@ const StepRightToCure = ({
                         <div className="col-md-6">
                           <div className="form-group mb-3">
                             <label className="form-label">
-                              Amount in Default ($) *
+                              {t("petitionTabContent.amountInDefault")} ($) *
                             </label>
                             <input
                               type="text"
@@ -193,7 +193,7 @@ const StepRightToCure = ({
                         <div className="col-md-6">
                           <div className="form-group mb-3">
                             <label className="form-label">
-                              Cure Expiration Date
+                              {t("petitionTabContent.cureExpirationDate")}
                             </label>
                             <input
                               type="date"
@@ -216,7 +216,7 @@ const StepRightToCure = ({
                         <div className="col-md-6">
                           <div className="form-group mb-3">
                             <label className="form-label">
-                              Notice Address Street
+                              {t("petitionTabContent.noticeAddressStreet")}
                             </label>
                             <input
                               type="text"
@@ -255,7 +255,7 @@ const StepRightToCure = ({
 
                         <div className="col-md-6">
                           <div className="form-group mb-3">
-                            <label className="form-label">Notice Address City</label>
+                            <label className="form-label">{t("petitionTabContent.formFields.noticeAddressCity")}</label>
                             <input
                               type="text"
                               name={`rightToCures.${index}.noticeAddressCity`}
@@ -269,7 +269,7 @@ const StepRightToCure = ({
 
                         <div className="col-md-4">
                           <div className="form-group mb-3">
-                            <label className="form-label">Notice Address State</label>
+                            <label className="form-label">{t("petitionTabContent.formFields.noticeAddressState")}</label>
                             <input
                               type="text"
                               name={`rightToCures.${index}.noticeAddressState`}
@@ -283,7 +283,7 @@ const StepRightToCure = ({
 
                         <div className="col-md-4">
                           <div className="form-group mb-3">
-                            <label className="form-label">Notice Address ZIP</label>
+                            <label className="form-label">{t("petitionTabContent.formFields.noticeAddressZip")}</label>
                             <input
                               type="text"
                               name={`rightToCures.${index}.noticeAddressZip`}
@@ -301,7 +301,7 @@ const StepRightToCure = ({
                     {rtc.noticeSent === false && (
                       <div className="col-md-12">
                         <div className="form-group mb-3">
-                          <label className="form-label">Acceleration Date</label>
+                          <label className="form-label">{t("petitionTabContent.accelerationDate")}</label>
                           <input
                             type="date"
                             name={`rightToCures.${index}.manualOverrideReason`}
@@ -326,7 +326,7 @@ const StepRightToCure = ({
                       <>
                         <div className="col-12">
                           <div className="form-group mb-3">
-                            <label className="form-label">Did the borrower respond to the notice within 30 days? *</label>
+                            <label className="form-label">{t("petitionTabContent.borrowerRespondedWithin30Days")}? *</label>
                             {(fieldErrors[`rightToCures.${index}.borrowerRespondedWithin30Days`] || fieldErrors.borrowerRespondedWithin30Days) && (
                               <div className="text-danger small mt-1">
                                 {fieldErrors[`rightToCures.${index}.borrowerRespondedWithin30Days`] || fieldErrors.borrowerRespondedWithin30Days}
@@ -354,19 +354,19 @@ const StepRightToCure = ({
                                     updateRightToCure(index, "borrowerResponseDate", "");
                                   }
                                 }}
-                                placeholder="Select..."
+                                placeholder={t("petitionTabContent.select")}
                                 disabled={!isEditing}
                                 options={[
-                                  { value: "", label: "Select..." },
-                                  { value: "true", label: "Yes" },
-                                  { value: "false", label: "No" },
+                                  { value: "", label: t("petitionTabContent.select") },
+                                  { value: "true", label: t("petitionTabContent.yes") },
+                                  { value: "false", label: t("petitionTabContent.no") },
                                 ]}
                               />
                             ) : (
                               <input
                                 type="text"
                                 className="form-control"
-                                value={rtc.borrowerRespondedWithin30Days === true ? "Yes" : rtc.borrowerRespondedWithin30Days === false ? "No" : ""}
+                                value={rtc.borrowerRespondedWithin30Days === true ? t("petitionTabContent.yes") : rtc.borrowerRespondedWithin30Days === false ? t("petitionTabContent.no") : ""}
                                 readOnly
                               />
                             )}
@@ -377,7 +377,7 @@ const StepRightToCure = ({
                           <>
                             <div className="col-md-6">
                               <div className="form-group mb-3">
-                                <label className="form-label">Date on which the borrower responded *</label>
+                                <label className="form-label">{t("petitionTabContent.borrowerResponseDate")} *</label>
                                 <input
                                   type="date"
                                   className="form-control"
@@ -392,7 +392,7 @@ const StepRightToCure = ({
 
                             <div className="col-12">
                               <div className="form-group mb-3">
-                                <label className="form-label">Did the borrower proceed with the right to cure? *</label>
+                                <label className="form-label">{t("petitionTabContent.proceededWithRightToCure")} *</label>
                                 {(fieldErrors[`rightToCures.${index}.proceededWithRightToCure`] || fieldErrors.proceededWithRightToCure) && (
                                   <div className="text-danger small mt-1">
                                     {fieldErrors[`rightToCures.${index}.proceededWithRightToCure`] || fieldErrors.proceededWithRightToCure}
@@ -417,19 +417,19 @@ const StepRightToCure = ({
                                           : null;
                                       updateRightToCure(index, "proceededWithRightToCure", value);
                                     }}
-                                    placeholder="Select..."
+                                    placeholder={t("petitionTabContent.select")}
                                     disabled={!isEditing}
                                     options={[
-                                      { value: "", label: "Select..." },
-                                      { value: "true", label: "Yes" },
-                                      { value: "false", label: "No" },
+                                      { value: "", label: t("petitionTabContent.select") },
+                                      { value: "true", label: t("petitionTabContent.yes") },
+                                      { value: "false", label: t("petitionTabContent.no") },
                                     ]}
                                   />
                                 ) : (
                                   <input
                                     type="text"
                                     className="form-control"
-                                    value={rtc.proceededWithRightToCure === true ? "Yes" : rtc.proceededWithRightToCure === false ? "No" : ""}
+                                    value={rtc.proceededWithRightToCure === true ? t("petitionTabContent.yes") : rtc.proceededWithRightToCure === false ? t("petitionTabContent.no") : ""}
                                     readOnly
                                   />
                                 )}
@@ -450,7 +450,7 @@ const StepRightToCure = ({
                     className="btn btn-primary"
                     onClick={addRightToCure}
                   >
-                    <i className="fas fa-plus me-1"></i>Add Right to Cure
+                    <i className="fas fa-plus me-1"></i>{t("petitionTabContent.addRightToCure")}
                   </button>
                 </div>
               )}

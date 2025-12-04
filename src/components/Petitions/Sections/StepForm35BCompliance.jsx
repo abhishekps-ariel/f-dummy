@@ -32,7 +32,7 @@ const StepForm35BCompliance = ({
                 <div className="col-12">
                   <div className="form-group mb-3">
                     <label className="form-label">
-                      Certain Mortgage Loan *
+                      {t("petitionTabContent.certainMortgageLoan")} *
                     </label>
                     <CustomDropdown
                       name="certainMortgageLoan"
@@ -55,13 +55,13 @@ const StepForm35BCompliance = ({
                           certainMortgageLoan: value,
                         }));
                       }}
-                      placeholder="Select..."
+                      placeholder={t("petitionTabContent.select")}
                       disabled={!isEditing || isCertainMortgageLoanReadOnly}
                       error={!!fieldErrors.certainMortgageLoan}
                       options={[
-                        { value: "", label: "Select..." },
-                        { value: "true", label: "Yes" },
-                        { value: "false", label: "No" },
+                        { value: "", label: t("petitionTabContent.select") },
+                        { value: "true", label: t("petitionTabContent.yes") },
+                        { value: "false", label: t("petitionTabContent.no") },
                       ]}
                     />
                     {isCertainMortgageLoanReadOnly && (

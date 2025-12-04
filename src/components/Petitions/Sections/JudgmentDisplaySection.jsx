@@ -202,7 +202,7 @@ const JudgmentDisplaySection = ({
         <div className="row">
           <div className="col-md-6">
             <div className="form-group mb-3">
-              <label className="form-label">Judgment Date {isEditing && "*"}</label>
+              <label className="form-label">{t("petitionTabContent.judgmentDate")} {isEditing && "*"}</label>
               {isEditing ? (
                 <>
                   <input
@@ -229,7 +229,7 @@ const JudgmentDisplaySection = ({
           </div>
           <div className="col-md-6">
             <div className="form-group mb-3">
-              <label className="form-label">Judgment Amount {isEditing && "*"}</label>
+              <label className="form-label">{t("petitionTabContent.judgmentAmount")} {isEditing && "*"}</label>
               {isEditing ? (
                 <>
                   <input
@@ -257,7 +257,7 @@ const JudgmentDisplaySection = ({
           </div>
           <div className="col-md-6">
             <div className="form-group mb-3">
-              <label className="form-label">Judgment Type {isEditing && "*"}</label>
+              <label className="form-label">{t("petitionTabContent.judgmentType")} {isEditing && "*"}</label>
               {isEditing ? (
                 <>
                   <CustomDropdown
@@ -290,7 +290,7 @@ const JudgmentDisplaySection = ({
           </div>
           <div className="col-md-6">
             <div className="form-group mb-3">
-              <label className="form-label">Docket Numbers {isEditing && "*"}</label>
+              <label className="form-label">{t("petitionTabContent.docketNumbers")} {isEditing && "*"}</label>
               {isEditing ? (
                 <>
                   <input
@@ -317,7 +317,7 @@ const JudgmentDisplaySection = ({
           </div>
           <div className="col-12">
             <div className="form-group mb-3">
-              <label className="form-label">Court Information {isEditing && "*"}</label>
+              <label className="form-label">{t("petitionTabContent.courtInformation")} {isEditing && "*"}</label>
               {isEditing ? (
                 <>
                   <textarea

@@ -30,7 +30,7 @@ const StepLoanAssignees = ({
                     <div key={index} className="border rounded p-3 mb-3">
                       <div className="d-flex justify-content-between align-items-center mb-3">
                         <h6 className="mb-0 fw-semibold">
-                          Assignee {index + 1}
+                          {t("petitionTabContent.assignee")} {index + 1}
                         </h6>
                         {isEditing && formData.loanAssignees.length > 1 && (
                           <button
@@ -47,7 +47,7 @@ const StepLoanAssignees = ({
                         <div className="col-md-6">
                           <div className="form-group mb-3">
                             <label className="form-label">
-                              Assignee Name *
+                              {t("petitionTabContent.assigneeName")} *
                             </label>
                             <input
                               type="text"
@@ -85,7 +85,7 @@ const StepLoanAssignees = ({
                         <div className="col-md-6">
                           <div className="form-group mb-3">
                             <label className="form-label">
-                              Assignee Type *
+                              {t("petitionTabContent.assigneeType")} *
                             </label>
                             <CustomDropdown
                               name={`loanAssignees.${index}.assigneeTypeId`}
@@ -97,7 +97,7 @@ const StepLoanAssignees = ({
                                   e.target.value
                                 )
                               }
-                              placeholder="Select Type"
+                              placeholder={t("petitionTabContent.selectType")}
                               disabled={!isEditing || commonDataLoading}
                               error={
                                 !!fieldErrors[
@@ -105,7 +105,7 @@ const StepLoanAssignees = ({
                                 ]
                               }
                               options={[
-                                { value: "", label: "Select Type" },
+                                { value: "", label: t("petitionTabContent.selectType") },
                                 ...getAssigneeTypes().map((type) => ({
                                   value: type.id,
                                   label: type.name,
@@ -128,7 +128,7 @@ const StepLoanAssignees = ({
                         <div className="col-md-6">
                           <div className="form-group mb-3">
                             <label className="form-label">
-                              Assignee Role *
+                              {t("petitionTabContent.assigneeRole")} *
                             </label>
                             <CustomDropdown
                               name={`loanAssignees.${index}.assigneeRoleId`}
@@ -140,7 +140,7 @@ const StepLoanAssignees = ({
                                   e.target.value
                                 )
                               }
-                              placeholder="Select Role"
+                              placeholder={t("petitionTabContent.selectRole")}
                               disabled={!isEditing || commonDataLoading}
                               error={
                                 !!fieldErrors[
@@ -148,7 +148,7 @@ const StepLoanAssignees = ({
                                 ]
                               }
                               options={[
-                                { value: "", label: "Select Role" },
+                                { value: "", label: t("petitionTabContent.selectRole") },
                                 ...getAssigneeRoles().map((role) => ({
                                   value: role.id,
                                   label: role.name,
@@ -171,7 +171,7 @@ const StepLoanAssignees = ({
                         <div className="col-md-6">
                           <div className="form-group mb-3">
                             <label className="form-label">
-                              Street Address *
+                              {t("petitionTabContent.formFields.streetAddress")} *
                             </label>
                             <input
                               type="text"
@@ -226,7 +226,7 @@ const StepLoanAssignees = ({
                         <div className="col-md-6">
                           <div className="form-group mb-3">
                             <label className="form-label">
-                              Street Address 2
+                              {t("petitionTabContent.formFields.streetAddress2")}
                             </label>
                             <input
                               type="text"
@@ -245,7 +245,7 @@ const StepLoanAssignees = ({
                         </div>
                         <div className="col-md-4">
                           <div className="form-group mb-3">
-                            <label className="form-label">City *</label>
+                            <label className="form-label">{t("petitionTabContent.formFields.city")} *</label>
                             <input
                               type="text"
                               className={`form-control ${
@@ -273,7 +273,7 @@ const StepLoanAssignees = ({
                         </div>
                         <div className="col-md-4">
                           <div className="form-group mb-3">
-                            <label className="form-label">State *</label>
+                            <label className="form-label">{t("petitionTabContent.formFields.state")} *</label>
                             <input
                               type="text"
                               className={`form-control ${
@@ -309,7 +309,7 @@ const StepLoanAssignees = ({
                         </div>
                         <div className="col-md-4">
                           <div className="form-group mb-3">
-                            <label className="form-label">ZIP Code *</label>
+                            <label className="form-label">{t("petitionTabContent.formFields.zipCode")} *</label>
                             <input
                               type="text"
                               className={`form-control ${
@@ -333,7 +333,7 @@ const StepLoanAssignees = ({
                         </div>
                         <div className="col-md-6">
                           <div className="form-group mb-3">
-                            <label className="form-label">License Number</label>
+                            <label className="form-label">{t("petitionTabContent.licenseNumber")}</label>
                             <input
                               type="text"
                               className="form-control"
@@ -351,7 +351,7 @@ const StepLoanAssignees = ({
                         </div>
                         <div className="col-md-6">
                           <div className="form-group mb-3">
-                            <label className="form-label">License State</label>
+                            <label className="form-label">{t("petitionTabContent.licenseState")}</label>
                             <input
                               type="text"
                               className="form-control"

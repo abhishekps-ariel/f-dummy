@@ -22,7 +22,7 @@ const PropertyDetailsCard = ({
               <div className="row">
                 <div className="col-md-6">
                   <div className="form-group mb-3">
-                    <label className="form-label">Street Address *</label>
+                    <label className="form-label">{t("petitionTabContent.formFields.streetAddress")} *</label>
                     <input
                       ref={propertyAddressInputRef}
                       type="text"
@@ -61,7 +61,7 @@ const PropertyDetailsCard = ({
                 </div>
                 <div className="col-md-6">
                   <div className="form-group mb-3">
-                    <label className="form-label">Street Address 2</label>
+                    <label className="form-label">{t("petitionTabContent.formFields.streetAddress2")}</label>
                     <input
                       type="text"
                       name="propertyStreet2"
@@ -74,7 +74,7 @@ const PropertyDetailsCard = ({
                 </div>
                 <div className="col-md-4">
                   <div className="form-group mb-3">
-                    <label className="form-label">City *</label>
+                    <label className="form-label">{t("petitionTabContent.formFields.city")} *</label>
                     <input
                       type="text"
                       name="propertyCity"
@@ -94,7 +94,7 @@ const PropertyDetailsCard = ({
                 </div>
                 <div className="col-md-4">
                   <div className="form-group mb-3">
-                    <label className="form-label">State *</label>
+                    <label className="form-label">{t("petitionTabContent.formFields.state")} *</label>
                     <input
                       type="text"
                       name="propertyState"
@@ -114,7 +114,7 @@ const PropertyDetailsCard = ({
                 </div>
                 <div className="col-md-4">
                   <div className="form-group mb-3">
-                    <label className="form-label">ZIP Code *</label>
+                    <label className="form-label">{t("petitionTabContent.formFields.zipCode")} *</label>
                     <input
                       type="text"
                       name="propertyZip"
@@ -134,7 +134,7 @@ const PropertyDetailsCard = ({
                 </div>
                 <div className="col-md-6">
                   <div className="form-group mb-3">
-                    <label className="form-label">County</label>
+                    <label className="form-label">{t("petitionTabContent.formFields.county")}</label>
                     <input
                       type="text"
                       name="propertyCounty"
@@ -147,7 +147,7 @@ const PropertyDetailsCard = ({
                 </div>
                 <div className="col-md-6">
                   <div className="form-group mb-3">
-                    <label className="form-label">Assessor Parcel ID</label>
+                    <label className="form-label">{t("petitionTabContent.formFields.assessorParcelId")}</label>
                     <input
                       type="text"
                       name="assessorParcelId"

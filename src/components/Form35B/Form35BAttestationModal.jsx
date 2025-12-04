@@ -158,7 +158,7 @@ const Form35BAttestationModal = ({
 
                 <div className="col-md-6">
                   <label htmlFor="submitterTitle" className="form-label fw-medium">
-                    {t("form35B.attestation.title")} <span className="text-danger">*</span>
+                    {t("form35B.attestation.submitterTitle")} <span className="text-danger">*</span>
                   </label>
                   <input
                     type="text"

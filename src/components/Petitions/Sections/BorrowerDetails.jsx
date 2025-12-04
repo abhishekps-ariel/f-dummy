@@ -30,7 +30,7 @@ const BorrowerDetails = ({
                     >
                       <div className="d-flex justify-content-between align-items-center mb-3">
                         <h6 className="mb-0 fw-semibold">
-                          Borrower {index + 1}
+                          {t("petitionTabContent.borrower")} {index + 1}
                         </h6>
                         {isEditing && formData.borrowers.length > 1 && (
                           <button
@@ -49,7 +49,7 @@ const BorrowerDetails = ({
                       <div className="row">
                         <div className="col-md-3">
                           <div className="form-group mb-3">
-                            <label className="form-label">First Name *</label>
+                            <label className="form-label">{t("petitionTabContent.firstName")} *</label>
                             <input
                               type="text"
                               className={`form-control ${
@@ -83,7 +83,7 @@ const BorrowerDetails = ({
                         </div>
                         <div className="col-md-3">
                           <div className="form-group mb-3">
-                            <label className="form-label">Middle Name</label>
+                            <label className="form-label">{t("petitionTabContent.middleName")}</label>
                             <input
                               type="text"
                               className={`form-control ${
@@ -119,7 +119,7 @@ const BorrowerDetails = ({
                         </div>
                         <div className="col-md-3">
                           <div className="form-group mb-3">
-                            <label className="form-label">Last Name *</label>
+                            <label className="form-label">{t("petitionTabContent.lastName")} *</label>
                             <input
                               type="text"
                               className={`form-control ${
@@ -153,7 +153,7 @@ const BorrowerDetails = ({
                         </div>
                         <div className="col-md-3">
                           <div className="form-group mb-3">
-                            <label className="form-label">Suffix</label>
+                            <label className="form-label">{t("petitionTabContent.suffix")}</label>
                             <input
                               type="text"
                               className={`form-control ${
@@ -182,7 +182,7 @@ const BorrowerDetails = ({
                         <div className="col-md-6">
                           <div className="form-group mb-3">
                             <label className="form-label">
-                              Primary Borrower
+                              {t("petitionTabContent.primaryBorrower")}
                             </label>
                             <div className="form-check">
                               <input
@@ -197,14 +197,14 @@ const BorrowerDetails = ({
                                 disabled={!isEditing}
                               />
                               <label className="form-check-label">
-                                {borrower.borrowerIsPrimary ? "Yes" : "No"}
+                                {borrower.borrowerIsPrimary ? t("petitionTabContent.yes") : t("petitionTabContent.no")}
                               </label>
                             </div>
                           </div>
                         </div>
                         <div className="col-md-6">
                           <div className="form-group mb-3">
-                            <label className="form-label">Email</label>
+                            <label className="form-label">{t("petitionTabContent.email")}</label>
                             <input
                               type="email"
                               className="form-control"
@@ -222,7 +222,7 @@ const BorrowerDetails = ({
                         </div>
                         <div className="col-md-6">
                           <div className="form-group mb-3">
-                            <label className="form-label">Phone</label>
+                            <label className="form-label">{t("petitionTabContent.phone")}</label>
                             <input
                               type="text"
                               className="form-control"
@@ -241,7 +241,7 @@ const BorrowerDetails = ({
                         <div className="col-md-6">
                           <div className="form-group mb-3">
                             <label className="form-label">
-                              Mailing Address
+                              {t("petitionTabContent.mailingAddress")}
                             </label>
                             <input
                               type="text"
@@ -307,7 +307,7 @@ const BorrowerDetails = ({
                         </div>
                         <div className="col-md-4">
                           <div className="form-group mb-3">
-                            <label className="form-label">Mailing City</label>
+                            <label className="form-label">{t("petitionTabContent.formFields.mailingCity")}</label>
                             <input
                               type="text"
                               className={`form-control ${
@@ -343,7 +343,7 @@ const BorrowerDetails = ({
                         </div>
                         <div className="col-md-2">
                           <div className="form-group mb-3">
-                            <label className="form-label">State</label>
+                            <label className="form-label">{t("petitionTabContent.formFields.mailingState")}</label>
                             <input
                               type="text"
                               className={`form-control ${
@@ -379,7 +379,7 @@ const BorrowerDetails = ({
                         </div>
                         <div className="col-md-4">
                           <div className="form-group mb-3">
-                            <label className="form-label">Mailing ZIP</label>
+                            <label className="form-label">{t("petitionTabContent.formFields.mailingZip")}</label>
                             <input
                               type="text"
                               className={`form-control ${
@@ -423,7 +423,7 @@ const BorrowerDetails = ({
                       onClick={addBorrower}
                     >
                       <i className="fas fa-plus me-1"></i>
-                      Add Borrower
+                      {t("petitionTabContent.addBorrower")}
                     </button>
                   )}
                 </>

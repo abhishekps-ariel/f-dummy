@@ -115,12 +115,12 @@ const EditForeclosureModal = ({
     }
     // Validate requested alternative to foreclosure (required)
     if (foreclosureData.requestedAlternativeToForeclosure === null || foreclosureData.requestedAlternativeToForeclosure === undefined) {
-      errors.requestedAlternativeToForeclosure = "Please select if the borrower requested an alternative to foreclosure";
+      errors.requestedAlternativeToForeclosure = t("modals.editForeclosure.validation.requestedAlternativeToForeclosureRequired");
     }
     // Validate foreclosure alternative option (required if alternative was requested)
     if (foreclosureData.requestedAlternativeToForeclosure === true) {
       if (!foreclosureData.foreclosureAlternativeOption || foreclosureData.foreclosureAlternativeOption === "") {
-        errors.foreclosureAlternativeOption = "Alternative option is required";
+        errors.foreclosureAlternativeOption = t("modals.editForeclosure.validation.foreclosureAlternativeOptionRequired");
       }
     }
     setFieldErrors(errors);
@@ -379,7 +379,7 @@ const EditForeclosureModal = ({
               {/* Foreclosure Alternative Fields - Moved to Bottom */}
               <div className="col-12">
                 <label className="form-label">
-                  Did the borrower request an alternative to foreclosure?{"\u00A0"}
+                  {t("petitionTabContent.requestedAlternativeToForeclosure")}{"\u00A0"}
                   <span style={{ whiteSpace: 'nowrap' }}>*</span>
                 </label>
                 {fieldErrors.requestedAlternativeToForeclosure && (
@@ -401,7 +401,7 @@ const EditForeclosureModal = ({
                       }
                     />
                     <label className="form-check-label" htmlFor="requestedAlternativeToForeclosureYes">
-                      Yes
+                      {t("petitionTabContent.yes")}
                     </label>
                   </div>
                   <div className="form-check">
@@ -417,7 +417,7 @@ const EditForeclosureModal = ({
                       }
                     />
                     <label className="form-check-label" htmlFor="requestedAlternativeToForeclosureNo">
-                      No
+                      {t("petitionTabContent.no")}
                     </label>
                   </div>
                 </div>
@@ -426,17 +426,17 @@ const EditForeclosureModal = ({
               {foreclosureData.requestedAlternativeToForeclosure === true && (
                 <div className="col-12">
                   <label htmlFor="foreclosureAlternativeOption" className="form-label">
-                    Alternative Options *
+                    {t("petitionTabContent.foreclosureAlternativeOption")} *
                   </label>
                   <CustomDropdown
                     id="foreclosureAlternativeOption"
                     name="foreclosureAlternativeOption"
                     value={foreclosureData.foreclosureAlternativeOption || ""}
                     onChange={handleDropdownChange}
-                    placeholder="Select Alternative Option"
+                    placeholder={t("petitionTabContent.selectAlternativeOption")}
                     error={!!fieldErrors.foreclosureAlternativeOption}
                     options={[
-                      { value: "", label: "Select Alternative Option" },
+                      { value: "", label: t("petitionTabContent.selectAlternativeOption") },
                       ...(getForeclosureAlternativeOptions ? getForeclosureAlternativeOptions().map((option) => ({
                         value: option.value || option.id,
                         label: option.description || option.name,

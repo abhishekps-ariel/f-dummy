@@ -19,7 +19,7 @@ const StepFilingEntity = ({
                 <div className="col-12">
                   <div className="form-group mb-3">
                     <label className="form-label">
-                      Filing Entity Legal Name *
+                      {t("petitionTabContent.filingEntityLegalName")} *
                     </label>
                     <input
                       type="text"
@@ -40,7 +40,7 @@ const StepFilingEntity = ({
                 </div>
                 <div className="col-md-6">
                   <div className="form-group mb-3">
-                    <label className="form-label">Contact Name *</label>
+                    <label className="form-label">{t("petitionTabContent.contactName")} *</label>
                     <input
                       type="text"
                       name="filingContactName"
@@ -60,7 +60,7 @@ const StepFilingEntity = ({
                 </div>
                 <div className="col-md-6">
                   <div className="form-group mb-3">
-                    <label className="form-label">Contact Email *</label>
+                    <label className="form-label">{t("petitionTabContent.contactEmail")} *</label>
                     <input
                       type="email"
                       name="filingContactEmail"
@@ -80,7 +80,7 @@ const StepFilingEntity = ({
                 </div>
                 <div className="col-md-6">
                   <div className="form-group mb-3">
-                    <label className="form-label">Contact Phone *</label>
+                    <label className="form-label">{t("petitionTabContent.contactPhone")} *</label>
                     <input
                       type="text"
                       name="filingContactPhone"
@@ -100,7 +100,7 @@ const StepFilingEntity = ({
                 </div>
                 <div className="col-md-6">
                   <div className="form-group mb-3">
-                    <label className="form-label">NMLS License Number</label>
+                    <label className="form-label">{t("petitionTabContent.nmlsLicenseNumber")}</label>
                     <input
                       type="text"
                       name="nmlsLicenseNumber"
@@ -113,7 +113,7 @@ const StepFilingEntity = ({
                 </div>
                 <div className="col-md-6">
                   <div className="form-group mb-3">
-                    <label className="form-label">State License Number</label>
+                    <label className="form-label">{t("petitionTabContent.stateLicenseNumber")}</label>
                     <input
                       type="text"
                       name="stateLicenseNumber"
@@ -126,7 +126,7 @@ const StepFilingEntity = ({
                 </div>
                 <div className="col-md-6">
                   <div className="form-group mb-3">
-                    <label className="form-label">State License State</label>
+                    <label className="form-label">{t("petitionTabContent.stateLicenseState")}</label>
                     <input
                       type="text"
                       name="stateLicenseState"
@@ -139,7 +139,7 @@ const StepFilingEntity = ({
                 </div>
                 <div className="col-md-6">
                   <div className="form-group mb-3">
-                    <label className="form-label">Street Address *</label>
+                    <label className="form-label">{t("petitionTabContent.formFields.streetAddress")} *</label>
                     <input
                       type="text"
                       name="filingEntityStreet1"
@@ -159,7 +159,7 @@ const StepFilingEntity = ({
                 </div>
                 <div className="col-md-6">
                   <div className="form-group mb-3">
-                    <label className="form-label">Street Address 2</label>
+                    <label className="form-label">{t("petitionTabContent.formFields.streetAddress2")}</label>
                     <input
                       type="text"
                       name="filingEntityStreet2"
@@ -172,7 +172,7 @@ const StepFilingEntity = ({
                 </div>
                 <div className="col-md-4">
                   <div className="form-group mb-3">
-                    <label className="form-label">City *</label>
+                    <label className="form-label">{t("petitionTabContent.formFields.city")} *</label>
                     <input
                       type="text"
                       name="filingEntityCity"
@@ -192,7 +192,7 @@ const StepFilingEntity = ({
                 </div>
                 <div className="col-md-4">
                   <div className="form-group mb-3">
-                    <label className="form-label">State *</label>
+                    <label className="form-label">{t("petitionTabContent.formFields.state")} *</label>
                     <input
                       type="text"
                       name="filingEntityState"
@@ -212,7 +212,7 @@ const StepFilingEntity = ({
                 </div>
                 <div className="col-md-4">
                   <div className="form-group mb-3">
-                    <label className="form-label">ZIP Code *</label>
+                    <label className="form-label">{t("petitionTabContent.formFields.zipCode")} *</label>
                     <input
                       type="text"
                       name="filingEntityZip"

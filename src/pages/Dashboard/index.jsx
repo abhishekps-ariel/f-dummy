@@ -282,26 +282,26 @@ function Dashboard() {
                       <div>
                         <div className="mb-3 pb-2 border-bottom">
                           <p className="text-muted small mb-0" style={{ fontSize: '0.75rem', fontWeight: '500' }}>
-                            Current Year: <strong style={{ color: '#333' }}>{new Date().getFullYear()}</strong>
+                            {t("dashboard.currentYear")}: <strong style={{ color: '#333' }}>{new Date().getFullYear()}</strong>
                           </p>
                         </div>
                         <div className="mb-2">
                           <div className="d-flex align-items-center mb-2" style={{ gap: '12px' }}>
                             <span className="text-muted small" style={{ fontSize: '0.8rem', flex: '1', minWidth: '140px' }}>
-                              January - June
+                              {t("dashboard.januaryJune")}
                             </span>
                             <span style={{ color: '#357a5b', fontWeight: '600', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px', minWidth: '70px' }}>
                               <i className="fa-solid fa-check-circle"></i>
-                              Ready
+                              {t("dashboard.ready")}
                             </span>
                           </div>
                           <div className="d-flex align-items-center" style={{ gap: '12px' }}>
                             <span className="text-muted small" style={{ fontSize: '0.8rem', flex: '1', minWidth: '140px' }}>
-                              July - December
+                              {t("dashboard.julyDecember")}
                             </span>
                             <span style={{ color: '#dc3545', fontWeight: '600', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px', minWidth: '70px' }}>
                               <i className="fa-solid fa-clock"></i>
-                              Due
+                              {t("dashboard.due")}
                             </span>
                           </div>
                         </div>
@@ -331,7 +331,7 @@ function Dashboard() {
                           e.currentTarget.style.background = '#357a5b';
                         }}
                       >
-                        Form 35B Reporting
+                        {t("dashboard.form35BReporting")}
                         <i className="fa-solid fa-arrow-right"></i>
                       </button>
                     </div>

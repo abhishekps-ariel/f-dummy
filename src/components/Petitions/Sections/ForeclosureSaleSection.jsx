@@ -49,7 +49,7 @@ const ForeclosureSaleSection = ({
                     <div className="row">
                       <div className="col-md-6">
                         <div className="form-group mb-3">
-                          <label className="form-label">Sale Date *</label>
+                          <label className="form-label">{t("petitionTabContent.saleDate")} *</label>
                           <input
                             type="date"
                             className={`form-control ${
@@ -72,7 +72,7 @@ const ForeclosureSaleSection = ({
                       </div>
                       <div className="col-md-6">
                         <div className="form-group mb-3">
-                          <label className="form-label">Sold To? *</label>
+                          <label className="form-label">{t("petitionTabContent.soldToQuestion")} *</label>
                           {isEditing ? (
                             <CustomDropdown
                               name="soldToId"
@@ -80,11 +80,11 @@ const ForeclosureSaleSection = ({
                               onChange={(e) =>
                                 updateForeclosureSale("soldToId", e.target.value)
                               }
-                              placeholder="Select..."
+                              placeholder={t("petitionTabContent.select")}
                               disabled={!isEditing}
                               error={!!fieldErrors["foreclosureSale.soldToId"]}
                               options={[
-                                { value: "", label: "Select..." },
+                                { value: "", label: t("petitionTabContent.select") },
                                 ...getBuyerTypes().map((buyerType) => ({
                                   value: buyerType.id || buyerType.value,
                                   label: buyerType.name || buyerType.value,
@@ -113,9 +113,9 @@ const ForeclosureSaleSection = ({
                       <div className="col-md-6">
                         <div className="form-group mb-3">
                           <label className="form-label">
-                            Vesting Entity Name {isMortgageeInvestor ? "*" : ""}
+                            {t("petitionTabContent.vestingEntityName")} {isMortgageeInvestor ? "*" : ""}
                             {isMortgageeInvestor && (
-                              <span className="text-muted small ms-1">(If Mortgagee/Investor)</span>
+                              <span className="text-muted small ms-1">{t("petitionTabContent.ifMortgageeInvestor")}</span>
                             )}
                           </label>
                           <input
@@ -145,7 +145,7 @@ const ForeclosureSaleSection = ({
                       </div>
                       <div className="col-md-6">
                         <div className="form-group mb-3">
-                          <label className="form-label">REO Entity Name</label>
+                          <label className="form-label">{t("petitionTabContent.reoEntityName")}</label>
                           <input
                             type="text"
                             className="form-control"
@@ -160,9 +160,9 @@ const ForeclosureSaleSection = ({
                       <div className="col-md-6">
                         <div className="form-group mb-3">
                           <label className="form-label">
-                            REO Contact First Name {isMortgageeInvestor ? "*" : ""}
+                            {t("petitionTabContent.reoContactFirstName")} {isMortgageeInvestor ? "*" : ""}
                             {isMortgageeInvestor && (
-                              <span className="text-muted small ms-1">(If Mortgagee/Investor)</span>
+                              <span className="text-muted small ms-1">{t("petitionTabContent.ifMortgageeInvestor")}</span>
                             )}
                           </label>
                           <input
@@ -193,9 +193,9 @@ const ForeclosureSaleSection = ({
                       <div className="col-md-6">
                         <div className="form-group mb-3">
                           <label className="form-label">
-                            REO Contact Last Name {isMortgageeInvestor ? "*" : ""}
+                            {t("petitionTabContent.reoContactLastName")} {isMortgageeInvestor ? "*" : ""}
                             {isMortgageeInvestor && (
-                              <span className="text-muted small ms-1">(If Mortgagee/Investor)</span>
+                              <span className="text-muted small ms-1">{t("petitionTabContent.ifMortgageeInvestor")}</span>
                             )}
                           </label>
                           <input
@@ -226,9 +226,9 @@ const ForeclosureSaleSection = ({
                       <div className="col-md-6">
                         <div className="form-group mb-3">
                           <label className="form-label">
-                            REO Business Phone {isMortgageeInvestor ? "*" : ""}
+                            {t("petitionTabContent.reoBusinessPhone")} {isMortgageeInvestor ? "*" : ""}
                             {isMortgageeInvestor && (
-                              <span className="text-muted small ms-1">(If Mortgagee/Investor)</span>
+                              <span className="text-muted small ms-1">{t("petitionTabContent.ifMortgageeInvestor")}</span>
                             )}
                           </label>
                           <input
@@ -256,7 +256,7 @@ const ForeclosureSaleSection = ({
                       </div>
                       <div className="col-md-6">
                         <div className="form-group mb-3">
-                          <label className="form-label">REO Emergency Phone</label>
+                          <label className="form-label">{t("petitionTabContent.reoEmergencyPhone")}</label>
                           <input
                             type="text"
                             className="form-control"
@@ -277,7 +277,7 @@ const ForeclosureSaleSection = ({
                       {/* Foreclosure Alternative Fields */}
                       <div className="col-12">
                         <div className="form-group mb-3">
-                          <label className="form-label">Did the borrower request an alternative to foreclosure? *</label>
+                          <label className="form-label">{t("petitionTabContent.requestedAlternativeToForeclosure")} *</label>
                           {fieldErrors["foreclosureSale.requestedAlternativeToForeclosure"] && (
                             <div className="text-danger small mt-1">
                               {fieldErrors["foreclosureSale.requestedAlternativeToForeclosure"]}
@@ -305,19 +305,19 @@ const ForeclosureSaleSection = ({
                                   updateForeclosureSale("foreclosureAlternativeOption", null);
                                 }
                               }}
-                              placeholder="Select..."
+                              placeholder={t("petitionTabContent.select")}
                               disabled={!isEditing}
                               options={[
-                                { value: "", label: "Select..." },
-                                { value: "true", label: "Yes" },
-                                { value: "false", label: "No" },
+                                { value: "", label: t("petitionTabContent.select") },
+                                { value: "true", label: t("petitionTabContent.yes") },
+                                { value: "false", label: t("petitionTabContent.no") },
                               ]}
                             />
                           ) : (
                             <input
                               type="text"
                               className="form-control"
-                              value={formData.foreclosureSale?.requestedAlternativeToForeclosure === true ? "Yes" : formData.foreclosureSale?.requestedAlternativeToForeclosure === false ? "No" : ""}
+                              value={formData.foreclosureSale?.requestedAlternativeToForeclosure === true ? t("petitionTabContent.yes") : formData.foreclosureSale?.requestedAlternativeToForeclosure === false ? t("petitionTabContent.no") : ""}
                               readOnly
                             />
                           )}
@@ -327,7 +327,7 @@ const ForeclosureSaleSection = ({
                       {formData.foreclosureSale?.requestedAlternativeToForeclosure === true && (
                         <div className="col-12">
                           <div className="form-group mb-3">
-                            <label className="form-label">Alternative Options *</label>
+                            <label className="form-label">{t("petitionTabContent.foreclosureAlternativeOption")} *</label>
                             {isEditing ? (
                               <CustomDropdown
                                 name="foreclosureAlternativeOption"
@@ -335,11 +335,11 @@ const ForeclosureSaleSection = ({
                                 onChange={(e) =>
                                   updateForeclosureSale("foreclosureAlternativeOption", e.target.value)
                                 }
-                                placeholder="Select Alternative Option"
+                                placeholder={t("petitionTabContent.selectAlternativeOption")}
                                 disabled={!isEditing}
                                 error={!!fieldErrors["foreclosureSale.foreclosureAlternativeOption"]}
                                 options={[
-                                  { value: "", label: "Select Alternative Option" },
+                                  { value: "", label: t("petitionTabContent.selectAlternativeOption") },
                                   ...(getForeclosureAlternativeOptions ? getForeclosureAlternativeOptions().map((option) => ({
                                     value: option.value || option.id,
                                     label: option.description || option.name,

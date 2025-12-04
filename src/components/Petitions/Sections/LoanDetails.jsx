@@ -35,7 +35,7 @@ const LoanDetails = ({
               <div className="row">
                 <div className="col-md-6">
                   <div className="form-group mb-3">
-                    <label className="form-label">Is MIN Applicable? *</label>
+                    <label className="form-label">{t("petitionTabContent.isMinApplicable")} *</label>
                     <div className="d-flex gap-3">
                       <div className="form-check">
                         <input
@@ -49,7 +49,7 @@ const LoanDetails = ({
                           disabled={!isEditing}
                         />
                         <label className="form-check-label" htmlFor="isMinApplicableYes">
-                          Yes
+                          {t("petitionTabContent.yes")}
                         </label>
                       </div>
                       <div className="form-check">
@@ -64,7 +64,7 @@ const LoanDetails = ({
                           disabled={!isEditing}
                         />
                         <label className="form-check-label" htmlFor="isMinApplicableNo">
-                          No
+                          {t("petitionTabContent.no")}
                         </label>
                       </div>
                     </div>
@@ -79,7 +79,7 @@ const LoanDetails = ({
                 {formData.isMinApplicable === "yes" && (
                   <div className="col-md-6">
                     <div className="form-group mb-3">
-                      <label className="form-label">MIN Number *</label>
+                      <label className="form-label">{t("petitionTabContent.minNumber")} *</label>
                       <input
                         type="text"
                         name="minNumber"
@@ -100,7 +100,7 @@ const LoanDetails = ({
                 )}
                 <div className="col-md-6">
                   <div className="form-group mb-3">
-                    <label className="form-label">Loan Number *</label>
+                    <label className="form-label">{t("petitionTabContent.loanNumber")} *</label>
                     <input
                       type="text"
                       name="loanNumber"
@@ -120,16 +120,16 @@ const LoanDetails = ({
                 </div>
                 <div className="col-md-6">
                   <div className="form-group mb-3">
-                    <label className="form-label">Loan Type *</label>
+                    <label className="form-label">{t("petitionTabContent.loanType")} *</label>
                     <CustomDropdown
                       name="petitionLoanTypeId"
                       value={formData.petitionLoanTypeId || ""}
                       onChange={handleInputChange}
-                      placeholder="Select Loan Type"
+                      placeholder={t("petitionTabContent.selectLoanType")}
                       disabled={!isEditing || commonDataLoading}
                       error={!!fieldErrors.petitionLoanTypeId}
                       options={[
-                        { value: "", label: "Select Loan Type" },
+                        { value: "", label: t("petitionTabContent.selectLoanType") },
                         ...getLoanTypes().map((loanType) => ({
                           value: loanType.id,
                           label: loanType.name,
@@ -145,16 +145,16 @@ const LoanDetails = ({
                 </div>
                 <div className="col-md-6">
                   <div className="form-group mb-3">
-                    <label className="form-label">Lien Position *</label>
+                    <label className="form-label">{t("petitionTabContent.lienPosition")} *</label>
                     <CustomDropdown
                       name="lienPosition"
                       value={formData.lienPosition ?? ""}
                       onChange={handleInputChange}
-                      placeholder="Select Position"
+                      placeholder={t("petitionTabContent.selectPosition")}
                       disabled={!isEditing || commonDataLoading}
                       error={!!fieldErrors.lienPosition}
                       options={[
-                        { value: "", label: "Select Position" },
+                        { value: "", label: t("petitionTabContent.selectPosition") },
                         ...getLienPositions().map((position) => ({
                           value: position.value,
                           label: position.name,
@@ -170,7 +170,7 @@ const LoanDetails = ({
                 </div>
                 <div className="col-md-6">
                   <div className="form-group mb-3">
-                    <label className="form-label">Origination Date *</label>
+                    <label className="form-label">{t("petitionTabContent.originationDate")} *</label>
                     <input
                       type="date"
                       name="originationDate"
@@ -191,7 +191,7 @@ const LoanDetails = ({
                 <div className="col-md-6">
                   <div className="form-group mb-3">
                     <label className="form-label">
-                      Original Principal Amount ($) *
+                      {t("petitionTabContent.originalPrincipalAmount")} *
                     </label>
                     <input
                       type="text"
@@ -213,7 +213,7 @@ const LoanDetails = ({
                 <div className="col-md-6">
                   <div className="form-group mb-3">
                     <label className="form-label">
-                      Current Principal Balance ($) *
+                      {t("petitionTabContent.currentPrincipalBalance")} *
                     </label>
                     <input
                       type="text"
@@ -234,7 +234,7 @@ const LoanDetails = ({
                 </div>
                 <div className="col-md-6">
                   <div className="form-group mb-3">
-                    <label className="form-label">Interest Rate (%) *</label>
+                    <label className="form-label">{t("petitionTabContent.interestRatePercent")} *</label>
                     <input
                       type="number"
                       step="0.001"
@@ -256,7 +256,7 @@ const LoanDetails = ({
                 <div className="col-md-6">
                   <div className="form-group mb-3">
                     <label className="form-label">
-                      Monthly Payment Amount ($) *
+                      {t("petitionTabContent.monthlyPaymentAmount")} *
                     </label>
                     <input
                       type="text"
@@ -278,7 +278,7 @@ const LoanDetails = ({
                 <div className="col-md-6">
                   <div className="form-group mb-3">
                     <label className="form-label">
-                      Delinquency Days at Filing
+                      {t("petitionTabContent.delinquencyDaysAtFiling")}
                     </label>
                     <input
                       type="number"
@@ -299,7 +299,7 @@ const LoanDetails = ({
                 </div>
                 <div className="col-md-6">
                   <div className="form-group mb-3">
-                    <label className="form-label">Mortgage Broker License Number</label>
+                    <label className="form-label">{t("petitionTabContent.mortgageBrokerLicenseNumber")}</label>
                     <input
                       type="text"
                       name="mortgageBrokerLicenseNumber"
@@ -319,7 +319,7 @@ const LoanDetails = ({
                 </div>
                 <div className="col-md-6">
                   <div className="form-group mb-3">
-                    <label className="form-label">Mortgage Loan Originator License Number</label>
+                    <label className="form-label">{t("petitionTabContent.mortgageLoanOriginatorLicenseNumber")}</label>
                     <input
                       type="text"
                       name="mortgageLoanOriginatorLicenseNumber"
@@ -339,16 +339,16 @@ const LoanDetails = ({
                 </div>
                 <div className="col-md-6">
                   <div className="form-group mb-3">
-                    <label className="form-label">Lender Type</label>
+                    <label className="form-label">{t("petitionTabContent.lenderType")}</label>
                     <CustomDropdown
                       name="lenderId"
                       value={formData.lenderId || ""}
                       onChange={handleInputChange}
-                      placeholder="Select Lender Type"
+                      placeholder={t("petitionTabContent.selectLenderType")}
                       disabled={!isEditing || commonDataLoading}
                       error={!!fieldErrors.lenderId}
                       options={[
-                        { value: "", label: "Select Lender Type" },
+                        { value: "", label: t("petitionTabContent.selectLenderType") },
                         ...getLenderTypes().map((lenderType) => ({
                           value: lenderType.id,
                           label: lenderType.name,
@@ -364,7 +364,7 @@ const LoanDetails = ({
                 </div>
                 <div className="col-md-6">
                   <div className="form-group mb-3">
-                    <label className="form-label">Variable Rate</label>
+                    <label className="form-label">{t("petitionTabContent.variableRate")}</label>
                     <div className="form-check">
                       <input
                         type="checkbox"
@@ -375,14 +375,14 @@ const LoanDetails = ({
                         disabled={!isEditing}
                       />
                       <label className="form-check-label">
-                        {formData.variableRate ? "Yes" : "No"}
+                        {formData.variableRate ? t("petitionTabContent.yes") : t("petitionTabContent.no")}
                       </label>
                     </div>
                   </div>
                 </div>
                 <div className="col-md-6">
                   <div className="form-group mb-3">
-                    <label className="form-label">Interest Only</label>
+                    <label className="form-label">{t("petitionTabContent.interestOnly")}</label>
                     <div className="form-check">
                       <input
                         type="checkbox"
@@ -393,14 +393,14 @@ const LoanDetails = ({
                         disabled={!isEditing}
                       />
                       <label className="form-check-label">
-                        {formData.interestOnly ? "Yes" : "No"}
+                        {formData.interestOnly ? t("petitionTabContent.yes") : t("petitionTabContent.no")}
                       </label>
                     </div>
                   </div>
                 </div>
                 <div className="col-md-6">
                   <div className="form-group mb-3">
-                    <label className="form-label">Negative Amortization</label>
+                    <label className="form-label">{t("petitionTabContent.negativeAmortization")}</label>
                     <div className="form-check">
                       <input
                         type="checkbox"
@@ -411,7 +411,7 @@ const LoanDetails = ({
                         disabled={!isEditing}
                       />
                       <label className="form-check-label">
-                        {formData.negativeAmortization ? "Yes" : "No"}
+                        {formData.negativeAmortization ? t("petitionTabContent.yes") : t("petitionTabContent.no")}
                       </label>
                     </div>
                   </div>
@@ -420,7 +420,7 @@ const LoanDetails = ({
                 {/* Loan Modification Fields - Moved to Bottom */}
                 <div className="col-12">
                   <div className="form-group mb-3">
-                    <label className="form-label">Did the borrower request a loan modification? *</label>
+                    <label className="form-label">{t("petitionTabContent.borrowerRequestedLoanModification")}? *</label>
                     {fieldErrors.borrowerRequestedLoanModification && (
                       <div className="text-danger small mt-1">
                         {fieldErrors.borrowerRequestedLoanModification}
@@ -439,7 +439,7 @@ const LoanDetails = ({
                             onChange={handleInputChange}
                           />
                           <label className="form-check-label" htmlFor="borrowerRequestedLoanModificationYes">
-                            Yes
+                            {t("petitionTabContent.yes")}
                           </label>
                         </div>
                         <div className="form-check">
@@ -453,7 +453,7 @@ const LoanDetails = ({
                             onChange={handleInputChange}
                           />
                           <label className="form-check-label" htmlFor="borrowerRequestedLoanModificationNo">
-                            No
+                            {t("petitionTabContent.no")}
                           </label>
                         </div>
                       </div>
@@ -461,7 +461,7 @@ const LoanDetails = ({
                       <input
                         type="text"
                         className="form-control"
-                        value={formData.borrowerRequestedLoanModification === true ? "Yes" : formData.borrowerRequestedLoanModification === false ? "No" : ""}
+                        value={formData.borrowerRequestedLoanModification === true ? t("petitionTabContent.yes") : formData.borrowerRequestedLoanModification === false ? t("petitionTabContent.no") : ""}
                         readOnly
                       />
                     )}
@@ -471,7 +471,7 @@ const LoanDetails = ({
                 {formData.borrowerRequestedLoanModification === true && (
                   <div className="col-12">
                     <div className="form-group mb-3">
-                      <label className="form-label">Loan modification request finalized? *</label>
+                      <label className="form-label">{t("petitionTabContent.loanModificationRequestFinalized")}? *</label>
                       {fieldErrors.loanModificationRequestFinalized && (
                         <div className="text-danger small mt-1">
                           {fieldErrors.loanModificationRequestFinalized}
@@ -490,7 +490,7 @@ const LoanDetails = ({
                               onChange={handleInputChange}
                             />
                             <label className="form-check-label" htmlFor="loanModificationRequestFinalizedYes">
-                              Yes
+                              {t("petitionTabContent.yes")}
                             </label>
                           </div>
                           <div className="form-check">
@@ -504,7 +504,7 @@ const LoanDetails = ({
                               onChange={handleInputChange}
                             />
                             <label className="form-check-label" htmlFor="loanModificationRequestFinalizedNo">
-                              No
+                              {t("petitionTabContent.no")}
                             </label>
                           </div>
                         </div>
@@ -512,7 +512,7 @@ const LoanDetails = ({
                         <input
                           type="text"
                           className="form-control"
-                          value={formData.loanModificationRequestFinalized === true ? "Yes" : formData.loanModificationRequestFinalized === false ? "No" : ""}
+                          value={formData.loanModificationRequestFinalized === true ? t("petitionTabContent.yes") : formData.loanModificationRequestFinalized === false ? t("petitionTabContent.no") : ""}
                           readOnly
                         />
                       )}

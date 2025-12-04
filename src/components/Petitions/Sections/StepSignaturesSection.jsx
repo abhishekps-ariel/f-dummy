@@ -75,11 +75,11 @@ const StepSignaturesSection = ({
                 return signatures.length > 0 ? (
                   signatures.map((signature, index) => (
                   <div key={index} className="border rounded p-3 mb-3">
-                    <h6 className="mb-3 fw-semibold">Signature {index + 1}</h6>
+                    <h6 className="mb-3 fw-semibold">{t("petitionTabContent.signature")} {index + 1}</h6>
                     <div className="row">
                       <div className="col-md-6">
                         <div className="form-group mb-3">
-                          <label className="form-label">Signer Full Name</label>
+                          <label className="form-label">{t("petitionTabContent.signerFullName")}</label>
                           <input
                             type="text"
                             className="form-control"
@@ -90,7 +90,7 @@ const StepSignaturesSection = ({
                       </div>
                       <div className="col-md-6">
                         <div className="form-group mb-3">
-                          <label className="form-label">Signer Title</label>
+                          <label className="form-label">{t("petitionTabContent.signerTitle")}</label>
                           <input
                             type="text"
                             className="form-control"
@@ -101,7 +101,7 @@ const StepSignaturesSection = ({
                       </div>
                       <div className="col-md-6">
                         <div className="form-group mb-3">
-                          <label className="form-label">Signer Email</label>
+                          <label className="form-label">{t("petitionTabContent.signerEmail")}</label>
                           <input
                             type="text"
                             className="form-control"
@@ -113,7 +113,7 @@ const StepSignaturesSection = ({
                       <div className="col-md-6">
                         <div className="form-group mb-3">
                           <label className="form-label">
-                            E-Sign Consent {isEditing && "*"}
+                            {t("petitionTabContent.esignConsent")} {isEditing && "*"}
                           </label>
                           {isEditing ? (
                             <>
@@ -148,7 +148,7 @@ const StepSignaturesSection = ({
                                   className="form-check-label"
                                   htmlFor={`esignConsent_${index}`}
                                 >
-                                  I consent to electronic signature
+                                  {t("petitionTabContent.esignConsentText")}
                                 </label>
                               </div>
                               {fieldErrors.esignConsent && (
@@ -161,7 +161,7 @@ const StepSignaturesSection = ({
                             <input
                               type="text"
                               className="form-control"
-                              value={signature.esignConsent ? "Yes" : "No"}
+                              value={signature.esignConsent ? t("petitionTabContent.yes") : t("petitionTabContent.no")}
                               readOnly
                             />
                           )}
@@ -169,7 +169,7 @@ const StepSignaturesSection = ({
                       </div>
                       <div className="col-md-6">
                         <div className="form-group mb-3">
-                          <label className="form-label">Signed At</label>
+                          <label className="form-label">{t("petitionTabContent.signedAt")}</label>
                           <input
                             type="text"
                             className="form-control"
@@ -182,7 +182,7 @@ const StepSignaturesSection = ({
                         <div className="col-12">
                           <div className="form-group mb-3">
                             <label className="form-label">
-                              Signature Preview
+                              {t("petitionTabContent.signaturePreview")}
                             </label>
                             <div className="signature-preview-container p-3 border rounded bg-light">
                               {loadingSignatures[index] ? (
@@ -190,7 +190,7 @@ const StepSignaturesSection = ({
                                   <div className="spinner-border spinner-border-sm text-primary" role="status">
                                     <span className="visually-hidden">Loading signature...</span>
                                   </div>
-                                  <p className="mt-1 text-muted small">Loading signature...</p>
+                                  <p className="mt-1 text-muted small">{t("petitionTabContent.loadingSignature")}</p>
                                 </div>
                               ) : (
                                 <img
@@ -215,7 +215,7 @@ const StepSignaturesSection = ({
                   </div>
                 ))
                 ) : (
-                  <p className="text-muted">No signature information available</p>
+                  <p className="text-muted">{t("petitionTabContent.noSignatureInformation")}</p>
                 );
               })()}
             </div>
