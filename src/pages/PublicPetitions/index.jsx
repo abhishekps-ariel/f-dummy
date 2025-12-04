@@ -489,7 +489,7 @@ function PublicPetitions() {
                         const startIndex = (currentPage - 1) * pageSize + 1;
                         const endIndex = Math.min(currentPage * pageSize, totalRecords);
                         return t("publicPetitions.showingResults", { 
-                          showing: petitions.length, 
+                          showing: endIndex - startIndex + 1, 
                           total: totalRecords, 
                           count: totalRecords
                         });

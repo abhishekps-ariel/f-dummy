@@ -754,7 +754,7 @@
     "noPetitionsFound": "No petitions found",
     "tryAdjustingSearch": "Try adjusting your search criteria.",
     "noPetitionsAvailable": "No petitions are currently available.",
-    "showingResults": "Showing {{showing}} of {{total}} {{count, plural, one {petition} other {petitions}}}",
+    "showingResults": "Showing {{showing}} of {{total}} petitions",
     "city": "City",
     "zipCode": "Zip Code",
     "saleAmount": "Sale Amount",

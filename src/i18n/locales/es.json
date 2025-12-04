@@ -754,7 +754,7 @@
     "noPetitionsFound": "No se encontraron peticiones",
     "tryAdjustingSearch": "Intente ajustar sus criterios de búsqueda.",
     "noPetitionsAvailable": "No hay peticiones disponibles actualmente.",
-    "showingResults": "Mostrando {{showing}} de {{total}} {{count, plural, one {petición} other {peticiones}}}",
+    "showingResults": "Mostrando {{showing}} de {{total}} peticiones",
     "city": "Ciudad",
     "zipCode": "Código Postal",
     "saleAmount": "Monto de Venta",
