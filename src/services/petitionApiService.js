@@ -310,9 +310,9 @@ class PetitionApiService {
         noticeAddressState: rtc.noticeAddressState || "",
         noticeAddressZip: rtc.noticeAddressZip || "",
         manualOverrideReason: rtc.manualOverrideReason || "",
-        borrowerRespondedWithin30Days: rtc.borrowerRespondedWithin30Days !== null && rtc.borrowerRespondedWithin30Days !== undefined ? rtc.borrowerRespondedWithin30Days : false,
+        borrowerRespondedWithin30Days: (rtc.noticeSent === false || rtc.noticeSent === null || rtc.noticeSent === undefined) ? null : (rtc.borrowerRespondedWithin30Days !== null && rtc.borrowerRespondedWithin30Days !== undefined ? rtc.borrowerRespondedWithin30Days : false),
         borrowerResponseDate: safeDateConversion(rtc.borrowerResponseDate),
-        proceededWithRightToCure: rtc.proceededWithRightToCure !== null && rtc.proceededWithRightToCure !== undefined ? rtc.proceededWithRightToCure : false
+        proceededWithRightToCure: (rtc.noticeSent === false || rtc.noticeSent === null || rtc.noticeSent === undefined) ? null : (rtc.proceededWithRightToCure !== null && rtc.proceededWithRightToCure !== undefined ? rtc.proceededWithRightToCure : false)
       };
     });
 
@@ -728,9 +728,9 @@ class PetitionApiService {
             noticeAddressState: rightToCure.noticeAddressState || "",
             noticeAddressZip: rightToCure.noticeAddressZip || "",
             manualOverrideReason: rightToCure.manualOverrideReason || "",
-            borrowerRespondedWithin30Days: rightToCure.borrowerRespondedWithin30Days !== null && rightToCure.borrowerRespondedWithin30Days !== undefined ? rightToCure.borrowerRespondedWithin30Days : false,
+            borrowerRespondedWithin30Days: (rightToCure.noticeSent === false || rightToCure.noticeSent === null || rightToCure.noticeSent === undefined) ? null : (rightToCure.borrowerRespondedWithin30Days !== null && rightToCure.borrowerRespondedWithin30Days !== undefined ? rightToCure.borrowerRespondedWithin30Days : false),
             borrowerResponseDate: safeDateConversion(rightToCure.borrowerResponseDate),
-            proceededWithRightToCure: rightToCure.proceededWithRightToCure !== null && rightToCure.proceededWithRightToCure !== undefined ? rightToCure.proceededWithRightToCure : false
+            proceededWithRightToCure: (rightToCure.noticeSent === false || rightToCure.noticeSent === null || rightToCure.noticeSent === undefined) ? null : (rightToCure.proceededWithRightToCure !== null && rightToCure.proceededWithRightToCure !== undefined ? rightToCure.proceededWithRightToCure : false)
           }));
         }
         // If old single-object format exists (from wizard form - first submission), convert to array with one object
@@ -747,9 +747,9 @@ class PetitionApiService {
             noticeAddressState: formData.noticeAddressState || "",
             noticeAddressZip: formData.noticeAddressZip || "",
             manualOverrideReason: formData.manualOverrideReason || "",
-            borrowerRespondedWithin30Days: formData.borrowerRespondedWithin30Days !== null && formData.borrowerRespondedWithin30Days !== undefined ? formData.borrowerRespondedWithin30Days : false,
+            borrowerRespondedWithin30Days: (formData.noticeSent === false || formData.noticeSent === null || formData.noticeSent === undefined) ? null : (formData.borrowerRespondedWithin30Days !== null && formData.borrowerRespondedWithin30Days !== undefined ? formData.borrowerRespondedWithin30Days : false),
             borrowerResponseDate: safeDateConversion(formData.borrowerResponseDate),
-            proceededWithRightToCure: formData.proceededWithRightToCure !== null && formData.proceededWithRightToCure !== undefined ? formData.proceededWithRightToCure : false
+            proceededWithRightToCure: (formData.noticeSent === false || formData.noticeSent === null || formData.noticeSent === undefined) ? null : (formData.proceededWithRightToCure !== null && formData.proceededWithRightToCure !== undefined ? formData.proceededWithRightToCure : false)
           }];
         }
         // Return empty array if no rightToCure data exists

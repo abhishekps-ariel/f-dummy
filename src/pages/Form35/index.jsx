@@ -698,21 +698,25 @@ const Form35 = () => {
                     </div>
 
                     {/* Reporting Year */}
-                    <div className="form-group mb-3">
-                      <label className="form-label fw-medium">
-                        2. {t("form35B.reportingYear")} <span className="text-danger">*</span>
-                      </label>
-                      <YearPicker
-                        name="reportingYear"
-                        value={formData.reportingYear}
-                        onChange={handleInputChange}
-                        placeholder={t("form35B.selectYear")}
-                        error={!!errors.reportingYear}
-                        minYear={1990}
-                      />
-                      {errors.reportingYear && (
-                        <div className="text-danger small mt-1">{errors.reportingYear}</div>
-                      )}
+                    <div className="row">
+                      <div className="col-md-6 col-lg-6">
+                        <div className="form-group mb-3">
+                          <label className="form-label fw-medium">
+                            2. {t("form35B.reportingYear")} <span className="text-danger">*</span>
+                          </label>
+                          <YearPicker
+                            name="reportingYear"
+                            value={formData.reportingYear}
+                            onChange={handleInputChange}
+                            placeholder={t("form35B.selectYear")}
+                            error={!!errors.reportingYear}
+                            minYear={2020}
+                          />
+                          {errors.reportingYear && (
+                            <div className="text-danger small mt-1">{errors.reportingYear}</div>
+                          )}
+                        </div>
+                      </div>
                     </div>
 
                     {/* Reporting Period */}
