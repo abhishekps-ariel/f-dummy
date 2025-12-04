@@ -7,6 +7,7 @@ const SignatureCapture = ({ isOpen, onClose, onSave, isUploading = false }) => {
   const { t } = useTranslation();
   const signatureRef = useRef();
   const textCanvasRef = useRef();
+  const canvasWrapperRef = useRef();
   const [mode, setMode] = useState('draw'); // 'draw' or 'type'
   const [isCaptured, setIsCaptured] = useState(false);
   const [showOtpModal, setShowOtpModal] = useState(false);
@@ -26,30 +27,65 @@ const SignatureCapture = ({ isOpen, onClose, onSave, isUploading = false }) => {
     }
   }, [isOpen]);
 
-  // Calculate canvas dimensions for mobile
+  // Calculate canvas dimensions based on container size
   useEffect(() => {
+    if (!isOpen || mode !== 'draw') return;
+
     const updateCanvasDimensions = () => {
+      if (!canvasWrapperRef.current) return;
+
+      const container = canvasWrapperRef.current;
+      const containerRect = container.getBoundingClientRect();
+      
       if (window.innerWidth <= 768) {
-        // Mobile: full screen minus header and footer
-        const headerHeight = 60; // Approximate header height
-        const footerHeight = 80; // Approximate footer height
-        const modeToggleHeight = 60; // Mode toggle height
-        const padding = 40; // Padding
+        // Mobile: use container dimensions
+        const headerHeight = 60;
+        const footerHeight = 80;
+        const modeToggleHeight = 60;
+        const padding = 40;
         const availableHeight = window.innerHeight - headerHeight - footerHeight - modeToggleHeight - padding;
         setCanvasDimensions({
-          width: window.innerWidth - 40, // Full width minus padding
-          height: Math.max(300, availableHeight) // Minimum 300px height
+          width: window.innerWidth - 40,
+          height: Math.max(300, availableHeight)
         });
       } else {
-        // Desktop: original dimensions
-        setCanvasDimensions({ width: 500, height: 200 });
+        // Desktop: use fixed dimensions that match the wrapper size
+        // Get the wrapper's computed style or use defaults
+        const wrapperWidth = containerRect.width > 0 ? Math.floor(containerRect.width) : 600;
+        const wrapperHeight = containerRect.height > 0 ? Math.floor(containerRect.height) : 200;
+        
+        // Set dimensions to match wrapper exactly - prevents coordinate offset
+        setCanvasDimensions({ 
+          width: wrapperWidth,
+          height: wrapperHeight
+        });
       }
     };
 
-    updateCanvasDimensions();
+    // Initial update with multiple attempts to ensure DOM is ready
+    const timeout1 = setTimeout(updateCanvasDimensions, 50);
+    const timeout2 = setTimeout(updateCanvasDimensions, 200);
+    
+    // Use ResizeObserver for better size tracking
+    let resizeObserver;
+    if (canvasWrapperRef.current && window.ResizeObserver) {
+      resizeObserver = new ResizeObserver(() => {
+        updateCanvasDimensions();
+      });
+      resizeObserver.observe(canvasWrapperRef.current);
+    }
+
     window.addEventListener('resize', updateCanvasDimensions);
-    return () => window.removeEventListener('resize', updateCanvasDimensions);
-  }, []);
+    
+    return () => {
+      clearTimeout(timeout1);
+      clearTimeout(timeout2);
+      window.removeEventListener('resize', updateCanvasDimensions);
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      }
+    };
+  }, [isOpen, mode]);
 
   // Render typed signature to canvas when text changes
   const renderTypedSignature = useCallback(() => {
@@ -214,7 +250,7 @@ const SignatureCapture = ({ isOpen, onClose, onSave, isUploading = false }) => {
                     </p>
                     
                     {/* Signature Canvas */}
-                    <div className="signature-canvas-wrapper">
+                    <div className="signature-canvas-wrapper" ref={canvasWrapperRef}>
                       <SignatureCanvas
                         ref={signatureRef}
                         canvasProps={{

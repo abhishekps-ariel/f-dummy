@@ -2983,8 +2983,29 @@ input, textarea, select {
     border-radius: 4px;
     cursor: crosshair;
     display: block;
+}
+
+/* Desktop: fixed size, no scaling */
+.signature-canvas-wrapper {
     width: 100%;
-    height: 100%;
+    min-height: 200px;
+    height: 200px;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    position: relative;
+}
+
+.signature-canvas-wrapper .signature-canvas {
+    /* Don't scale - use exact dimensions */
+    width: auto !important;
+    height: auto !important;
+    max-width: 100%;
+    max-height: 100%;
 }
 
 /* Signature Modal Mobile Styles */
