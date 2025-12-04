@@ -711,7 +711,7 @@ class PetitionApiService {
         mortgageLoanOriginatorLicenseNumber: formData.mortgageLoanOriginatorLicenseNumber || null,
         lenderId: formData.lenderId && formData.lenderId.trim() !== '' ? formData.lenderId : null,
         borrowerRequestedLoanModification: formData.borrowerRequestedLoanModification !== null && formData.borrowerRequestedLoanModification !== undefined ? formData.borrowerRequestedLoanModification : false,
-        loanModificationRequestFinalized: formData.loanModificationRequestFinalized !== null && formData.loanModificationRequestFinalized !== undefined ? formData.loanModificationRequestFinalized : false
+        loanModificationRequestFinalized: (formData.borrowerRequestedLoanModification === false || formData.borrowerRequestedLoanModification === null || formData.borrowerRequestedLoanModification === undefined) ? null : (formData.loanModificationRequestFinalized !== null && formData.loanModificationRequestFinalized !== undefined ? formData.loanModificationRequestFinalized : false)
       },
       rightToCures: (() => {
         // If rightToCures array exists and has entries, use it (from edit mode in PetitionTabContent)
