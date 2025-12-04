@@ -214,7 +214,7 @@ const StepRightToCure = ({
                         </div>
 
                         <div className="col-md-6">
-                          <div className="form-group mb-3">
+                          <div className="form-group mb-3 position-relative">
                             <label className="form-label">
                               {t("petitionTabContent.noticeAddressStreet")}
                             </label>
@@ -226,15 +226,30 @@ const StepRightToCure = ({
                               readOnly={!isEditing}
                               autoComplete="off"
                               onChange={(e) => {
-                                updateRightToCure(index, "noticeAddressStreet1", e.target.value);
+                                const value = e.target.value;
+                                updateRightToCure(index, "noticeAddressStreet1", value);
                                 if (isEditing && handleNoticeAddressInput) {
-                                  handleNoticeAddressInput(e);
+                                  handleNoticeAddressInput(index, value);
+                                }
+                              }}
+                              onBlur={() => {
+                                // Delay hiding suggestions to allow click events
+                                setTimeout(() => {
+                                  if (handleNoticeAddressInput) {
+                                    handleNoticeAddressInput(index, "");
+                                  }
+                                }, 300);
+                              }}
+                              onFocus={() => {
+                                const currentValue = rtc.noticeAddressStreet1 || "";
+                                if (isEditing && handleNoticeAddressInput && currentValue) {
+                                  handleNoticeAddressInput(index, currentValue);
                                 }
                               }}
                             />
-                            {isEditing && isLoaded && noticePredictions && noticePredictions.length > 0 && (
-                              <div className="list-group mt-1">
-                                {noticePredictions.map((p) => (
+                            {isEditing && isLoaded && noticePredictions && noticePredictions[index] && noticePredictions[index].length > 0 && (
+                              <div className="list-group mt-1 position-absolute w-100" style={{ zIndex: 1000, maxHeight: "200px", overflowY: "auto", backgroundColor: "white", boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}>
+                                {noticePredictions[index].map((p) => (
                                   <button
                                     type="button"
                                     key={p.place_id}

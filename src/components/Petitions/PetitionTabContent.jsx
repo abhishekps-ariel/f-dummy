@@ -113,10 +113,10 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
   const [assigneePredictions, setAssigneePredictions] = useState({}); // { [index]: Prediction[] }
   const [isLoadingAssigneePredictions, setIsLoadingAssigneePredictions] =
     useState({}); // { [index]: boolean }
-  // Notice address autocomplete
-  const [noticePredictions, setNoticePredictions] = useState([]);
+  // Notice address autocomplete - per entry
+  const [noticePredictions, setNoticePredictions] = useState({}); // { [index]: Prediction[] }
   const [isLoadingNoticePredictions, setIsLoadingNoticePredictions] =
-    useState(false);
+    useState({}); // { [index]: boolean }
 
   useEffect(() => {
     if (!isLoaded || loadError) return;
@@ -397,9 +397,9 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
   };
 
   // Notice address handlers
-  const handleNoticeAddressInput = (value) => {
+  const handleNoticeAddressInput = (index, value) => {
     if (!autocompleteServiceRef.current || !value.trim()) {
-      setNoticePredictions([]);
+      setNoticePredictions((prev) => ({ ...prev, [index]: [] }));
       return;
     }
     const request = {
@@ -408,61 +408,55 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
       types: ["address"],
     };
     if (window.autocompleteTimeout) clearTimeout(window.autocompleteTimeout);
-    setIsLoadingNoticePredictions(true);
+    setIsLoadingNoticePredictions((prev) => ({ ...prev, [index]: true }));
     window.autocompleteTimeout = setTimeout(() => {
       try {
         autocompleteServiceRef.current.getPlacePredictions(
           request,
           (result, status) => {
-            setIsLoadingNoticePredictions(false);
+            setIsLoadingNoticePredictions((prev) => ({
+              ...prev,
+              [index]: false,
+            }));
             if (
               status === window.google.maps.places.PlacesServiceStatus.OK &&
               result
             ) {
-              setNoticePredictions(result.slice(0, 5));
+              setNoticePredictions((prev) => ({
+                ...prev,
+                [index]: result.slice(0, 5),
+              }));
             } else {
-              setNoticePredictions([]);
+              setNoticePredictions((prev) => ({ ...prev, [index]: [] }));
             }
           }
         );
       } catch (e) {
-        setIsLoadingNoticePredictions(false);
-        setNoticePredictions([]);
+        setIsLoadingNoticePredictions((prev) => ({
+          ...prev,
+          [index]: false,
+        }));
+        setNoticePredictions((prev) => ({ ...prev, [index]: [] }));
       }
     }, 250);
   };
 
-  const handleNoticeAddressSelect = (prediction, index = null) => {
-    setNoticePredictions([]);
+  const handleNoticeAddressSelect = (prediction, index) => {
+    if (index === null || index === undefined) return;
+    
+    setNoticePredictions((prev) => ({ ...prev, [index]: [] }));
     const street = prediction.description?.split(",")[0] || "";
     
-    if (index !== null && index !== undefined) {
-      // Update specific rightToCure entry
-      geocodePlaceAndFill(
-        prediction.place_id,
-        ({ street1, city, state, zip }) => {
-          updateRightToCure(index, "noticeAddressStreet1", street1 || street);
-          if (city) updateRightToCure(index, "noticeAddressCity", city);
-          if (state) updateRightToCure(index, "noticeAddressState", state);
-          if (zip) updateRightToCure(index, "noticeAddressZip", zip);
-        }
-      );
-    } else {
-      // Legacy single-object format
-      setFormData((prev) => ({ ...prev, noticeAddressStreet1: street }));
-      geocodePlaceAndFill(
-        prediction.place_id,
-        ({ street1, city, state, zip }) => {
-          setFormData((prev) => ({
-            ...prev,
-            noticeAddressStreet1: street1 || prev.noticeAddressStreet1,
-            noticeAddressCity: city || prev.noticeAddressCity,
-            noticeAddressState: state || prev.noticeAddressState,
-            noticeAddressZip: zip || prev.noticeAddressZip,
-          }));
-        }
-      );
-    }
+    // Update specific rightToCure entry
+    geocodePlaceAndFill(
+      prediction.place_id,
+      ({ street1, city, state, zip }) => {
+        updateRightToCure(index, "noticeAddressStreet1", street1 || street);
+        if (city) updateRightToCure(index, "noticeAddressCity", city);
+        if (state) updateRightToCure(index, "noticeAddressState", state);
+        if (zip) updateRightToCure(index, "noticeAddressZip", zip);
+      }
+    );
   };
 
   const validatePropertyAddressWithGeocoding = async () => {

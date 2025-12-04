@@ -239,7 +239,7 @@ const BorrowerDetails = ({
                           </div>
                         </div>
                         <div className="col-md-6">
-                          <div className="form-group mb-3">
+                          <div className="form-group mb-3 position-relative">
                             <label className="form-label">
                               {t("petitionTabContent.mailingAddress")}
                             </label>
@@ -272,7 +272,7 @@ const BorrowerDetails = ({
                               isLoaded &&
                               (borrowerPredictions[borrower.id] || []).length >
                                 0 && (
-                                <div className="list-group mt-1">
+                                <div className="list-group mt-1 position-absolute w-100" style={{ zIndex: 1000, maxHeight: "200px", overflowY: "auto", backgroundColor: "white", boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}>
                                   {(borrowerPredictions[borrower.id] || []).map(
                                     (p) => (
                                       <button
