@@ -21,40 +21,36 @@ function HomeHeader({
       {/* Official Banner */}
       <section className="official-banner text-white">
         <div className="container py-1">
-          <div className="row align-items-center">
-            <div className="col-md-6 order-md-2">
-              {/* Language selector */}
-              <div className="text-md-end mb-2 mb-md-0">
-                <LanguageSwitcher 
-                  className="font-base"
-                  variant="dropdown"
-                  textColor="white"
-                />
-              </div>
+          <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div className="d-flex align-items-center gap-2 font-sm">
+              <i className="fa-solid fa-shield"></i>
+              <span>
+                {t("home.officialBanner")}{" "}
+                <button
+                  className="btn btn-link text-white p-0 font-sm fw-semibold text-nowrap ms-1 align-baseline"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#officialInfo"
+                  aria-expanded="false"
+                  aria-controls="officialInfo"
+                  style={{
+                    display: "inline",
+                    verticalAlign: "baseline",
+                    lineHeight: "1.2",
+                  }}
+                >
+                  {t("home.howYouKnow")}{" "}
+                  <i className="fa-solid fa-chevron-down small"></i>
+                </button>
+              </span>
             </div>
-            <div className="col-md-6">
-              <div className="d-flex align-items-center gap-2 font-sm">
-                <i className="fa-solid fa-shield"></i>
-                <span className="flex-grow-1">
-                  {t("home.officialBanner")}{" "}
-                  <button
-                    className="btn btn-link text-white p-0 font-sm fw-semibold text-nowrap ms-1 align-baseline"
-                    type="button"
-                    data-bs-toggle="collapse"
-                    data-bs-target="#officialInfo"
-                    aria-expanded="false"
-                    aria-controls="officialInfo"
-                    style={{
-                      display: "inline",
-                      verticalAlign: "baseline",
-                      lineHeight: "1.2",
-                    }}
-                  >
-                    {t("home.howYouKnow")}{" "}
-                    <i className="fa-solid fa-chevron-down small"></i>
-                  </button>
-                </span>
-              </div>
+            {/* Language selector */}
+            <div>
+              <LanguageSwitcher 
+                className="font-base"
+                variant="dropdown"
+                textColor="white"
+              />
             </div>
           </div>
 
