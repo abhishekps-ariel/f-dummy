@@ -4114,6 +4114,12 @@ body.high-contrast .text-size-dropdown-item.selected {
     margin-top: 1rem;
 }
 
+@media (max-width: 575.98px) {
+    .profile-header-badges {
+        align-items: center;
+    }
+}
+
 @media (min-width: 576px) {
     .profile-header-badges {
         flex-direction: row;
@@ -4125,6 +4131,17 @@ body.high-contrast .text-size-dropdown-item.selected {
     display: flex;
     flex-direction: column;
     gap: 0.375rem;
+}
+
+@media (max-width: 575.98px) {
+    .profile-header-badge-item {
+        align-items: center;
+        text-align: center;
+    }
+    
+    .profile-header-badge-item .profile-field-label {
+        text-align: center;
+    }
 }
 
 .profile-header-actions {
@@ -4303,11 +4320,12 @@ body.high-contrast .text-size-dropdown-item.selected {
 .profile-badge {
     display: inline-flex;
     align-items: center;
-    padding: 0.375rem 0.875rem;
+    padding: 0.25rem 0.5rem;
     border-radius: 6px;
     font-size: var(--text-sm);
     font-weight: 500;
     white-space: nowrap;
+    width: fit-content;
 }
 
 .profile-badge-primary {

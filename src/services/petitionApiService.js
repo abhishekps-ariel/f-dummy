@@ -38,7 +38,7 @@ class PetitionApiService {
       throw new Error('Petition ID is required to delete a petition.');
     }
  
-    const response = await axiosInstance.post(PETITION_ENDPOINTS.DELETE_PETITION_BY_ID(petitionId), {
+    const response = await axiosInstance.delete(PETITION_ENDPOINTS.DELETE_PETITION_BY_ID(petitionId), {
       headers: {
         'Accept': 'text/plain'
       }
