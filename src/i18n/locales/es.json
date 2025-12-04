@@ -713,6 +713,7 @@
     "selectRole": "Seleccionar Rol",
     "addBorrower": "Agregar Prestatario",
     "addRightToCure": "Agregar Derecho a Remediar",
+    "addLoanAssignee": "Agregar Cesionario del Préstamo",
     "rightToCureEntry": "Entrada de Derecho a Remediar",
     "remove": "Eliminar",
     "borrower": "Prestatario",

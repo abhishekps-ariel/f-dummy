@@ -2,11 +2,10 @@ const resolveOrganizationId = (organization) =>
   organization?.organizationId || organization?.id || null;
 
 export const storeAuthData = (authData) => {
-  // Only clear auth-related data, not all storage (to preserve other app data)
+  // Only clear token and user - never touch refreshToken or activeOrganizationId here
+  // They should only be cleared on explicit logout via clearAuthData()
   localStorage.removeItem("token");
-  localStorage.removeItem("refreshToken");
   localStorage.removeItem("user");
-  localStorage.removeItem("activeOrganizationId");
   
   // Clear sessionStorage auth-related items only
   sessionStorage.removeItem("isImpersonating");
@@ -18,14 +17,17 @@ export const storeAuthData = (authData) => {
   if (token) {
     localStorage.setItem("token", token);
   }
-  if (refreshToken) {
+  
+  // Only update refreshToken if explicitly provided, otherwise leave it untouched
+  if (refreshToken !== undefined && refreshToken !== null) {
     localStorage.setItem("refreshToken", refreshToken);
   }
+  
   if (user) {
     localStorage.setItem("user", JSON.stringify(user));
   }
 
-  // Set active organization ID
+  // Only update activeOrganizationId if user has organizations, otherwise leave it untouched
   const organizations = Array.isArray(user?.organizations) ? user.organizations : [];
   if (organizations.length > 0) {
     const primaryOrganization =
@@ -41,9 +43,8 @@ export const storeAuthData = (authData) => {
     }
   } else if (user?.organizationId) {
     setActiveOrganizationId(user.organizationId);
-  } else {
-    setActiveOrganizationId(null);
   }
+  // If user doesn't have organizations, leave activeOrganizationId untouched
 };
 
 export const getAuthData = () => {

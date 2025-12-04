@@ -447,7 +447,7 @@ const StepRightToCure = ({
                 <div className="mt-3">
                   <button
                     type="button"
-                    className="btn btn-primary"
+                    className="dashboard-btn-create"
                     onClick={addRightToCure}
                   >
                     <i className="fas fa-plus me-1"></i>{t("petitionTabContent.addRightToCure")}

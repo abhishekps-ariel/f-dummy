@@ -75,7 +75,7 @@ const StepSignaturesSection = ({
                 return signatures.length > 0 ? (
                   signatures.map((signature, index) => (
                   <div key={index} className="border rounded p-3 mb-3">
-                    <h6 className="mb-3 fw-semibold">{t("petitionTabContent.signature")} {index + 1}</h6>
+                    <h6 className="mb-3 fw-semibold">{t("petitionTabContent.signature")}</h6>
                     <div className="row">
                       <div className="col-md-6">
                         <div className="form-group mb-3">

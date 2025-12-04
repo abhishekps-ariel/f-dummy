@@ -419,7 +419,7 @@ const BorrowerDetails = ({
                   {isEditing && (
                     <button
                       type="button"
-                      className="btn btn-sm btn-outline-primary"
+                      className="dashboard-btn-create"
                       onClick={addBorrower}
                     >
                       <i className="fas fa-plus me-1"></i>

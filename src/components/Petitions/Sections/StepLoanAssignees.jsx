@@ -373,14 +373,12 @@ const StepLoanAssignees = ({
                   {isEditing && (
                     <button
                       type="button"
-                      className="btn btn-outline-primary btn-sm"
+                      className="dashboard-btn-create"
                       onClick={addLoanAssignee}
-                      title="Add Loan Assignee"
+                      title={t("petitionTabContent.addLoanAssignee")}
                     >
-                      <i
-                        className="fas fa-plus"
-                        style={{ fontSize: "12px" }}
-                      ></i>
+                      <i className="fas fa-plus me-1"></i>
+                      {t("petitionTabContent.addLoanAssignee")}
                     </button>
                   )}
                 </>
