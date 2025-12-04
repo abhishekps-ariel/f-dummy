@@ -115,6 +115,7 @@ const Form35 = () => {
         setIsCalculatingData(true);
         try {
           const calculationData = {
+            userId: user?.id || null,
             organizationId: formData.companyOrganizationId,
             reportingYear: year,
             reportingPeriodId: formData.reportingPeriod,
