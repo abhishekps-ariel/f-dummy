@@ -341,14 +341,14 @@ function PublicPetitions() {
       {/* Page Header */}
       <section className="py-4 bg-light">
         <div className="container">
-          <div className="d-flex justify-content-between align-items-center">
+          <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
             <div>
               <h1 className="font-xl-med mb-2 fw-medium">{t("publicPetitions.title")}</h1>
               <p className="text-muted mb-0">
                 {t("publicPetitions.subtitle")}
               </p>
             </div>
-            <div className="d-flex gap-2">
+            <div className="d-flex gap-2 flex-wrap ms-auto">
               <div className="dropdown" style={{ position: "relative" }}>
                 <button
                   className={`dashboard-btn-create ${exporting ? 'disabled' : ''} ${showExportDropdown ? 'active' : ''}`}
@@ -480,18 +480,27 @@ function PublicPetitions() {
             <>
               {/* Results Count */}
               <div className="mb-2">
-                <p className="text-muted mb-0">
+                <p className="text-muted mb-0 small">
                   {loading ? (
                     t("publicPetitions.loadingPetitions")
                   ) : (
                     <>
-                      {t("publicPetitions.showingResults", { showing: petitions.length, total: totalRecords, count: totalRecords })}
+                      {(() => {
+                        const startIndex = (currentPage - 1) * pageSize + 1;
+                        const endIndex = Math.min(currentPage * pageSize, totalRecords);
+                        return t("publicPetitions.showingResults", { 
+                          showing: petitions.length, 
+                          total: totalRecords, 
+                          count: totalRecords
+                        });
+                      })()}
                     </>
                   )}
                 </p>
               </div>
 
-              <div className="table-responsive">
+              {/* Desktop Table View */}
+              <div className="d-none d-lg-block table-responsive">
                 <table className="table table-hover">
                   <thead className="table-light">
                     <tr>
@@ -512,6 +521,46 @@ function PublicPetitions() {
                     ))}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Mobile Card View */}
+              <div className="d-lg-none">
+                {petitions.length > 0 ? (
+                  <div className="row g-3">
+                    {petitions.map((petition, index) => (
+                      <div key={index} className="col-12">
+                        <div className="petition-mobile-card">
+                          <div className="petition-card-body">
+                            <div className="petition-card-detail">
+                              <i className="fas fa-city text-muted me-2" style={{ fontSize: "0.75rem" }}></i>
+                              <span className="small">
+                                <strong>{t("publicPetitions.city")}:</strong> {petition.city || t("common.nA")}
+                              </span>
+                            </div>
+                            <div className="petition-card-detail">
+                              <i className="fas fa-map-marker-alt text-muted me-2" style={{ fontSize: "0.75rem" }}></i>
+                              <span className="small">
+                                <strong>{t("publicPetitions.zipCode")}:</strong> {petition.zipCode || t("common.nA")}
+                              </span>
+                            </div>
+                            <div className="petition-card-detail">
+                              <i className="fas fa-dollar-sign text-muted me-2" style={{ fontSize: "0.75rem" }}></i>
+                              <span className="small">
+                                <strong>{t("publicPetitions.saleAmount")}:</strong> {formatCurrency(petition.saleAmount)}
+                              </span>
+                            </div>
+                            <div className="petition-card-detail">
+                              <i className="fas fa-calendar text-muted me-2" style={{ fontSize: "0.75rem" }}></i>
+                              <span className="small">
+                                <strong>{t("publicPetitions.saleDate")}:</strong> {formatDate(petition.saleDate)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
               </div>
 
               {/* Pagination */}
@@ -544,14 +593,67 @@ function PublicPetitions() {
                           strokeLinejoin="round"
                         />
                       </svg>
-                      {t("common.previous")}
+                      <span className="pagination-btn-text d-none d-md-inline">
+                        {t("common.previous")}
+                      </span>
                     </button>
 
                     <div className="pagination-pages">
-                      {Array.from(
-                        { length: Math.min(totalPages, 5) },
-                        (_, i) => {
-                          const page = i + 1;
+                      {(() => {
+                        const maxVisiblePages = 5;
+                        
+                        if (totalPages <= maxVisiblePages) {
+                          // If total pages is 5 or less, show all pages
+                          return Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                            <button
+                              key={page}
+                              className={`pagination-page ${
+                                page === currentPage ? "active" : ""
+                              }`}
+                              onClick={() => setCurrentPage(page)}
+                            >
+                              {page}
+                            </button>
+                          ));
+                        }
+                        
+                        // For many pages, show exactly 5 page numbers with ellipsis
+                        const pages = [];
+                        
+                        if (currentPage <= 3) {
+                          // Near the beginning: show 1, 2, 3, 4, ... last
+                          for (let i = 1; i <= 4; i++) {
+                            pages.push(i);
+                          }
+                          pages.push('ellipsis-end');
+                          pages.push(totalPages);
+                        } else if (currentPage >= totalPages - 2) {
+                          // Near the end: show 1, ... , last-3, last-2, last-1, last
+                          pages.push(1);
+                          pages.push('ellipsis-start');
+                          for (let i = totalPages - 3; i <= totalPages; i++) {
+                            pages.push(i);
+                          }
+                        } else {
+                          // In the middle: show 1, ... , current-1, current, current+1, ... last
+                          pages.push(1);
+                          pages.push('ellipsis-start');
+                          // Show current page and 1 page on each side (total 3 pages) to keep total at 5
+                          for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+                            pages.push(i);
+                          }
+                          pages.push('ellipsis-end');
+                          pages.push(totalPages);
+                        }
+                        
+                        return pages.map((page, index) => {
+                          if (page === 'ellipsis-start' || page === 'ellipsis-end') {
+                            return (
+                              <span key={`ellipsis-${index}`} className="pagination-ellipsis">
+                                ...
+                              </span>
+                            );
+                          }
                           return (
                             <button
                               key={page}
@@ -563,8 +665,8 @@ function PublicPetitions() {
                               {page}
                             </button>
                           );
-                        }
-                      )}
+                        });
+                      })()}
                     </div>
 
                     <button
@@ -578,7 +680,9 @@ function PublicPetitions() {
                       }}
                       disabled={currentPage >= totalPages}
                     >
-                      {t("common.next")}
+                      <span className="pagination-btn-text d-none d-md-inline">
+                        {t("common.next")}
+                      </span>
                       <svg
                         width="16"
                         height="16"
