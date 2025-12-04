@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, Link } from "react-router-dom";
-import { getAuthData, clearAuthData, getUserRole } from "../../utils/storage";
+import { getAuthData, clearAuthData, getUserRole, updateStoredUser } from "../../utils/storage";
 import { useAuth } from "../../context/AuthContext";
 import { usePetitionWizard } from "../../context/PetitionWizardContext";
 import { ROUTES } from "../../constants/routerConstants";
@@ -241,10 +241,7 @@ function Profile() {
             setUser(updatedUser);
             
             // Update auth context with new user data
-             const { token } = getAuthData();
-            clearAuthData();
-            localStorage.setItem('token', token);
-            localStorage.setItem('user', JSON.stringify(updatedUser));
+            updateStoredUser(updatedUser);
             
             // Update the form data with the fresh data
             setEditFormData({
@@ -277,11 +274,7 @@ function Profile() {
             fullName: `${editFormData.firstName} ${editFormData.lastName}`.trim(),
           };
           setUser(updatedUser);
-          
-          const { token } = getAuthData();
-            clearAuthData();
-            localStorage.setItem('token', token);
-          localStorage.setItem('user', JSON.stringify(updatedUser));
+          updateStoredUser(updatedUser);
   
         }
         
@@ -359,11 +352,8 @@ function Profile() {
           signatureUrl: signatureDataUrl,
         });
         
-        // Update storage
-        const { token } = getAuthData();
-        clearAuthData();
-        localStorage.setItem('token', token);
-        localStorage.setItem('user', JSON.stringify(updatedUser));
+        // Update storage - preserve refreshToken and activeOrganizationId
+        updateStoredUser(updatedUser);
         
         // Optionally fetch the signature base64 from server using the S3 key
         // This ensures we have the server's version, but preview is already showing
@@ -385,7 +375,7 @@ function Profile() {
                 signatureBase64: serverBase64,
                 signatureUrl: serverDataUrl,
               });
-              localStorage.setItem('user', JSON.stringify(finalUpdatedUser));
+              updateStoredUser(finalUpdatedUser);
             }
           } catch (fetchError) {
             // If fetching fails, we still have the preview from the upload
