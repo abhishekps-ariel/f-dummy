@@ -2,15 +2,30 @@ const resolveOrganizationId = (organization) =>
   organization?.organizationId || organization?.id || null;
 
 export const storeAuthData = (authData) => {
-  // Clear all existing data before storing new user data
-  localStorage.clear();
-  sessionStorage.clear();
+  // Only clear auth-related data, not all storage (to preserve other app data)
+  localStorage.removeItem("token");
+  localStorage.removeItem("refreshToken");
+  localStorage.removeItem("user");
+  localStorage.removeItem("activeOrganizationId");
+  
+  // Clear sessionStorage auth-related items only
+  sessionStorage.removeItem("isImpersonating");
+  sessionStorage.removeItem("impersonatedUserName");
 
   const { token, refreshToken, user } = authData;
-  localStorage.setItem("token", token);
-  localStorage.setItem("refreshToken", refreshToken);
-  localStorage.setItem("user", JSON.stringify(user));
+  
+  // Store auth data in localStorage
+  if (token) {
+    localStorage.setItem("token", token);
+  }
+  if (refreshToken) {
+    localStorage.setItem("refreshToken", refreshToken);
+  }
+  if (user) {
+    localStorage.setItem("user", JSON.stringify(user));
+  }
 
+  // Set active organization ID
   const organizations = Array.isArray(user?.organizations) ? user.organizations : [];
   if (organizations.length > 0) {
     const primaryOrganization =
@@ -41,17 +56,16 @@ export const getAuthData = () => {
 };
 
 export const clearAuthData = () => {
-  // Clear authentication data from localStorage
+  // Clear authentication data from localStorage (only auth-related items)
   localStorage.removeItem("token");
   localStorage.removeItem("refreshToken");
   localStorage.removeItem("user");
   localStorage.removeItem("activeOrganizationId");
 
-  // Clear all sessionStorage data
-  sessionStorage.clear();
-  
-  // Clear localStorage completely (in case there are any other items)
-  localStorage.clear();
+  // Clear sessionStorage auth-related items only
+  sessionStorage.removeItem("isImpersonating");
+  sessionStorage.removeItem("impersonatedUserName");
+  // Note: We don't clear all sessionStorage to preserve other app data like petitionFormData, tabs, etc.
 };
 
 export const setImpersonationState = (isImpersonating, impersonatedUserName = '') => {
