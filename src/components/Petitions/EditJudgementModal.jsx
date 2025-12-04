@@ -135,13 +135,7 @@ const EditJudgementModal = ({ isOpen, onClose, petition, onSave, formData, setFo
     if (!judgmentData.judgmentDate || (typeof judgmentData.judgmentDate === 'string' && !judgmentData.judgmentDate.trim())) {
       errors.judgmentDate = t("modals.editJudgment.validation.judgmentDateRequired");
     }
-    // Parse judgment amount to check if it's valid (handle formatted currency with commas)
-    const parsedAmount = parseCurrencyInput(judgmentData.judgmentAmount);
-    if (!parsedAmount || !parsedAmount.trim()) {
-      errors.judgmentAmount = t("modals.editJudgment.validation.judgmentAmountRequired");
-    } else if (isNaN(parseFloat(parsedAmount)) || parseFloat(parsedAmount) <= 0) {
-      errors.judgmentAmount = t("modals.editJudgment.validation.judgmentAmountInvalid");
-    }
+    // Judgment amount validation removed - field is hidden from UI
     // judgmentType can be a number (0 is valid) or string, so check for empty string or null/undefined
     if (judgmentData.judgmentType === "" || judgmentData.judgmentType === null || judgmentData.judgmentType === undefined) {
       errors.judgmentType = t("modals.editJudgment.validation.judgmentTypeRequired");
@@ -176,9 +170,8 @@ const EditJudgementModal = ({ isOpen, onClose, petition, onSave, formData, setFo
         return;
       }
       
-      // Parse judgment amount (remove commas) before saving
-      const parsedAmount = parseCurrencyInput(judgmentData.judgmentAmount);
-      const judgmentAmountNumber = parsedAmount ? parseFloat(parsedAmount) : 0;
+      // Judgment amount - use existing value or default to 0 (field is hidden from UI)
+      const judgmentAmountNumber = formData?.judgment?.judgmentAmount || 0;
       
       // Get judgment ID from petition details (null if new)
       const judgmentId = petition?.details?.judgment?.id || null;
@@ -299,28 +292,6 @@ const EditJudgementModal = ({ isOpen, onClose, petition, onSave, formData, setFo
               </div>
 
               <div className="col-md-6">
-                <label htmlFor="judgmentAmount" className="form-label">
-                  {t("modals.editJudgment.judgmentAmount")} ($) *
-                </label>
-                <input
-                  type="text"
-                  id="judgmentAmount"
-                  name="judgmentAmount"
-                  className={`form-control ${
-                    fieldErrors.judgmentAmount ? "is-invalid" : ""
-                  }`}
-                  value={judgmentData.judgmentAmount}
-                  onChange={handleInputChange}
-                  placeholder={t("modals.editJudgment.placeholder.judgmentAmount")}
-                />
-                {fieldErrors.judgmentAmount && (
-                  <div className="text-danger small mt-1">
-                    {fieldErrors.judgmentAmount}
-                  </div>
-                )}
-              </div>
-
-              <div className="col-md-6">
                 <label htmlFor="judgmentType" className="form-label">
                   {t("modals.editJudgment.judgmentType")} *
                 </label>
@@ -343,7 +314,7 @@ const EditJudgementModal = ({ isOpen, onClose, petition, onSave, formData, setFo
 
               <div className="col-md-6">
                 <label htmlFor="docketNumbers" className="form-label">
-                  {t("modals.editJudgment.docketNumbers")} *
+                  {t("modals.editJudgment.docketNumber")} *
                 </label>
                 <input
                   type="text"
@@ -354,7 +325,7 @@ const EditJudgementModal = ({ isOpen, onClose, petition, onSave, formData, setFo
                   }`}
                   value={judgmentData.docketNumbers}
                   onChange={handleInputChange}
-                  placeholder={t("modals.editJudgment.placeholder.docketNumbers")}
+                  placeholder={t("modals.editJudgment.placeholder.docketNumber")}
                 />
                 {fieldErrors.docketNumbers && (
                   <div className="text-danger small mt-1">

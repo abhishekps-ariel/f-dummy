@@ -665,7 +665,8 @@
     "judgmentAmount": "Monto del Juicio",
     "judgmentType": "Tipo de Juicio",
     "courtInformation": "Información del Tribunal",
-    "docketNumbers": "Números de Expediente",
+    "docketNumbers": "Número de Expediente",
+    "docketNumber": "Número de Expediente",
     "saleDate": "Fecha de Venta",
     "soldTo": "Vendido A",
     "soldToQuestion": "¿Vendido A?",
@@ -879,7 +880,8 @@
       "judgmentDate": "Fecha del Juicio",
       "judgmentAmount": "Monto del Juicio",
       "judgmentType": "Tipo de Juicio",
-      "docketNumbers": "Números de Expediente",
+      "docketNumbers": "Número de Expediente",
+      "docketNumber": "Número de Expediente",
       "courtInformation": "Información del Tribunal",
       "saveButton": "Guardar Juicio",
       "failedSave": "Error al guardar el juicio. Por favor intente nuevamente.",
@@ -890,14 +892,16 @@
         "judgmentAmountInvalid": "El monto del juicio debe ser un número positivo válido",
         "judgmentTypeRequired": "El tipo de juicio es requerido",
         "courtInformationRequired": "La información del tribunal es requerida",
-        "docketNumbersRequired": "Los números de expediente son requeridos",
+        "docketNumbersRequired": "El número de expediente es requerido",
+        "docketNumberRequired": "El número de expediente es requerido",
         "fillAllRequired": "Por favor complete todos los campos requeridos.",
         "selectJudgmentType": "Por favor seleccione un tipo de juicio."
       },
       "placeholder": {
         "judgmentAmount": "Ingrese el monto del juicio",
         "judgmentType": "Seleccionar Tipo de Juicio",
-        "docketNumbers": "Ingrese los números de expediente",
+        "docketNumbers": "Ingrese el número de expediente",
+        "docketNumber": "Ingrese el número de expediente",
         "courtInformation": "Ingrese la información del tribunal"
       }
     },

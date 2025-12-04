@@ -665,7 +665,8 @@
     "judgmentAmount": "Judgment Amount",
     "judgmentType": "Judgment Type",
     "courtInformation": "Court Information",
-    "docketNumbers": "Docket Numbers",
+    "docketNumbers": "Docket Number",
+    "docketNumber": "Docket Number",
     "saleDate": "Sale Date",
     "soldTo": "Sold To",
     "soldToQuestion": "Sold To?",
@@ -879,7 +880,8 @@
       "judgmentDate": "Judgment Date",
       "judgmentAmount": "Judgment Amount",
       "judgmentType": "Judgment Type",
-      "docketNumbers": "Docket Numbers",
+      "docketNumbers": "Docket Number",
+      "docketNumber": "Docket Number",
       "courtInformation": "Court Information",
       "saveButton": "Save Judgment",
       "failedSave": "Failed to save judgment. Please try again.",
@@ -890,14 +892,16 @@
         "judgmentAmountInvalid": "Judgment amount must be a valid positive number",
         "judgmentTypeRequired": "Judgment type is required",
         "courtInformationRequired": "Court information is required",
-        "docketNumbersRequired": "Docket numbers are required",
+        "docketNumbersRequired": "Docket number is required",
+        "docketNumberRequired": "Docket number is required",
         "fillAllRequired": "Please fill all required fields.",
         "selectJudgmentType": "Please select a judgment type."
       },
       "placeholder": {
         "judgmentAmount": "Enter judgment amount",
         "judgmentType": "Select Judgment Type",
-        "docketNumbers": "Enter docket numbers",
+        "docketNumbers": "Enter docket number",
+        "docketNumber": "Enter docket number",
         "courtInformation": "Enter court information"
       }
     },

@@ -1816,19 +1816,9 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
           throw new Error("Judgment date is required");
         }
         
-        // Parse judgment amount (handle formatted currency with commas)
-        const parseCurrencyInput = (value) => {
-          if (!value) return "";
-          return String(value).replace(/[^\d.]/g, "");
-        };
-        const parsedAmount = parseCurrencyInput(judgment.judgmentAmount);
-        if (!parsedAmount || !parsedAmount.trim()) {
-          setFieldErrors(prev => ({ ...prev, judgmentAmount: "Judgment amount is required" }));
-          throw new Error("Judgment amount is required");
-        } else if (isNaN(parseFloat(parsedAmount)) || parseFloat(parsedAmount) <= 0) {
-          setFieldErrors(prev => ({ ...prev, judgmentAmount: "Judgment amount must be greater than 0" }));
-          throw new Error("Judgment amount must be greater than 0");
-        }
+        // Judgment amount validation removed - field is hidden from UI
+        // Use existing value or default to 0
+        const parsedAmount = judgment.judgmentAmount || 0;
         
         if (judgment.judgmentType === "" || judgment.judgmentType === null || judgment.judgmentType === undefined) {
           setFieldErrors(prev => ({ ...prev, judgmentType: "Judgment type is required" }));
@@ -1839,8 +1829,8 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
           throw new Error("Court information is required");
         }
         if (!judgment.docketNumbers || (typeof judgment.docketNumbers === 'string' && !judgment.docketNumbers.trim())) {
-          setFieldErrors(prev => ({ ...prev, docketNumbers: "Docket numbers is required" }));
-          throw new Error("Docket numbers is required");
+          setFieldErrors(prev => ({ ...prev, docketNumbers: "Docket number is required" }));
+          throw new Error("Docket number is required");
         }
 
         // Get judgment ID from petition details
@@ -1855,7 +1845,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
                 ? judgment.judgmentDate 
                 : new Date(judgment.judgmentDate + 'T00:00:00').toISOString())
             : null,
-          judgmentAmount: parseFloat(parsedAmount) || 0,
+          judgmentAmount: typeof parsedAmount === 'number' ? parsedAmount : (parseFloat(parsedAmount) || 0),
           judgmentType: judgment.judgmentType !== null && judgment.judgmentType !== undefined 
             ? (typeof judgment.judgmentType === 'number' 
                 ? judgment.judgmentType 
@@ -3527,7 +3517,6 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
           (judgment.judgmentDate !== null && judgment.judgmentDate !== undefined && 
            ((typeof judgment.judgmentDate === 'string' && judgment.judgmentDate.trim() !== '') ||
             (typeof judgment.judgmentDate !== 'string'))) ||
-          (judgment.judgmentAmount !== null && judgment.judgmentAmount !== undefined && judgment.judgmentAmount !== 0) ||
           (judgment.judgmentType !== null && judgment.judgmentType !== undefined && judgment.judgmentType !== 0 && judgment.judgmentType !== '') ||
           (judgment.courtInformation !== null && judgment.courtInformation !== undefined && 
            typeof judgment.courtInformation === 'string' && judgment.courtInformation.trim() !== '') ||
@@ -3550,10 +3539,9 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
 
           const judgmentData = [
             [t("petitionTabContent.judgmentDate"), formatDate(judgment.judgmentDate) || t("common.nA")],
-            [t("petitionTabContent.judgmentAmount"), formatCurrency(judgment.judgmentAmount) || t("common.nA")],
             [t("petitionTabContent.judgmentType"), judgmentTypeName],
             [t("petitionTabContent.courtInformation"), judgment.courtInformation || t("common.nA")],
-            [t("petitionTabContent.docketNumbers"), judgment.docketNumbers || t("common.nA")],
+            [t("petitionTabContent.docketNumber"), judgment.docketNumbers || t("common.nA")],
           ];
 
           autoTable(doc, {

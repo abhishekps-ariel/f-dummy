@@ -47,10 +47,6 @@ const JudgmentDisplaySection = ({
                     ((typeof judgment.judgmentDate === 'string' && judgment.judgmentDate.trim() !== '') ||
                      (typeof judgment.judgmentDate !== 'string'));
     
-    const hasAmount = judgment.judgmentAmount !== null && 
-                      judgment.judgmentAmount !== undefined && 
-                      judgment.judgmentAmount !== 0;
-    
     const hasType = judgment.judgmentType !== null && 
                     judgment.judgmentType !== undefined && 
                     judgment.judgmentType !== 0 &&
@@ -66,7 +62,7 @@ const JudgmentDisplaySection = ({
                       typeof judgment.docketNumbers === 'string' && 
                       judgment.docketNumbers.trim() !== '';
     
-    return hasDate || hasAmount || hasType || hasCourtInfo || hasDocket;
+    return hasDate || hasType || hasCourtInfo || hasDocket;
   };
 
   if (!hasJudgmentData()) {
@@ -229,34 +225,6 @@ const JudgmentDisplaySection = ({
           </div>
           <div className="col-md-6">
             <div className="form-group mb-3">
-              <label className="form-label">{t("petitionTabContent.judgmentAmount")} {isEditing && "*"}</label>
-              {isEditing ? (
-                <>
-                  <input
-                    type="text"
-                    className={`form-control ${fieldErrors?.judgmentAmount ? "is-invalid" : ""}`}
-                    value={formatJudgmentAmount()}
-                    onChange={handleAmountChange}
-                    placeholder="0.00"
-                  />
-                  {fieldErrors?.judgmentAmount && (
-                    <div className="text-danger small mt-1">
-                      {fieldErrors.judgmentAmount}
-                    </div>
-                  )}
-                </>
-              ) : (
-                <input
-                  type="text"
-                  className="form-control"
-                  value={formatJudgmentAmount()}
-                  readOnly
-                />
-              )}
-            </div>
-          </div>
-          <div className="col-md-6">
-            <div className="form-group mb-3">
               <label className="form-label">{t("petitionTabContent.judgmentType")} {isEditing && "*"}</label>
               {isEditing ? (
                 <>
@@ -290,7 +258,7 @@ const JudgmentDisplaySection = ({
           </div>
           <div className="col-md-6">
             <div className="form-group mb-3">
-              <label className="form-label">{t("petitionTabContent.docketNumbers")} {isEditing && "*"}</label>
+              <label className="form-label">{t("petitionTabContent.docketNumber")} {isEditing && "*"}</label>
               {isEditing ? (
                 <>
                   <input
