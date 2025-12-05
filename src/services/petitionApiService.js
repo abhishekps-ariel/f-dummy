@@ -506,7 +506,6 @@ class PetitionApiService {
         id: judgmentData.id || null,
         petitionId: petitionId,
         judgmentDate: safeDateConversion(judgmentData.judgmentDate),
-        judgmentAmount: parseFloat(judgmentData.judgmentAmount) || 0,
         judgmentType: judgmentData.judgmentType !== null && judgmentData.judgmentType !== undefined 
           ? (typeof judgmentData.judgmentType === 'number' 
               ? judgmentData.judgmentType 
@@ -781,7 +780,6 @@ class PetitionApiService {
       // For taken-over petitions, don't send judgment data as it needs to be redone
       judgment: (formData.takeOverToUserId) ? null : (formData.judgment && (
         formData.judgment.judgmentDate || 
-        (formData.judgment.judgmentAmount && formData.judgment.judgmentAmount > 0) || 
         (formData.judgment.judgmentType !== null && formData.judgment.judgmentType !== undefined && formData.judgment.judgmentType !== 0) ||
         (formData.judgment.courtInformation && formData.judgment.courtInformation.trim()) || 
         (formData.judgment.docketNumbers && formData.judgment.docketNumbers.trim())
@@ -789,9 +787,6 @@ class PetitionApiService {
         id: formData.judgment.id || null,
         petitionId: petitionId || null,
         judgmentDate: safeDateConversion(formData.judgment.judgmentDate),
-        judgmentAmount: typeof formData.judgment.judgmentAmount === 'number' 
-          ? formData.judgment.judgmentAmount 
-          : (formData.judgment.judgmentAmount ? parseFloat(formData.judgment.judgmentAmount) : 0),
         judgmentType: typeof formData.judgment.judgmentType === 'number' 
           ? formData.judgment.judgmentType 
           : (formData.judgment.judgmentType !== null && formData.judgment.judgmentType !== undefined && formData.judgment.judgmentType !== ""

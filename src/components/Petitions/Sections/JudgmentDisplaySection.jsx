@@ -108,24 +108,6 @@ const JudgmentDisplaySection = ({
     }
   };
 
-  // Format judgment amount for display
-  const formatJudgmentAmount = () => {
-    if (
-      judgment.judgmentAmount === null ||
-      judgment.judgmentAmount === undefined ||
-      judgment.judgmentAmount === 0
-    ) {
-      return isEditing ? "" : "N/A";
-    }
-    if (isEditing) {
-      // When editing, show formatted value for display
-      return formatCurrencyDisplay(String(judgment.judgmentAmount));
-    }
-    return formatCurrency
-      ? formatCurrency(judgment.judgmentAmount)
-      : `$${judgment.judgmentAmount.toLocaleString()}`;
-  };
-
   // Get judgment types from API
   const judgmentTypesFromApi = getJudgmentTypes ? getJudgmentTypes() : [];
   const judgmentTypes = judgmentTypesFromApi
@@ -134,23 +116,6 @@ const JudgmentDisplaySection = ({
       value: String(jt.value ?? jt.id ?? ''),
       label: jt.description || jt.name || '',
     }));
-
-  // Handle currency input change
-  const handleAmountChange = (e) => {
-    const parsedValue = parseCurrencyInput(e.target.value);
-    // Convert to number for storage
-    const numericValue = parsedValue ? parseFloat(parsedValue) : 0;
-    // Update formData.judgment.judgmentAmount
-    handleInputChange({
-      target: {
-        name: 'judgment',
-        value: {
-          ...formData.judgment,
-          judgmentAmount: isNaN(numericValue) ? 0 : numericValue
-        }
-      }
-    });
-  };
 
   // Handle judgment date change
   const handleDateChange = (e) => {

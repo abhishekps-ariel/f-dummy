@@ -379,6 +379,7 @@ const Form35 = () => {
         // id is optional - only include if updating existing form
         // id: formData.id || undefined,
         organizationId: formData.companyOrganizationId,
+        userId: user?.id || null,
         entityTypeId: formData.entityType,
         reportingYear: parseInt(formData.reportingYear) || 0,
         reportingPeriodId: formData.reportingPeriod,

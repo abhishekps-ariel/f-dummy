@@ -777,10 +777,6 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
                     ((typeof judgment.judgmentDate === 'string' && judgment.judgmentDate.trim() !== '') ||
                      (typeof judgment.judgmentDate !== 'string'));
     
-    const hasAmount = judgment.judgmentAmount !== null && 
-                      judgment.judgmentAmount !== undefined && 
-                      judgment.judgmentAmount !== 0;
-    
     const hasType = judgment.judgmentType !== null && 
                     judgment.judgmentType !== undefined && 
                     judgment.judgmentType !== 0 &&
@@ -796,7 +792,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
                       typeof judgment.docketNumbers === 'string' && 
                       judgment.docketNumbers.trim() !== '';
     
-    return hasDate || hasAmount || hasType || hasCourtInfo || hasDocket;
+    return hasDate || hasType || hasCourtInfo || hasDocket;
   };
 
   // Helper function to check if foreclosure sale has meaningful data
@@ -1816,10 +1812,6 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
           throw new Error("Judgment date is required");
         }
         
-        // Judgment amount validation removed - field is hidden from UI
-        // Use existing value or default to 0
-        const parsedAmount = judgment.judgmentAmount || 0;
-        
         if (judgment.judgmentType === "" || judgment.judgmentType === null || judgment.judgmentType === undefined) {
           setFieldErrors(prev => ({ ...prev, judgmentType: "Judgment type is required" }));
           throw new Error("Judgment type is required");
@@ -1845,7 +1837,6 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
                 ? judgment.judgmentDate 
                 : new Date(judgment.judgmentDate + 'T00:00:00').toISOString())
             : null,
-          judgmentAmount: typeof parsedAmount === 'number' ? parsedAmount : (parseFloat(parsedAmount) || 0),
           judgmentType: judgment.judgmentType !== null && judgment.judgmentType !== undefined 
             ? (typeof judgment.judgmentType === 'number' 
                 ? judgment.judgmentType 
@@ -1875,7 +1866,6 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
           const newErrors = { ...prev };
           delete newErrors.judgment;
           delete newErrors.judgmentDate;
-          delete newErrors.judgmentAmount;
           delete newErrors.judgmentType;
           delete newErrors.courtInformation;
           delete newErrors.docketNumbers;
@@ -2783,10 +2773,6 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
                     ((typeof judgment.judgmentDate === 'string' && judgment.judgmentDate.trim() !== '') ||
                      (typeof judgment.judgmentDate !== 'string'));
     
-    const hasAmount = judgment.judgmentAmount !== null && 
-                      judgment.judgmentAmount !== undefined && 
-                      judgment.judgmentAmount !== 0;
-    
     const hasType = judgment.judgmentType !== null && 
                     judgment.judgmentType !== undefined && 
                     judgment.judgmentType !== 0 &&
@@ -2802,7 +2788,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
                       typeof judgment.docketNumbers === 'string' && 
                       judgment.docketNumbers.trim() !== '';
     
-    return hasDate || hasAmount || hasType || hasCourtInfo || hasDocket;
+    return hasDate || hasType || hasCourtInfo || hasDocket;
   };
 
   // Helper function to check if foreclosure editing is allowed
@@ -2873,7 +2859,6 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
         id: judgmentId,
         petitionId: petition.id,
         judgmentDate: judgment.judgmentDate || "",
-        judgmentAmount: judgment.judgmentAmount || 0,
         judgmentType: judgment.judgmentType !== null && judgment.judgmentType !== undefined 
           ? (typeof judgment.judgmentType === 'number' 
               ? judgment.judgmentType 
