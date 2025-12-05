@@ -3,27 +3,30 @@ import { createBrowserRouter } from 'react-router-dom';
 import Layout from '../layout/Layout';
 import RouteGuard from './RouteGuard';
 import { ROUTES } from '../constants/routerConstants';
+import RouteError from '../components/shared/RouteError';
+import lazyWithRetry from '../utils/lazyWithRetry';
 
-const Home = lazy(() => import('../pages/Home'));
-const Dashboard = lazy(() => import('../pages/Dashboard'));
-const Profile = lazy(() => import('../pages/Profile'));
-const Petitions = lazy(() => import('../pages/Petitions'));
-const PublicPetitions = lazy(() => import('../pages/PublicPetitions'));
-const Messages = lazy(() => import('../pages/Messages'));
-const FAQ = lazy(() => import('../pages/FAQ'));
-const Training = lazy(() => import('../pages/Training'));
-const Form35 = lazy(() => import('../pages/Form35'));
-const Login = lazy(() => import('../pages/Auth/Login'));
-const Register = lazy(() => import('../pages/Auth/Register'));
-const ForgotPassword = lazy(() => import('../pages/Auth/ForgotPassword'));
-const PasswordEmailSent = lazy(() => import('../pages/Auth/PasswordEmailSent'));
-const SetNewPassword = lazy(() => import('../pages/Auth/SetNewPassword'));
-const PasswordChanged = lazy(() => import('../pages/Auth/PasswordChanged'));
-const TwoFactorAuth = lazy(() => import('../pages/Auth/TwoFactorAuth'));
-const VerificationPage = lazy(() => import('../pages/Auth/VerificationPage'));
-const VerificationEmailSent = lazy(() => import('../pages/Auth/VerificationEmailSent'));
-const ImpersonationRequest = lazy(() => import('../pages/Auth/ImpersonationRequest'));
-const PageNotFound = lazy(() => import('../components/shared/PageNotFound'));
+// Use lazyWithRetry for better error handling on module load failures
+const Home = lazyWithRetry(() => import('../pages/Home'));
+const Dashboard = lazyWithRetry(() => import('../pages/Dashboard'));
+const Profile = lazyWithRetry(() => import('../pages/Profile'));
+const Petitions = lazyWithRetry(() => import('../pages/Petitions'));
+const PublicPetitions = lazyWithRetry(() => import('../pages/PublicPetitions'));
+const Messages = lazyWithRetry(() => import('../pages/Messages'));
+const FAQ = lazyWithRetry(() => import('../pages/FAQ'));
+const Training = lazyWithRetry(() => import('../pages/Training'));
+const Form35 = lazyWithRetry(() => import('../pages/Form35'));
+const Login = lazyWithRetry(() => import('../pages/Auth/Login'));
+const Register = lazyWithRetry(() => import('../pages/Auth/Register'));
+const ForgotPassword = lazyWithRetry(() => import('../pages/Auth/ForgotPassword'));
+const PasswordEmailSent = lazyWithRetry(() => import('../pages/Auth/PasswordEmailSent'));
+const SetNewPassword = lazyWithRetry(() => import('../pages/Auth/SetNewPassword'));
+const PasswordChanged = lazyWithRetry(() => import('../pages/Auth/PasswordChanged'));
+const TwoFactorAuth = lazyWithRetry(() => import('../pages/Auth/TwoFactorAuth'));
+const VerificationPage = lazyWithRetry(() => import('../pages/Auth/VerificationPage'));
+const VerificationEmailSent = lazyWithRetry(() => import('../pages/Auth/VerificationEmailSent'));
+const ImpersonationRequest = lazyWithRetry(() => import('../pages/Auth/ImpersonationRequest'));
+const PageNotFound = lazyWithRetry(() => import('../components/shared/PageNotFound'));
 
 export const router = createBrowserRouter([
   {
@@ -33,50 +36,62 @@ export const router = createBrowserRouter([
         <Home />
       </RouteGuard>
     ),
+    errorElement: <RouteError />,
   },
   {
     path: ROUTES.PUBLIC_PETITIONS,
     element: <PublicPetitions />,
+    errorElement: <RouteError />,
   },
   {
     path: ROUTES.LOGIN,
     element: <Login />,
+    errorElement: <RouteError />,
   },
   {
     path: ROUTES.REGISTER,
     element: <Register />,
+    errorElement: <RouteError />,
   },
   {
     path: ROUTES.FORGOT_PASSWORD,
     element: <ForgotPassword />,
+    errorElement: <RouteError />,
   },
   {
     path: ROUTES.PASSWORD_EMAIL_SENT,
     element: <PasswordEmailSent />,
+    errorElement: <RouteError />,
   },
   {
     path: `${ROUTES.SET_NEW_PASSWORD}/:token?`,
     element: <SetNewPassword />,
+    errorElement: <RouteError />,
   },
   {
     path: ROUTES.PASSWORD_CHANGED,
     element: <PasswordChanged />,
+    errorElement: <RouteError />,
   },
   {
     path: ROUTES.TWO_FACTOR_AUTH,
     element: <TwoFactorAuth />,
+    errorElement: <RouteError />,
   },
   {
     path: `${ROUTES.VERIFICATION_PAGE}/:token?`,
     element: <VerificationPage />,
+    errorElement: <RouteError />,
   },
   {
     path: ROUTES.VERIFICATION_EMAIL_SENT,
     element: <VerificationEmailSent />,
+    errorElement: <RouteError />,
   },
   {
     path: ROUTES.REQUEST_IMPERSONATE_USER,
     element: <ImpersonationRequest />,
+    errorElement: <RouteError />,
   },
   {
     path: ROUTES.DASHBOARD,
@@ -85,6 +100,7 @@ export const router = createBrowserRouter([
         <Dashboard />
       </Layout>
     ),
+    errorElement: <RouteError />,
   },
   {
     path: ROUTES.PROFILE,
@@ -93,6 +109,7 @@ export const router = createBrowserRouter([
         <Profile />
       </Layout>
     ),
+    errorElement: <RouteError />,
   },
   {
     path: ROUTES.PETITIONS,
@@ -101,6 +118,7 @@ export const router = createBrowserRouter([
         <Petitions />
       </Layout>
     ),
+    errorElement: <RouteError />,
   },
   {
     path: ROUTES.MESSAGES,
@@ -109,6 +127,7 @@ export const router = createBrowserRouter([
         <Messages />
       </Layout>
     ),
+    errorElement: <RouteError />,
   },
   {
     path: ROUTES.FAQ,
@@ -117,6 +136,7 @@ export const router = createBrowserRouter([
         <FAQ />
       </Layout>
     ),
+    errorElement: <RouteError />,
   },
   {
     path: ROUTES.TRAINING,
@@ -125,6 +145,7 @@ export const router = createBrowserRouter([
         <Training />
       </Layout>
     ),
+    errorElement: <RouteError />,
   },
   {
     path: ROUTES.FORM35,
@@ -133,9 +154,11 @@ export const router = createBrowserRouter([
         <Form35 />
       </Layout>
     ),
+    errorElement: <RouteError />,
   },
   {
     path: ROUTES.NOT_FOUND,
     element: <PageNotFound />,
+    errorElement: <RouteError />,
   },
 ]);
