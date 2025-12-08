@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { memo } from 'react';
+import { VALIDATION } from '../../constants/appConstants';
 
-const PasswordGuidelines = ({ showGuidelines, passwordGuidelines }) => {
+const PasswordGuidelines = memo(({ showGuidelines, passwordGuidelines }) => {
   if (!showGuidelines) return null;
 
   return (
@@ -36,7 +37,7 @@ const PasswordGuidelines = ({ showGuidelines, passwordGuidelines }) => {
           }}>
             {passwordGuidelines.minLength ? '✓' : '✗'}
           </span>
-          At least 8 Characters
+          At least {VALIDATION.MIN_PASSWORD_LENGTH} Characters
         </div>
         <div style={{ marginBottom: '6px' }}>
           <span style={{ 
@@ -81,6 +82,8 @@ const PasswordGuidelines = ({ showGuidelines, passwordGuidelines }) => {
       </div>
     </div>
   );
-};
+});
+
+PasswordGuidelines.displayName = 'PasswordGuidelines';
 
 export default PasswordGuidelines;

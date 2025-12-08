@@ -37,8 +37,7 @@ function Login() {
           );
           setMfaTypes(availableTypes);
         }
-      } catch (error) {
-        console.error("Error loading MFA types:", error);
+      } catch {
         // Fallback to default types
         setMfaTypes([
           { name: "SMS", value: 1 },
@@ -141,10 +140,10 @@ function Login() {
 
       // Always show MFA selection screen
       setShowMfaSelection(true);
-    } catch (error) {
+    } catch (err) {
       // Handle specific error messages from API response
-      if (error.response?.data?.message) {
-        const errorMessage = error.response.data.message.toLowerCase();
+      if (err?.response?.data?.message) {
+        const errorMessage = err.response.data.message.toLowerCase();
         if (errorMessage.includes("user not found")) {
           toast.error(t("auth.userNotFound"));
         } else if (errorMessage.includes("invalid email or password")) {
@@ -201,10 +200,10 @@ function Login() {
           toast.error(response.msg || t("auth.failedSendOTP"));
         }
       }
-    } catch (error) {
+    } catch (err) {
       // Handle specific error messages from API response
-      if (error.response?.data?.message) {
-        const errorMessage = error.response.data.message.toLowerCase();
+      if (err?.response?.data?.message) {
+        const errorMessage = err.response.data.message.toLowerCase();
         if (errorMessage.includes("user not found")) {
           toast.error(t("auth.userNotFound"));
         } else if (errorMessage.includes("invalid email or password")) {

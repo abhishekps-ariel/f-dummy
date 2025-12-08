@@ -1,5 +1,6 @@
 import React, { useEffect, useCallback } from 'react';
 import { useRouteError, useNavigate } from 'react-router-dom';
+import { TIMEOUTS } from '../../constants/appConstants';
 
 const RouteError = () => {
   const error = useRouteError();
@@ -29,7 +30,7 @@ const RouteError = () => {
     if (isChunkLoadError) {
       const reloadTimer = setTimeout(() => {
         handleReload();
-      }, 2000); // Auto-reload after 2 seconds
+      }, TIMEOUTS.ERROR_RELOAD_DELAY);
 
       return () => clearTimeout(reloadTimer);
     }

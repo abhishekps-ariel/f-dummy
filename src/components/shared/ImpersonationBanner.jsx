@@ -33,8 +33,8 @@ function ImpersonationBanner() {
       } else {
         toast.error(result.msg || 'Failed to exit impersonation');
       }
-    } catch (e) {
-      toast.error(e?.message || 'Failed to exit impersonation');
+    } catch (err) {
+      toast.error(err?.message || 'Failed to exit impersonation');
     }
   }, []);
 

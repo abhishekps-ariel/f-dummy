@@ -48,14 +48,14 @@ export const AuthProvider = ({ children }) => {
     try {
       sessionStorage.removeItem('petitionTabs');
       sessionStorage.removeItem('activePetitionTab');
-    } catch (error) {
-      // Failed to clear petition tabs from storage
+    } catch {
+      // Failed to clear petition tabs from storage - non-critical
     }
 
     try {
       window.dispatchEvent(new Event('filir:petition-tabs-reset'));
-    } catch (error) {
-      // Failed to dispatch petition tabs reset event
+    } catch {
+      // Failed to dispatch petition tabs reset event - non-critical
     }
   };
 
@@ -178,7 +178,7 @@ export const AuthProvider = ({ children }) => {
         } else {
           setOrganization({ id: activeOrganizationId });
         }
-      } catch (error) {
+      } catch {
         setOrganization({ id: activeOrganizationId });
       }
     };
@@ -230,8 +230,8 @@ export const AuthProvider = ({ children }) => {
           }
         }
       }
-    } catch (error) {
-      // Error checking join requests
+    } catch {
+      // Error checking join requests - non-critical
     }
 
     return false;
@@ -256,7 +256,7 @@ export const AuthProvider = ({ children }) => {
           setOrganizations([]);
           setActiveOrganizationIdState(null);
         }
-      } catch (error) {
+      } catch {
         setIsAuthenticated(false);
         setUser(null);
         setOrganization(null);
@@ -282,7 +282,7 @@ export const AuthProvider = ({ children }) => {
 
       // Consider token expired if it expires within 5 minutes (300 seconds)
       return currentTime >= expirationTime - 300;
-    } catch (error) {
+    } catch {
       return true;
     }
   };
@@ -304,8 +304,8 @@ export const AuthProvider = ({ children }) => {
     // Clear petition form data from localStorage on logout
     try {
       sessionStorage.removeItem('petitionFormData');
-    } catch (error) {
-      // Error clearing petition form data on logout
+    } catch {
+      // Error clearing petition form data on logout - non-critical
     }
   };
 

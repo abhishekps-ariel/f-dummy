@@ -154,8 +154,8 @@ function TwoFactorAuth() {
           response.msg || "Invalid authentication code. Please try again."
         );
       }
-    } catch (error) {
-      toast.error("Invalid authentication code. Please try again.");
+    } catch (err) {
+      toast.error(err?.message || "Invalid authentication code. Please try again.");
     } finally {
       setIsSubmitting(false);
     }

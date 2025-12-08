@@ -51,9 +51,8 @@ const NotesModal = ({ isOpen, onClose, petition, noteToEdit = null, onNoteSaved 
       
       // Close the modal after successful save
       onClose();
-    } catch (error) {
-      console.error("Error saving note:", error);
-      const errorMessage = error?.response?.data?.message || error?.message || 
+    } catch (err) {
+      const errorMessage = err?.response?.data?.message || err?.message || 
         (isEditMode ? t("modals.notes.failedUpdate") : t("modals.notes.failedAdd"));
       toast.error(errorMessage);
     } finally {

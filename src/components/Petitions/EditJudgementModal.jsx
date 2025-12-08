@@ -151,7 +151,6 @@ const EditJudgementModal = ({ isOpen, onClose, petition, onSave, formData, setFo
       if (onSave) {
         await onSave(updatedFormData);
       } else {
-        console.error("onSave function is not provided!");
         toast.error(t("modals.editJudgment.saveFunctionNotAvailable"));
         setIsSaving(false);
         return;
@@ -159,9 +158,8 @@ const EditJudgementModal = ({ isOpen, onClose, petition, onSave, formData, setFo
 
       // Close modal after successful save
       onClose();
-    } catch (error) {
-      console.error("Error saving judgment:", error);
-      toast.error(error?.message || t("modals.editJudgment.failedSave"));
+    } catch (err) {
+      toast.error(err?.message || t("modals.editJudgment.failedSave"));
       // Don't close the modal if there's an error
     } finally {
       setIsSaving(false);

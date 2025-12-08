@@ -1,4 +1,5 @@
 import axiosInstance from '../api/axiosInstance';
+import { PAGINATION } from '../constants/appConstants';
 import { PETITION_ENDPOINTS } from '../constants/apiEndpoints';
 import axios from 'axios';
 import Config from '../config/index';
@@ -556,7 +557,7 @@ class PetitionApiService {
    * @param {string} [paginationParams.organizationId] - Organization ID (for org admins)
    * @param {string} [paginationParams.userId] - User ID (for filers)
    * @param {number} [paginationParams.pageNumber=1] - Page number (1-based)
-   * @param {number} [paginationParams.pageSize=10] - Number of items per page
+   * @param {number} [paginationParams.pageSize] - Number of items per page (default: PAGINATION.DEFAULT_PAGE_SIZE)
    * @param {string} [paginationParams.searchText=""] - Search text for filtering
    * @param {number} [paginationParams.status=null] - Status filter (null=all, 0=draft, 1=submitted, etc.)
    * @param {string|Date} [paginationParams.fromDate] - Start date for date range filter
@@ -583,7 +584,7 @@ class PetitionApiService {
       organizationId,
       userId,
       pageNumber = 1,
-      pageSize = 10,
+      pageSize = PAGINATION.DEFAULT_PAGE_SIZE,
       searchText = "",
       status = null,
       fromDate = null,
@@ -608,7 +609,7 @@ class PetitionApiService {
     // Build parameters object
     const params = {
       pageNumber: Math.max(1, parseInt(pageNumber) || 1), // Ensure minimum page 1
-      pageSize: Math.max(1, parseInt(pageSize) || 10),
+      pageSize: Math.max(1, parseInt(pageSize) || PAGINATION.DEFAULT_PAGE_SIZE),
       status: status !== null ? parseInt(status) : null,
       sortColumn: validSortColumn,
       sortDirection: validSortDirection
@@ -1012,7 +1013,7 @@ class PetitionApiService {
 
   // Get public petitions (no authentication required)
   async getPublicPetitionsPaged(params) {
-    const { city, zipCode, pageNumber = 1, pageSize = 10, sortColumn, sortDirection } = params;
+    const { city, zipCode, pageNumber = 1, pageSize = PAGINATION.DEFAULT_PAGE_SIZE, sortColumn, sortDirection } = params;
     
     const requestBody = {
       city: city || "",

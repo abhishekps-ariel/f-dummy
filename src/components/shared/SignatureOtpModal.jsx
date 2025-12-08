@@ -34,7 +34,7 @@ const SignatureOtpModal = ({ show, onHide, onOtpVerified, signatureData }) => {
       } else {
         setError(response.msg || t("signature.failedSendOtp"));
       }
-    } catch (err) {
+    } catch {
       setError(t("signature.failedSendOtpRetry"));
     } finally {
       setIsLoading(false);
@@ -68,7 +68,7 @@ const SignatureOtpModal = ({ show, onHide, onOtpVerified, signatureData }) => {
       } else {
         setError(response.msg || t("signature.invalidOtp"));
       }
-    } catch (err) {
+    } catch {
       setError(t("signature.failedVerifyOtp"));
     } finally {
       setIsVerifying(false);

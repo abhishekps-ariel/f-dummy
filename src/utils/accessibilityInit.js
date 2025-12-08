@@ -1,7 +1,8 @@
+import { STORAGE_KEYS } from '../constants/appConstants';
 
 export function initializeAccessibility() {
   // Load high contrast mode
-  const savedHighContrast = sessionStorage.getItem('highContrastMode');
+  const savedHighContrast = sessionStorage.getItem(STORAGE_KEYS.HIGH_CONTRAST_MODE);
   if (savedHighContrast === 'true') {
     document.body.classList.add('high-contrast');
   }
@@ -30,31 +31,31 @@ export function initializeAccessibility() {
     root.style.setProperty('--text-xs', `${12 * multiplier}px`);
   };
   
-  const savedTextSize = sessionStorage.getItem('accessibilityTextSize');
+  const savedTextSize = sessionStorage.getItem(STORAGE_KEYS.ACCESSIBILITY_TEXT_SIZE);
   if (savedTextSize && ['small', 'normal', 'large'].includes(savedTextSize)) {
     // Use new text size preference
     const size = fontSizeMap[savedTextSize];
     document.documentElement.style.fontSize = `${size}px`;
     updateCSSVariables(size);
   } else {
-    const savedFontSize = sessionStorage.getItem('accessibilityFontSize');
+    const savedFontSize = sessionStorage.getItem(STORAGE_KEYS.ACCESSIBILITY_FONT_SIZE);
     if (savedFontSize) {
       const size = parseInt(savedFontSize, 10);
       if (size >= 12 && size <= 24) {
         document.documentElement.style.fontSize = `${size}px`;
         updateCSSVariables(size);
         if (size <= 13) {
-          sessionStorage.setItem('accessibilityTextSize', 'small');
+          sessionStorage.setItem(STORAGE_KEYS.ACCESSIBILITY_TEXT_SIZE, 'small');
           const newSize = fontSizeMap.small;
           document.documentElement.style.fontSize = `${newSize}px`;
           updateCSSVariables(newSize);
         } else if (size <= 19) {
-          sessionStorage.setItem('accessibilityTextSize', 'normal');
+          sessionStorage.setItem(STORAGE_KEYS.ACCESSIBILITY_TEXT_SIZE, 'normal');
           const newSize = fontSizeMap.normal;
           document.documentElement.style.fontSize = `${newSize}px`;
           updateCSSVariables(newSize);
         } else {
-          sessionStorage.setItem('accessibilityTextSize', 'large');
+          sessionStorage.setItem(STORAGE_KEYS.ACCESSIBILITY_TEXT_SIZE, 'large');
           const newSize = fontSizeMap.large;
           document.documentElement.style.fontSize = `${newSize}px`;
           updateCSSVariables(newSize);

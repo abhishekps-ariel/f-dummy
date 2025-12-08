@@ -106,7 +106,7 @@ function Profile() {
         } else {
           setFilingEntityTypes([]);
         }
-      } catch (error) {
+      } catch {
         setFilingEntityTypes([]);
       } finally {
         setIsLoadingEntityTypes(false);
@@ -158,7 +158,7 @@ function Profile() {
         setSignatureData(null);
         return false;
       }
-    } catch (error) {
+    } catch {
       setSignatureStatus('pending');
       setSignatureData(null);
       return false;
@@ -176,7 +176,7 @@ function Profile() {
         // Call logout API
         await logoutApi(refreshToken);
       }
-    } catch (error) {
+    } catch {
       // Continue with logout even if API fails
     } finally {
       // Always clear local data and redirect
@@ -186,8 +186,8 @@ function Profile() {
       // Clear petition form data from localStorage on logout
       try {
         sessionStorage.removeItem('petitionFormData');
-      } catch (error) {
-        console.error('Error clearing petition form data on logout:', error);
+      } catch {
+        // Error clearing petition form data on logout - non-critical
       }
       
       // Reset petition wizard progress
@@ -264,7 +264,7 @@ function Profile() {
             // Update the auth context state
             login(updatedUser);
           }
-        } catch (error) {
+        } catch {
           // Fallback: Update with the data we sent
           const updatedUser = {
             ...user,
@@ -282,8 +282,8 @@ function Profile() {
       } else {
         toast.error(response.msg || t("profile.failedUpdateProfile"));
       }
-    } catch (error) {
-      toast.error(t("profile.failedUpdateProfileRetry"));
+    } catch (err) {
+      toast.error(err?.message || t("profile.failedUpdateProfileRetry"));
     } finally {
       setIsSaving(false);
     }
@@ -379,7 +379,6 @@ function Profile() {
             }
           } catch (fetchError) {
             // If fetching fails, we still have the preview from the upload
-            console.log('Could not fetch signature from server, using uploaded version');
           }
         }
         
@@ -391,11 +390,11 @@ function Profile() {
         setSignatureStatus('pending');
         toast.error(uploadResponse.msg || t("profile.failedUploadSignature"));
       }
-    } catch (error) {
+    } catch (err) {
       // If upload fails, reset the preview
       setSignatureData(null);
       setSignatureStatus('pending');
-      toast.error(t("profile.failedUploadSignatureRetry"));
+      toast.error(err?.message || t("profile.failedUploadSignatureRetry"));
     } finally {
       setIsUploadingSignature(false);
     }

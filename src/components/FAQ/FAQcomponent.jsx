@@ -28,8 +28,7 @@ const FAQcomponent = () => {
         } else {
           setError("No FAQ found");
         }
-      } catch (err) {
-        console.error("Error fetching FAQ categories:", err);
+      } catch {
         setError(t("faq.errors.fetchError") || "Failed to load FAQ categories. Please try again later.");
       } finally {
         setLoading(false);
@@ -56,8 +55,7 @@ const FAQcomponent = () => {
           setQuestions([]);
           setError(t("faq.errors.noQuestions") || "No questions available for this category");
         }
-      } catch (err) {
-        console.error("Error fetching FAQ questions:", err);
+      } catch {
         setError(t("faq.errors.fetchQuestionsError") || "Failed to load questions. Please try again later.");
         setQuestions([]);
       } finally {

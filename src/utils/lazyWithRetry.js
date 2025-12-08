@@ -1,4 +1,5 @@
 import { lazy } from 'react';
+import { RETRY } from '../constants/appConstants';
 
 /**
  * Lazy load a component with retry logic for failed module loads
@@ -9,7 +10,7 @@ import { lazy } from 'react';
  * @param {number} delay - Delay between retries in ms (default: 1000)
  * @returns {Promise} - Promise that resolves to the component
  */
-const lazyWithRetry = (importFunc, retries = 3, delay = 1000) => {
+const lazyWithRetry = (importFunc, retries = RETRY.DEFAULT_RETRIES, delay = RETRY.DEFAULT_DELAY) => {
   return lazy(() => {
     return new Promise((resolve, reject) => {
       const attemptImport = (attemptNumber) => {
@@ -31,8 +32,7 @@ const lazyWithRetry = (importFunc, retries = 3, delay = 1000) => {
                 });
               }
               
-              console.warn(`Module load failed, retrying... (${attemptNumber}/${retries})`);
-              setTimeout(() => {
+                setTimeout(() => {
                 attemptImport(attemptNumber + 1);
               }, delay * attemptNumber); // Exponential backoff
             } else {

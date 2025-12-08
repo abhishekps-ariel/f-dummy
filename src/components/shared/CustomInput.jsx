@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { memo } from 'react';
+import PropTypes from 'prop-types';
 import './CustomInput.css';
 
-const CustomInput = ({
+const CustomInput = memo(({
   type = 'text',
   value,
   onChange,
@@ -31,7 +32,22 @@ const CustomInput = ({
       />
     </div>
   );
+});
+
+CustomInput.propTypes = {
+  type: PropTypes.string,
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  onChange: PropTypes.func.isRequired,
+  placeholder: PropTypes.string,
+  className: PropTypes.string,
+  disabled: PropTypes.bool,
+  onKeyDown: PropTypes.func,
+  onFocus: PropTypes.func,
+  onBlur: PropTypes.func,
+  autoComplete: PropTypes.string,
 };
+
+CustomInput.displayName = 'CustomInput';
 
 export default CustomInput;
 

@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { logout as logoutApi } from '../../services/authService';
 import { clearAuthData, getAuthData } from '../../utils/storage';
 import { ROUTES } from '../../constants/routerConstants';
+import { STORAGE_KEYS } from '../../constants/appConstants';
 import Sidebar from '../../components/shared/Sidebar';
 import Header from '../../components/shared/Header';
 import MessagesLayout from '../../components/Messages/MessagesLayout';
@@ -130,10 +132,10 @@ const Messages = () => {
         
         // Update total unread count in localStorage for sidebar badge
         const totalUnread = Object.values(initialUnreadCounts).reduce((sum, count) => sum + count, 0);
-        sessionStorage.setItem('messagesUnreadCount', totalUnread.toString());
+        sessionStorage.setItem(STORAGE_KEYS.MESSAGES_UNREAD_COUNT, totalUnread.toString());
       }
-    } catch (error) {
-      console.error('Error loading chat list:', error);
+    } catch (err) {
+      toast.error(err?.message || t("messages.errorLoadingChatList") || "Failed to load chat list. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -204,8 +206,8 @@ const Messages = () => {
         if (!appendToTop) {
           try {
             await markAsRead(chatId, user.id);
-          } catch (error) {
-            console.error('Error marking messages as read:', error);
+          } catch {
+            // Error marking messages as read - non-critical background operation
           }
           
           // Reset unread count when messages are loaded (conversation is opened)
@@ -217,11 +219,10 @@ const Messages = () => {
               };
               // Update total unread count in localStorage
               const totalUnread = Object.values(newCounts).reduce((sum, count) => sum + count, 0);
-              sessionStorage.setItem('messagesUnreadCount', totalUnread.toString());
-            return newCounts;
-          });
-          
-          return newCounts;
+              sessionStorage.setItem(STORAGE_KEYS.MESSAGES_UNREAD_COUNT, totalUnread.toString());
+              return newCounts;
+            });
+            
             // Update conversation unread count in conversations list
             setConversations((prev) =>
               prev.map((conv) =>
@@ -233,10 +234,10 @@ const Messages = () => {
           }
         }
         
-        return { hasMore: loadedMessages < totalMessages, scrollToBottom: !appendToTop };
+        return { hasMore, scrollToBottom: !appendToTop };
       }
-    } catch (error) {
-      console.error('Error loading messages:', error);
+    } catch (err) {
+      toast.error(err?.message || t("messages.errorLoadingMessages") || "Failed to load messages. Please try again.");
       return { hasMore: false, scrollToBottom: false };
     } finally {
       setLoading(false);
@@ -422,7 +423,7 @@ const Messages = () => {
           // Mark as read when receiving a new message while chat is open
           if (!isOwn && user?.id) {
             markAsRead(chatId, user.id).catch((error) => {
-              console.error('Error marking messages as read:', error);
+              // Error marking messages as read
             });
           }
         }
@@ -436,7 +437,7 @@ const Messages = () => {
         }
       })
       .catch((err) => {
-        console.error('SignalR connection error:', err);
+        // SignalR connection error
       });
 
     return () => {
@@ -469,7 +470,7 @@ const Messages = () => {
         // Mark as read when opening a conversation (even if messages are cached)
         if (user?.id) {
           markAsRead(chatId, user.id).catch((error) => {
-            console.error('Error marking messages as read:', error);
+            // Error marking messages as read
           });
         }
       } else {
@@ -489,7 +490,7 @@ const Messages = () => {
       if (refreshToken) {
         await logoutApi(refreshToken);
       }
-    } catch (error) {
+    } catch {
       // Continue with logout even if API fails
     } finally {
       clearAuthData();
@@ -577,7 +578,7 @@ const Messages = () => {
                 try {
                   await markAsRead(newChatId, user.id);
                 } catch (error) {
-                  console.error('Error marking messages as read:', error);
+                  // Error marking messages as read
                 }
               }
             }
@@ -606,16 +607,10 @@ const Messages = () => {
             // Sort by latest message time
             return sortConversationsByLatest(updatedConversations);
           });
-          
-          // Update total unread count in localStorage
-          const totalUnread = Object.values(newCounts).reduce((sum, count) => sum + count, 0);
-          sessionStorage.setItem('messagesUnreadCount', totalUnread.toString());
-          
-          return newCounts;
         }
       }
-    } catch (error) {
-      console.error('Error sending message:', error);
+    } catch (err) {
+      toast.error(err?.message || t("messages.errorSendingMessage") || "Failed to send message. Please try again.");
     } finally {
       setSendingMessage(false);
     }
@@ -641,7 +636,7 @@ const Messages = () => {
           };
           // Update total unread count in localStorage
           const totalUnread = Object.values(newCounts).reduce((sum, count) => sum + count, 0);
-          sessionStorage.setItem('messagesUnreadCount', totalUnread.toString());
+          sessionStorage.setItem(STORAGE_KEYS.MESSAGES_UNREAD_COUNT, totalUnread.toString());
           return newCounts;
         });
         // Update conversation unread count in conversations list

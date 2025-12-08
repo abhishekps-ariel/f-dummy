@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import petitionApiService from '../services/petitionApiService';
+import { STORAGE_KEYS } from '../constants/appConstants';
 
 const TabContext = createContext();
 
@@ -32,19 +33,18 @@ export const TabProvider = ({ children }) => {
     setActiveTabId(DEFAULT_TAB_ID);
     setLoadingTabs(new Set());
     try {
-      sessionStorage.setItem('petitionTabs', JSON.stringify(defaultTabs));
-      sessionStorage.setItem('activePetitionTab', DEFAULT_TAB_ID);
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('Failed to reset petition tabs in storage:', error);
+      sessionStorage.setItem(STORAGE_KEYS.PETITION_TABS, JSON.stringify(defaultTabs));
+      sessionStorage.setItem(STORAGE_KEYS.ACTIVE_PETITION_TAB, DEFAULT_TAB_ID);
+    } catch {
+      // Failed to reset petition tabs in storage - non-critical
     }
   }, []);
 
   // Load tabs from sessionStorage on mount
   useEffect(() => {
     try {
-      const savedTabs = sessionStorage.getItem('petitionTabs');
-      const savedActiveTab = sessionStorage.getItem('activePetitionTab');
+      const savedTabs = sessionStorage.getItem(STORAGE_KEYS.PETITION_TABS);
+      const savedActiveTab = sessionStorage.getItem(STORAGE_KEYS.ACTIVE_PETITION_TAB);
       
       if (savedTabs) {
         const parsedTabs = JSON.parse(savedTabs);
@@ -65,8 +65,8 @@ export const TabProvider = ({ children }) => {
         // Initialize with default "All Petitions" tab
         resetTabsState();
       }
-    } catch (error) {
-      // Fallback to default tab
+    } catch {
+      // Fallback to default tab - storage read failed
       resetTabsState();
     }
   }, [resetTabsState]);
@@ -94,7 +94,7 @@ export const TabProvider = ({ children }) => {
           isClosable: tab.isClosable,
           petitionId: tab.type === 'petition' ? tab.id.replace('petition-', '') : null
         }));
-        sessionStorage.setItem('petitionTabs', JSON.stringify(tabsToSave));
+        sessionStorage.setItem(STORAGE_KEYS.PETITION_TABS, JSON.stringify(tabsToSave));
       } catch (error) {
       }
     }
@@ -104,7 +104,7 @@ export const TabProvider = ({ children }) => {
   useEffect(() => {
     if (activeTabId) {
       try {
-        sessionStorage.setItem('activePetitionTab', activeTabId);
+        sessionStorage.setItem(STORAGE_KEYS.ACTIVE_PETITION_TAB, activeTabId);
       } catch (error) {
       }
     }

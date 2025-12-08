@@ -1,4 +1,6 @@
 import React from 'react';
+import PropTypes from 'prop-types';
+import { TIMEOUTS } from '../../constants/appConstants';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -23,8 +25,7 @@ class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    // Log error for debugging
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    // Error caught by ErrorBoundary
     
     this.setState({
       error,
@@ -43,7 +44,7 @@ class ErrorBoundary extends React.Component {
       this.reloadTimeout = setTimeout(() => {
         // Force a hard reload to get fresh assets
         window.location.reload(true);
-      }, 1500);
+      }, TIMEOUTS.CHUNK_ERROR_RELOAD);
     }
   }
 
@@ -166,6 +167,10 @@ class ErrorBoundary extends React.Component {
     return this.props.children;
   }
 }
+
+ErrorBoundary.propTypes = {
+  children: PropTypes.node.isRequired,
+};
 
 export default ErrorBoundary;
 

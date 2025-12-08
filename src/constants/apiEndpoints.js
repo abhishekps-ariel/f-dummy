@@ -18,7 +18,6 @@ export const AUTH_ENDPOINTS = {
   GET_BASE64_BY_S3KEY: "/api/Account/get-base64-by-s3key",
   SEND_SIGNATURE_OTP: "/api/Account/send-signature-otp",
   VERIFY_SIGNATURE_OTP: "/api/Account/verify-signature-otp",
-  ORGANISATION_USERS_API: "/api/Account/list",
   // Impersonation
   IMPERSONATE_BY_USER_ID: (userId) => `/api/Auth/impersonate/${userId}`,
   EXIT_IMPERSONATION: "/api/Auth/exit-impersonation",
@@ -28,17 +27,10 @@ export const AUTH_ENDPOINTS = {
 export const ORGANIZATION_ENDPOINTS = {
   GET_ALL: "/Organization",
   GET_BY_ID: (id) => `/Organization/${id}`,
-  GET_BY_USER: (userId) => `/Organization/get-organizations-by-user/${userId}`,
   SEARCH: "/Organization/search",
-  CREATE: "/Organization/create-and-request-to-join",
-  UPDATE: (id) => `/Organization/${id}`,
-  DELETE: (id) => `/Organization/${id}`,
-  SUBMIT_JOIN_REQUEST: "/api/OrganizationJoinRequest/request",
   GET_MY_REQUESTS: "/api/OrganizationJoinRequest/my-requests",
   GET_JOIN_REQUEST: (joinRequestId) => `/api/OrganizationJoinRequest/join-request/${joinRequestId}`,
-  GET_ALL_REQUESTS: (organizationId) => `/api/OrganizationJoinRequest/by-organization/${organizationId}`, // GET by organizationId (deprecated, use LIST_BY_ORGANIZATION)
-  LIST_BY_ORGANIZATION: "/api/OrganizationJoinRequest/list-by-organization", // POST with filters and pagination
-  REVIEW_JOIN_REQUEST: "/api/OrganizationJoinRequest/review", // POST with requestId, status, adminComment
+  BIND_USER_TO_ORGANIZATION: "/api/OrganizationJoinRequest/bind-user-to-organization",
 };
 
 export const COMMON_ENDPOINTS = {
@@ -50,7 +42,6 @@ export const COMMON_ENDPOINTS = {
   GET_BUYER_TYPES: "/Common/get-buyer-type",
   GET_LENDER_TYPES: "/Common/get-lender-type",
   GET_FAQ_CATEGORIES: "/Common/get-faq-category",
-  GET_JOIN_REQUEST_STATUS_ENUM: "/Common/join-request-status-enum",
   GET_MFA_TYPES_ENUM: "/Common/mfa-types-enum",
   GET_35B_REPORTING_PERIOD: "/Common/get-35b-reporting-period",
   GET_35B_ENTITY_TYPE: "/Common/get-35b-entitytype",

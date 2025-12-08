@@ -54,8 +54,7 @@ const ConversationsSidebar = ({ conversations, selectedConversation, onConversat
           setSearchResults([]);
           setShowSearchResults(false);
         }
-      } catch (error) {
-        console.error('Error searching users:', error);
+      } catch {
         setSearchResults([]);
         setShowSearchResults(false);
       } finally {

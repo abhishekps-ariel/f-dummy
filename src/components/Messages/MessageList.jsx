@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import MessageItem from './MessageItem';
 import DateBreaker from './DateBreaker';
@@ -20,8 +20,8 @@ const MessageList = ({
   const scrollPositionRef = useRef(null);
   const previousConversationIdRef = useRef(null);
 
-  // Helper function to get date label for a message
-  const getDateLabel = (timestamp) => {
+  // Helper function to get date label for a message (memoized)
+  const getDateLabel = useCallback((timestamp) => {
     if (!timestamp) return null;
     
     const messageDate = new Date(timestamp);
@@ -45,10 +45,10 @@ const MessageList = ({
         year: 'numeric' 
       });
     }
-  };
+  }, [t]);
 
-  // Helper function to check if two messages are on different dates
-  const isDifferentDate = (timestamp1, timestamp2) => {
+  // Helper function to check if two messages are on different dates (memoized)
+  const isDifferentDate = useCallback((timestamp1, timestamp2) => {
     if (!timestamp1 || !timestamp2) return true;
     
     const date1 = new Date(timestamp1);
@@ -59,10 +59,10 @@ const MessageList = ({
       date1.getMonth() !== date2.getMonth() ||
       date1.getDate() !== date2.getDate()
     );
-  };
+  }, []);
 
-  // Group messages with date breakers
-  const renderMessagesWithDateBreakers = () => {
+  // Group messages with date breakers (memoized)
+  const renderMessagesWithDateBreakers = useMemo(() => {
     if (!messages || messages.length === 0) return null;
     
     const elements = [];
@@ -92,7 +92,7 @@ const MessageList = ({
     });
     
     return elements;
-  };
+  }, [messages, conversationAvatar, getDateLabel, isDifferentDate]);
 
   // Scroll to bottom on initial load or when new messages arrive at bottom
   useEffect(() => {
@@ -122,8 +122,8 @@ const MessageList = ({
     previousMessagesLengthRef.current = messagesLength;
   }, [messages, shouldScrollToBottom]);
 
-  // Handle scroll to detect when user scrolls to top
-  const handleScroll = (e) => {
+  // Handle scroll to detect when user scrolls to top (memoized)
+  const handleScroll = useCallback((e) => {
     const container = e.target;
     const scrollTop = container.scrollTop;
     
@@ -143,7 +143,7 @@ const MessageList = ({
     const clientHeight = container.clientHeight;
     const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
     setShouldScrollToBottom(isNearBottom);
-  };
+  }, [hasMoreMessages, loadingMoreMessages, onLoadMoreMessages]);
 
   // Maintain scroll position when loading older messages
   useEffect(() => {
@@ -228,7 +228,7 @@ const MessageList = ({
         </div>
       )}
       <div ref={messagesTopRef} />
-      {renderMessagesWithDateBreakers()}
+      {renderMessagesWithDateBreakers}
       <div ref={messagesEndRef} />
     </div>
   );

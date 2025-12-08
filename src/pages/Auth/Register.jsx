@@ -9,6 +9,7 @@ import {
 } from "../../services/organizationService";
 import { useDebounce } from "../../hooks/useDebounce";
 import { ROUTES } from "../../constants/routerConstants";
+import { VALIDATION } from "../../constants/appConstants";
 import loginImg from "../../assets/logo-sample.png";
 import PasswordGuidelines from "../../components/shared/PasswordGuidelines";
 import PhoneInput from "react-phone-input-2";
@@ -98,7 +99,7 @@ function Register() {
         } else {
           setOrganizations([]);
         }
-      } catch (error) {
+      } catch {
         setOrganizations([]);
       } finally {
         setIsLoadingOrgs(false);
@@ -162,7 +163,7 @@ function Register() {
 
   const checkPasswordGuidelines = (password) => {
     const guidelines = {
-      minLength: password.length >= 8,
+      minLength: password.length >= VALIDATION.MIN_PASSWORD_LENGTH,
       hasUppercase: /[A-Z]/.test(password),
       hasLowercase: /[a-z]/.test(password),
       hasNumber: /\d/.test(password),
@@ -221,7 +222,7 @@ function Register() {
     if (!formData.password.trim()) {
       newErrors.password = "Password is required";
     } else {
-      if (formData.password.length < 8) {
+      if (formData.password.length < VALIDATION.MIN_PASSWORD_LENGTH) {
         newErrors.password = "Password must be at least 8 characters long";
       } else if (!/[A-Z]/.test(formData.password)) {
         newErrors.password =
@@ -309,7 +310,7 @@ function Register() {
         } else {
           setOrganizations([]);
         }
-      } catch (error) {
+      } catch {
         setOrganizations([]);
       } finally {
         setIsLoadingOrgs(false);
@@ -377,10 +378,10 @@ function Register() {
       }
     } catch (err) {
       // Handle specific error messages from API response
-      if (err.response?.data?.message) {
+      if (err?.response?.data?.message) {
         toast.error(err.response.data.message);
       } else {
-        toast.error(err.message || "Registration failed!");
+        toast.error(err?.message || "Registration failed!");
       }
     } finally {
       setIsSubmitting(false);

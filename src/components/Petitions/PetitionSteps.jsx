@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import { useJsApiLoader } from "@react-google-maps/api";
 
 import Config from "../../config/index";
+import { STORAGE_KEYS } from "../../constants/appConstants";
 
 import { usePetitionCommonData } from "../../hooks/usePetitionCommonData";
 
@@ -39,33 +40,10 @@ import Step8LoanAssignees from "./MultiStepForm/Step8LoanAssignees";
 import Step9PetitionAttestation from "./MultiStepForm/Step9PetitionAttestation";
 import Step10ReviewSubmit from "./MultiStepForm/Step10ReviewSubmit";
 import TakeOverPetitionModal from "./TakeOverPetitionModal";
+import { formatCurrencyInput, parseCurrencyInput } from "../../utils/currencyUtils";
 
 // Static libraries array to prevent LoadScript reload
-
 const LIBRARIES = ["places"];
-
-// Currency formatting utility functions
-const formatCurrencyInput = (value) => {
-  if (!value && value !== 0) return "";
-  // Remove all non-digit characters except decimal point
-  const numericValue = String(value).replace(/[^\d.]/g, "");
-  // Split by decimal point
-  const parts = numericValue.split(".");
-  // Format the integer part with commas
-  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  // Join back with decimal if it exists
-  return parts.length > 1 ? parts.join(".") : parts[0];
-};
-
-const parseCurrencyInput = (value) => {
-  if (!value) return "";
-  // Remove all non-digit characters except decimal point
-  const numericValue = String(value).replace(/[^\d.]/g, "");
-  // Return empty string if nothing remains
-  if (!numericValue) return "";
-  // Return the numeric value (without commas)
-  return numericValue;
-};
 
 const PetitionSteps = ({
   isOpen,
@@ -470,13 +448,13 @@ const PetitionSteps = ({
   // Load form data from localStorage on component mount
   const loadFormDataFromStorage = () => {
     try {
-      const savedData = sessionStorage.getItem("petitionFormData");
+      const savedData = sessionStorage.getItem(STORAGE_KEYS.PETITION_FORM_DATA);
       if (savedData) {
         const parsedData = JSON.parse(savedData);
         return { ...defaultFormData, ...parsedData };
       }
-    } catch (error) {
-      console.error("Error loading form data from localStorage:", error);
+    } catch {
+      // Error loading form data from localStorage - will use default data
     }
     return defaultFormData;
   };
@@ -533,7 +511,9 @@ const PetitionSteps = ({
             }));
           } else {
           }
-        } catch (error) {}
+        } catch {
+          // Error loading signature - non-critical
+        }
 
         // Load filing entity types
 
@@ -557,7 +537,7 @@ const PetitionSteps = ({
   // Moved here after user is defined to avoid initialization errors
   useEffect(() => {
     if (isOpen) {
-      const savedData = sessionStorage.getItem("petitionFormData");
+      const savedData = sessionStorage.getItem(STORAGE_KEYS.PETITION_FORM_DATA);
       const editingPetitionId = sessionStorage.getItem("editingPetitionId");
       const isEditingDraft = !!editingPetitionId;
       
@@ -615,7 +595,7 @@ const PetitionSteps = ({
           // Simply set formData - let natural step tracking handle marking steps
           setFormData(updatedData);
         } catch (error) {
-          console.error("Error loading form data from localStorage:", error);
+          // Error loading form data from localStorage
         }
       } else {
         // No saved data, reset wizard
@@ -952,7 +932,9 @@ const PetitionSteps = ({
         // Initialize Geocoder
 
         geocoderRef.current = new window.google.maps.Geocoder();
-      } catch (error) {}
+      } catch {
+        // Error initializing Google Maps - will retry on next load
+      }
     }
   }, [isLoaded]);
 
@@ -962,7 +944,7 @@ const PetitionSteps = ({
     const loadSavedDrafts = () => {
       try {
         const savedDrafts = JSON.parse(
-          sessionStorage.getItem("petitionDrafts") || "[]"
+          sessionStorage.getItem(STORAGE_KEYS.PETITION_DRAFTS) || "[]"
         );
 
         if (savedDrafts.length > 0) {
@@ -1025,9 +1007,9 @@ const PetitionSteps = ({
 
   const saveFormDataToStorage = (data) => {
     try {
-      sessionStorage.setItem("petitionFormData", JSON.stringify(data));
-    } catch (error) {
-      console.error("Error saving form data to localStorage:", error);
+      sessionStorage.setItem(STORAGE_KEYS.PETITION_FORM_DATA, JSON.stringify(data));
+    } catch {
+      // Error saving form data to localStorage - non-critical
     }
   };
 
@@ -1036,8 +1018,8 @@ const PetitionSteps = ({
   const clearFormDataFromStorage = () => {
     try {
       sessionStorage.removeItem("petitionFormData");
-    } catch (error) {
-      console.error("Error clearing form data from localStorage:", error);
+    } catch {
+      // Error clearing form data from localStorage - non-critical
     }
   };
 
@@ -1750,8 +1732,8 @@ const PetitionSteps = ({
       
       // Reset previous step ref
       previousStepRef.current = 1;
-    } catch (e) {
-      // ignore
+    } catch {
+      // Error clearing form state - non-critical
     }
   };
 
@@ -1763,8 +1745,8 @@ const PetitionSteps = ({
   const handleDiscardAndClose = () => {
     try {
       clearFormAndWizardState();
-    } catch (e) {
-      // ignore
+    } catch {
+      // Error clearing form state - non-critical
     } finally {
       setShowCloseConfirmDialog(false);
       onClose();
@@ -3206,7 +3188,9 @@ const PetitionSteps = ({
           }
         }
       );
-    } catch (error) {}
+    } catch {
+      // Error handling address validation - non-critical
+    }
   };
 
   const handleInputChange = (e) => {
@@ -4819,10 +4803,10 @@ const PetitionSteps = ({
         existingDrafts.push(saveData);
       }
 
-      sessionStorage.setItem("petitionDrafts", JSON.stringify(existingDrafts));
+      sessionStorage.setItem(STORAGE_KEYS.PETITION_DRAFTS, JSON.stringify(existingDrafts));
 
       setHasSavedDraft(true);
-    } catch (error) {
+    } catch {
       // Don't show error toast for auto-save failures to avoid interrupting user flow
     }
   };
@@ -4932,9 +4916,9 @@ const PetitionSteps = ({
 
       // Close the form modal
       onClose();
-    } catch (error) {
+    } catch (err) {
       // Check if this is a duplicate with take-over option
-      if (error.isDuplicate && error.duplicateInfo?.canTakeOver) {
+      if (err?.isDuplicate && err.duplicateInfo?.canTakeOver) {
         // Show take-over modal instead of error toast
         setDuplicateInfo(error.duplicateInfo);
         setPendingAction('save');
@@ -4944,8 +4928,6 @@ const PetitionSteps = ({
       }
       
       // Error toast is already shown by submitPetition function, so we don't show another one here
-      // Only log the error for debugging
-      console.error("Error saving draft:", error);
     } finally {
       setIsSaving(false);
     }
@@ -5727,9 +5709,9 @@ const PetitionSteps = ({
       clearFormAndWizardState();
 
       onClose();
-    } catch (error) {
+    } catch (err) {
       // Check if this is a duplicate with take-over option
-      if (error.isDuplicate && error.duplicateInfo?.canTakeOver) {
+      if (err?.isDuplicate && err.duplicateInfo?.canTakeOver) {
         // Show take-over modal instead of error toast
         setDuplicateInfo(error.duplicateInfo);
         setPendingAction('submit');
@@ -6200,8 +6182,8 @@ const PetitionSteps = ({
             // Also set selectedOrganizationId so it shows as selected in step 1
             setSelectedOrganizationId(organizationId);
           }
-        } catch (error) {
-          console.error("Failed to load organization data for filing entity:", error);
+        } catch (err) {
+          toast.error(err?.message || "Failed to load organization data. Please try again.");
         } finally {
           setOrganizationLoading(false);
         }
@@ -6274,16 +6256,15 @@ const PetitionSteps = ({
 
       clearFormAndWizardState();
       onClose();
-    } catch (error) {
+    } catch (err) {
       // Check if this is still a duplicate error (shouldn't happen with takeOverToUserId, but handle it)
-      if (error.isDuplicate && error.duplicateInfo?.canTakeOver) {
+      if (err?.isDuplicate && err.duplicateInfo?.canTakeOver) {
         // Show error - this shouldn't happen if takeOverToUserId is set correctly
         toast.error("Unable to take over petition. Please try again.");
         setShowTakeOverModal(true);
         setDuplicateInfo(error.duplicateInfo);
       } else {
         // Other errors are already handled by submitPetition
-        console.error("Error saving draft with take-over:", error);
       }
     } finally {
       setIsSaving(false);
@@ -6335,16 +6316,15 @@ const PetitionSteps = ({
 
       clearFormAndWizardState();
       onClose();
-    } catch (error) {
+    } catch (err) {
       // Check if this is still a duplicate error (shouldn't happen with takeOverToUserId, but handle it)
-      if (error.isDuplicate && error.duplicateInfo?.canTakeOver) {
+      if (err?.isDuplicate && err.duplicateInfo?.canTakeOver) {
         // Show error - this shouldn't happen if takeOverToUserId is set correctly
         toast.error("Unable to take over petition. Please try again.");
         setShowTakeOverModal(true);
         setDuplicateInfo(error.duplicateInfo);
       } else {
         // Other errors are already handled by submitPetition
-        console.error("Error submitting with take-over:", error);
       }
     } finally {
       setShouldTakeOver(false);

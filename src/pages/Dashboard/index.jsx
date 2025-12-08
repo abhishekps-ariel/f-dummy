@@ -135,7 +135,7 @@ function Dashboard() {
                 };
               }
               return request;
-            } catch (error) {
+            } catch {
               return request;
             }
           })
@@ -149,7 +149,8 @@ function Dashboard() {
         }
       } else {
       }
-    } catch (error) {
+    } catch {
+      // Error loading organization data - non-critical
     } finally {
       setIsLoadingOrgData(false);
     }
@@ -164,7 +165,7 @@ function Dashboard() {
       } else {
         setFilingEntityTypes([]);
       }
-    } catch (error) {
+    } catch {
       setFilingEntityTypes([]);
     } finally {
       setIsLoadingFilingEntityTypes(false);
@@ -181,7 +182,7 @@ function Dashboard() {
         // Call logout API
         await logoutApi(refreshToken);
       }
-    } catch (error) {
+    } catch {
       // Continue with logout even if API fails
     } finally {
       // Always clear local data and redirect
@@ -191,8 +192,8 @@ function Dashboard() {
       // Clear petition form data from localStorage on logout
       try {
         sessionStorage.removeItem('petitionFormData');
-      } catch (error) {
-        console.error('Error clearing petition form data on logout:', error);
+      } catch {
+        // Error clearing petition form data on logout - non-critical
       }
       
       // Reset petition wizard progress

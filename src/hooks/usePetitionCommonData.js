@@ -34,7 +34,7 @@ export const usePetitionCommonData = () => {
           throw new Error('Failed to fetch petition common data');
         }
       } catch (err) {
-        setError(err.message || 'Failed to load petition data');
+        setError(err?.message || 'Failed to load petition data');
       } finally {
         setLoading(false);
       }

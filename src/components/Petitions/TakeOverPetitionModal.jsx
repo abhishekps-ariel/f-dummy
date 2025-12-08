@@ -39,8 +39,7 @@ const TakeOverPetitionModal = ({ isOpen, duplicateInfo, onConfirm, onCancel }) =
         } else {
           setError(t("modals.takeOver.failedLoadDetails"));
         }
-      } catch (err) {
-        console.error("Error fetching petition details:", err);
+      } catch {
         setError(t("modals.takeOver.failedLoadDetails"));
       } finally {
         setIsLoading(false);

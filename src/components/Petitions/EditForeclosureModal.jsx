@@ -152,9 +152,8 @@ const EditForeclosureModal = ({
       }
 
       onClose();
-    } catch (error) {
-      console.error("Error saving foreclosure:", error);
-      toast.error(t("modals.editForeclosure.failedSave"));
+    } catch (err) {
+      toast.error(err?.message || t("modals.editForeclosure.failedSave"));
     } finally {
       setIsSaving(false);
     }

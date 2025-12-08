@@ -1,11 +1,13 @@
+import { STORAGE_KEYS } from '../constants/appConstants';
+
 const resolveOrganizationId = (organization) =>
   organization?.organizationId || organization?.id || null;
 
 export const storeAuthData = (authData) => {
   // Only clear token and user - never touch refreshToken or activeOrganizationId here
   // They should only be cleared on explicit logout via clearAuthData()
-  localStorage.removeItem("token");
-  localStorage.removeItem("user");
+  localStorage.removeItem(STORAGE_KEYS.TOKEN);
+  localStorage.removeItem(STORAGE_KEYS.USER);
   
   // Clear sessionStorage auth-related items only
   sessionStorage.removeItem("isImpersonating");
@@ -15,16 +17,16 @@ export const storeAuthData = (authData) => {
   
   // Store auth data in localStorage
   if (token) {
-    localStorage.setItem("token", token);
+    localStorage.setItem(STORAGE_KEYS.TOKEN, token);
   }
   
   // Only update refreshToken if explicitly provided, otherwise leave it untouched
   if (refreshToken !== undefined && refreshToken !== null) {
-    localStorage.setItem("refreshToken", refreshToken);
+    localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, refreshToken);
   }
   
   if (user) {
-    localStorage.setItem("user", JSON.stringify(user));
+    localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
   }
 
   // Only update activeOrganizationId if user has organizations, otherwise leave it untouched
@@ -48,9 +50,9 @@ export const storeAuthData = (authData) => {
 };
 
 export const getAuthData = () => {
-  const token = localStorage.getItem("token");
-  const refreshToken = localStorage.getItem("refreshToken");
-  const user = JSON.parse(localStorage.getItem("user") || "null");
+  const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
+  const refreshToken = localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
+  const user = JSON.parse(localStorage.getItem(STORAGE_KEYS.USER) || "null");
   const activeOrganizationId = getActiveOrganizationId();
 
   return { token, refreshToken, user, activeOrganizationId };
@@ -58,10 +60,10 @@ export const getAuthData = () => {
 
 export const clearAuthData = () => {
   // Clear authentication data from localStorage (only auth-related items)
-  localStorage.removeItem("token");
-  localStorage.removeItem("refreshToken");
-  localStorage.removeItem("user");
-  localStorage.removeItem("activeOrganizationId");
+  localStorage.removeItem(STORAGE_KEYS.TOKEN);
+  localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
+  localStorage.removeItem(STORAGE_KEYS.USER);
+  localStorage.removeItem(STORAGE_KEYS.ACTIVE_ORGANIZATION);
 
   // Clear sessionStorage auth-related items only
   sessionStorage.removeItem("isImpersonating");
@@ -108,22 +110,22 @@ export const getUserRole = (user) => {
 };
 
 export const getActiveOrganizationId = () => {
-  return localStorage.getItem("activeOrganizationId") || null;
+  return localStorage.getItem(STORAGE_KEYS.ACTIVE_ORGANIZATION) || null;
 };
 
 export const setActiveOrganizationId = (organizationId) => {
   if (organizationId) {
-    localStorage.setItem("activeOrganizationId", organizationId);
+    localStorage.setItem(STORAGE_KEYS.ACTIVE_ORGANIZATION, organizationId);
   } else {
-    localStorage.removeItem("activeOrganizationId");
+    localStorage.removeItem(STORAGE_KEYS.ACTIVE_ORGANIZATION);
   }
 };
 
 export const updateStoredUser = (user) => {
   if (!user) {
-    localStorage.removeItem("user");
+    localStorage.removeItem(STORAGE_KEYS.USER);
     return;
   }
-  localStorage.setItem("user", JSON.stringify(user));
+  localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
 };
 

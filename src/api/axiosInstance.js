@@ -2,32 +2,18 @@ import axios from 'axios';
 import { clearAuthData, getAuthData } from '../utils/storage';
 import { refreshToken } from '../services/authService';
 import Config from '../config/index';
+import { isTokenExpired } from '../utils/tokenParser';
+import { TOKEN } from '../constants/appConstants';
 
 // Refresh token lock to prevent concurrent refresh calls
 let refreshTokenPromise = null;
-
-// Function to check if token is expired or about to expire (within 5 minutes)
-const isTokenExpired = (token) => {
-  if (!token) return true;
-  
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    const currentTime = Math.floor(Date.now() / 1000);
-    const expirationTime = payload.exp;
-    
-    // Consider token expired if it expires within 5 minutes (300 seconds)
-    return currentTime >= (expirationTime - 300);
-  } catch (error) {
-    return true;
-  }
-};
 
 // Function to proactively refresh token with lock mechanism
 const refreshTokenIfNeeded = async () => {
   const { token, refreshToken: storedRefreshToken } = getAuthData();
   
   // If token is still valid, return it immediately
-  if (!isTokenExpired(token)) {
+  if (!isTokenExpired(token, TOKEN.EXPIRY_BUFFER)) {
     return token;
   }
   
@@ -41,7 +27,7 @@ const refreshTokenIfNeeded = async () => {
     try {
       const newToken = await refreshTokenPromise;
       return newToken || token;
-    } catch (error) {
+    } catch {
       // If refresh failed, return current token
       return token;
     }
@@ -59,9 +45,9 @@ const refreshTokenIfNeeded = async () => {
         return response.data.token;
       }
       throw new Error('Refresh token failed');
-    } catch (error) {
+    } catch (err) {
       // Clear the promise on error so next request can retry
-      throw error;
+      throw err;
     } finally {
       // Clear the promise after completion (success or failure)
       refreshTokenPromise = null;

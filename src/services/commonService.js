@@ -1,5 +1,6 @@
 import client from "../api/axiosInstance";
 import { COMMON_ENDPOINTS } from "../constants/apiEndpoints";
+import { extractNestedData, normalizeResponse } from "../utils/responseParser";
 
 export const getFilingEntityTypes = async () => {
   const response = await client.get(COMMON_ENDPOINTS.GET_FILING_ENTITY_TYPES, {
@@ -8,37 +9,7 @@ export const getFilingEntityTypes = async () => {
     },
   });
 
-  return {
-    isSuccess: response.data.success,
-    msg: response.data.message,
-    data: response.data.data,
-  };
-};
-
-export const getJoinRequestStatusEnum = async () => {
-  const response = await client.get(COMMON_ENDPOINTS.GET_JOIN_REQUEST_STATUS_ENUM, {
-    headers: {
-      Accept: "text/plain",
-    },
-  });
-
-  // Handle nested structure: data.joinRequestStatus
-  let enumData = null;
-  if (response.data && response.data.data && response.data.data.joinRequestStatus) {
-    enumData = response.data.data.joinRequestStatus;
-  } else if (response.data && response.data.joinRequestStatus) {
-    enumData = response.data.joinRequestStatus;
-  } else if (response.data && response.data.data) {
-    enumData = response.data.data;
-  } else if (response.data) {
-    enumData = response.data;
-  }
-
-  return {
-    isSuccess: response.data.success || true,
-    msg: response.data.message || "Status enum fetched successfully",
-    data: enumData || [],
-  };
+  return normalizeResponse(response, "Filing entity types fetched successfully");
 };
 
 export const getMfaTypesEnum = async () => {
@@ -48,21 +19,12 @@ export const getMfaTypesEnum = async () => {
     },
   });
 
-  // Handle nested structure: data.mfaTypes
-  let enumData = null;
-  if (response.data && response.data.data && response.data.data.mfaTypes) {
-    enumData = response.data.data.mfaTypes;
-  } else if (response.data && response.data.mfaTypes) {
-    enumData = response.data.mfaTypes;
-  } else if (response.data && response.data.data) {
-    enumData = response.data.data;
-  } else if (response.data) {
-    enumData = response.data;
-  }
+  // Extract nested mfaTypes data using unified parser
+  const enumData = extractNestedData(response, 'mfaTypes') || extractNestedData(response);
 
   return {
-    isSuccess: response.data.success || true,
-    msg: response.data.message || "MFA types enum fetched successfully",
+    isSuccess: response.data?.success !== false,
+    msg: response.data?.message || "MFA types enum fetched successfully",
     data: enumData || [],
   };
 };
@@ -74,11 +36,7 @@ export const get35BReportingPeriods = async () => {
     },
   });
 
-  return {
-    isSuccess: response.data.success,
-    msg: response.data.message,
-    data: response.data.data,
-  };
+  return normalizeResponse(response, "35B reporting periods fetched successfully");
 };
 
 export const get35BEntityTypes = async () => {
@@ -88,10 +46,6 @@ export const get35BEntityTypes = async () => {
     },
   });
 
-  return {
-    isSuccess: response.data.success,
-    msg: response.data.message,
-    data: response.data.data,
-  };
+  return normalizeResponse(response, "35B entity types fetched successfully");
 };
 

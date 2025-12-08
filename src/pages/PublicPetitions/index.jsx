@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { PAGINATION } from "../../constants/appConstants";
 import { useNavigate, useLocation } from "react-router-dom";
 import HomeHeader from "../../components/Home/HomeHeader";
 import HomeFooter from "../../components/Home/HomeFooter";
@@ -22,7 +23,7 @@ function PublicPetitions() {
   const [searchZipCode, setSearchZipCode] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
-  const [pageSize] = useState(10);
+  const [pageSize] = useState(PAGINATION.DEFAULT_PAGE_SIZE);
   const [exporting, setExporting] = useState(false);
   const [showExportDropdown, setShowExportDropdown] = useState(false);
 
@@ -48,8 +49,8 @@ function PublicPetitions() {
         setPetitions([]);
       }
     } catch (err) {
-      console.error("Error fetching public petitions:", err);
-      setError(err.response?.data?.message || err.message || t("publicPetitions.failedFetchPetitionsTryAgain"));
+      const errorMessage = err?.response?.data?.message || err?.message || t("publicPetitions.failedFetchPetitionsTryAgain");
+      setError(errorMessage);
       setPetitions([]);
       toast.error(t("publicPetitions.failedLoadPetitions"));
     } finally {
@@ -200,7 +201,7 @@ function PublicPetitions() {
         city: searchCity,
         zipCode: searchZipCode,
         pageNumber: 1,
-        pageSize: totalRecords || 1000, // Get all records
+        pageSize: totalRecords || PAGINATION.MAX_PAGE_SIZE, // Get all records
         sortColumn: "",
         sortDirection: "",
       });
@@ -215,8 +216,8 @@ function PublicPetitions() {
       toast.success(
         t("publicPetitions.exportSuccess", { format: format.toUpperCase() })
       );
-    } catch (error) {
-      toast.error(t("publicPetitions.failedExport"));
+    } catch (err) {
+      toast.error(err?.message || t("publicPetitions.failedExport"));
     } finally {
       setExporting(false);
     }
@@ -255,8 +256,8 @@ function PublicPetitions() {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-    } catch (error) {
-      toast.error(t("publicPetitions.failedExportCSV"));
+    } catch (err) {
+      toast.error(err?.message || t("publicPetitions.failedExportCSV"));
     }
   };
 
@@ -320,8 +321,8 @@ function PublicPetitions() {
 
       // Save the PDF
       doc.save(`public_petitions_${new Date().toISOString().split("T")[0]}.pdf`);
-    } catch (error) {
-      toast.error(t("publicPetitions.failedExportPDF"));
+    } catch (err) {
+      toast.error(err?.message || t("publicPetitions.failedExportPDF"));
     }
   };
 

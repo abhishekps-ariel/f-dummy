@@ -66,8 +66,8 @@ const Form35 = () => {
         if (response.isSuccess && response.data) {
           setReportingPeriods(response.data);
         }
-      } catch (error) {
-        console.error('Error fetching reporting periods:', error);
+      } catch {
+        // Error fetching reporting periods - non-critical
       } finally {
         setLoadingReportingPeriods(false);
       }
@@ -85,8 +85,8 @@ const Form35 = () => {
         if (response.isSuccess && response.data) {
           setEntityTypes(response.data);
         }
-      } catch (error) {
-        console.error('Error fetching entity types:', error);
+      } catch {
+        // Error fetching entity types - non-critical
       } finally {
         setLoadingEntityTypes(false);
       }
@@ -153,9 +153,8 @@ const Form35 = () => {
               return newErrors;
             });
           }
-        } catch (error) {
-          console.error('Error calculating Form 35B data:', error);
-          // Don't show error to user, just log it - user can manually enter values
+        } catch {
+          // Error calculating Form 35B data - user can manually enter values
         } finally {
           setIsCalculatingData(false);
         }
@@ -180,8 +179,7 @@ const Form35 = () => {
       } else {
         setOrganizations([]);
       }
-    } catch (error) {
-      console.error('Error loading organizations:', error);
+    } catch {
       setOrganizations([]);
     } finally {
       setIsLoadingOrganizations(false);
@@ -208,7 +206,6 @@ const Form35 = () => {
           setOrganizations([]);
         }
       } catch (error) {
-        console.error('Error searching organizations:', error);
         setOrganizations([]);
       } finally {
         setIsLoadingOrganizations(false);
@@ -427,9 +424,8 @@ const Form35 = () => {
       } else {
         toast.error(response.msg || t("form35B.failedSubmit"));
       }
-    } catch (error) {
-      console.error('Error submitting Form 35B:', error);
-      const errorMessage = error.response?.data?.message || error.message || t("form35B.errorSubmitting");
+    } catch (err) {
+      const errorMessage = err?.response?.data?.message || err?.message || t("form35B.errorSubmitting");
       toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);

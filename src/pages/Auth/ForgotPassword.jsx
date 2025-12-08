@@ -64,10 +64,10 @@ function ForgotPassword() {
           response.msg || t("forgotPassword.failedSendResetEmail")
         );
       }
-    } catch (error) {
+    } catch (err) {
       // Handle specific error messages from API response
-      if (error.response?.data?.message) {
-        toast.error(error.response.data.message);
+      if (err?.response?.data?.message) {
+        toast.error(err.response.data.message);
       } else {
         toast.error(t("forgotPassword.failedSendResetEmail"));
       }

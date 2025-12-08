@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { DEBOUNCE } from '../constants/appConstants';
 
 /**
  * Custom hook for debouncing a value
@@ -6,7 +7,7 @@ import { useState, useEffect } from 'react';
  * @param {number} delay - The delay in milliseconds (default: 500ms)
  * @returns {any} - The debounced value
  */
-export function useDebounce(value, delay = 500) {
+export function useDebounce(value, delay = DEBOUNCE.FORM_CALCULATION) {
   const [debouncedValue, setDebouncedValue] = useState(value);
 
   useEffect(() => {

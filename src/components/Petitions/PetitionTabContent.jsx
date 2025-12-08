@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useTabs } from "../../context/TabContext";
+import { STORAGE_KEYS } from "../../constants/appConstants";
 import { usePetitionCommonData } from "../../hooks/usePetitionCommonData";
 import { usePetitions } from "../../hooks/usePetitions";
 import { toast } from "react-toastify";
@@ -124,8 +125,8 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
       autocompleteServiceRef.current =
         new window.google.maps.places.AutocompleteService();
       geocoderRef.current = new window.google.maps.Geocoder();
-    } catch (err) {
-      // ignore
+    } catch {
+      // Google Maps API initialization failed - will retry on next load
     }
   }, [isLoaded, loadError]);
 
@@ -157,7 +158,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
             }
           }
         );
-      } catch (e) {
+      } catch {
         setIsLoadingPredictions(false);
         setPredictions([]);
       }
@@ -281,7 +282,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
             }
           }
         );
-      } catch (e) {
+      } catch {
         setIsLoadingBorrowerPredictions((prev) => ({
           ...prev,
           [borrowerId]: false,
@@ -356,7 +357,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
             }
           }
         );
-      } catch (e) {
+      } catch {
         setIsLoadingAssigneePredictions((prev) => ({
           ...prev,
           [index]: false,
@@ -431,7 +432,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
             }
           }
         );
-      } catch (e) {
+      } catch {
         setIsLoadingNoticePredictions((prev) => ({
           ...prev,
           [index]: false,
@@ -530,7 +531,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
             resolve({ isValid: false, error: "Invalid address" });
           }
         });
-      } catch (e) {
+      } catch {
         resolve({ isValid: false, error: "Address validation failed" });
       }
     });
@@ -1069,10 +1070,10 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
             delete newErrors.propertyZip;
             return newErrors;
           });
-        } catch (error) {
+        } catch (err) {
           // Handle axios errors (when API returns non-2xx status)
-          if (error.response && error.response.data) {
-            const errorData = error.response.data;
+          if (err?.response && err.response.data) {
+            const errorData = err.response.data;
             // Check if it's a duplicate error
             if (errorData.isDuplicate) {
               const errorMessage = errorData.message || "A petition with the same property address already exists.";
@@ -2819,7 +2820,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
   const handleOpenDraftWizard = () => {
     // Store the pre-filled form data in localStorage so PetitionSteps can load it
     if (initialFormData) {
-      sessionStorage.setItem("petitionFormData", JSON.stringify(initialFormData));
+      sessionStorage.setItem(STORAGE_KEYS.PETITION_FORM_DATA, JSON.stringify(initialFormData));
       // Also store the petition ID so we can update it when saving
       sessionStorage.setItem("editingPetitionId", petition.id);
     }
@@ -2892,11 +2893,10 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
           onPetitionUpdated();
         }, 200);
       }
-    } catch (error) {
-      console.error("Error saving judgment:", error);
-      const errorMessage = error?.response?.data?.message || error?.message || "Failed to save judgment. Please try again.";
+    } catch (err) {
+      const errorMessage = err?.response?.data?.message || err?.message || "Failed to save judgment. Please try again.";
       toast.error(errorMessage);
-      throw error;
+      throw err;
     }
   };
 
@@ -2912,8 +2912,8 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
       if (activeTabId && refreshTab) {
         await refreshTab(activeTabId);
       }
-    } catch (error) {
-      console.error("Error refreshing petition after note save:", error);
+    } catch {
+      // Error refreshing petition after note save - non-critical
     }
   };
 
@@ -2986,11 +2986,10 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
           onPetitionUpdated();
         }, 200);
       }
-    } catch (error) {
-      console.error("Error saving foreclosure:", error);
-      const errorMessage = error?.response?.data?.message || error?.message || "Failed to save foreclosure. Please try again.";
+    } catch (err) {
+      const errorMessage = err?.response?.data?.message || err?.message || "Failed to save foreclosure. Please try again.";
       toast.error(errorMessage);
-      throw error;
+      throw err;
     }
   };
 
@@ -3020,8 +3019,8 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
       if (activeTabId && refreshTab) {
         await refreshTab(activeTabId);
       }
-    } catch (error) {
-      toast.error(t("petitionTabContent.failedSaveDraft"));
+    } catch (err) {
+      toast.error(err?.message || t("petitionTabContent.failedSaveDraft"));
     } finally {
       setIsSavingDraft(false);
     }
@@ -3062,10 +3061,8 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
       if (activeTabId && refreshTab) {
         await refreshTab(activeTabId);
       }
-    } catch (error) {
+    } catch {
       // Error toast is already shown by submitPetition function, so we don't show another one here
-      // Only log the error for debugging
-      console.error("Error submitting petition:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -3106,11 +3103,10 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
                         await handleSectionSave(sectionId);
                         toggleSectionEditing(sectionId);
                         toast.success(t("petitionTabContent.sectionSaved") || "Section saved successfully");
-                      } catch (error) {
-                        console.error("Error saving section:", error);
+                      } catch (err) {
                         // Check if it's a duplicate error - show the specific message
-                        if (error.isDuplicate || (error.message && (error.message.toLowerCase().includes("duplicate") || error.message.toLowerCase().includes("same property")))) {
-                          toast.error(error.message || "A petition with the same property address already exists.");
+                        if (err?.isDuplicate || (err?.message && (err.message.toLowerCase().includes("duplicate") || err.message.toLowerCase().includes("same property")))) {
+                          toast.error(err.message || "A petition with the same property address already exists.");
                         } else {
                           // Show generic error for other errors
                           toast.error(t("petitionTabContent.saveError") || "Error saving section");
@@ -3758,8 +3754,8 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
 
       // Save the PDF
       doc.save(`petition-${petition.petitionNumber}-details.pdf`);
-    } catch (error) {
-      toast.error(t("common.errorGeneratingPDF") || "Error generating PDF. Please try again.");
+    } catch (err) {
+      toast.error(err?.message || t("common.errorGeneratingPDF") || "Error generating PDF. Please try again.");
     }
   };
 

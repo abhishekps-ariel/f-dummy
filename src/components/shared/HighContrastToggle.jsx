@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { STORAGE_KEYS } from '../../constants/appConstants';
 
 const HighContrastToggle = () => {
   // Initialize with saved preference
   const getInitialState = () => {
-    const savedPreference = sessionStorage.getItem('highContrastMode');
+    const savedPreference = sessionStorage.getItem(STORAGE_KEYS.HIGH_CONTRAST_MODE);
     return savedPreference === 'true';
   };
 
@@ -11,7 +12,7 @@ const HighContrastToggle = () => {
 
   useEffect(() => {
     // Apply saved preference on mount
-    const savedPreference = sessionStorage.getItem('highContrastMode');
+    const savedPreference = sessionStorage.getItem(STORAGE_KEYS.HIGH_CONTRAST_MODE);
     if (savedPreference === 'true') {
       document.body.classList.add('high-contrast');
     } else {
@@ -25,10 +26,10 @@ const HighContrastToggle = () => {
     
     if (newState) {
       document.body.classList.add('high-contrast');
-      sessionStorage.setItem('highContrastMode', 'true');
+      sessionStorage.setItem(STORAGE_KEYS.HIGH_CONTRAST_MODE, 'true');
     } else {
       document.body.classList.remove('high-contrast');
-      sessionStorage.setItem('highContrastMode', 'false');
+      sessionStorage.setItem(STORAGE_KEYS.HIGH_CONTRAST_MODE, 'false');
     }
   };
 

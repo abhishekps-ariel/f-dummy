@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { memo } from 'react';
 
-const MessageItem = ({ message, conversationAvatar }) => {
+const MessageItem = memo(({ message, conversationAvatar }) => {
   return (
     <div className={`message-item ${message.isOwn ? 'own-message' : 'other-message'}`}>
       {!message.isOwn && (
@@ -17,7 +17,9 @@ const MessageItem = ({ message, conversationAvatar }) => {
       </div>
     </div>
   );
-};
+});
+
+MessageItem.displayName = 'MessageItem';
 
 export default MessageItem;
 

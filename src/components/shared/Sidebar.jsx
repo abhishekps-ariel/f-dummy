@@ -2,12 +2,13 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ROUTES } from "../../constants/routerConstants";
+import { STORAGE_KEYS, INTERVALS } from "../../constants/appConstants";
 import loginImg from "../../assets/logo-sample.png";
 
 // Helper function to get unread message count from localStorage
 const getUnreadMessageCount = () => {
   try {
-    const count = sessionStorage.getItem('messagesUnreadCount');
+    const count = sessionStorage.getItem(STORAGE_KEYS.MESSAGES_UNREAD_COUNT);
     return count ? parseInt(count, 10) : 0;
   } catch {
     return 0;
@@ -20,7 +21,7 @@ const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
   const location = useLocation();
   // Initialize from localStorage immediately to prevent flash of wrong state
   const [isCollapsed, setIsCollapsed] = useState(() => {
-    const savedState = sessionStorage.getItem('sidebarCollapsed');
+    const savedState = sessionStorage.getItem(STORAGE_KEYS.SIDEBAR_COLLAPSED);
     return savedState !== null ? savedState === 'true' : false;
   });
   
@@ -28,7 +29,7 @@ const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
 
   // Save collapsed state to localStorage whenever it changes
   useEffect(() => {
-    sessionStorage.setItem('sidebarCollapsed', isCollapsed.toString());
+    sessionStorage.setItem(STORAGE_KEYS.SIDEBAR_COLLAPSED, isCollapsed.toString());
   }, [isCollapsed]);
   
   // Listen for changes to unread message count in localStorage
@@ -55,7 +56,7 @@ const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
       if (currentCount !== unreadMessageCount) {
         setUnreadMessageCount(currentCount);
       }
-    }, 2000); // Check every 2 seconds
+    }, INTERVALS.UNREAD_COUNT_CHECK);
     
     return () => {
       window.removeEventListener('storage', handleStorageChange);

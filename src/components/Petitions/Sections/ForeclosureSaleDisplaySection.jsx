@@ -112,7 +112,7 @@ const ForeclosureSaleDisplaySection = ({
         month: "long",
         day: "numeric",
       });
-    } catch (e) {
+    } catch {
       return dateStr;
     }
   };

@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 
-const ChatHeader = ({ conversation, onBack }) => {
+const ChatHeader = memo(({ conversation, onBack }) => {
   const { t } = useTranslation();
   
   if (!conversation) return null;
@@ -29,7 +29,9 @@ const ChatHeader = ({ conversation, onBack }) => {
       </div>
     </div>
   );
-};
+});
+
+ChatHeader.displayName = 'ChatHeader';
 
 export default ChatHeader;
 

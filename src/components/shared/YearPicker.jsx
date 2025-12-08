@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
 import { createPortal } from 'react-dom';
+import PropTypes from 'prop-types';
 
-const YearPicker = ({
+const YearPicker = memo(({
   value,
   onChange,
   placeholder = 'Select Year',
@@ -57,6 +58,17 @@ const YearPicker = ({
     return years;
   };
 
+  const updatePosition = useCallback(() => {
+    if (pickerRef.current) {
+      const rect = pickerRef.current.getBoundingClientRect();
+      setPosition({
+        top: rect.bottom + window.scrollY + 4,
+        left: rect.left + window.scrollX,
+        width: rect.width,
+      });
+    }
+  }, []);
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -91,18 +103,7 @@ const YearPicker = ({
       document.removeEventListener('keydown', handleEscape);
       window.removeEventListener('scroll', handleScroll, true);
     };
-  }, [isOpen]);
-
-  const updatePosition = () => {
-    if (pickerRef.current) {
-      const rect = pickerRef.current.getBoundingClientRect();
-      setPosition({
-        top: rect.bottom + window.scrollY + 4,
-        left: rect.left + window.scrollX,
-        width: rect.width,
-      });
-    }
-  };
+  }, [isOpen, updatePosition]);
 
   const handleToggle = () => {
     if (!disabled) {
@@ -245,7 +246,22 @@ const YearPicker = ({
       {createPortal(yearMenu, document.body)}
     </>
   );
+});
+
+YearPicker.propTypes = {
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  onChange: PropTypes.func.isRequired,
+  placeholder: PropTypes.string,
+  disabled: PropTypes.bool,
+  className: PropTypes.string,
+  error: PropTypes.bool,
+  id: PropTypes.string,
+  name: PropTypes.string,
+  minYear: PropTypes.number,
+  maxYear: PropTypes.number,
 };
+
+YearPicker.displayName = 'YearPicker';
 
 export default YearPicker;
 

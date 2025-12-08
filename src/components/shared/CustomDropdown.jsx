@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
 import { createPortal } from 'react-dom';
+import PropTypes from 'prop-types';
 
-const CustomDropdown = ({
+const CustomDropdown = memo(({
   value,
   onChange,
   options = [],
@@ -19,6 +20,17 @@ const CustomDropdown = ({
   const menuRef = useRef(null);
 
   const selectedOption = options.find(opt => opt.value === value);
+
+  const updatePosition = useCallback(() => {
+    if (dropdownRef.current) {
+      const rect = dropdownRef.current.getBoundingClientRect();
+      setPosition({
+        top: rect.bottom,
+        left: rect.left,
+        width: rect.width,
+      });
+    }
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -62,18 +74,7 @@ const CustomDropdown = ({
       window.removeEventListener('scroll', handleScroll, true);
       window.removeEventListener('resize', handleResize);
     };
-  }, [isOpen]);
-
-  const updatePosition = () => {
-    if (dropdownRef.current) {
-      const rect = dropdownRef.current.getBoundingClientRect();
-      setPosition({
-        top: rect.bottom,
-        left: rect.left,
-        width: rect.width,
-      });
-    }
-  };
+  }, [isOpen, updatePosition]);
 
   const handleToggle = () => {
     if (!disabled) {
@@ -143,7 +144,28 @@ const CustomDropdown = ({
       {createPortal(dropdownMenu, document.body)}
     </>
   );
+});
+
+CustomDropdown.propTypes = {
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  onChange: PropTypes.func.isRequired,
+  options: PropTypes.arrayOf(
+    PropTypes.shape({
+      value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+      label: PropTypes.string.isRequired,
+      disabled: PropTypes.bool,
+    })
+  ),
+  placeholder: PropTypes.string,
+  disabled: PropTypes.bool,
+  className: PropTypes.string,
+  error: PropTypes.bool,
+  id: PropTypes.string,
+  name: PropTypes.string,
+  maxMenuHeight: PropTypes.number,
 };
+
+CustomDropdown.displayName = 'CustomDropdown';
 
 export default CustomDropdown;
 

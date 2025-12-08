@@ -1,17 +1,17 @@
-import React from 'react';
+import React, { memo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import CustomInput from '../shared/CustomInput';
 import sendIcon from '../../assets/sendIcon.png';
 
-const MessageInput = ({ messageText, setMessageText, onSendMessage, sendingMessage = false }) => {
+const MessageInput = memo(({ messageText, setMessageText, onSendMessage, sendingMessage = false }) => {
   const { t } = useTranslation();
   
-  const handleSubmit = (e) => {
+  const handleSubmit = useCallback((e) => {
     e.preventDefault();
     if (!sendingMessage && messageText.trim()) {
       onSendMessage(e);
     }
-  };
+  }, [sendingMessage, messageText, onSendMessage]);
 
   return (
     <div className="message-input-container">
@@ -41,7 +41,9 @@ const MessageInput = ({ messageText, setMessageText, onSendMessage, sendingMessa
       </form>
     </div>
   );
-};
+});
+
+MessageInput.displayName = 'MessageInput';
 
 export default MessageInput;
 

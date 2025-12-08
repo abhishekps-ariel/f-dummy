@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import AuthContext from './AuthContext';
 import { createSignalRConnection, getChatList } from '../services/chatService';
+import { INTERVALS, STORAGE_KEYS } from '../constants/appConstants';
 
 const MessageContext = createContext();
 
@@ -30,12 +31,12 @@ export const MessageProvider = ({ children }) => {
         const totalUnread = response.data.reduce((sum, chat) => {
           return sum + (chat.unreadCount || 0);
         }, 0);
-        sessionStorage.setItem('messagesUnreadCount', totalUnread.toString());
+        sessionStorage.setItem(STORAGE_KEYS.MESSAGES_UNREAD_COUNT, totalUnread.toString());
         // Dispatch a custom event to notify other components
         window.dispatchEvent(new CustomEvent('messagesUnreadCountUpdated', { detail: totalUnread }));
       }
-    } catch (error) {
-      console.error('Error updating unread count:', error);
+    } catch {
+      // Error updating unread count - non-critical background operation
     }
   };
 
@@ -60,9 +61,9 @@ export const MessageProvider = ({ children }) => {
       // Only increment unread count if message is not from current user
       if (!isOwn) {
         // Get current unread counts from localStorage or fetch fresh
-        const currentCount = parseInt(sessionStorage.getItem('messagesUnreadCount') || '0', 10);
+        const currentCount = parseInt(sessionStorage.getItem(STORAGE_KEYS.MESSAGES_UNREAD_COUNT) || '0', 10);
         const newCount = currentCount + 1;
-        sessionStorage.setItem('messagesUnreadCount', newCount.toString());
+        sessionStorage.setItem(STORAGE_KEYS.MESSAGES_UNREAD_COUNT, newCount.toString());
         
         // Dispatch custom event immediately for instant UI update
         window.dispatchEvent(new CustomEvent('messagesUnreadCountUpdated', { detail: newCount }));
@@ -95,7 +96,6 @@ export const MessageProvider = ({ children }) => {
         updateUnreadCountInStorage();
       })
       .catch((error) => {
-        console.error('Error starting SignalR connection (global):', error);
         setIsConnected(false);
       });
 
@@ -106,7 +106,7 @@ export const MessageProvider = ({ children }) => {
           .then(() => {
           })
           .catch((error) => {
-            console.error('Error stopping SignalR connection (global):', error);
+            // Error stopping SignalR connection
           });
         signalRConnectionRef.current = null;
         isInitializedRef.current = false;
@@ -125,7 +125,7 @@ export const MessageProvider = ({ children }) => {
     // Update every 30 seconds as a fallback
     const interval = setInterval(() => {
       updateUnreadCountInStorage();
-    }, 30000);
+    }, INTERVALS.MESSAGE_REFRESH);
 
     return () => clearInterval(interval);
   }, [user?.id]);

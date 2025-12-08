@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useSearchParams, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { checkResetToken, resetPassword } from "../../services/authService";
+import { VALIDATION } from "../../constants/appConstants";
 import PasswordGuidelines from "../../components/shared/PasswordGuidelines";
 import loginImg from "../../assets/logo-sample.png";
 import "../../styles/custom.css";
@@ -53,8 +54,8 @@ function SetNewPassword() {
           toast.error(response.msg || "Invalid or expired reset link");
           setIsTokenValid(false);
         }
-      } catch (error) {
-        toast.error("Invalid or expired reset link");
+      } catch (err) {
+        toast.error(err?.message || "Invalid or expired reset link");
         setIsTokenValid(false);
       } finally {
         setIsCheckingToken(false);
@@ -67,7 +68,7 @@ function SetNewPassword() {
   // Check password guidelines
   const checkPasswordGuidelines = (password) => {
     const guidelines = {
-      minLength: password.length >= 8,
+      minLength: password.length >= VALIDATION.MIN_PASSWORD_LENGTH,
       hasUppercase: /[A-Z]/.test(password),
       hasLowercase: /[a-z]/.test(password),
       hasNumber: /\d/.test(password),
@@ -84,7 +85,7 @@ function SetNewPassword() {
     if (!formData.newPassword.trim()) {
       newErrors.newPassword = "New password is required";
     } else {
-      if (formData.newPassword.length < 8) {
+      if (formData.newPassword.length < VALIDATION.MIN_PASSWORD_LENGTH) {
         newErrors.newPassword = "Password must be at least 8 characters long";
       } else if (!/[A-Z]/.test(formData.newPassword)) {
         newErrors.newPassword =
@@ -152,8 +153,8 @@ function SetNewPassword() {
           response.msg || "Failed to reset password. Please try again."
         );
       }
-    } catch (error) {
-      toast.error("Failed to reset password. Please try again.");
+    } catch (err) {
+      toast.error(err?.message || "Failed to reset password. Please try again.");
     } finally {
       setIsSubmitting(false);
     }

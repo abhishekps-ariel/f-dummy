@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { STORAGE_KEYS } from '../../constants/appConstants';
 
 const TextSizeController = () => {
   // Font size options: Small, Normal, Large
@@ -18,7 +19,7 @@ const TextSizeController = () => {
 
   // Initialize with saved text size preference or default to 'normal'
   const getInitialTextSize = () => {
-    const savedTextSize = sessionStorage.getItem('accessibilityTextSize');
+    const savedTextSize = sessionStorage.getItem(STORAGE_KEYS.ACCESSIBILITY_TEXT_SIZE);
     if (savedTextSize && ['small', 'normal', 'large'].includes(savedTextSize)) {
       return savedTextSize;
     }
@@ -61,7 +62,7 @@ const TextSizeController = () => {
 
   useEffect(() => {
     // Apply saved text size on mount
-    const savedTextSize = sessionStorage.getItem('accessibilityTextSize');
+    const savedTextSize = sessionStorage.getItem(STORAGE_KEYS.ACCESSIBILITY_TEXT_SIZE);
     if (savedTextSize && ['small', 'normal', 'large'].includes(savedTextSize)) {
       const size = fontSizeMap[savedTextSize];
       document.documentElement.style.fontSize = `${size}px`;
@@ -117,9 +118,9 @@ const TextSizeController = () => {
     updateCSSVariables(size);
     
     // Save to localStorage
-    sessionStorage.setItem('accessibilityTextSize', option.value);
+    sessionStorage.setItem(STORAGE_KEYS.ACCESSIBILITY_TEXT_SIZE, option.value);
     // Also update the old key for backward compatibility
-    sessionStorage.setItem('accessibilityFontSize', size.toString());
+    sessionStorage.setItem(STORAGE_KEYS.ACCESSIBILITY_FONT_SIZE, size.toString());
     
     setIsOpen(false);
   };

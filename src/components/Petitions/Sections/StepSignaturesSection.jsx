@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { toast } from "react-toastify";
 import { getBase64ByS3Key } from "../../../services/authService";
 
 
@@ -45,7 +46,7 @@ const StepSignaturesSection = ({
                 }
               })
               .catch(error => {
-                console.error('Error fetching signature:', error);
+                toast.error(t("petitionTabContent.errorFetchingSignature") || "Failed to load signature image");
               })
               .finally(() => {
                 setLoadingSignatures(prev => ({ ...prev, [index]: false }));

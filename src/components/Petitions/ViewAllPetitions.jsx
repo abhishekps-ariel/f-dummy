@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { PAGINATION } from "../../constants/appConstants";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import jsPDF from "jspdf";
@@ -34,7 +35,7 @@ const ViewAllPetitions = ({ onBack }) => {
     currentPage: 1, // API uses 1-based indexing
     totalPages: 1,
     totalCount: 0,
-    pageSize: 10,
+    pageSize: PAGINATION.DEFAULT_PAGE_SIZE,
   });
   const [openDropdownId, setOpenDropdownId] = useState(null);
   const [petitions, setPetitions] = useState([]);
@@ -119,53 +120,17 @@ const ViewAllPetitions = ({ onBack }) => {
       }
 
       return true;
-    } catch (error) {
-      console.error("Error validating user profile:", error);
-      toast.error(t("viewAllPetitions.failedValidateProfile"));
+    } catch (err) {
+      toast.error(err?.message || t("viewAllPetitions.failedValidateProfile"));
       setIsValidatingProfile(false);
       return false;
-    }
-  };
-
-  // Handle create new petition button click
-  const handleCreateNewPetition = async () => {
-    const isValid = await validateUserProfileBeforeCreate();
-    if (isValid) {
-      setShowPetitionSteps(true);
-    }
-  };
-
-  const handleConfirmDelete = async () => {
-    try {
-      await petitionApiService.deletePetitionById(petitionToDelete);
-      setShowDeleteModal(false);
-      setPetitionToDelete(null);
-
-      toast.success(t("viewAllPetitions.petitionDeletedSuccess"));
-      setTabs((prevTabs) =>
-        prevTabs.filter((tab) => tab.id !== `petition-${petitionToDelete}`)
-      );
-      const activeTab = getActiveTab?.();
-      if (
-        activeTab?.type === "petition" &&
-        activeTab?.data?.id === petitionToDelete
-      ) {
-        setActiveTabId("all-petitions");
-      }
-
-      if (typeof fetchPetitions === "function") {
-        fetchPetitions();
-      }
-    } catch (error) {
-      console.error("Error deleting petition:", error);
-      toast.error(t("viewAllPetitions.failedDeletePetition"));
     }
   };
 
   // Use the petitions hook
   const { organization } = usePetitions();
 
-  // Use the tabs context
+  // Use the tabs context (moved before handlers that use it)
   const { tabs, setTabs, activeTabId, setActiveTabId, getActiveTab, openTab } =
     useTabs();
 
@@ -205,8 +170,67 @@ const ViewAllPetitions = ({ onBack }) => {
   // For filers, use userId; for org admins, use organizationId
   const userId = user?.id || null;
 
-  // Handle date filter change
-  const handleDateFilterChange = (value) => {
+  // Helper function to get status value for API (memoized)
+  const getStatusValue = useCallback((status) => {
+    const statusMap = {
+      all: null,
+      draft: 0,
+      submitted: 1,
+      resubmitted: 3,
+      accepted: 4,
+      returned: 2,
+      closed: 5,
+      judgmentSubmitted: 3,
+      foreclosureSaleInitiated: 2,
+    };
+    return statusMap[status] !== undefined ? statusMap[status] : null;
+  }, []);
+
+  // Helper function to map frontend sort fields to API sort columns (memoized)
+  const getSortColumn = useCallback((sortBy) => {
+    const sortColumnMap = {
+      filingDate: "CreatedDate", // filingDate maps to CreatedDate
+      lastUpdated: "ModifiedDate", // lastUpdated maps to ModifiedDate
+      petitionNumber: "PetitionNumber", // petitionNumber maps to PetitionNumber
+    };
+    return sortColumnMap[sortBy] || "ModifiedDate"; // Default to ModifiedDate (lastUpdated)
+  }, []);
+
+  // Helper function to get from date (memoized)
+  const getFromDate = useCallback(() => {
+    if (dateFilter === "custom" && customDateFrom) {
+      return new Date(customDateFrom).toISOString();
+    }
+    if (dateFilter === "today") {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return today.toISOString();
+    }
+    if (dateFilter === "week") {
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      return weekAgo.toISOString();
+    }
+    if (dateFilter === "month") {
+      const monthAgo = new Date();
+      monthAgo.setMonth(monthAgo.getMonth() - 1);
+      return monthAgo.toISOString();
+    }
+    return new Date("2020-01-01").toISOString(); // Default to a very old date
+  }, [dateFilter, customDateFrom]);
+
+  // Helper function to get to date (memoized)
+  const getToDate = useCallback(() => {
+    if (dateFilter === "custom" && customDateTo) {
+      const toDate = new Date(customDateTo);
+      toDate.setHours(23, 59, 59, 999);
+      return toDate.toISOString();
+    }
+    return new Date().toISOString();
+  }, [dateFilter, customDateTo]);
+
+  // Handle date filter change (memoized)
+  const handleDateFilterChange = useCallback((value) => {
     setDateFilter(value);
     setShowCustomDateRange(value === "custom");
     if (value !== "custom") {
@@ -214,10 +238,10 @@ const ViewAllPetitions = ({ onBack }) => {
       setCustomDateTo("");
     }
     // Don't trigger fetch here - let useEffect handle it after state update
-  };
+  }, []);
 
-  // Fetch petitions using paged API
-  const fetchPetitions = async (page = 1) => {
+  // Fetch petitions using paged API (memoized)
+  const fetchPetitions = useCallback(async (page = 1) => {
     // For filers, check userId; for org admins, check organizationId
     if ((isOrgAdmin && !organizationId) || (!isOrgAdmin && !userId)) {
       return;
@@ -227,7 +251,7 @@ const ViewAllPetitions = ({ onBack }) => {
     try {
       const paginationParams = {
         pageNumber: page, // Use 1-based pagination as expected by API
-        pageSize: 10, // 10 petitions per page
+        pageSize: PAGINATION.DEFAULT_PAGE_SIZE,
         searchText: searchQuery.trim() || "",
         status: getStatusValue(statusFilter),
         fromDate: getFromDate(),
@@ -256,7 +280,7 @@ const ViewAllPetitions = ({ onBack }) => {
         // Update pagination info from API response
         // Use totalRecords from API response, which should be the total count across all pages
         const totalRecords = response.totalRecords ?? 0;
-        const pageSize = 10;
+        const pageSize = PAGINATION.DEFAULT_PAGE_SIZE;
         const calculatedTotalPages = totalRecords > 0 ? Math.ceil(totalRecords / pageSize) : 1;
         
         setPagination((prev) => ({
@@ -269,81 +293,55 @@ const ViewAllPetitions = ({ onBack }) => {
         toast.error(response.message || t("viewAllPetitions.failedFetchPetitions"));
         setPetitions([]);
       }
-    } catch (error) {
-      toast.error(t("viewAllPetitions.failedFetchPetitions"));
+    } catch (err) {
+      toast.error(err?.message || t("viewAllPetitions.failedFetchPetitions"));
       setPetitions([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [isOrgAdmin, organizationId, userId, searchQuery, statusFilter, dateFilter, customDateFrom, customDateTo, sortBy, sortOrder, getStatusValue, getFromDate, getToDate, getSortColumn, t]);
 
   // Keep ref updated with latest fetchPetitions function
-  // The ref will be used in the event listener to access the current function
   useEffect(() => {
     fetchPetitionsRef.current = fetchPetitions;
-  }, [organizationId, searchQuery, statusFilter, dateFilter, customDateFrom, customDateTo, sortBy, sortOrder]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [fetchPetitions]);
 
-  // Helper function to get status value for API
-  const getStatusValue = (status) => {
-    const statusMap = {
-      all: null,
-      draft: 0,
-      submitted: 1,
-      resubmitted: 3,
-      accepted: 4,
-      returned: 2,
-      closed: 5,
-      judgmentSubmitted: 3,
-      foreclosureSaleInitiated: 2,
-    };
-    return statusMap[status] !== undefined ? statusMap[status] : null;
-  };
+  // Handle create new petition button click (memoized)
+  const handleCreateNewPetition = useCallback(async () => {
+    const isValid = await validateUserProfileBeforeCreate();
+    if (isValid) {
+      setShowPetitionSteps(true);
+    }
+  }, []);
 
-  // Helper function to map frontend sort fields to API sort columns
-  const getSortColumn = (sortBy) => {
-    const sortColumnMap = {
-      filingDate: "CreatedDate", // filingDate maps to CreatedDate
-      lastUpdated: "ModifiedDate", // lastUpdated maps to ModifiedDate
-      petitionNumber: "PetitionNumber", // petitionNumber maps to PetitionNumber
-    };
-    return sortColumnMap[sortBy] || "ModifiedDate"; // Default to ModifiedDate (lastUpdated)
-  };
+  const handleConfirmDelete = useCallback(async () => {
+    try {
+      await petitionApiService.deletePetitionById(petitionToDelete);
+      setShowDeleteModal(false);
+      setPetitionToDelete(null);
 
-  // Helper function to get from date
-  const getFromDate = () => {
-    if (dateFilter === "custom" && customDateFrom) {
-      return new Date(customDateFrom).toISOString();
-    }
-    if (dateFilter === "today") {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      return today.toISOString();
-    }
-    if (dateFilter === "week") {
-      const weekAgo = new Date();
-      weekAgo.setDate(weekAgo.getDate() - 7);
-      return weekAgo.toISOString();
-    }
-    if (dateFilter === "month") {
-      const monthAgo = new Date();
-      monthAgo.setMonth(monthAgo.getMonth() - 1);
-      return monthAgo.toISOString();
-    }
-    return new Date("2020-01-01").toISOString(); // Default to a very old date
-  };
+      toast.success(t("viewAllPetitions.petitionDeletedSuccess"));
+      setTabs((prevTabs) =>
+        prevTabs.filter((tab) => tab.id !== `petition-${petitionToDelete}`)
+      );
+      const activeTab = getActiveTab?.();
+      if (
+        activeTab?.type === "petition" &&
+        activeTab?.data?.id === petitionToDelete
+      ) {
+        setActiveTabId("all-petitions");
+      }
 
-  // Helper function to get to date
-  const getToDate = () => {
-    if (dateFilter === "custom" && customDateTo) {
-      const toDate = new Date(customDateTo);
-      toDate.setHours(23, 59, 59, 999);
-      return toDate.toISOString();
+      if (fetchPetitionsRef.current) {
+        fetchPetitionsRef.current(1);
+      }
+    } catch (error) {
+      toast.error(t("viewAllPetitions.failedDeletePetition"));
     }
-    return new Date().toISOString();
-  };
+  }, [petitionToDelete, t, setTabs, getActiveTab, setActiveTabId]);
 
-  // Reset all filters and refresh data
-  const handleRefresh = () => {
+  // Reset all filters and refresh data (memoized)
+  const handleRefresh = useCallback(() => {
     setSearchQuery("");
     setStatusFilter("all");
     setDateFilter("all");
@@ -353,8 +351,10 @@ const ViewAllPetitions = ({ onBack }) => {
     setSortBy("lastUpdated");
     setSortOrder("desc");
     setPagination((prev) => ({ ...prev, currentPage: 1 }));
-    fetchPetitions(1);
-  };
+    if (fetchPetitionsRef.current) {
+      fetchPetitionsRef.current(1);
+    }
+  }, []);
 
   // Handle export functionality
   const handleExport = async (format) => {
@@ -363,7 +363,7 @@ const ViewAllPetitions = ({ onBack }) => {
       // Fetch all petitions for export (not just current page) - use totalCount
       const paginationParams = {
         pageNumber: 1,
-        pageSize: pagination.totalCount || 1000, // Get all records by passing totalCount
+        pageSize: pagination.totalCount || PAGINATION.MAX_PAGE_SIZE, // Get all records by passing totalCount
         searchText: searchQuery.trim() || "",
         status: getStatusValue(statusFilter),
         fromDate: getFromDate(),
@@ -401,8 +401,8 @@ const ViewAllPetitions = ({ onBack }) => {
       toast.success(
         t("viewAllPetitions.exportSuccess", { format: format.toUpperCase() })
       );
-    } catch (error) {
-      toast.error(t("viewAllPetitions.failedExport"));
+    } catch (err) {
+      toast.error(err?.message || t("viewAllPetitions.failedExport"));
     } finally {
       setExporting(false);
     }
@@ -446,8 +446,8 @@ const ViewAllPetitions = ({ onBack }) => {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-    } catch (error) {
-      toast.error(t("viewAllPetitions.failedExportCSV"));
+    } catch (err) {
+      toast.error(err?.message || t("viewAllPetitions.failedExportCSV"));
     }
   };
 
@@ -518,8 +518,8 @@ const ViewAllPetitions = ({ onBack }) => {
 
       // Save the PDF
       doc.save(`petitions_${new Date().toISOString().split("T")[0]}.pdf`);
-    } catch (error) {
-      toast.error(t("viewAllPetitions.failedExportPDF"));
+    } catch (err) {
+      toast.error(err?.message || t("viewAllPetitions.failedExportPDF"));
     }
   };
 
@@ -527,7 +527,9 @@ const ViewAllPetitions = ({ onBack }) => {
   useEffect(() => {
     // For filers, check userId; for org admins, check organizationId
     if ((isOrgAdmin && organizationId) || (!isOrgAdmin && userId)) {
-      fetchPetitions(1);
+      if (fetchPetitionsRef.current) {
+        fetchPetitionsRef.current(1);
+      }
     }
   }, [isOrgAdmin, organizationId, userId]);
 
@@ -539,7 +541,9 @@ const ViewAllPetitions = ({ onBack }) => {
     
     const timeoutId = setTimeout(() => {
       setPagination((prev) => ({ ...prev, currentPage: 1 }));
-      fetchPetitions(1);
+      if (fetchPetitionsRef.current) {
+        fetchPetitionsRef.current(1);
+      }
     }, 500); // 500ms debounce
 
     return () => clearTimeout(timeoutId);
@@ -557,7 +561,9 @@ const ViewAllPetitions = ({ onBack }) => {
     // Custom range is handled separately via Apply Filter button
     if (dateFilter !== "custom" && ((isOrgAdmin && organizationId) || (!isOrgAdmin && userId))) {
       setPagination((prev) => ({ ...prev, currentPage: 1 }));
-      fetchPetitions(1);
+      if (fetchPetitionsRef.current) {
+        fetchPetitionsRef.current(1);
+      }
     }
   }, [dateFilter]); // eslint-disable-line react-hooks/exhaustive-deps
   // Note: fetchPetitions uses ref pattern and reads latest state values from closure
@@ -567,7 +573,9 @@ const ViewAllPetitions = ({ onBack }) => {
   useEffect(() => {
     if (organizationId) {
       setPagination((prev) => ({ ...prev, currentPage: 1 }));
-      fetchPetitions(1);
+      if (fetchPetitionsRef.current) {
+        fetchPetitionsRef.current(1);
+      }
     }
   }, [sortBy, sortOrder]);
 
@@ -620,7 +628,7 @@ const ViewAllPetitions = ({ onBack }) => {
     }
   };
 
-  const handleDeletePetition = async (e, petitionId) => {
+  const handleDeletePetition = useCallback(async (e, petitionId) => {
     e.stopPropagation();
     setOpenDropdownId(null);
 
@@ -633,20 +641,19 @@ const ViewAllPetitions = ({ onBack }) => {
       await petitionApiService.deletePetitionById(petitionId);
       toast.success(t("viewAllPetitions.petitionDeletedSuccess"));
 
-      if (typeof fetchPetitions === "function") {
-        fetchPetitions();
+      if (fetchPetitionsRef.current) {
+        fetchPetitionsRef.current(1);
       }
     } catch (error) {
-      console.error("Error deleting petition:", error);
       toast.error(t("viewAllPetitions.failedDeletePetition"));
     }
-  };
+  }, [t]);
 
-  const handlePetitionClick = (petition) => {
+  const handlePetitionClick = useCallback((petition) => {
     openTab(petition);
-  };
+  }, [openTab]);
 
-  const handlePetitionSubmitted = () => {
+  const handlePetitionSubmitted = useCallback(() => {
     // For filers, check userId; for org admins, check organizationId
     if ((isOrgAdmin && !organizationId) || (!isOrgAdmin && !userId)) {
       return;
@@ -659,10 +666,10 @@ const ViewAllPetitions = ({ onBack }) => {
       setPagination((prev) => ({ ...prev, currentPage: 1 }));
       fetchPetitionsRef.current(1);
     }, 800);
-  };
+  }, [isOrgAdmin, organizationId, userId]);
 
 
-  const handleSort = (field) => {
+  const handleSort = useCallback((field) => {
     if (sortBy === field) {
       // Toggle sort order if same field
       setSortOrder(sortOrder === "asc" ? "desc" : "asc");
@@ -671,7 +678,7 @@ const ViewAllPetitions = ({ onBack }) => {
       setSortBy(field);
       setSortOrder("asc");
     }
-  };
+  }, [sortBy, sortOrder]);
 
 
   // Organization access check is now handled at the page level
@@ -952,7 +959,9 @@ const ViewAllPetitions = ({ onBack }) => {
                             ...prev,
                             currentPage: 1,
                           }));
-                          fetchPetitions(1);
+                          if (fetchPetitionsRef.current) {
+                            fetchPetitionsRef.current(1);
+                          }
                         }}
                         disabled={!customDateFrom || !customDateTo}
                       >
@@ -969,7 +978,9 @@ const ViewAllPetitions = ({ onBack }) => {
                             ...prev,
                             currentPage: 1,
                           }));
-                          fetchPetitions(1);
+                          if (fetchPetitionsRef.current) {
+                            fetchPetitionsRef.current(1);
+                          }
                         }}
                       >
                         {t("viewAllPetitions.clear")}
@@ -1375,7 +1386,9 @@ const ViewAllPetitions = ({ onBack }) => {
                         }`}
                         onClick={() => {
                           if (pagination.currentPage > 1) {
-                            fetchPetitions(pagination.currentPage - 1);
+                            if (fetchPetitionsRef.current) {
+                              fetchPetitionsRef.current(pagination.currentPage - 1);
+                            }
                           }
                         }}
                         disabled={pagination.currentPage === 1}
@@ -1414,7 +1427,11 @@ const ViewAllPetitions = ({ onBack }) => {
                                 className={`pagination-page ${
                                   page === currentPage ? "active" : ""
                                 }`}
-                                onClick={() => fetchPetitions(page)}
+                                onClick={() => {
+                                  if (fetchPetitionsRef.current) {
+                                    fetchPetitionsRef.current(page);
+                                  }
+                                }}
                               >
                                 {page}
                               </button>
@@ -1464,7 +1481,11 @@ const ViewAllPetitions = ({ onBack }) => {
                                 className={`pagination-page ${
                                   page === currentPage ? "active" : ""
                                 }`}
-                                onClick={() => fetchPetitions(page)}
+                                onClick={() => {
+                                  if (fetchPetitionsRef.current) {
+                                    fetchPetitionsRef.current(page);
+                                  }
+                                }}
                               >
                                 {page}
                               </button>
@@ -1481,7 +1502,9 @@ const ViewAllPetitions = ({ onBack }) => {
                         }`}
                         onClick={() => {
                           if (pagination.currentPage < pagination.totalPages) {
-                            fetchPetitions(pagination.currentPage + 1);
+                            if (fetchPetitionsRef.current) {
+                              fetchPetitionsRef.current(pagination.currentPage + 1);
+                            }
                           }
                         }}
                         disabled={

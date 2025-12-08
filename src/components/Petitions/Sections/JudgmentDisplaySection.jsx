@@ -103,7 +103,7 @@ const JudgmentDisplaySection = ({
         month: "long",
         day: "numeric",
       });
-    } catch (e) {
+    } catch {
       return dateStr;
     }
   };

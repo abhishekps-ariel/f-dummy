@@ -55,7 +55,7 @@ function ImpersonationRequest() {
         }
       } catch (err) {
         const errMsg =
-          err.response?.data?.message || err.message || "Impersonation failed";
+          err?.response?.data?.message || err?.message || "Impersonation failed";
         setMessage(errMsg);
         toast.error(errMsg);
       } finally {

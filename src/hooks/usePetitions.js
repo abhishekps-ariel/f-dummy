@@ -88,7 +88,7 @@ export const usePetitions = () => {
         toast.error(response.message || 'Failed to fetch petitions');
       }
     } catch (err) {
-      const errorMessage = err.response?.data?.message || err.message || 'Failed to fetch petitions';
+      const errorMessage = err?.response?.data?.message || err?.message || 'Failed to fetch petitions';
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -115,7 +115,8 @@ export const usePetitions = () => {
         setPetitionCounts(response.data);
       } else {
       }
-    } catch (err) {
+    } catch {
+      // Silently fail - counts are not critical
     }
   };
 

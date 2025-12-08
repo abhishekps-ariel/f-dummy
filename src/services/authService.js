@@ -486,7 +486,7 @@ export const performExitImpersonation = async () => {
   // Hit API to end server-side impersonation session, but do not restore manager session locally
   try {
     await exitImpersonation();
-  } catch (e) {
+  } catch {
     // ignore errors; still proceed to clear local state for safety
   }
   try {
@@ -498,22 +498,3 @@ export const performExitImpersonation = async () => {
   return { isSuccess: true };
 };
 
-
-export const getorganisationUsersList = async (payload) => {
-  const response = await client.post(
-    AUTH_ENDPOINTS.ORGANISATION_USERS_API,
-    payload,
-    {
-      headers: { Accept: "application/json" },
-    }
-  );
- 
-  return {
-    isSuccess: response.data.success,
-    msg: response.data.message,
-    data: response.data.data,
-    totalRecords: response.data.totalRecords || 0, // ✅ include totalRecords
-    pageNumber: response.data.pageNumber || 1, // ✅ include page info
-    pageSize: response.data.pageSize || payload.pageSize, // ✅ include size info
-  };
-};

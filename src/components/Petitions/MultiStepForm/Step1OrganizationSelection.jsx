@@ -31,7 +31,7 @@ const Step1OrganizationSelection = ({
       } else {
         setOrganizations([]);
       }
-    } catch (error) {
+    } catch {
       setOrganizations([]);
     } finally {
       setIsLoading(false);
@@ -171,7 +171,7 @@ const Step1OrganizationSelection = ({
           )}
         </div>
       ) : (
-        // For filers, show the organization selector matching OrganizationActions styling
+        // For filers, show the organization selector
         <div className="search-form-wrapper" ref={searchRef}>
           {displayOrganizationData ? (
             <div className="selected-org-container">

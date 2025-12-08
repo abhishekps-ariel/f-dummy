@@ -3,37 +3,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { getAuthData, clearAuthData } from '../utils/storage';
 import { refreshToken } from '../services/authService';
 import { ROUTES } from '../constants/routerConstants';
-
-// Function to check if token is expired or about to expire (within 5 minutes)
-const isTokenExpired = (token) => {
-  if (!token) return true;
-  
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    const currentTime = Math.floor(Date.now() / 1000);
-    const expirationTime = payload.exp;
-    
-    // Consider token expired if it expires within 5 minutes (300 seconds)
-    return currentTime >= (expirationTime - 300);
-  } catch (error) {
-    return true;
-  }
-};
-
-// Function to check if refresh token is expired
-const isRefreshTokenExpired = (refreshToken) => {
-  if (!refreshToken) return true;
-  
-  try {
-    const payload = JSON.parse(atob(refreshToken.split('.')[1]));
-    const currentTime = Math.floor(Date.now() / 1000);
-    const expirationTime = payload.exp;
-    
-    return currentTime >= expirationTime;
-  } catch (error) {
-    return true;
-  }
-};
+import { isTokenExpired, isRefreshTokenExpired } from '../utils/tokenParser';
+import { TOKEN } from '../constants/appConstants';
 
 export const useAuthCheck = () => {
   const [isChecking, setIsChecking] = useState(true);
@@ -54,7 +25,7 @@ export const useAuthCheck = () => {
         }
 
         // Case 1: Access token is still valid
-        if (!isTokenExpired(token)) {
+        if (!isTokenExpired(token, TOKEN.EXPIRY_BUFFER)) {
           setAuthStatus('authenticated');
           setIsChecking(false);
           
@@ -84,7 +55,7 @@ export const useAuthCheck = () => {
               }
               return;
             }
-          } catch (error) {
+          } catch {
             // Refresh failed, clear auth data
             clearAuthData();
             setAuthStatus('unauthenticated');
@@ -98,7 +69,7 @@ export const useAuthCheck = () => {
         setAuthStatus('unauthenticated');
         setIsChecking(false);
         
-      } catch (error) {
+      } catch {
         // Any error during auth check
         clearAuthData();
         setAuthStatus('unauthenticated');

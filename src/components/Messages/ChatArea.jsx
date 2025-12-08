@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import ChatHeader from './ChatHeader';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
 
-const ChatArea = ({ 
+const ChatArea = memo(({ 
   selectedConversation, 
   messages, 
   messageText, 
@@ -47,7 +47,9 @@ const ChatArea = ({
       />
     </>
   );
-};
+});
+
+ChatArea.displayName = 'ChatArea';
 
 export default ChatArea;
 
