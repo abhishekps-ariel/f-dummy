@@ -67,14 +67,11 @@ export const AuthProvider = ({ children }) => {
     }
     if (userData.roles && Array.isArray(userData.roles)) {
       return userData.roles.some(
-        (role) =>
-          role === 'Organisation Admin' ||
-          role === 'Organization Admin' ||
-          role === 'orgAdmin'
+        (role) => role === 'Organization Admin'
       );
     }
     const userRole = getUserRole(userData);
-    if (userRole === 'orgAdmin' || userRole === 'Organisation Admin' || userRole === 'Organization Admin') {
+    if (userRole === 'Organization Admin') {
       return true;
     }
     return false;

@@ -219,10 +219,8 @@ const PetitionSteps = ({
   // Check if user is org admin (filer if not org admin)
   const isOrgAdmin = user?.isManager === true || 
     (user?.roles && Array.isArray(user?.roles) && user.roles.some(
-      (role) => role === 'Organisation Admin' || role === 'Organization Admin' || role === 'orgAdmin'
+      (role) => role === 'Organization Admin'
     )) ||
-    getUserRole(user) === 'orgAdmin' || 
-    getUserRole(user) === 'Organisation Admin' || 
     getUserRole(user) === 'Organization Admin';
 
   // Get organization ID from user object (stored in browser storage) or organization prop/context

@@ -1,18 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import CustomDropdown from "../../shared/CustomDropdown";
-
-// Helper function to format currency with commas
-const formatCurrencyDisplay = (value) => {
-  if (!value && value !== 0) return "";
-  const str = String(value);
-  // Split by decimal point if it exists
-  const parts = str.split(".");
-  // Format the integer part with commas
-  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  // Join back with decimal if it exists
-  return parts.length > 1 ? parts.join(".") : parts[0];
-};
+import { formatCurrencyDisplay } from "../../../utils/currencyUtils";
 
 const LoanDetails = ({
     SectionHeader,

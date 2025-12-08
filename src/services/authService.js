@@ -110,7 +110,7 @@ export const register = async (formData, inviteData = null, role = null, organiz
   // Map role values to backend expected values
   let roleValue = "Normal User"; // Default
   if (role === "orgAdmin") {
-    roleValue = "Organisation Admin";
+    roleValue = "Organization Admin";
   } else if (role === "filer") {
     roleValue = "Filer";
   }

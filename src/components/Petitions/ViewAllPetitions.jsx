@@ -142,18 +142,11 @@ const ViewAllPetitions = ({ onBack }) => {
     if (userData.isManager === true) return true;
     if (userData.roles && Array.isArray(userData.roles)) {
       return userData.roles.some(
-        (role) =>
-          role === 'Organisation Admin' ||
-          role === 'Organization Admin' ||
-          role === 'orgAdmin'
+        (role) => role === 'Organization Admin'
       );
     }
     const userRole = getUserRole(userData);
-    return (
-      userRole === 'orgAdmin' ||
-      userRole === 'Organisation Admin' ||
-      userRole === 'Organization Admin'
-    );
+    return userRole === 'Organization Admin';
   };
 
   // Determine if user is org admin or filer

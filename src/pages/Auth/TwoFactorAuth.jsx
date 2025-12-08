@@ -17,13 +17,10 @@ const isOrgAdmin = (userData) => {
     return true;
   }
   
-  // Check roles array for "Organisation Admin"
+  // Check roles array for "Organization Admin"
   if (userData.roles && Array.isArray(userData.roles)) {
     return userData.roles.some(
-      (role) =>
-        role === "Organisation Admin" ||
-        role === "Organization Admin" ||
-        role === "orgAdmin"
+      (role) => role === "Organization Admin"
     );
   }
   

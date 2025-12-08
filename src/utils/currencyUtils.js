@@ -34,3 +34,19 @@ export const parseCurrencyInput = (value) => {
   return numericValue;
 };
 
+/**
+ * Format a numeric value as currency for display (with commas)
+ * @param {string|number} value - The value to format
+ * @returns {string} Formatted currency string for display
+ */
+export const formatCurrencyDisplay = (value) => {
+  if (!value && value !== 0) return "";
+  const str = String(value);
+  // Split by decimal point if it exists
+  const parts = str.split(".");
+  // Format the integer part with commas
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  // Join back with decimal if it exists
+  return parts.length > 1 ? parts.join(".") : parts[0];
+};
+

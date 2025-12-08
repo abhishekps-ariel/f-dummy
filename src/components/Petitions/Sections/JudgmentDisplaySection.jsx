@@ -1,26 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import CustomDropdown from "../../shared/CustomDropdown";
-
-// Helper function to format currency with commas for display
-const formatCurrencyDisplay = (value) => {
-  if (!value && value !== 0) return "";
-  const str = String(value);
-  // Split by decimal point if it exists
-  const parts = str.split(".");
-  // Format the integer part with commas
-  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  // Join back with decimal if it exists
-  return parts.length > 1 ? parts.join(".") : parts[0];
-};
-
-// Helper function to parse currency input (remove commas and non-digits except decimal)
-const parseCurrencyInput = (value) => {
-  if (!value) return "";
-  // Remove all non-digit characters except decimal point
-  const numericValue = String(value).replace(/[^\d.]/g, "");
-  return numericValue;
-};
+import { formatCurrencyDisplay, parseCurrencyInput } from "../../../utils/currencyUtils";
 
 const JudgmentDisplaySection = ({
   SectionHeader,
