@@ -12,6 +12,561 @@ const formatCurrencyDisplay = (value) => {
   return parts.length > 1 ? parts.join(".") : parts[0];
 };
 
+// Component to render a single Right-to-Cure form
+const SingleRightToCureForm = ({
+  rtc,
+  index,
+  fieldErrors,
+  updateRTCField,
+  handleNoticeAddressInput,
+  handleNoticePredictionClick,
+  noticePredictions,
+  noticeAddressValidationErrors,
+  isLoadingNoticePredictions,
+  showNoticePredictions,
+  setShowNoticePredictions,
+  selectedNoticePredictionIndex,
+  setSelectedNoticePredictionIndex,
+  isMultipleMode = false,
+  onRemove,
+  canRemove = false,
+}) => {
+  const noticeSent = rtc.noticeSent;
+  const noticeDate = rtc.noticeDate || "";
+  const amountInDefault = rtc.amountInDefault || 0;
+  const daysDelinquentAtNotice = rtc.daysDelinquentAtNotice || 0;
+  const cureExpirationDate = rtc.cureExpirationDate || "";
+  const noticeAddressStreet1 = rtc.noticeAddressStreet1 || "";
+  const noticeAddressCity = rtc.noticeAddressCity || "";
+  const noticeAddressState = rtc.noticeAddressState || "";
+  const noticeAddressZip = rtc.noticeAddressZip || "";
+  const manualOverrideReason = rtc.manualOverrideReason || "";
+  const borrowerRespondedWithin30Days = rtc.borrowerRespondedWithin30Days;
+  const borrowerResponseDate = rtc.borrowerResponseDate || "";
+  const proceededWithRightToCure = rtc.proceededWithRightToCure;
+
+  // Get field errors for this specific index in multiple mode
+  const getFieldError = (fieldName) => {
+    if (isMultipleMode) {
+      return fieldErrors[`rightToCures.${index}.${fieldName}`] || fieldErrors[fieldName];
+    }
+    return fieldErrors[fieldName];
+  };
+
+  return (
+    <div className={isMultipleMode ? "p-3 border rounded bg-light mb-3" : ""}>
+      {isMultipleMode && (
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <h5 className="fw-semibold text-dark mb-0">
+            Right-to-Cure {index + 1}
+          </h5>
+          {canRemove && (
+            <button
+              type="button"
+              className="btn btn-outline-danger btn-sm"
+              onClick={() => onRemove(index)}
+              title="Remove this right-to-cure"
+            >
+              <i className="fas fa-trash"></i>
+            </button>
+          )}
+        </div>
+      )}
+
+      <div className="row g-3">
+        <div className="col-12">
+          <label className="form-label fw-bold">
+            Was the Right-to-Cure notice sent? *
+          </label>
+
+          <div className="d-flex gap-4">
+            <div className="form-check">
+              <input
+                className="form-check-input"
+                type="radio"
+                id={isMultipleMode ? `noticeSentYes_${index}` : "noticeSentYes"}
+                name={isMultipleMode ? `noticeSent_${index}` : "noticeSent"}
+                value="yes"
+                checked={noticeSent === true}
+                onChange={(e) => updateRTCField(index, "noticeSent", true)}
+              />
+
+              <label
+                className="form-check-label fw-medium"
+                htmlFor={isMultipleMode ? `noticeSentYes_${index}` : "noticeSentYes"}
+                style={{ fontSize: '13px', fontWeight: '500', color: '#333' }}
+              >
+                Yes
+              </label>
+            </div>
+
+            <div className="form-check">
+              <input
+                className="form-check-input"
+                type="radio"
+                id={isMultipleMode ? `noticeSentNo_${index}` : "noticeSentNo"}
+                name={isMultipleMode ? `noticeSent_${index}` : "noticeSent"}
+                value="no"
+                checked={noticeSent === false}
+                onChange={(e) => updateRTCField(index, "noticeSent", false)}
+              />
+
+              <label
+                className="form-check-label fw-medium"
+                htmlFor={isMultipleMode ? `noticeSentNo_${index}` : "noticeSentNo"}
+                style={{ fontSize: '13px', fontWeight: '500', color: '#333' }}
+              >
+                No
+              </label>
+            </div>
+          </div>
+
+          {getFieldError("noticeSent") && (
+            <div className="text-danger small mt-1">
+              {getFieldError("noticeSent")}
+            </div>
+          )}
+        </div>
+
+        {noticeSent === true && (
+          <>
+            <div className="col-md-6">
+              <label htmlFor={isMultipleMode ? `noticeDate_${index}` : "noticeDate"} className="form-label">
+                Notice Date *
+              </label>
+
+              <input
+                type="date"
+                id={isMultipleMode ? `noticeDate_${index}` : "noticeDate"}
+                name={isMultipleMode ? `noticeDate_${index}` : "noticeDate"}
+                className={`form-control ${
+                  getFieldError("noticeDate") ? "is-invalid" : ""
+                }`}
+                value={noticeDate}
+                onChange={(e) => updateRTCField(index, "noticeDate", e.target.value)}
+              />
+
+              {getFieldError("noticeDate") && (
+                <div className="text-danger small mt-1">
+                  {getFieldError("noticeDate")}
+                </div>
+              )}
+            </div>
+
+            <div className="col-md-6">
+              <label
+                htmlFor={isMultipleMode ? `daysDelinquentAtNotice_${index}` : "daysDelinquentAtNotice"}
+                className="form-label"
+              >
+                Days Delinquent on Notice Date *
+              </label>
+
+              <input
+                type="number"
+                id={isMultipleMode ? `daysDelinquentAtNotice_${index}` : "daysDelinquentAtNotice"}
+                name={isMultipleMode ? `daysDelinquentAtNotice_${index}` : "daysDelinquentAtNotice"}
+                min="0"
+                className={`form-control ${
+                  getFieldError("daysDelinquentAtNotice") ? "is-invalid" : ""
+                }`}
+                value={
+                  daysDelinquentAtNotice === "" ||
+                  daysDelinquentAtNotice === null ||
+                  daysDelinquentAtNotice === undefined
+                    ? ""
+                    : String(
+                        Math.floor(
+                          Number(daysDelinquentAtNotice)
+                        )
+                      )
+                }
+                onChange={(e) => updateRTCField(index, "daysDelinquentAtNotice", e.target.value === "" ? "" : Number(e.target.value))}
+              />
+
+              {getFieldError("daysDelinquentAtNotice") && (
+                <div className="text-danger small mt-1">
+                  {getFieldError("daysDelinquentAtNotice")}
+                </div>
+              )}
+            </div>
+
+            <div className="col-md-6">
+              <label htmlFor={isMultipleMode ? `amountInDefault_${index}` : "amountInDefault"} className="form-label">
+                Amount in Default ($) *
+              </label>
+
+              <input
+                type="text"
+                id={isMultipleMode ? `amountInDefault_${index}` : "amountInDefault"}
+                name={isMultipleMode ? `amountInDefault_${index}` : "amountInDefault"}
+                className={`form-control ${
+                  getFieldError("amountInDefault") ? "is-invalid" : ""
+                }`}
+                value={formatCurrencyDisplay(amountInDefault)}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^\d.]/g, "");
+                  updateRTCField(index, "amountInDefault", value === "" ? 0 : parseFloat(value) || 0);
+                }}
+              />
+
+              {getFieldError("amountInDefault") && (
+                <div className="text-danger small mt-1">
+                  {getFieldError("amountInDefault")}
+                </div>
+              )}
+            </div>
+
+            <div className="col-md-6">
+              <label htmlFor={isMultipleMode ? `cureExpirationDate_${index}` : "cureExpirationDate"} className="form-label">
+                Cure Expiration Date *
+              </label>
+
+              <input
+                type="date"
+                id={isMultipleMode ? `cureExpirationDate_${index}` : "cureExpirationDate"}
+                name={isMultipleMode ? `cureExpirationDate_${index}` : "cureExpirationDate"}
+                className={`form-control ${
+                  getFieldError("cureExpirationDate") ? "is-invalid" : ""
+                }`}
+                value={cureExpirationDate}
+                onChange={(e) => updateRTCField(index, "cureExpirationDate", e.target.value)}
+              />
+
+              {getFieldError("cureExpirationDate") && (
+                <div className="text-danger small mt-1">
+                  {getFieldError("cureExpirationDate")}
+                </div>
+              )}
+            </div>
+
+            <div className="col-12">
+              <label
+                htmlFor={isMultipleMode ? `noticeAddressStreet1_${index}` : "noticeAddressStreet1"}
+                className="form-label"
+              >
+                Notice Mailing Address *
+              </label>
+
+              <div className="position-relative">
+                <input
+                  type="text"
+                  id={isMultipleMode ? `noticeAddressStreet1_${index}` : "noticeAddressStreet1"}
+                  name={isMultipleMode ? `noticeAddressStreet1_${index}` : "noticeAddressStreet1"}
+                  className={`form-control ${
+                    getFieldError("noticeAddressStreet1") ||
+                    noticeAddressValidationErrors.noticeAddress
+                      ? "is-invalid"
+                      : ""
+                  }`}
+                  value={noticeAddressStreet1}
+                  onChange={(e) => {
+                    updateRTCField(index, "noticeAddressStreet1", e.target.value);
+                    if (!isMultipleMode) {
+                      handleNoticeAddressInput(e.target.value);
+                    }
+                  }}
+                  onBlur={() => {
+                    if (!isMultipleMode) {
+                      setTimeout(
+                        () => setShowNoticePredictions(false),
+                        300
+                      );
+                    }
+                  }}
+                  onFocus={() => {
+                    if (!isMultipleMode && noticePredictions && noticePredictions.length > 0) {
+                      setShowNoticePredictions(true);
+                    }
+                  }}
+                  placeholder="Street address"
+                  autoComplete="off"
+                />
+
+                {!isMultipleMode && isLoadingNoticePredictions && (
+                  <div className="position-absolute top-50 end-0 translate-middle-y me-3">
+                    <div
+                      className="spinner-border spinner-border-sm text-primary"
+                      role="status"
+                    >
+                      <span className="visually-hidden">Loading...</span>
+                    </div>
+                  </div>
+                )}
+
+                {!isMultipleMode && showNoticePredictions &&
+                  noticePredictions &&
+                  noticePredictions.length > 0 && (
+                    <div
+                      className="position-absolute w-100 bg-white border rounded shadow-lg"
+                      style={{ zIndex: 1000, top: "100%" }}
+                    >
+                      {noticePredictions.map((prediction, predIndex) => (
+                        <div
+                          key={prediction.place_id}
+                          className="p-2 cursor-pointer hover-bg-light"
+                          style={{
+                            backgroundColor:
+                              selectedNoticePredictionIndex === predIndex
+                                ? "#f8f9fa"
+                                : "transparent",
+                            cursor: "pointer",
+                          }}
+                          onClick={() =>
+                            handleNoticePredictionClick(prediction)
+                          }
+                          onMouseEnter={() =>
+                            setSelectedNoticePredictionIndex(predIndex)
+                          }
+                        >
+                          <div className="d-flex align-items-center">
+                            <i className="fas fa-map-marker-alt text-muted me-2"></i>
+
+                            <div>
+                              <div className="fw-medium">
+                                {prediction.structured_formatting.main_text}
+                              </div>
+
+                              <div className="text-muted small">
+                                {prediction.structured_formatting.secondary_text}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+              </div>
+
+              {getFieldError("noticeAddressStreet1") && (
+                <div className="text-danger small mt-1">
+                  {getFieldError("noticeAddressStreet1")}
+                </div>
+              )}
+
+              {!isMultipleMode && noticeAddressValidationErrors.noticeAddress && (
+                <div className="text-danger small mt-1">
+                  {noticeAddressValidationErrors.noticeAddress}
+                </div>
+              )}
+            </div>
+
+            <div className="col-md-4">
+              <label htmlFor={isMultipleMode ? `noticeAddressCity_${index}` : "noticeAddressCity"} className="form-label">
+                City *
+              </label>
+
+              <input
+                type="text"
+                id={isMultipleMode ? `noticeAddressCity_${index}` : "noticeAddressCity"}
+                name={isMultipleMode ? `noticeAddressCity_${index}` : "noticeAddressCity"}
+                className={`form-control ${
+                  getFieldError("noticeAddressCity") ? "is-invalid" : ""
+                }`}
+                value={noticeAddressCity}
+                onChange={(e) => updateRTCField(index, "noticeAddressCity", e.target.value)}
+              />
+
+              {getFieldError("noticeAddressCity") && (
+                <div className="text-danger small mt-1">
+                  {getFieldError("noticeAddressCity")}
+                </div>
+              )}
+            </div>
+
+            <div className="col-md-4">
+              <label htmlFor={isMultipleMode ? `noticeAddressState_${index}` : "noticeAddressState"} className="form-label">
+                State *
+              </label>
+
+              <input
+                type="text"
+                id={isMultipleMode ? `noticeAddressState_${index}` : "noticeAddressState"}
+                name={isMultipleMode ? `noticeAddressState_${index}` : "noticeAddressState"}
+                className={`form-control ${
+                  getFieldError("noticeAddressState") ? "is-invalid" : ""
+                }`}
+                value={noticeAddressState}
+                onChange={(e) => updateRTCField(index, "noticeAddressState", e.target.value)}
+              />
+
+              {getFieldError("noticeAddressState") && (
+                <div className="text-danger small mt-1">
+                  {getFieldError("noticeAddressState")}
+                </div>
+              )}
+            </div>
+
+            <div className="col-md-4">
+              <label htmlFor={isMultipleMode ? `noticeAddressZip_${index}` : "noticeAddressZip"} className="form-label">
+                ZIP Code *
+              </label>
+
+              <input
+                type="text"
+                id={isMultipleMode ? `noticeAddressZip_${index}` : "noticeAddressZip"}
+                name={isMultipleMode ? `noticeAddressZip_${index}` : "noticeAddressZip"}
+                className={`form-control ${
+                  getFieldError("noticeAddressZip") ? "is-invalid" : ""
+                }`}
+                value={noticeAddressZip}
+                onChange={(e) => updateRTCField(index, "noticeAddressZip", e.target.value)}
+              />
+
+              {getFieldError("noticeAddressZip") && (
+                <div className="text-danger small mt-1">
+                  {getFieldError("noticeAddressZip")}
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
+        {noticeSent === false && (
+          <div className="col-12">
+            <label htmlFor={isMultipleMode ? `manualOverrideReason_${index}` : "manualOverrideReason"} className="form-label">
+              Acceleration Date *
+            </label>
+
+            <input
+              type="date"
+              id={isMultipleMode ? `manualOverrideReason_${index}` : "manualOverrideReason"}
+              name={isMultipleMode ? `manualOverrideReason_${index}` : "manualOverrideReason"}
+              className={`form-control ${
+                getFieldError("manualOverrideReason") ? "is-invalid" : ""
+              }`}
+              value={manualOverrideReason}
+              onChange={(e) => updateRTCField(index, "manualOverrideReason", e.target.value)}
+            />
+
+            {getFieldError("manualOverrideReason") && (
+              <div className="text-danger small mt-1">
+                {getFieldError("manualOverrideReason")}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Borrower Response Fields */}
+        {noticeSent === true && (
+          <>
+            <div className="col-md-6">
+              <label className="form-label">
+                Did the borrower respond to the notice within 30 days? *
+              </label>
+              {getFieldError("borrowerRespondedWithin30Days") && (
+                <div className="text-danger small mt-1">
+                  {getFieldError("borrowerRespondedWithin30Days")}
+                </div>
+              )}
+              <div className="d-flex gap-3">
+                <div className="form-check">
+                  <input
+                    className="form-check-input"
+                    type="radio"
+                    name={isMultipleMode ? `borrowerRespondedWithin30Days_${index}` : "borrowerRespondedWithin30Days"}
+                    id={isMultipleMode ? `borrowerRespondedWithin30DaysYes_${index}` : "borrowerRespondedWithin30DaysYes"}
+                    value="yes"
+                    checked={borrowerRespondedWithin30Days === true}
+                    onChange={(e) => {
+                      updateRTCField(index, "borrowerRespondedWithin30Days", true);
+                    }}
+                  />
+                  <label className="form-check-label" htmlFor={isMultipleMode ? `borrowerRespondedWithin30DaysYes_${index}` : "borrowerRespondedWithin30DaysYes"} style={{ fontSize: '13px', fontWeight: '500', color: '#333' }}>
+                    Yes
+                  </label>
+                </div>
+                <div className="form-check">
+                  <input
+                    className="form-check-input"
+                    type="radio"
+                    name={isMultipleMode ? `borrowerRespondedWithin30Days_${index}` : "borrowerRespondedWithin30Days"}
+                    id={isMultipleMode ? `borrowerRespondedWithin30DaysNo_${index}` : "borrowerRespondedWithin30DaysNo"}
+                    value="no"
+                    checked={borrowerRespondedWithin30Days === false}
+                    onChange={(e) => {
+                      updateRTCField(index, "borrowerRespondedWithin30Days", false);
+                      updateRTCField(index, "borrowerResponseDate", "");
+                    }}
+                  />
+                  <label className="form-check-label" htmlFor={isMultipleMode ? `borrowerRespondedWithin30DaysNo_${index}` : "borrowerRespondedWithin30DaysNo"} style={{ fontSize: '13px', fontWeight: '500', color: '#333' }}>
+                    No
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            {borrowerRespondedWithin30Days === true && (
+              <>
+                <div className="col-md-6">
+                  <label htmlFor={isMultipleMode ? `borrowerResponseDate_${index}` : "borrowerResponseDate"} className="form-label">
+                    Date on which the borrower responded *
+                  </label>
+                  <input
+                    type="date"
+                    id={isMultipleMode ? `borrowerResponseDate_${index}` : "borrowerResponseDate"}
+                    name={isMultipleMode ? `borrowerResponseDate_${index}` : "borrowerResponseDate"}
+                    className={`form-control ${
+                      getFieldError("borrowerResponseDate") ? "is-invalid" : ""
+                    }`}
+                    value={borrowerResponseDate}
+                    onChange={(e) => updateRTCField(index, "borrowerResponseDate", e.target.value)}
+                  />
+                  {getFieldError("borrowerResponseDate") && (
+                    <div className="text-danger small mt-1">
+                      {getFieldError("borrowerResponseDate")}
+                    </div>
+                  )}
+                </div>
+
+                <div className="col-md-6">
+                  <label className="form-label">
+                    Did the borrower proceed with the right to cure? *
+                  </label>
+                  {getFieldError("proceededWithRightToCure") && (
+                    <div className="text-danger small mt-1">
+                      {getFieldError("proceededWithRightToCure")}
+                    </div>
+                  )}
+                  <div className="d-flex gap-3">
+                    <div className="form-check">
+                      <input
+                        className="form-check-input"
+                        type="radio"
+                        name={isMultipleMode ? `proceededWithRightToCure_${index}` : "proceededWithRightToCure"}
+                        id={isMultipleMode ? `proceededWithRightToCureYes_${index}` : "proceededWithRightToCureYes"}
+                        value="yes"
+                        checked={proceededWithRightToCure === true}
+                        onChange={(e) => updateRTCField(index, "proceededWithRightToCure", true)}
+                      />
+                      <label className="form-check-label" htmlFor={isMultipleMode ? `proceededWithRightToCureYes_${index}` : "proceededWithRightToCureYes"} style={{ fontSize: '13px', fontWeight: '500', color: '#333' }}>
+                        Yes
+                      </label>
+                    </div>
+                    <div className="form-check">
+                      <input
+                        className="form-check-input"
+                        type="radio"
+                        name={isMultipleMode ? `proceededWithRightToCure_${index}` : "proceededWithRightToCure"}
+                        id={isMultipleMode ? `proceededWithRightToCureNo_${index}` : "proceededWithRightToCureNo"}
+                        value="no"
+                        checked={proceededWithRightToCure === false}
+                        onChange={(e) => updateRTCField(index, "proceededWithRightToCure", false)}
+                      />
+                      <label className="form-check-label" htmlFor={isMultipleMode ? `proceededWithRightToCureNo_${index}` : "proceededWithRightToCureNo"} style={{ fontSize: '13px', fontWeight: '500', color: '#333' }}>
+                        No
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const Step6RightToCure = ({
   formData,
   fieldErrors,
@@ -27,9 +582,19 @@ const Step6RightToCure = ({
   setShowNoticePredictions,
   selectedNoticePredictionIndex,
   setSelectedNoticePredictionIndex,
+  isTakenOverPetition = false,
+  addRightToCure,
+  removeRightToCure,
+  updateRightToCure,
 }) => {
   // Handle rightToCures array format (new) or single-object format (old) for backward compatibility
   const rightToCures = formData.rightToCures || [];
+  
+  // Determine if we should show multiple right-to-cures
+  // Only show multiple when taking over a petition that has more than one right-to-cure
+  const showMultiple = isTakenOverPetition && rightToCures.length > 1;
+  
+  // For single mode, use first right-to-cure or fallback to legacy fields
   const currentRTC = rightToCures.length > 0 ? rightToCures[0] : {
     noticeSent: formData.noticeSent,
     noticeDate: formData.noticeDate || "",
@@ -47,7 +612,7 @@ const Step6RightToCure = ({
   };
 
   // Helper to update rightToCures array or fallback to single-object format with real-time validation
-  const updateRTCField = (field, value) => {
+  const updateRTCField = (index, field, value) => {
     // Real-time validation
     const validateField = (fieldName, fieldValue, currentRTCData) => {
       const errors = {};
@@ -134,41 +699,49 @@ const Step6RightToCure = ({
     };
     
     // Get current RTC data for validation
-    const currentRTCData = rightToCures.length > 0 ? rightToCures[0] : {
-      noticeSent: formData.noticeSent,
-      noticeDate: formData.noticeDate || "",
-      amountInDefault: formData.amountInDefault || 0,
-      daysDelinquentAtNotice: formData.daysDelinquentAtNotice || 0,
-      cureExpirationDate: formData.cureExpirationDate || "",
-      noticeAddressStreet1: formData.noticeAddressStreet1 || "",
-      noticeAddressCity: formData.noticeAddressCity || "",
-      noticeAddressState: formData.noticeAddressState || "",
-      noticeAddressZip: formData.noticeAddressZip || "",
-      manualOverrideReason: formData.manualOverrideReason || "",
-      borrowerRespondedWithin30Days: formData.borrowerRespondedWithin30Days,
-      borrowerResponseDate: formData.borrowerResponseDate || "",
-      proceededWithRightToCure: formData.proceededWithRightToCure,
-      [field]: value,
-    };
+    const currentRTCData = showMultiple && rightToCures[index] 
+      ? rightToCures[index] 
+      : rightToCures.length > 0 
+        ? rightToCures[0] 
+        : {
+            noticeSent: formData.noticeSent,
+            noticeDate: formData.noticeDate || "",
+            amountInDefault: formData.amountInDefault || 0,
+            daysDelinquentAtNotice: formData.daysDelinquentAtNotice || 0,
+            cureExpirationDate: formData.cureExpirationDate || "",
+            noticeAddressStreet1: formData.noticeAddressStreet1 || "",
+            noticeAddressCity: formData.noticeAddressCity || "",
+            noticeAddressState: formData.noticeAddressState || "",
+            noticeAddressZip: formData.noticeAddressZip || "",
+            manualOverrideReason: formData.manualOverrideReason || "",
+            borrowerRespondedWithin30Days: formData.borrowerRespondedWithin30Days,
+            borrowerResponseDate: formData.borrowerResponseDate || "",
+            proceededWithRightToCure: formData.proceededWithRightToCure,
+            [field]: value,
+          };
     
     // Perform real-time validation
     const validationErrors = validateField(field, value, currentRTCData);
     
     // Update field errors
     Object.keys(validationErrors).forEach(errorField => {
+      const errorKey = showMultiple ? `rightToCures.${index}.${errorField}` : errorField;
       setFieldErrors((prev) => ({
         ...prev,
-        [errorField]: validationErrors[errorField],
+        [errorKey]: validationErrors[errorField],
       }));
     });
     
     // Clear error if validation passes
-    if (Object.keys(validationErrors).length === 0 && fieldErrors[field]) {
-      setFieldErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[field];
-        return newErrors;
-      });
+    if (Object.keys(validationErrors).length === 0) {
+      const errorKey = showMultiple ? `rightToCures.${index}.${field}` : field;
+      if (fieldErrors[errorKey]) {
+        setFieldErrors((prev) => {
+          const newErrors = { ...prev };
+          delete newErrors[errorKey];
+          return newErrors;
+        });
+      }
     }
     
     // Also re-validate cure expiration date when notice date changes
@@ -177,22 +750,29 @@ const Step6RightToCure = ({
       const cureExpirationDateObj = new Date(currentRTCData.cureExpirationDate);
       if (!isNaN(noticeDateObj.getTime()) && !isNaN(cureExpirationDateObj.getTime())) {
         if (cureExpirationDateObj <= noticeDateObj) {
+          const errorKey = showMultiple ? `rightToCures.${index}.cureExpirationDate` : "cureExpirationDate";
           setFieldErrors((prev) => ({
             ...prev,
-            cureExpirationDate: "Cure Expiration Date must be after Notice Date",
+            [errorKey]: "Cure Expiration Date must be after Notice Date",
           }));
-        } else if (fieldErrors.cureExpirationDate === "Cure Expiration Date must be after Notice Date") {
-          setFieldErrors((prev) => {
-            const newErrors = { ...prev };
-            delete newErrors.cureExpirationDate;
-            return newErrors;
-          });
+        } else {
+          const errorKey = showMultiple ? `rightToCures.${index}.cureExpirationDate` : "cureExpirationDate";
+          if (fieldErrors[errorKey] === "Cure Expiration Date must be after Notice Date") {
+            setFieldErrors((prev) => {
+              const newErrors = { ...prev };
+              delete newErrors[errorKey];
+              return newErrors;
+            });
+          }
         }
       }
     }
     
-    if (rightToCures.length > 0) {
-      // Update array format
+    // Use the updateRightToCure function if in multiple mode, otherwise use the old logic
+    if (showMultiple && updateRightToCure) {
+      updateRightToCure(index, field, value);
+    } else if (rightToCures.length > 0) {
+      // Update array format (single mode, but array exists)
       setFormData((prev) => ({
         ...prev,
         rightToCures: prev.rightToCures.map((rtc, idx) =>
@@ -228,533 +808,76 @@ const Step6RightToCure = ({
     }
   };
 
-  const noticeSent = currentRTC.noticeSent;
-  const noticeDate = currentRTC.noticeDate || "";
-  const amountInDefault = currentRTC.amountInDefault || 0;
-  const daysDelinquentAtNotice = currentRTC.daysDelinquentAtNotice || 0;
-  const cureExpirationDate = currentRTC.cureExpirationDate || "";
-  const noticeAddressStreet1 = currentRTC.noticeAddressStreet1 || "";
-  const noticeAddressCity = currentRTC.noticeAddressCity || "";
-  const noticeAddressState = currentRTC.noticeAddressState || "";
-  const noticeAddressZip = currentRTC.noticeAddressZip || "";
-  const manualOverrideReason = currentRTC.manualOverrideReason || "";
-  const borrowerRespondedWithin30Days = currentRTC.borrowerRespondedWithin30Days;
-  const borrowerResponseDate = currentRTC.borrowerResponseDate || "";
-  const proceededWithRightToCure = currentRTC.proceededWithRightToCure;
+  return (
+    <div>
+      <h2 className="theme-color font-med mb-1">
+        6. Right-to-Cure (§35A)
+      </h2>
 
-   return (
-          <div>
-            <h2 className="theme-color font-med mb-1">
-              6. Right-to-Cure (§35A)
-            </h2>
+      <p className="text-muted small mb-3">
+        Enter details proving the §35A notice was properly issued to the
+        borrower.
+      </p>
 
-            <p className="text-muted small mb-3">
-              Enter details proving the §35A notice was properly issued to the
-              borrower.
-            </p>
+      {showMultiple ? (
+        // Multiple right-to-cures mode (when taking over with more than one)
+        <>
+          {rightToCures.map((rtc, index) => (
+            <SingleRightToCureForm
+              key={rtc.id || index}
+              rtc={rtc}
+              index={index}
+              fieldErrors={fieldErrors}
+              updateRTCField={updateRTCField}
+              handleNoticeAddressInput={handleNoticeAddressInput}
+              handleNoticePredictionClick={handleNoticePredictionClick}
+              noticePredictions={noticePredictions}
+              noticeAddressValidationErrors={noticeAddressValidationErrors}
+              isLoadingNoticePredictions={isLoadingNoticePredictions}
+              showNoticePredictions={showNoticePredictions}
+              setShowNoticePredictions={setShowNoticePredictions}
+              selectedNoticePredictionIndex={selectedNoticePredictionIndex}
+              setSelectedNoticePredictionIndex={setSelectedNoticePredictionIndex}
+              isMultipleMode={true}
+              onRemove={removeRightToCure}
+              canRemove={rightToCures.length > 1}
+            />
+          ))}
 
-            <div className="row g-3">
-              <div className="col-12">
-                <label className="form-label fw-bold">
-                  Was the Right-to-Cure notice sent? *
-                </label>
-
-                <div className="d-flex gap-4">
-                  <div className="form-check">
-                    <input
-                      className="form-check-input"
-                      type="radio"
-                      id="noticeSentYes"
-                      name="noticeSent"
-                      value="yes"
-                      checked={noticeSent === true}
-                      onChange={(e) => updateRTCField("noticeSent", true)}
-                    />
-
-                    <label
-                      className="form-check-label fw-medium"
-                      htmlFor="noticeSentYes"
-                      style={{ fontSize: '13px', fontWeight: '500', color: '#333' }}
-                    >
-                      Yes
-                    </label>
-                  </div>
-
-                  <div className="form-check">
-                    <input
-                      className="form-check-input"
-                      type="radio"
-                      id="noticeSentNo"
-                      name="noticeSent"
-                      value="no"
-                      checked={noticeSent === false}
-                      onChange={(e) => updateRTCField("noticeSent", false)}
-                    />
-
-                    <label
-                      className="form-check-label fw-medium"
-                      htmlFor="noticeSentNo"
-                      style={{ fontSize: '13px', fontWeight: '500', color: '#333' }}
-                    >
-                      No
-                    </label>
-                  </div>
-                </div>
-
-                {fieldErrors.noticeSent && (
-                  <div className="text-danger small mt-1">
-                    {fieldErrors.noticeSent}
-                  </div>
-                )}
-              </div>
-
-              {noticeSent === true && (
-                <>
-                  <div className="col-md-6">
-                    <label htmlFor="noticeDate" className="form-label">
-                      Notice Date *
-                    </label>
-
-                    <input
-                      type="date"
-                      id="noticeDate"
-                      name="noticeDate"
-                      className={`form-control ${
-                        fieldErrors.noticeDate ? "is-invalid" : ""
-                      }`}
-                      value={noticeDate}
-                      onChange={(e) => updateRTCField("noticeDate", e.target.value)}
-                    />
-
-                    {fieldErrors.noticeDate && (
-                      <div className="text-danger small mt-1">
-                        {fieldErrors.noticeDate}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="col-md-6">
-                    <label
-                      htmlFor="daysDelinquentAtNotice"
-                      className="form-label"
-                    >
-                      Days Delinquent on Notice Date *
-                    </label>
-
-                    <input
-                      type="number"
-                      id="daysDelinquentAtNotice"
-                      name="daysDelinquentAtNotice"
-                      min="0"
-                      className={`form-control ${
-                        fieldErrors.daysDelinquentAtNotice ? "is-invalid" : ""
-                      }`}
-                      value={
-                        daysDelinquentAtNotice === "" ||
-                        daysDelinquentAtNotice === null ||
-                        daysDelinquentAtNotice === undefined
-                          ? ""
-                          : String(
-                              Math.floor(
-                                Number(daysDelinquentAtNotice)
-                              )
-                            )
-                      }
-                      onChange={(e) => updateRTCField("daysDelinquentAtNotice", e.target.value === "" ? "" : Number(e.target.value))}
-                    />
-
-                    {fieldErrors.daysDelinquentAtNotice && (
-                      <div className="text-danger small mt-1">
-                        {fieldErrors.daysDelinquentAtNotice}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="col-md-6">
-                    <label htmlFor="amountInDefault" className="form-label">
-                      Amount in Default ($) *
-                    </label>
-
-                    <input
-                      type="text"
-                      id="amountInDefault"
-                      name="amountInDefault"
-                      className={`form-control ${
-                        fieldErrors.amountInDefault ? "is-invalid" : ""
-                      }`}
-                      value={formatCurrencyDisplay(amountInDefault)}
-                      onChange={(e) => {
-                        const value = e.target.value.replace(/[^\d.]/g, "");
-                        updateRTCField("amountInDefault", value === "" ? 0 : parseFloat(value) || 0);
-                      }}
-                    />
-
-                    {fieldErrors.amountInDefault && (
-                      <div className="text-danger small mt-1">
-                        {fieldErrors.amountInDefault}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="col-md-6">
-                    <label htmlFor="cureExpirationDate" className="form-label">
-                      Cure Expiration Date *
-                    </label>
-
-                    <input
-                      type="date"
-                      id="cureExpirationDate"
-                      name="cureExpirationDate"
-                      className={`form-control ${
-                        fieldErrors.cureExpirationDate ? "is-invalid" : ""
-                      }`}
-                      value={cureExpirationDate}
-                      onChange={(e) => updateRTCField("cureExpirationDate", e.target.value)}
-                    />
-
-                    {fieldErrors.cureExpirationDate && (
-                      <div className="text-danger small mt-1">
-                        {fieldErrors.cureExpirationDate}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="col-12">
-                    <label
-                      htmlFor="noticeAddressStreet1"
-                      className="form-label"
-                    >
-                      Notice Mailing Address *
-                    </label>
-
-                    <div className="position-relative">
-                      <input
-                        type="text"
-                        id="noticeAddressStreet1"
-                        name="noticeAddressStreet1"
-                        className={`form-control ${
-                          fieldErrors.noticeAddressStreet1 ||
-                          noticeAddressValidationErrors.noticeAddress
-                            ? "is-invalid"
-                            : ""
-                        }`}
-                        value={noticeAddressStreet1}
-                        onChange={(e) => {
-                          updateRTCField("noticeAddressStreet1", e.target.value);
-                          handleNoticeAddressInput(e.target.value);
-                        }}
-                        onBlur={() => {
-                          setTimeout(
-                            () => setShowNoticePredictions(false),
-                            300
-                          );
-                        }}
-                        onFocus={() => {
-                          if (
-                            noticePredictions &&
-                            noticePredictions.length > 0
-                          ) {
-                            setShowNoticePredictions(true);
-                          }
-                        }}
-                        placeholder="Street address"
-                        autoComplete="off"
-                      />
-
-                      {/* Loading indicator */}
-
-                      {isLoadingNoticePredictions && (
-                        <div className="position-absolute top-50 end-0 translate-middle-y me-3">
-                          <div
-                            className="spinner-border spinner-border-sm text-primary"
-                            role="status"
-                          >
-                            <span className="visually-hidden">Loading...</span>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Predictions dropdown */}
-
-                      {showNoticePredictions &&
-                        noticePredictions &&
-                        noticePredictions.length > 0 && (
-                          <div
-                            className="position-absolute w-100 bg-white border rounded shadow-lg"
-                            style={{ zIndex: 1000, top: "100%" }}
-                          >
-                            {noticePredictions.map((prediction, index) => (
-                              <div
-                                key={prediction.place_id}
-                                className="p-2 cursor-pointer hover-bg-light"
-                                style={{
-                                  backgroundColor:
-                                    selectedNoticePredictionIndex === index
-                                      ? "#f8f9fa"
-                                      : "transparent",
-
-                                  cursor: "pointer",
-                                }}
-                                onClick={() =>
-                                  handleNoticePredictionClick(prediction)
-                                }
-                                onMouseEnter={() =>
-                                  setSelectedNoticePredictionIndex(index)
-                                }
-                              >
-                                <div className="d-flex align-items-center">
-                                  <i className="fas fa-map-marker-alt text-muted me-2"></i>
-
-                                  <div>
-                                    <div className="fw-medium">
-                                      {
-                                        prediction.structured_formatting
-                                          .main_text
-                                      }
-                                    </div>
-
-                                    <div className="text-muted small">
-                                      {
-                                        prediction.structured_formatting
-                                          .secondary_text
-                                      }
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                    </div>
-
-                    {fieldErrors.noticeAddressStreet1 && (
-                      <div className="text-danger small mt-1">
-                        {fieldErrors.noticeAddressStreet1}
-                      </div>
-                    )}
-
-                    {noticeAddressValidationErrors.noticeAddress && (
-                      <div className="text-danger small mt-1">
-                        {noticeAddressValidationErrors.noticeAddress}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="col-md-4">
-                    <label htmlFor="noticeAddressCity" className="form-label">
-                      City *
-                    </label>
-
-                    <input
-                      type="text"
-                      id="noticeAddressCity"
-                      name="noticeAddressCity"
-                      className={`form-control ${
-                        fieldErrors.noticeAddressCity ? "is-invalid" : ""
-                      }`}
-                      value={noticeAddressCity}
-                      onChange={(e) => updateRTCField("noticeAddressCity", e.target.value)}
-                    />
-
-                    {fieldErrors.noticeAddressCity && (
-                      <div className="text-danger small mt-1">
-                        {fieldErrors.noticeAddressCity}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="col-md-4">
-                    <label htmlFor="noticeAddressState" className="form-label">
-                      State *
-                    </label>
-
-                    <input
-                      type="text"
-                      id="noticeAddressState"
-                      name="noticeAddressState"
-                      className={`form-control ${
-                        fieldErrors.noticeAddressState ? "is-invalid" : ""
-                      }`}
-                      value={noticeAddressState}
-                      onChange={(e) => updateRTCField("noticeAddressState", e.target.value)}
-                    />
-
-                    {fieldErrors.noticeAddressState && (
-                      <div className="text-danger small mt-1">
-                        {fieldErrors.noticeAddressState}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="col-md-4">
-                    <label htmlFor="noticeAddressZip" className="form-label">
-                      ZIP Code *
-                    </label>
-
-                    <input
-                      type="text"
-                      id="noticeAddressZip"
-                      name="noticeAddressZip"
-                      className={`form-control ${
-                        fieldErrors.noticeAddressZip ? "is-invalid" : ""
-                      }`}
-                      value={noticeAddressZip}
-                      onChange={(e) => updateRTCField("noticeAddressZip", e.target.value)}
-                    />
-
-                    {fieldErrors.noticeAddressZip && (
-                      <div className="text-danger small mt-1">
-                        {fieldErrors.noticeAddressZip}
-                      </div>
-                    )}
-                  </div>
-                </>
-              )}
-
-              {noticeSent === false && (
-                <div className="col-12">
-                  <label htmlFor="manualOverrideReason" className="form-label">
-                    Acceleration Date *
-                  </label>
-
-                  <input
-                    type="date"
-                    id="manualOverrideReason"
-                    name="manualOverrideReason"
-                    className={`form-control ${
-                      fieldErrors.manualOverrideReason ? "is-invalid" : ""
-                    }`}
-                    value={manualOverrideReason}
-                    onChange={(e) => updateRTCField("manualOverrideReason", e.target.value)}
-                  />
-
-                  {fieldErrors.manualOverrideReason && (
-                    <div className="text-danger small mt-1">
-                      {fieldErrors.manualOverrideReason}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Borrower Response Fields - Moved to Bottom */}
-              {noticeSent === true && (
-                <>
-                  <div className="col-md-6">
-                    <label className="form-label">
-                      Did the borrower respond to the notice within 30 days? *
-                    </label>
-                    {fieldErrors.borrowerRespondedWithin30Days && (
-                      <div className="text-danger small mt-1">
-                        {fieldErrors.borrowerRespondedWithin30Days}
-                      </div>
-                    )}
-                    <div className="d-flex gap-3">
-                      <div className="form-check">
-                        <input
-                          className="form-check-input"
-                          type="radio"
-                          name="borrowerRespondedWithin30Days"
-                          id="borrowerRespondedWithin30DaysYes"
-                          value="yes"
-                          checked={borrowerRespondedWithin30Days === true}
-                          onChange={(e) => {
-                            updateRTCField("borrowerRespondedWithin30Days", true);
-                          }}
-                        />
-                        <label className="form-check-label" htmlFor="borrowerRespondedWithin30DaysYes" style={{ fontSize: '13px', fontWeight: '500', color: '#333' }}>
-                          Yes
-                        </label>
-                      </div>
-                      <div className="form-check">
-                        <input
-                          className="form-check-input"
-                          type="radio"
-                          name="borrowerRespondedWithin30Days"
-                          id="borrowerRespondedWithin30DaysNo"
-                          value="no"
-                          checked={borrowerRespondedWithin30Days === false}
-                          onChange={(e) => {
-                            updateRTCField("borrowerRespondedWithin30Days", false);
-                            updateRTCField("borrowerResponseDate", "");
-                          }}
-                        />
-                        <label className="form-check-label" htmlFor="borrowerRespondedWithin30DaysNo" style={{ fontSize: '13px', fontWeight: '500', color: '#333' }}>
-                          No
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-
-                  {borrowerRespondedWithin30Days === true && (
-                    <>
-                      <div className="col-md-6">
-                        <label htmlFor="borrowerResponseDate" className="form-label">
-                          Date on which the borrower responded *
-                        </label>
-                        <input
-                          type="date"
-                          id="borrowerResponseDate"
-                          name="borrowerResponseDate"
-                          className={`form-control ${
-                            fieldErrors.borrowerResponseDate ? "is-invalid" : ""
-                          }`}
-                          value={borrowerResponseDate}
-                          onChange={(e) => updateRTCField("borrowerResponseDate", e.target.value)}
-                        />
-                        {fieldErrors.borrowerResponseDate && (
-                          <div className="text-danger small mt-1">
-                            {fieldErrors.borrowerResponseDate}
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="col-md-6">
-                        <label className="form-label">
-                          Did the borrower proceed with the right to cure? *
-                        </label>
-                        {fieldErrors.proceededWithRightToCure && (
-                          <div className="text-danger small mt-1">
-                            {fieldErrors.proceededWithRightToCure}
-                          </div>
-                        )}
-                        <div className="d-flex gap-3">
-                          <div className="form-check">
-                            <input
-                              className="form-check-input"
-                              type="radio"
-                              name="proceededWithRightToCure"
-                              id="proceededWithRightToCureYes"
-                              value="yes"
-                              checked={proceededWithRightToCure === true}
-                              onChange={(e) => updateRTCField("proceededWithRightToCure", true)}
-                            />
-                            <label className="form-check-label" htmlFor="proceededWithRightToCureYes" style={{ fontSize: '13px', fontWeight: '500', color: '#333' }}>
-                              Yes
-                            </label>
-                          </div>
-                          <div className="form-check">
-                            <input
-                              className="form-check-input"
-                              type="radio"
-                              name="proceededWithRightToCure"
-                              id="proceededWithRightToCureNo"
-                              value="no"
-                              checked={proceededWithRightToCure === false}
-                              onChange={(e) => updateRTCField("proceededWithRightToCure", false)}
-                            />
-                            <label className="form-check-label" htmlFor="proceededWithRightToCureNo" style={{ fontSize: '13px', fontWeight: '500', color: '#333' }}>
-                              No
-                            </label>
-                          </div>
-                        </div>
-                      </div>
-                    </>
-                  )}
-                </>
-              )}
+          {addRightToCure && (
+            <div className="text-center">
+              <button
+                type="button"
+                className="dashboard-btn-create"
+                onClick={addRightToCure}
+              >
+                <i className="fas fa-plus me-2"></i>
+                Add Another Right-to-Cure
+              </button>
             </div>
-          </div>
-        );
+          )}
+        </>
+      ) : (
+        // Single right-to-cure mode (normal behavior)
+        <SingleRightToCureForm
+          rtc={currentRTC}
+          index={0}
+          fieldErrors={fieldErrors}
+          updateRTCField={updateRTCField}
+          handleNoticeAddressInput={handleNoticeAddressInput}
+          handleNoticePredictionClick={handleNoticePredictionClick}
+          noticePredictions={noticePredictions}
+          noticeAddressValidationErrors={noticeAddressValidationErrors}
+          isLoadingNoticePredictions={isLoadingNoticePredictions}
+          showNoticePredictions={showNoticePredictions}
+          setShowNoticePredictions={setShowNoticePredictions}
+              selectedNoticePredictionIndex={selectedNoticePredictionIndex}
+              setSelectedNoticePredictionIndex={setSelectedNoticePredictionIndex}
+          isMultipleMode={false}
+        />
+      )}
+    </div>
+  );
 };
 
 export default Step6RightToCure;

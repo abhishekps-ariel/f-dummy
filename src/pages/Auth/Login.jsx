@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { checkMfa, sendOtp } from "../../services/authService";
-import { getMfaTypesEnum } from "../../services/commonService";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { ROUTES } from "../../constants/routerConstants";
 import { toast } from "react-toastify";
 import loginImg from "../../assets/logo-sample.png";
 import "../../styles/custom.css";
+import { validateEmail } from "../../helpers/auth/formValidation";
+import { loadMfaTypes, getPreferredMfaMethod } from "../../helpers/auth/mfaUtils";
 
 function Login() {
   const [formData, setFormData] = useState({
@@ -27,36 +28,19 @@ function Login() {
 
   // Load MFA types enum on mount
   useEffect(() => {
-    const loadMfaTypes = async () => {
-      try {
-        const response = await getMfaTypesEnum();
-        if (response.isSuccess && response.data) {
-          // Filter out "None" and "AuthenticatorApp" for now, only show SMS and Email
-          const availableTypes = response.data.filter(
-            (type) => type.name === "SMS" || type.name === "Email"
-          );
-          setMfaTypes(availableTypes);
-        }
-      } catch {
-        // Fallback to default types
-        setMfaTypes([
-          { name: "SMS", value: 1 },
-          { name: "Email", value: 2 },
-        ]);
-      }
+    const loadMfaTypesData = async () => {
+      const types = await loadMfaTypes();
+      setMfaTypes(types);
     };
-    loadMfaTypes();
+    loadMfaTypesData();
   }, []);
 
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.email.trim()) {
-      newErrors.email = t("auth.thisFieldEmpty");
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = t("auth.enterValidEmail");
-    } else if (formData.email.toLowerCase().endsWith("@gmail.com")) {
-      newErrors.email = t("auth.gmailNotAccepted");
+    const emailValidation = validateEmail(formData.email, { blockGmail: true });
+    if (!emailValidation.isValid) {
+      newErrors.email = t(emailValidation.error) || emailValidation.error;
     }
 
     if (!formData.password.trim()) {
@@ -77,10 +61,9 @@ function Login() {
 
     // Real-time email validation to block @gmail.com
     if (name === "email" && value.trim()) {
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-        setErrors({ ...errors, email: t("auth.enterValidEmail") });
-      } else if (value.toLowerCase().endsWith("@gmail.com")) {
-        setErrors({ ...errors, email: t("auth.gmailNotAccepted") });
+      const emailValidation = validateEmail(value, { blockGmail: true });
+      if (!emailValidation.isValid) {
+        setErrors({ ...errors, email: t(emailValidation.error) || emailValidation.error });
       }
     }
   };
@@ -126,9 +109,10 @@ function Login() {
       }
 
       // MFA is now required on every login
-      const { isMfaEnabled, preferredMfaMethod: preferredMethod, isMfaSetupRequired } = mfaResponse.data || {};
+      const { isMfaEnabled, isMfaSetupRequired } = mfaResponse.data || {};
       
       // Set preferred MFA method if available
+      const preferredMethod = getPreferredMfaMethod(mfaResponse);
       if (preferredMethod) {
         setPreferredMfaMethod(preferredMethod);
         // Pre-select the preferred method

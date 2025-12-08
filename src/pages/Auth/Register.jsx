@@ -3,9 +3,7 @@ import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { register } from "../../services/authService";
 import {
-  getJoinRequest,
   bindUserToOrganization,
-  searchOrganizations,
 } from "../../services/organizationService";
 import { useDebounce } from "../../hooks/useDebounce";
 import { ROUTES } from "../../constants/routerConstants";
@@ -15,6 +13,9 @@ import PasswordGuidelines from "../../components/shared/PasswordGuidelines";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import "../../styles/custom.css";
+import { checkPasswordGuidelines } from "../../helpers/auth/passwordValidation";
+import { fetchInviteData } from "../../helpers/auth/inviteFlow";
+import { searchOrganizationsByQuery } from "../../helpers/auth/organizationSearch";
 
 function Register() {
   const [searchParams] = useSearchParams();
@@ -71,7 +72,7 @@ function Register() {
       setInviteError(null);
 
       // Fetch invite data
-      fetchInviteData(joinRequestId, isAdminInvite);
+      handleFetchInviteData(joinRequestId, isAdminInvite);
     } else {
       // Not an invite flow
       // Set role if provided in URL, otherwise default to "filer"
@@ -91,14 +92,9 @@ function Register() {
 
       setIsLoadingOrgs(true);
       try {
-        // Use searchOrganizations - API should handle empty queries
-        const response = await searchOrganizations(debouncedOrgSearchQuery || "");
-        if (response.isSuccess) {
-          setOrganizations(response.data || []);
-          setShowOrgDropdown(true);
-        } else {
-          setOrganizations([]);
-        }
+        const orgs = await searchOrganizationsByQuery(debouncedOrgSearchQuery || "");
+        setOrganizations(orgs);
+        setShowOrgDropdown(true);
       } catch {
         setOrganizations([]);
       } finally {
@@ -126,49 +122,32 @@ function Register() {
     };
   }, []);
 
-  const fetchInviteData = async (joinRequestId, isAdminInvite) => {
-    try {
-      const response = await getJoinRequest(joinRequestId);
+  // Helper functions are now imported from helpers/auth
+  // fetchInviteData from helpers/auth/inviteFlow
+  // checkPasswordGuidelines from helpers/auth/passwordValidation
 
-      if (response.isSuccess) {
-        // Access email from the nested data structure
-        const email = response.data.data?.email || response.data.email;
-
-        if (email) {
-          setInviteData({
-            joinRequestId,
-            isAdminInvite,
-            email: email,
-          });
-
-          // Pre-fill email field
-          setFormData((prev) => ({
-            ...prev,
-            email: email,
-          }));
-        } else {
-          setInviteError("Email not found in invite data");
-        }
-      } else {
-        setInviteError("Invalid or expired invite link");
-      }
-    } catch (error) {
-      setInviteError(
-        "Failed to load invite details. Please check your link and try again."
-      );
-    } finally {
-      setIsLoadingInvite(false);
+  const handleFetchInviteData = async (joinRequestId, isAdminInvite) => {
+    setIsLoadingInvite(true);
+    setInviteError(null);
+    
+    const result = await fetchInviteData(joinRequestId, isAdminInvite);
+    
+    if (result.success) {
+      setInviteData(result.data);
+      // Pre-fill email field
+      setFormData((prev) => ({
+        ...prev,
+        email: result.data.email,
+      }));
+    } else {
+      setInviteError(result.error);
     }
+    
+    setIsLoadingInvite(false);
   };
 
-  const checkPasswordGuidelines = (password) => {
-    const guidelines = {
-      minLength: password.length >= VALIDATION.MIN_PASSWORD_LENGTH,
-      hasUppercase: /[A-Z]/.test(password),
-      hasLowercase: /[a-z]/.test(password),
-      hasNumber: /\d/.test(password),
-      hasSpecialChar: /[@#$%^&*]/.test(password),
-    };
+  const handleCheckPasswordGuidelines = (password) => {
+    const guidelines = checkPasswordGuidelines(password);
     setPasswordGuidelines(guidelines);
   };
 
@@ -269,7 +248,7 @@ function Register() {
       if (value.length > 0) {
         setShowPasswordGuidelines(true);
       }
-      checkPasswordGuidelines(value);
+      handleCheckPasswordGuidelines(value);
     }
   };
 
@@ -303,13 +282,9 @@ function Register() {
     if (organizationSearchQuery.trim() === "") {
       setIsLoadingOrgs(true);
       try {
-        const response = await searchOrganizations("");
-        if (response.isSuccess) {
-          setOrganizations(response.data || []);
-          setShowOrgDropdown(true);
-        } else {
-          setOrganizations([]);
-        }
+        const orgs = await searchOrganizationsByQuery("");
+        setOrganizations(orgs);
+        setShowOrgDropdown(true);
       } catch {
         setOrganizations([]);
       } finally {

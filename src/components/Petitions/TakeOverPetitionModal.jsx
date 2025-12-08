@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import petitionApiService from "../../services/petitionApiService";
 import { formatDate } from "../../utils/dateUtils";
+import { logger } from "../../utils/logger";
 
 const TakeOverPetitionModal = ({ isOpen, duplicateInfo, onConfirm, onCancel }) => {
   const { t } = useTranslation();
@@ -21,25 +22,56 @@ const TakeOverPetitionModal = ({ isOpen, duplicateInfo, onConfirm, onCancel }) =
       setError(null);
       try {
         const response = await petitionApiService.getPetitionById(duplicateInfo.petitionId);
-        if (response.success && response.data) {
-          // Store raw data for pre-filling
-          setPetitionRawData(response.data);
+        // getPetitionById returns axios response.data which is { success: true, data: {...} }
+        // We need to extract the actual petition object from response.data
+        if (response && response.success && response.data) {
+          const petitionData = response.data; // This is the actual petition object
           
-          // Transform the response to get readable status
-          const transformed = petitionApiService.transformSinglePetitionResponse(response);
+          // Store raw data for pre-filling (the actual petition object)
+          setPetitionRawData(petitionData);
+          
+          // Transform the response to get readable status for display
+          // transformSinglePetitionResponse expects { data: petitionObject }
+          const wrappedResponse = { data: petitionData };
+          const transformed = petitionApiService.transformSinglePetitionResponse(wrappedResponse);
           if (transformed) {
             setPetitionDetails({
               ...transformed,
-              property: transformed.details?.property,
-              filingEntity: transformed.details?.filingEntity,
+              property: transformed.details?.property || petitionData.property,
+              filingEntity: transformed.details?.filingEntity || petitionData.filingEntity,
             });
           } else {
-            setPetitionDetails(response.data);
+            // Fallback: use raw data with basic transformation
+            // Map status manually for fallback
+            const getStatusDisplay = (status) => {
+              switch (String(status)) {
+                case "0": return { text: "Draft", class: "Draft" };
+                case "1": return { text: "Submitted", class: "Submitted" };
+                case "2": return { text: "Foreclosure Sale Initiated", class: "ForeclosureSaleInitiated" };
+                case "3": return { text: "Judgment Submitted", class: "JudgmentSubmitted" };
+                case "4": return { text: "Returned", class: "Returned" };
+                case "5": return { text: "Resubmitted", class: "Resubmitted" };
+                case "6": return { text: "Accepted", class: "Accepted" };
+                case "7": return { text: "Closed", class: "Closed" };
+                default: return { text: "Unknown", class: "Unknown" };
+              }
+            };
+            const statusDisplay = getStatusDisplay(petitionData.status);
+            setPetitionDetails({
+              id: petitionData.id,
+              petitionNumber: petitionData.petitionNumber,
+              status: statusDisplay.text,
+              statusClass: statusDisplay.class,
+              createdDate: petitionData.createdDate,
+              property: petitionData.property,
+              filingEntity: petitionData.filingEntity,
+            });
           }
         } else {
           setError(t("modals.takeOver.failedLoadDetails"));
         }
-      } catch {
+      } catch (err) {
+        logger.error('Failed to load petition details for take-over:', err);
         setError(t("modals.takeOver.failedLoadDetails"));
       } finally {
         setIsLoading(false);
@@ -134,7 +166,7 @@ const TakeOverPetitionModal = ({ isOpen, duplicateInfo, onConfirm, onCancel }) =
                           petitionDetails.property.propertyCity,
                           petitionDetails.property.propertyState,
                           petitionDetails.property.propertyZip
-                        ].filter(Boolean).join(", ")}
+                        ].filter(Boolean).join(", ") || "N/A"}
                       </p>
                     </div>
                   )}
@@ -142,7 +174,7 @@ const TakeOverPetitionModal = ({ isOpen, duplicateInfo, onConfirm, onCancel }) =
                   {petitionDetails.filingEntity && (
                     <div className="col-md-6">
                       <span className="text-muted small">{t("modals.takeOver.filingEntity")}</span>
-                      <p className="mb-0 fw-medium small">{petitionDetails.filingEntity.filingEntityLegalName}</p>
+                      <p className="mb-0 fw-medium small">{petitionDetails.filingEntity.filingEntityLegalName || "N/A"}</p>
                     </div>
                   )}
                 </div>

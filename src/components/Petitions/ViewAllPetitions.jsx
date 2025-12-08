@@ -18,6 +18,8 @@ import { getUserById, getSignatureById } from "../../services/authService";
 import { useAuth } from "../../context/AuthContext";
 import { ROUTES } from "../../constants/routerConstants";
 import { getActiveOrganizationId, getUserRole } from "../../utils/storage";
+import { getStatusValue, getStatusBadgeClass, getSortColumn } from "../../helpers/petitions/petitionStatusUtils";
+import { getFromDate, getToDate } from "../../utils/dateUtils";
 
 const ViewAllPetitions = ({ onBack }) => {
   const { t } = useTranslation();
@@ -170,64 +172,7 @@ const ViewAllPetitions = ({ onBack }) => {
   // For filers, use userId; for org admins, use organizationId
   const userId = user?.id || null;
 
-  // Helper function to get status value for API (memoized)
-  const getStatusValue = useCallback((status) => {
-    const statusMap = {
-      all: null,
-      draft: 0,
-      submitted: 1,
-      resubmitted: 3,
-      accepted: 4,
-      returned: 2,
-      closed: 5,
-      judgmentSubmitted: 3,
-      foreclosureSaleInitiated: 2,
-    };
-    return statusMap[status] !== undefined ? statusMap[status] : null;
-  }, []);
-
-  // Helper function to map frontend sort fields to API sort columns (memoized)
-  const getSortColumn = useCallback((sortBy) => {
-    const sortColumnMap = {
-      filingDate: "CreatedDate", // filingDate maps to CreatedDate
-      lastUpdated: "ModifiedDate", // lastUpdated maps to ModifiedDate
-      petitionNumber: "PetitionNumber", // petitionNumber maps to PetitionNumber
-    };
-    return sortColumnMap[sortBy] || "ModifiedDate"; // Default to ModifiedDate (lastUpdated)
-  }, []);
-
-  // Helper function to get from date (memoized)
-  const getFromDate = useCallback(() => {
-    if (dateFilter === "custom" && customDateFrom) {
-      return new Date(customDateFrom).toISOString();
-    }
-    if (dateFilter === "today") {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      return today.toISOString();
-    }
-    if (dateFilter === "week") {
-      const weekAgo = new Date();
-      weekAgo.setDate(weekAgo.getDate() - 7);
-      return weekAgo.toISOString();
-    }
-    if (dateFilter === "month") {
-      const monthAgo = new Date();
-      monthAgo.setMonth(monthAgo.getMonth() - 1);
-      return monthAgo.toISOString();
-    }
-    return new Date("2020-01-01").toISOString(); // Default to a very old date
-  }, [dateFilter, customDateFrom]);
-
-  // Helper function to get to date (memoized)
-  const getToDate = useCallback(() => {
-    if (dateFilter === "custom" && customDateTo) {
-      const toDate = new Date(customDateTo);
-      toDate.setHours(23, 59, 59, 999);
-      return toDate.toISOString();
-    }
-    return new Date().toISOString();
-  }, [dateFilter, customDateTo]);
+  // Helper functions are now imported from helpers/petitions/petitionStatusUtils and utils/dateUtils
 
   // Handle date filter change (memoized)
   const handleDateFilterChange = useCallback((value) => {
@@ -254,8 +199,8 @@ const ViewAllPetitions = ({ onBack }) => {
         pageSize: PAGINATION.DEFAULT_PAGE_SIZE,
         searchText: searchQuery.trim() || "",
         status: getStatusValue(statusFilter),
-        fromDate: getFromDate(),
-        toDate: getToDate(),
+        fromDate: getFromDate(dateFilter, customDateFrom),
+        toDate: getToDate(dateFilter, customDateTo),
         sortColumn: getSortColumn(sortBy),
         sortDirection: sortOrder,
       };
@@ -299,7 +244,7 @@ const ViewAllPetitions = ({ onBack }) => {
     } finally {
       setLoading(false);
     }
-  }, [isOrgAdmin, organizationId, userId, searchQuery, statusFilter, dateFilter, customDateFrom, customDateTo, sortBy, sortOrder, getStatusValue, getFromDate, getToDate, getSortColumn, t]);
+  }, [isOrgAdmin, organizationId, userId, searchQuery, statusFilter, dateFilter, customDateFrom, customDateTo, sortBy, sortOrder, t]);
 
   // Keep ref updated with latest fetchPetitions function
   useEffect(() => {
@@ -366,8 +311,8 @@ const ViewAllPetitions = ({ onBack }) => {
         pageSize: pagination.totalCount || PAGINATION.MAX_PAGE_SIZE, // Get all records by passing totalCount
         searchText: searchQuery.trim() || "",
         status: getStatusValue(statusFilter),
-        fromDate: getFromDate(),
-        toDate: getToDate(),
+        fromDate: getFromDate(dateFilter, customDateFrom),
+        toDate: getToDate(dateFilter, customDateTo),
         sortColumn: getSortColumn(sortBy),
         sortDirection: sortOrder,
       };
@@ -600,33 +545,7 @@ const ViewAllPetitions = ({ onBack }) => {
     };
   }, [openDropdownId, showExportDropdown]);
 
-  const getStatusBadgeClass = (status, statusClass) => {
-    // Use the statusClass from API if available, otherwise fallback to status text
-    if (statusClass) {
-      return `status-badge status-${statusClass}`;
-    }
-
-    switch (status.toLowerCase()) {
-      case "accepted":
-        return "status-badge status-accepted";
-      case "submitted":
-        return "status-badge status-submitted";
-      case "resubmitted":
-        return "status-badge status-submitted";
-      case "returned":
-        return "status-badge status-returned";
-      case "draft":
-        return "status-badge status-draft";
-      case "under review":
-        return "status-badge status-under-review";
-      case "rejected":
-        return "status-badge status-rejected";
-      case "closed":
-        return "status-badge status-closed";
-      default:
-        return "status-badge";
-    }
-  };
+  // getStatusBadgeClass is now imported from helpers/petitions/petitionStatusUtils
 
   const handleDeletePetition = useCallback(async (e, petitionId) => {
     e.stopPropagation();

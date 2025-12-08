@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next';
 import MessageItem from './MessageItem';
 import DateBreaker from './DateBreaker';
+import { getDateLabel, isDifferentDate } from '../../helpers/messages/messageUtils';
 
 const MessageList = ({ 
   messages, 
@@ -20,46 +21,8 @@ const MessageList = ({
   const scrollPositionRef = useRef(null);
   const previousConversationIdRef = useRef(null);
 
-  // Helper function to get date label for a message (memoized)
-  const getDateLabel = useCallback((timestamp) => {
-    if (!timestamp) return null;
-    
-    const messageDate = new Date(timestamp);
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    
-    // Reset time to compare only dates
-    const messageDateOnly = new Date(messageDate.getFullYear(), messageDate.getMonth(), messageDate.getDate());
-    const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    const yesterdayOnly = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate());
-    
-    if (messageDateOnly.getTime() === todayOnly.getTime()) {
-      return t("messages.today");
-    } else if (messageDateOnly.getTime() === yesterdayOnly.getTime()) {
-      return t("messages.yesterday");
-    } else {
-      return messageDate.toLocaleDateString('en-US', { 
-        month: 'long', 
-        day: 'numeric', 
-        year: 'numeric' 
-      });
-    }
-  }, [t]);
-
-  // Helper function to check if two messages are on different dates (memoized)
-  const isDifferentDate = useCallback((timestamp1, timestamp2) => {
-    if (!timestamp1 || !timestamp2) return true;
-    
-    const date1 = new Date(timestamp1);
-    const date2 = new Date(timestamp2);
-    
-    return (
-      date1.getFullYear() !== date2.getFullYear() ||
-      date1.getMonth() !== date2.getMonth() ||
-      date1.getDate() !== date2.getDate()
-    );
-  }, []);
+  // Helper functions are now imported from helpers/messages/messageUtils
+  // getDateLabel and isDifferentDate are imported
 
   // Group messages with date breakers (memoized)
   const renderMessagesWithDateBreakers = useMemo(() => {
@@ -70,7 +33,7 @@ const MessageList = ({
     
     messages.forEach((message, index) => {
       const currentDate = message.originalTimestamp 
-        ? getDateLabel(message.originalTimestamp)
+        ? getDateLabel(message.originalTimestamp, t)
         : null;
       
       // Add date breaker if this is the first message or date changed
@@ -92,7 +55,7 @@ const MessageList = ({
     });
     
     return elements;
-  }, [messages, conversationAvatar, getDateLabel, isDifferentDate]);
+  }, [messages, conversationAvatar, t]);
 
   // Scroll to bottom on initial load or when new messages arrive at bottom
   useEffect(() => {

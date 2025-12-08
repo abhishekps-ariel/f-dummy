@@ -17,28 +17,8 @@ import {
   createSignalRConnection,
   markAsRead,
 } from '../../services/chatService';
-
-// Helper function to get two initials from a name (first letter of first name and first letter of last name)
-const getInitials = (name) => {
-  if (!name || typeof name !== 'string') return 'U';
-  
-  const trimmedName = name.trim();
-  if (!trimmedName) return 'U';
-  
-  const parts = trimmedName.split(/\s+/).filter(part => part.length > 0);
-  
-  if (parts.length === 0) return 'U';
-  
-  if (parts.length === 1) {
-    // Only one word, return first letter
-    return parts[0].charAt(0).toUpperCase();
-  }
-  
-  // Two or more words: return first letter of first word and first letter of last word
-  const firstInitial = parts[0].charAt(0).toUpperCase();
-  const lastInitial = parts[parts.length - 1].charAt(0).toUpperCase();
-  return `${firstInitial}${lastInitial}`;
-};
+import { getInitials, formatTimestamp, formatMessageTime, sortConversationsByLatest } from '../../helpers/messages/messageUtils';
+import { loadChatList, loadMessagesForChat, sendChatMessage, markMessagesAsRead } from '../../helpers/messages/messageHandlers';
 
 const Messages = () => {
   const { t } = useTranslation();
@@ -64,76 +44,15 @@ const Messages = () => {
   // Hardcoded receiver ID for testing
   const TEST_RECEIVER_ID = '1c490bd3-e968-4a36-b915-78b64815ba6c';
 
-  // Format timestamp for display (for conversation list)
-  const formatTimestamp = (timestamp) => {
-    if (!timestamp) return '';
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffInHours = (now - date) / (1000 * 60 * 60);
-    
-    if (diffInHours < 24) {
-      return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-    } else if (diffInHours < 48) {
-      return t("messages.yesterday");
-    } else {
-      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    }
-  };
-
-  // Format message time (only time, no date - date breakers handle dates)
-  const formatMessageTime = (timestamp) => {
-    if (!timestamp) return '';
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-  };
-
-  // Sort conversations by latest message time (descending)
-  const sortConversationsByLatest = (conversations) => {
-    return [...conversations].sort((a, b) => {
-      const timeA = a.lastMessageTime ? new Date(a.lastMessageTime).getTime() : 0;
-      const timeB = b.lastMessageTime ? new Date(b.lastMessageTime).getTime() : 0;
-      return timeB - timeA; // Latest first (descending order)
-    });
-  };
-
-  // Load chat list
-  const loadChatList = async () => {
+  // Load chat list using helper
+  const handleLoadChatList = async () => {
     if (!user?.id) return;
     
     try {
       setLoading(true);
-      const response = await getChatList(user.id);
-      if (response.isSuccess && response.data) {
-        const formattedConversations = response.data.map((chat) => ({
-          id: chat.chatId,
-          chatId: chat.chatId,
-          name: chat.userName || t("messages.unknownUser"),
-          email: chat.email || '',
-          lastMessage: chat.lastMessage || '',
-          timestamp: formatTimestamp(chat.lastMessageTime),
-          lastMessageTime: chat.lastMessageTime, // Store original timestamp for sorting
-          userId: chat.userId,
-          avatar: getInitials(chat.userName),
-          unread: chat.unreadCount || unreadCounts[chat.chatId] || 0, // Use API unread count or state
-        }));
-        
-        // Initialize unread counts from API response if available
-        const initialUnreadCounts = {};
-        response.data.forEach((chat) => {
-          if (chat.unreadCount !== undefined && chat.unreadCount > 0) {
-            initialUnreadCounts[chat.chatId] = chat.unreadCount;
-          }
-        });
-        if (Object.keys(initialUnreadCounts).length > 0) {
-          setUnreadCounts((prev) => ({ ...prev, ...initialUnreadCounts }));
-        }
-        const sortedConversations = sortConversationsByLatest(formattedConversations);
-        setConversations(sortedConversations);
-        
-        // Update total unread count in localStorage for sidebar badge
-        const totalUnread = Object.values(initialUnreadCounts).reduce((sum, count) => sum + count, 0);
-        sessionStorage.setItem(STORAGE_KEYS.MESSAGES_UNREAD_COUNT, totalUnread.toString());
-      }
+      const result = await loadChatList(user.id, t, unreadCounts);
+      setConversations(result.conversations);
+      setUnreadCounts((prev) => ({ ...prev, ...result.unreadCounts }));
     } catch (err) {
       toast.error(err?.message || t("messages.errorLoadingChatList") || "Failed to load chat list. Please try again.");
     } finally {
@@ -279,7 +198,7 @@ const Messages = () => {
         chatId: chatId,
         sender: msg.Author?.User || msg.author?.user || 'Unknown',
         text: msg.Message || msg.message || '',
-        timestamp: formatMessageTime(msg.TimeStamp || msg.timeStamp),
+        timestamp: formatMessageTime(msg.TimeStamp || msg.timeStamp || new Date().toISOString()),
         originalTimestamp: msg.TimeStamp || msg.timeStamp, // Store original timestamp for date grouping
         isOwn: isOwn,
         messageSeen: msg.MessageSeen !== undefined ? msg.MessageSeen : (msg.messageSeen || false),
@@ -454,7 +373,7 @@ const Messages = () => {
   // Load chat list on mount
   useEffect(() => {
     if (user?.id) {
-      loadChatList();
+      handleLoadChatList();
     }
   }, [user?.id]);
 

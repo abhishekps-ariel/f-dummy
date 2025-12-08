@@ -41,6 +41,7 @@ import Step9PetitionAttestation from "./MultiStepForm/Step9PetitionAttestation";
 import Step10ReviewSubmit from "./MultiStepForm/Step10ReviewSubmit";
 import TakeOverPetitionModal from "./TakeOverPetitionModal";
 import { formatCurrencyInput, parseCurrencyInput } from "../../utils/currencyUtils";
+import { defaultFormData, loadFormDataFromStorage, saveFormDataToStorage, clearFormDataFromStorage, transformTakeOverPetitionData } from "../../helpers/petitions/petitionFormData";
 
 // Static libraries array to prevent LoadScript reload
 const LIBRARIES = ["places"];
@@ -326,138 +327,7 @@ const PetitionSteps = ({
 
   const geocoderRef = useRef(null);
 
-  // Default form data structure (defined early for use in formData initialization)
-  const defaultFormData = {
-    // Step 2: Property Details
-    propertyStreet1: "",
-    propertyStreet2: "",
-    propertyCity: "",
-    propertyState: "MA",
-    propertyZip: "",
-    propertyCounty: "",
-    assessorParcelId: "",
-    // Step 3: Loan Details
-    isMinApplicable: "",
-    minNumber: "",
-    loanNumber: "",
-    petitionLoanTypeId: "",
-    petitionLoanTypeName: "",
-    lienPosition: "",
-    originationDate: "",
-    originalPrincipalAmount: 0,
-    currentPrincipalBalance: 0,
-    interestRatePercent: null,
-    variableRate: false,
-    interestOnly: false,
-    negativeAmortization: false,
-    monthlyPaymentAmount: 0,
-    delinquencyDaysAtFiling: null,
-    mortgageBrokerLicenseNumber: "",
-    mortgageLoanOriginatorLicenseNumber: "",
-    lenderId: "",
-    // Step 4: Borrower Details
-    borrowers: [
-      {
-        id: 1,
-        firstName: "",
-        middleName: "",
-        lastName: "",
-        suffix: "",
-        borrowerIsPrimary: true,
-        mailingStreet1: "",
-        mailingCity: "",
-        mailingState: "",
-        mailingZip: "",
-        phone: "",
-        email: "",
-      },
-    ],
-    // Step 5: Filing Entity
-    filingEntityLegalName: "",
-    filingEntityRole: "",
-    filingEntityStreet1: "",
-    filingEntityStreet2: "",
-    filingEntityCity: "",
-    filingEntityState: "",
-    filingEntityZip: "",
-    filingContactName: "",
-    filingContactEmail: "",
-    filingContactPhone: "",
-    nmlsLicenseNumber: "",
-    stateLicenseNumber: "",
-    stateLicenseState: "",
-    // Step 6: Right-to-Cure (new array format)
-    rightToCures: [],
-    // Legacy fields for backward compatibility
-    noticeSent: null,
-    noticeDate: "",
-    amountInDefault: 0,
-    daysDelinquentAtNotice: 0,
-    cureExpirationDate: "",
-    noticeAddressStreet1: "",
-    noticeAddressCity: "",
-    noticeAddressState: "",
-    noticeAddressZip: "",
-    manualOverrideReason: "",
-    // Step 7: Form 35B Compliance
-    certainMortgageLoan: null,
-    form35bComplianceAffidavitPdf: "",
-    form35bNonApplicabilityAffidavitPdf: "",
-    affiantName: "",
-    affiantTitle: "",
-    affidavitExecutionDate: "",
-    // Step 8: Loan Assignees
-    loanAssignees: [
-      {
-        assigneeName: "",
-        assigneeTypeId: "",
-        assigneeRoleId: "",
-        street1: "",
-        street2: "",
-        city: "",
-        addressState: "",
-        zip: "",
-        licenseNumber: "",
-        licenseState: "",
-      },
-    ],
-    // Step 9: Petition Attestation & Signatures
-    signatures: [
-      {
-        signerFullName: "",
-        signerTitle: "",
-        signerEmail: "",
-        esignConsent: false,
-        signatureDrawnOrTyped: "",
-        signedAt: "",
-        signerIp: "",
-        otpCode: "",
-      },
-    ],
-    // Additional fields
-    documents: [],
-    certification_check: false,
-    // Signer fields (prefilled from user data)
-    signerFirstName: "",
-    signerMiddleInitial: "",
-    signerLastName: "",
-    signerEmail: "",
-    signerTitle: "",
-  };
-
-  // Load form data from localStorage on component mount
-  const loadFormDataFromStorage = () => {
-    try {
-      const savedData = sessionStorage.getItem(STORAGE_KEYS.PETITION_FORM_DATA);
-      if (savedData) {
-        const parsedData = JSON.parse(savedData);
-        return { ...defaultFormData, ...parsedData };
-      }
-    } catch {
-      // Error loading form data from localStorage - will use default data
-    }
-    return defaultFormData;
-  };
+  // defaultFormData and loadFormDataFromStorage are now imported from helpers/petitions/petitionFormData
 
   // Initialize formData state early so it can be used in useEffects
   const [formData, setFormData] = useState(loadFormDataFromStorage);
@@ -1003,25 +873,7 @@ const PetitionSteps = ({
     }
   }, [isOpen, currentStep]);
 
-  // Save form data to localStorage
-
-  const saveFormDataToStorage = (data) => {
-    try {
-      sessionStorage.setItem(STORAGE_KEYS.PETITION_FORM_DATA, JSON.stringify(data));
-    } catch {
-      // Error saving form data to localStorage - non-critical
-    }
-  };
-
-  // Clear form data from localStorage
-
-  const clearFormDataFromStorage = () => {
-    try {
-      sessionStorage.removeItem("petitionFormData");
-    } catch {
-      // Error clearing form data from localStorage - non-critical
-    }
-  };
+  // saveFormDataToStorage and clearFormDataFromStorage are now imported from helpers/petitions/petitionFormData
 
   // Helper function to check if a step has required fields filled
   // Checks fields directly to match validation logic
@@ -3751,17 +3603,67 @@ const PetitionSteps = ({
         return newState;
       });
     }
+  };
+
+  // Right-to-Cure management functions (for multiple right-to-cures when taking over)
+  const addRightToCure = () => {
+    setFormData((prev) => ({
+      ...prev,
+      rightToCures: [
+        ...prev.rightToCures,
+        {
+          id: null,
+          noticeSent: null,
+          noticeDate: "",
+          amountInDefault: 0,
+          daysDelinquentAtNotice: 0,
+          cureExpirationDate: "",
+          noticeAddressStreet1: "",
+          noticeAddressCity: "",
+          noticeAddressState: "",
+          noticeAddressZip: "",
+          manualOverrideReason: "",
+          borrowerRespondedWithin30Days: null,
+          borrowerResponseDate: "",
+          proceededWithRightToCure: null,
+        },
+      ],
+    }));
+  };
+
+  const removeRightToCure = (index) => {
+    // Only allow removal if there's more than one right-to-cure
+    // and it's a taken over petition
+    if (formData.rightToCures.length > 1 && isTakenOverPetition) {
+      setFormData((prev) => ({
+        ...prev,
+        rightToCures: prev.rightToCures.filter((_, i) => i !== index),
+      }));
+      
+      // Clear notice address verification for removed index
+      setIsNoticeAddressVerified(false);
+    }
+  };
+
+  const updateRightToCure = (index, field, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      rightToCures: prev.rightToCures.map((rtc, i) =>
+        i === index ? { ...rtc, [field]: value } : rtc
+      ),
+    }));
+
+    // Reset notice address verification when address fields are edited
+    if (["noticeAddressStreet1", "noticeAddressCity", "noticeAddressState", "noticeAddressZip"].includes(field)) {
+      setIsNoticeAddressVerified(false);
+    }
 
     // Clear field error when user starts typing
-
-    const errorKey = `loanAssignees.${index}.${field}`;
-
+    const errorKey = `rightToCures.${index}.${field}`;
     if (fieldErrors[errorKey]) {
       setFieldErrors((prev) => {
         const newErrors = { ...prev };
-
         delete newErrors[errorKey];
-
         return newErrors;
       });
     }
@@ -4920,7 +4822,7 @@ const PetitionSteps = ({
       // Check if this is a duplicate with take-over option
       if (err?.isDuplicate && err.duplicateInfo?.canTakeOver) {
         // Show take-over modal instead of error toast
-        setDuplicateInfo(error.duplicateInfo);
+        setDuplicateInfo(err.duplicateInfo);
         setPendingAction('save');
         setShowTakeOverModal(true);
         setIsSaving(false);
@@ -5713,7 +5615,7 @@ const PetitionSteps = ({
       // Check if this is a duplicate with take-over option
       if (err?.isDuplicate && err.duplicateInfo?.canTakeOver) {
         // Show take-over modal instead of error toast
-        setDuplicateInfo(error.duplicateInfo);
+        setDuplicateInfo(err.duplicateInfo);
         setPendingAction('submit');
         setShowTakeOverModal(true);
         return;
@@ -5834,6 +5736,10 @@ const PetitionSteps = ({
             setShowNoticePredictions={setShowNoticePredictions}
             selectedNoticePredictionIndex={selectedNoticePredictionIndex}
             setSelectedNoticePredictionIndex={setSelectedNoticePredictionIndex}
+            isTakenOverPetition={isTakenOverPetition}
+            addRightToCure={addRightToCure}
+            removeRightToCure={removeRightToCure}
+            updateRightToCure={updateRightToCure}
           />
         );
 
@@ -5904,142 +5810,7 @@ const PetitionSteps = ({
     }
   };
 
-  // Transform takeover petition API response to formData format
-  const transformTakeOverPetitionData = (apiData) => {
-    if (!apiData) return null;
-
-    const details = apiData;
-    const mappedBorrowers = [];
-
-    (details.borrowers || []).forEach((b, idx) => {
-      const isPrimary = b.borrowerIsPrimary === true;
-      mappedBorrowers.push({
-        id: b.id || idx + 1,
-        firstName: b.firstName || "",
-        middleName: b.middleName || "",
-        lastName: b.lastName || "",
-        suffix: b.suffix || "",
-        borrowerIsPrimary: isPrimary,
-        mailingStreet1: b.mailingStreet1 || "",
-        mailingCity: b.mailingCity || "",
-        mailingState: b.mailingState || "",
-        mailingZip: b.mailingZip || "",
-        phone: b.phone || "",
-        email: b.email || "",
-      });
-    });
-
-    // Ensure at least one primary borrower
-    if (mappedBorrowers.length > 0 && !mappedBorrowers.some(b => b.borrowerIsPrimary)) {
-      mappedBorrowers[0].borrowerIsPrimary = true;
-    }
-
-    return {
-      // Property Details
-      propertyStreet1: details.property?.propertyStreet1 || "",
-      propertyStreet2: details.property?.propertyStreet2 || "",
-      propertyCity: details.property?.propertyCity || "",
-      propertyState: details.property?.propertyState || "MA",
-      propertyZip: details.property?.propertyZip || "",
-      propertyCounty: details.property?.propertyCounty || "",
-      assessorParcelId: details.property?.assessorParcelId || "",
-
-      // Loan Details
-      isMinApplicable: details.loan?.minNumber ? "yes" : "no",
-      minNumber: details.loan?.minNumber || "",
-      loanNumber: details.loan?.loanNumber || "",
-      petitionLoanTypeId: details.loan?.petitionLoanTypeId || "",
-      petitionLoanTypeName: details.loan?.petitionLoanTypeName || "",
-      lienPosition: details.loan?.lienPosition ?? "",
-      originationDate: details.loan?.originationDate
-        ? details.loan.originationDate.split("T")[0]
-        : "",
-      originalPrincipalAmount: details.loan?.originalPrincipalAmount || 0,
-      currentPrincipalBalance: details.loan?.currentPrincipalBalance || 0,
-      interestRatePercent: details.loan?.interestRatePercent || null,
-      variableRate: details.loan?.variableRate || false,
-      interestOnly: details.loan?.interestOnly || false,
-      negativeAmortization: details.loan?.negativeAmortization || false,
-      monthlyPaymentAmount: details.loan?.monthlyPaymentAmount || 0,
-      delinquencyDaysAtFiling: details.loan?.delinquencyDaysAtFiling || null,
-      mortgageBrokerLicenseNumber: details.loan?.mortgageBrokerLicenseNumber || "",
-      mortgageLoanOriginatorLicenseNumber: details.loan?.mortgageLoanOriginatorLicenseNumber || "",
-
-      // Borrowers
-      borrowers: mappedBorrowers.length > 0 ? mappedBorrowers : defaultFormData.borrowers,
-
-      // Filing Entity - DO NOT pre-fill, user must select organization and fill this themselves
-      filingEntityLegalName: "",
-      filingEntityTypeId: null,
-      filingEntityStreet1: "",
-      filingEntityStreet2: "",
-      filingEntityCity: "",
-      filingEntityState: "",
-      filingEntityZip: "",
-      filingContactName: "",
-      filingContactEmail: "",
-      filingContactPhone: "",
-      nmlsLicenseNumber: "",
-      stateLicenseNumber: "",
-      stateLicenseState: "",
-
-      // Right-to-Cure
-      noticeSent: details.rightToCure?.noticeSent || false,
-      noticeDate: details.rightToCure?.noticeDate
-        ? details.rightToCure.noticeDate.split("T")[0]
-        : "",
-      amountInDefault: details.rightToCure?.amountInDefault || 0,
-      daysDelinquentAtNotice: details.rightToCure?.daysDelinquentAtNotice || 0,
-      cureExpirationDate: details.rightToCure?.cureExpirationDate
-        ? details.rightToCure.cureExpirationDate.split("T")[0]
-        : "",
-      noticeAddressStreet1: details.rightToCure?.noticeAddressStreet1 || "",
-      noticeAddressCity: details.rightToCure?.noticeAddressCity || "",
-      noticeAddressState: details.rightToCure?.noticeAddressState || "",
-      noticeAddressZip: details.rightToCure?.noticeAddressZip || "",
-      manualOverrideReason: details.rightToCure?.manualOverrideReason || "",
-
-      // Form 35B Compliance
-      certainMortgageLoan: details.affidavit?.certainMortgageLoan ?? null,
-      form35bComplianceAffidavitPdf: details.affidavit?.form35bComplianceAffidavitPdf || "",
-      form35bNonApplicabilityAffidavitPdf: details.affidavit?.form35bNonApplicabilityAffidavitPdf || "",
-      affiantName: details.affidavit?.affiantName || "",
-      affiantTitle: details.affidavit?.affiantTitle || "",
-      affidavitExecutionDate: details.affidavit?.affidavitExecutionDate
-        ? details.affidavit.affidavitExecutionDate.split("T")[0]
-        : "",
-
-      // Loan Assignees
-      loanAssignees: details.loanAssignees?.map((a, idx) => ({
-        assigneeName: a.assigneeName || "",
-        assigneeTypeId: a.assigneeTypeId || "",
-        assigneeRoleId: a.assigneeRoleId || "",
-        street1: a.street1 || "",
-        street2: a.street2 || "",
-        city: a.city || "",
-        addressState: a.addressState || "",
-        zip: a.zip || "",
-        licenseNumber: a.licenseNumber || "",
-        licenseState: a.licenseState || "",
-      })) || [],
-
-      // Additional
-      documents: details.documents || [],
-      isAllStepsCompleted: false,
-      organizationId: null, // DO NOT pre-fill, user must select organization on step 1
-      
-      // Signer fields - will be filled with current user's details in handleTakeOverConfirm
-      signerFirstName: "",
-      signerMiddleInitial: "",
-      signerLastName: "",
-      signerEmail: "",
-      signerTitle: "",
-      certification_check: false,
-      
-      // Signatures - will be pre-filled with current user's details in handleTakeOverConfirm
-      signatures: defaultFormData.signatures,
-    };
-  };
+  // transformTakeOverPetitionData is now imported from helpers/petitions/petitionFormData
 
   if (!isOpen) return null;
 
@@ -6053,9 +5824,18 @@ const PetitionSteps = ({
     setShowTakeOverModal(false);
     
     // Transform the API data to formData format
+    // petitionData is the raw API response from getPetitionById (response.data)
     const transformedData = transformTakeOverPetitionData(petitionData);
     
-    if (transformedData && user) {
+    if (!transformedData) {
+      toast.error("Failed to transform petition data. The data structure may be invalid.");
+      return;
+    }
+    
+    if (!user) {
+      toast.error("User information is required to take over a petition.");
+      return;
+    }
       // Pre-fill signature section with current user's details (person taking over)
       const signerFirstName = user.firstName || "";
       const signerMiddleInitial = user.middleName
@@ -6199,9 +5979,6 @@ const PetitionSteps = ({
       
       // Navigate to step 1 to start reviewing (user must select organization)
       wizardGoToStep(1);
-    } else {
-      toast.error("Failed to process petition data");
-    }
   };
 
   const handleTakeOverCancel = () => {
@@ -6262,7 +6039,7 @@ const PetitionSteps = ({
         // Show error - this shouldn't happen if takeOverToUserId is set correctly
         toast.error("Unable to take over petition. Please try again.");
         setShowTakeOverModal(true);
-        setDuplicateInfo(error.duplicateInfo);
+        setDuplicateInfo(err.duplicateInfo);
       } else {
         // Other errors are already handled by submitPetition
       }
@@ -6322,7 +6099,7 @@ const PetitionSteps = ({
         // Show error - this shouldn't happen if takeOverToUserId is set correctly
         toast.error("Unable to take over petition. Please try again.");
         setShowTakeOverModal(true);
-        setDuplicateInfo(error.duplicateInfo);
+        setDuplicateInfo(err.duplicateInfo);
       } else {
         // Other errors are already handled by submitPetition
       }
