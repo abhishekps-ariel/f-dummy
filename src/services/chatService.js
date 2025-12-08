@@ -2,6 +2,7 @@ import client from "../api/axiosInstance";
 import { CHAT_ENDPOINTS } from "../constants/apiEndpoints";
 import Config from "../config/index";
 import * as signalR from "@microsoft/signalr";
+import { SERVICE_HEADERS, normalizeResponse } from "../utils/serviceUtils";
 
 export const createSignalRConnection = (userId) => {
   const url = `${Config.API_URL}${CHAT_ENDPOINTS.SIGNALR_HUB_URL}?userId=${encodeURIComponent(userId)}`;
@@ -26,18 +27,11 @@ export const sendMessage = async (messageData) => {
       replyToMessageId: messageData.replyToMessageId || null,
     },
     {
-      headers: {
-        Accept: "text/plain",
-        "Content-Type": "application/json",
-      },
+      headers: SERVICE_HEADERS.JSON,
     }
   );
 
-  return {
-    isSuccess: response.data.success,
-    msg: response.data.message,
-    data: response.data.data,
-  };
+  return normalizeResponse(response, "Message sent successfully");
 };
 
 // Get messages API
@@ -51,33 +45,20 @@ export const getMessages = async (chatId, userId, page = 1, pageSize = 15) => {
       pageSize: pageSize,
     },
     {
-      headers: {
-        Accept: "text/plain",
-        "Content-Type": "application/json",
-      },
+      headers: SERVICE_HEADERS.JSON,
     }
   );
 
-  return {
-    isSuccess: response.data.success,
-    msg: response.data.message,
-    data: response.data.data,
-  };
+  return normalizeResponse(response, "Messages fetched successfully");
 };
 
 // Get chat list API
 export const getChatList = async (userId) => {
   const response = await client.get(CHAT_ENDPOINTS.GET_CHAT_LIST(userId), {
-    headers: {
-      Accept: "text/plain",
-    },
+    headers: SERVICE_HEADERS.TEXT_PLAIN,
   });
 
-  return {
-    isSuccess: response.data.success,
-    msg: response.data.message,
-    data: response.data.data,
-  };
+  return normalizeResponse(response, "Chat list fetched successfully");
 };
 
 // Mark messages as read API
@@ -86,18 +67,11 @@ export const markAsRead = async (chatId, userId) => {
     CHAT_ENDPOINTS.MARK_AS_READ(chatId, userId),
     {},
     {
-      headers: {
-        Accept: "*/*",
-        "Content-Type": "application/json",
-      },
+      headers: SERVICE_HEADERS.JSON_WILDCARD,
     }
   );
 
-  return {
-    isSuccess: response.data?.success !== false,
-    msg: response.data?.message || "Messages marked as read",
-    data: response.data?.data,
-  };
+  return normalizeResponse(response, "Messages marked as read");
 };
 
 // Get chat user list (search users) API
@@ -105,16 +79,10 @@ export const getChatUserList = async (userId, searchText) => {
   const response = await client.get(
     CHAT_ENDPOINTS.GET_CHAT_USER_LIST(userId, searchText),
     {
-      headers: {
-        Accept: "text/plain",
-      },
+      headers: SERVICE_HEADERS.TEXT_PLAIN,
     }
   );
 
-  return {
-    isSuccess: response.data?.success !== false,
-    msg: response.data?.message || "Users fetched successfully",
-    data: response.data?.data || [],
-  };
+  return normalizeResponse(response, "Users fetched successfully");
 };
 

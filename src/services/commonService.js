@@ -1,12 +1,11 @@
 import client from "../api/axiosInstance";
 import { COMMON_ENDPOINTS } from "../constants/apiEndpoints";
 import { extractNestedData, normalizeResponse } from "../utils/responseParser";
+import { SERVICE_HEADERS } from "../utils/serviceUtils";
 
 export const getFilingEntityTypes = async () => {
   const response = await client.get(COMMON_ENDPOINTS.GET_FILING_ENTITY_TYPES, {
-    headers: {
-      Accept: "text/plain",
-    },
+    headers: SERVICE_HEADERS.TEXT_PLAIN,
   });
 
   return normalizeResponse(response, "Filing entity types fetched successfully");
@@ -14,9 +13,7 @@ export const getFilingEntityTypes = async () => {
 
 export const getMfaTypesEnum = async () => {
   const response = await client.get(COMMON_ENDPOINTS.GET_MFA_TYPES_ENUM, {
-    headers: {
-      Accept: "text/plain",
-    },
+    headers: SERVICE_HEADERS.TEXT_PLAIN,
   });
 
   // Extract nested mfaTypes data using unified parser
@@ -31,9 +28,7 @@ export const getMfaTypesEnum = async () => {
 
 export const get35BReportingPeriods = async () => {
   const response = await client.get(COMMON_ENDPOINTS.GET_35B_REPORTING_PERIOD, {
-    headers: {
-      Accept: "text/plain",
-    },
+    headers: SERVICE_HEADERS.TEXT_PLAIN,
   });
 
   return normalizeResponse(response, "35B reporting periods fetched successfully");
@@ -41,9 +36,7 @@ export const get35BReportingPeriods = async () => {
 
 export const get35BEntityTypes = async () => {
   const response = await client.get(COMMON_ENDPOINTS.GET_35B_ENTITY_TYPE, {
-    headers: {
-      Accept: "text/plain",
-    },
+    headers: SERVICE_HEADERS.TEXT_PLAIN,
   });
 
   return normalizeResponse(response, "35B entity types fetched successfully");

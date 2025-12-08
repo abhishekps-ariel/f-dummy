@@ -1,5 +1,6 @@
 import axiosInstance from '../api/axiosInstance';
 import { COMMON_ENDPOINTS } from '../constants/apiEndpoints';
+import { SERVICE_HEADERS } from '../utils/serviceUtils';
 
 class CommonPetitionService {
   // Get petition enums (status, filing entity role, lien position, address validation status)
@@ -29,9 +30,7 @@ class CommonPetitionService {
   // Get buyer types
   async getBuyerTypes() {
     const response = await axiosInstance.get(COMMON_ENDPOINTS.GET_BUYER_TYPES, {
-      headers: {
-        Accept: "text/plain",
-      },
+      headers: SERVICE_HEADERS.TEXT_PLAIN,
     });
     return response.data;
   }
@@ -39,9 +38,7 @@ class CommonPetitionService {
   // Get lender types
   async getLenderTypes() {
     const response = await axiosInstance.get(COMMON_ENDPOINTS.GET_LENDER_TYPES, {
-      headers: {
-        Accept: "text/plain",
-      },
+      headers: SERVICE_HEADERS.TEXT_PLAIN,
     });
     return response.data;
   }

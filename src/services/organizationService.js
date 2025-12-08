@@ -1,14 +1,11 @@
 import client from '../api/axiosInstance';
 import { ORGANIZATION_ENDPOINTS } from '../constants/apiEndpoints';
+import { SERVICE_HEADERS, normalizeResponse } from '../utils/serviceUtils';
 
 export const getAllOrganizations = async () => {
   const response = await client.get(ORGANIZATION_ENDPOINTS.GET_ALL);
 
-  return {
-    isSuccess: response.data.success || true,
-    msg: response.data.message || "Organizations fetched successfully",
-    data: response.data.data || response.data,
-  };
+  return normalizeResponse(response, "Organizations fetched successfully");
 };
 
 export const searchOrganizations = async (query) => {
@@ -16,45 +13,27 @@ export const searchOrganizations = async (query) => {
     params: { query },
   });
 
-  return {
-    isSuccess: response.data.success || true,
-    msg: response.data.message || "Search completed successfully",
-    data: response.data.data || response.data,
-  };
+  return normalizeResponse(response, "Search completed successfully");
 };
 
 export const getUserJoinRequests = async () => {
   const response = await client.get(ORGANIZATION_ENDPOINTS.GET_MY_REQUESTS);
 
-  return {
-    isSuccess: response.data.success || true,
-    msg: response.data.message || "Join requests fetched successfully",
-    data: response.data.data || response.data,
-  };
+  return normalizeResponse(response, "Join requests fetched successfully");
 };
 
 export const getOrganizationById = async (id) => {
   const response = await client.get(ORGANIZATION_ENDPOINTS.GET_BY_ID(id));
 
-  return {
-    isSuccess: response.data.success || true,
-    msg: response.data.message || "Organization fetched successfully",
-    data: response.data.data || response.data,
-  };
+  return normalizeResponse(response, "Organization fetched successfully");
 };
 
 export const getJoinRequest = async (joinRequestId) => {
   const response = await client.get(ORGANIZATION_ENDPOINTS.GET_JOIN_REQUEST(joinRequestId), {
-    headers: {
-      Accept: "text/plain",
-    },
+    headers: SERVICE_HEADERS.TEXT_PLAIN,
   });
 
-  return {
-    isSuccess: response.data?.success !== false && response.status === 200,
-    msg: response.data?.message || "Join request fetched successfully",
-    data: response.data?.data || response.data, // Contains request with userDetail
-  };
+  return normalizeResponse(response, "Join request fetched successfully");
 };
 
 export const bindUserToOrganization = async (joinRequestId, userId) => {
@@ -65,16 +44,9 @@ export const bindUserToOrganization = async (joinRequestId, userId) => {
       userId,
     },
     {
-      headers: {
-        Accept: "text/plain",
-        "Content-Type": "application/json",
-      },
+      headers: SERVICE_HEADERS.JSON,
     }
   );
 
-  return {
-    isSuccess: response.data.success,
-    msg: response.data.message,
-    data: response.data.data,
-  };
+  return normalizeResponse(response, "User bound to organization successfully");
 };

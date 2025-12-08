@@ -3,6 +3,7 @@ import { PAGINATION } from '../constants/appConstants';
 import { PETITION_ENDPOINTS } from '../constants/apiEndpoints';
 import axios from 'axios';
 import Config from '../config/index';
+import { SERVICE_HEADERS, safeDateConversion, dateToISO, fileToBase64, safeParseInt, safeParseFloat, safeString, isValidUUID } from '../utils/serviceUtils';
 
 class PetitionApiService {
   // Submit a new petition
@@ -25,10 +26,7 @@ class PetitionApiService {
     }
     
     const response = await axiosInstance.post(PETITION_ENDPOINTS.GET_PETITION_COUNT, requestBody, {
-      headers: {
-        'Accept': 'text/plain',
-        'Content-Type': 'application/json'
-      }
+      headers: SERVICE_HEADERS.JSON
     });
     
     return response.data;
@@ -40,9 +38,7 @@ class PetitionApiService {
     }
  
     const response = await axiosInstance.delete(PETITION_ENDPOINTS.DELETE_PETITION_BY_ID(petitionId), {
-      headers: {
-        'Accept': 'text/plain'
-      }
+      headers: SERVICE_HEADERS.TEXT_PLAIN
     });
  
     return response.data;
@@ -51,9 +47,7 @@ class PetitionApiService {
   // Get petition by ID
   async getPetitionById(petitionId) {
     const response = await axiosInstance.get(PETITION_ENDPOINTS.GET_PETITION_BY_ID(petitionId), {
-      headers: {
-        'Accept': 'text/plain'
-      }
+      headers: SERVICE_HEADERS.TEXT_PLAIN
     });
     
     return response.data;
@@ -72,10 +66,7 @@ class PetitionApiService {
     }
     
     const response = await axiosInstance.post(PETITION_ENDPOINTS.SUBMIT_NOTE, requestBody, {
-      headers: {
-        'Accept': 'text/plain',
-        'Content-Type': 'application/json'
-      }
+      headers: SERVICE_HEADERS.JSON
     });
     
     return response.data;
@@ -87,21 +78,18 @@ class PetitionApiService {
       petitionId: petitionId,
       petitionProperty: {
         id: propertyData.id || null,
-        propertyStreet1: propertyData.propertyStreet1 || "",
-        propertyStreet2: propertyData.propertyStreet2 || "",
-        propertyCity: propertyData.propertyCity || "",
-        propertyState: propertyData.propertyState || "MA",
-        propertyZip: propertyData.propertyZip || "",
-        propertyCounty: propertyData.propertyCounty || "",
-        assessorParcelId: propertyData.assessorParcelId || ""
+        propertyStreet1: safeString(propertyData.propertyStreet1),
+        propertyStreet2: safeString(propertyData.propertyStreet2),
+        propertyCity: safeString(propertyData.propertyCity),
+        propertyState: safeString(propertyData.propertyState, "MA"),
+        propertyZip: safeString(propertyData.propertyZip),
+        propertyCounty: safeString(propertyData.propertyCounty),
+        assessorParcelId: safeString(propertyData.assessorParcelId)
       }
     };
     
     const response = await axiosInstance.post(PETITION_ENDPOINTS.UPDATE_PROPERTY, requestBody, {
-      headers: {
-        'Accept': '*/*',
-        'Content-Type': 'application/json'
-      }
+      headers: SERVICE_HEADERS.JSON_WILDCARD
     });
     
     return response.data;
@@ -120,15 +108,15 @@ class PetitionApiService {
         lienPosition: (loanData.lienPosition === null || loanData.lienPosition === undefined || loanData.lienPosition === "") 
           ? null 
           : (typeof loanData.lienPosition === 'number' ? loanData.lienPosition : parseInt(loanData.lienPosition)),
-        originationDate: loanData.originationDate ? new Date(loanData.originationDate).toISOString() : null,
-        originalPrincipalAmount: parseFloat(loanData.originalPrincipalAmount) || 0,
-        currentPrincipalBalance: parseFloat(loanData.currentPrincipalBalance) || 0,
-        interestRatePercent: parseFloat(loanData.interestRatePercent) || 0,
+        originationDate: dateToISO(loanData.originationDate),
+        originalPrincipalAmount: safeParseFloat(loanData.originalPrincipalAmount),
+        currentPrincipalBalance: safeParseFloat(loanData.currentPrincipalBalance),
+        interestRatePercent: safeParseFloat(loanData.interestRatePercent),
         variableRate: loanData.variableRate || false,
         interestOnly: loanData.interestOnly || false,
         negativeAmortization: loanData.negativeAmortization || false,
-        monthlyPaymentAmount: parseFloat(loanData.monthlyPaymentAmount) || 0,
-        delinquencyDaysAtFiling: parseInt(loanData.delinquencyDaysAtFiling) || 0,
+        monthlyPaymentAmount: safeParseFloat(loanData.monthlyPaymentAmount),
+        delinquencyDaysAtFiling: safeParseInt(loanData.delinquencyDaysAtFiling),
         mortgageBrokerLicenseNumber: loanData.mortgageBrokerLicenseNumber || "",
         mortgageLoanOriginatorLicenseNumber: loanData.mortgageLoanOriginatorLicenseNumber || "",
         lenderId: loanData.lenderId && loanData.lenderId.trim() !== '' ? loanData.lenderId : null,
@@ -138,10 +126,7 @@ class PetitionApiService {
     };
     
     const response = await axiosInstance.post(PETITION_ENDPOINTS.UPDATE_LOAN, requestBody, {
-      headers: {
-        'Accept': '*/*',
-        'Content-Type': 'application/json'
-      }
+      headers: SERVICE_HEADERS.JSON_WILDCARD
     });
     
     return response.data;
@@ -170,10 +155,7 @@ class PetitionApiService {
     };
     
     const response = await axiosInstance.post(PETITION_ENDPOINTS.UPDATE_FILING_ENTITY, requestBody, {
-      headers: {
-        'Accept': '*/*',
-        'Content-Type': 'application/json'
-      }
+      headers: SERVICE_HEADERS.JSON_WILDCARD
     });
     
     return response.data;
@@ -200,10 +182,7 @@ class PetitionApiService {
     };
     
     const response = await axiosInstance.post(PETITION_ENDPOINTS.UPDATE_BORROWERS, requestBody, {
-      headers: {
-        'Accept': '*/*',
-        'Content-Type': 'application/json'
-      }
+      headers: SERVICE_HEADERS.JSON_WILDCARD
     });
     
     return response.data;
@@ -211,40 +190,9 @@ class PetitionApiService {
 
   // Update affidavit (Form 35B Compliance)
   async updateAffidavit(petitionId, affidavitData) {
-    // Helper function to convert File object to base64 string
-    const fileToBase64 = (file) => {
-      if (!file || typeof file === 'string') {
-        return file || "";
-      }
-      
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          // Remove the data URL prefix (data:application/pdf;base64,) to get just the base64 string
-          const base64 = reader.result.split(',')[1];
-          resolve(base64);
-        };
-        reader.onerror = () => {
-          resolve("");
-        };
-        reader.readAsDataURL(file);
-      });
-    };
-
     // Convert PDF files to base64 if they are File objects
     const form35bComplianceAffidavitPdf = await fileToBase64(affidavitData.form35bComplianceAffidavitPdf);
     const form35bNonApplicabilityAffidavitPdf = await fileToBase64(affidavitData.form35bNonApplicabilityAffidavitPdf);
-
-    // Helper function to safely convert dates
-    const safeDateConversion = (dateString) => {
-      if (!dateString) return null;
-      try {
-        const date = new Date(dateString);
-        return isNaN(date.getTime()) ? null : date.toISOString();
-      } catch {
-        return null;
-      }
-    };
 
     const requestBody = {
       petitionId: petitionId,
@@ -255,15 +203,12 @@ class PetitionApiService {
         form35bNonApplicabilityAffidavitPdf: form35bNonApplicabilityAffidavitPdf,
         affiantName: affidavitData.affiantName || "",
         affiantTitle: affidavitData.affiantTitle || "",
-        affidavitExecutionDate: safeDateConversion(affidavitData.affidavitExecutionDate)
+        affidavitExecutionDate: dateToISO(affidavitData.affidavitExecutionDate)
       }
     };
     
     const response = await axiosInstance.post(PETITION_ENDPOINTS.UPDATE_AFFIDAVIT, requestBody, {
-      headers: {
-        'Accept': '*/*',
-        'Content-Type': 'application/json'
-      }
+      headers: SERVICE_HEADERS.JSON_WILDCARD
     });
     
     return response.data;
@@ -271,40 +216,17 @@ class PetitionApiService {
 
   // Update right to cures
   async updateRightToCures(petitionId, rightToCuresData) {
-    // Helper function to safely convert dates
-    const safeDateConversion = (dateString) => {
-      if (!dateString || !dateString.trim()) return null;
-      try {
-        // If already in ISO format, return as is
-        if (dateString.includes('T')) {
-          return dateString;
-        }
-        // Otherwise, convert to ISO format
-        const date = new Date(dateString + 'T00:00:00');
-        return isNaN(date.getTime()) ? null : date.toISOString();
-      } catch {
-        return null;
-      }
-    };
-
     // Map right to cures data, ensuring new entries have id: null
     const mappedRightToCures = rightToCuresData.map((rtc) => {
-      // Determine ID: if it's a number (temporary) or not a valid UUID, set to null
-      let rtcId = null;
-      if (rtc.id && typeof rtc.id === 'string' && rtc.id.includes('-')) {
-        // It's a UUID string, use it
-        rtcId = rtc.id;
-      } else if (rtc.id && typeof rtc.id === 'number') {
-        // It's a temporary ID (number), set to null for new entries
-        rtcId = null;
-      }
+      // Determine ID: if it's a valid UUID, use it; otherwise set to null for new entries
+      const rtcId = isValidUUID(rtc.id) ? rtc.id : null;
 
       return {
         id: rtcId,
         noticeSent: rtc.noticeSent !== null && rtc.noticeSent !== undefined ? rtc.noticeSent : null,
         noticeDate: safeDateConversion(rtc.noticeDate),
-        amountInDefault: parseFloat(rtc.amountInDefault) || 0,
-        daysDelinquentAtNotice: parseInt(rtc.daysDelinquentAtNotice) || 0,
+        amountInDefault: safeParseFloat(rtc.amountInDefault),
+        daysDelinquentAtNotice: safeParseInt(rtc.daysDelinquentAtNotice),
         cureExpirationDate: safeDateConversion(rtc.cureExpirationDate),
         noticeAddressStreet1: rtc.noticeAddressStreet1 || "",
         noticeAddressCity: rtc.noticeAddressCity || "",

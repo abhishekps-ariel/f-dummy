@@ -5,6 +5,7 @@ import {
   clearAuthData,
   setImpersonationState,
 } from "../utils/storage";
+import { SERVICE_HEADERS, normalizeResponse } from "../utils/serviceUtils";
 
 export const checkMfa = async (email, password) => {
   const response = await client.post(
@@ -14,17 +15,11 @@ export const checkMfa = async (email, password) => {
       password,
     },
     {
-      headers: {
-        Accept: "text/plain",
-      },
+      headers: SERVICE_HEADERS.TEXT_PLAIN,
     }
   );
 
-  return {
-    isSuccess: response.data.success,
-    msg: response.data.message,
-    data: response.data.data,
-  };
+  return normalizeResponse(response, "MFA check completed");
 };
 
 export const login = async (email, password, rememberMe = true, isManager = false) => {
@@ -43,17 +38,11 @@ export const login = async (email, password, rememberMe = true, isManager = fals
     AUTH_ENDPOINTS.LOGIN,
     requestBody,
     {
-      headers: {
-        Accept: "text/plain",
-      },
+      headers: SERVICE_HEADERS.TEXT_PLAIN,
     }
   );
 
-  return {
-    isSuccess: response.data.success,
-    msg: response.data.message,
-    data: response.data.data,
-  };
+  return normalizeResponse(response, "Login successful");
 };
 
 export const sendOtp = async (email, password, mfaType = "None") => {
@@ -65,17 +54,11 @@ export const sendOtp = async (email, password, mfaType = "None") => {
       mfaType,
     },
     {
-      headers: {
-        Accept: "text/plain",
-      },
+      headers: SERVICE_HEADERS.TEXT_PLAIN,
     }
   );
 
-  return {
-    isSuccess: response.data.success,
-    msg: response.data.message,
-    data: response.data.data,
-  };
+  return normalizeResponse(response, "OTP sent successfully");
 };
 
 export const verifyOtp = async (email, otpCode, isManager = false) => {
@@ -93,17 +76,11 @@ export const verifyOtp = async (email, otpCode, isManager = false) => {
     AUTH_ENDPOINTS.VERIFY_OTP,
     requestBody,
     {
-      headers: {
-        Accept: "text/plain",
-      },
+      headers: SERVICE_HEADERS.TEXT_PLAIN,
     }
   );
 
-  return {
-    isSuccess: response.data.success,
-    msg: response.data.message,
-    data: response.data.data,
-  };
+  return normalizeResponse(response, "OTP verified successfully");
 };
 
 export const register = async (formData, inviteData = null, role = null, organizationId = null) => {
@@ -137,28 +114,18 @@ export const register = async (formData, inviteData = null, role = null, organiz
   }
 
   const response = await client.post(AUTH_ENDPOINTS.REGISTER, requestBody, {
-    headers: {
-      Accept: "text/plain",
-    },
+    headers: SERVICE_HEADERS.TEXT_PLAIN,
   });
 
-  return {
-    isSuccess: response.data.success,
-    msg: response.data.message,
-    data: response.data.data,
-  };
+  return normalizeResponse(response, "Registration successful");
 };
 
 export const verifyEmail = async (token) => {
   const response = await client.get(AUTH_ENDPOINTS.VERIFY_EMAIL(token), {
-    headers: { Accept: "text/plain" },
+    headers: SERVICE_HEADERS.TEXT_PLAIN,
   });
 
-  return {
-    isSuccess: response.data.success,
-    msg: response.data.message,
-    data: response.data.data,
-  };
+  return normalizeResponse(response, "Email verified successfully");
 };
 
 export const resendVerification = async (email) => {
@@ -166,17 +133,11 @@ export const resendVerification = async (email) => {
     AUTH_ENDPOINTS.RESEND_VERIFICATION,
     JSON.stringify(email),
     {
-      headers: {
-        Accept: "text/plain",
-      },
+      headers: SERVICE_HEADERS.TEXT_PLAIN,
     }
   );
 
-  return {
-    isSuccess: response.data.success,
-    msg: response.data.message,
-    data: response.data.data,
-  };
+  return normalizeResponse(response, "Verification email sent successfully");
 };
 
 export const refreshToken = async (refreshToken) => {
@@ -186,18 +147,11 @@ export const refreshToken = async (refreshToken) => {
       refreshToken: refreshToken,
     },
     {
-      headers: {
-        Accept: "text/plain",
-        "Content-Type": "application/json",
-      },
+      headers: SERVICE_HEADERS.JSON,
     }
   );
 
-  return {
-    isSuccess: response.data.success,
-    msg: response.data.message,
-    data: response.data.data,
-  };
+  return normalizeResponse(response, "Token refreshed successfully");
 };
 
 export const logout = async (refreshToken) => {
@@ -207,18 +161,11 @@ export const logout = async (refreshToken) => {
       refreshToken: refreshToken,
     },
     {
-      headers: {
-        Accept: "*/*",
-        "Content-Type": "application/json",
-      },
+      headers: SERVICE_HEADERS.JSON_WILDCARD,
     }
   );
 
-  return {
-    isSuccess: response.data.success,
-    msg: response.data.message,
-    data: response.data.data,
-  };
+  return normalizeResponse(response, "Logged out successfully");
 };
 
 export const forgotPassword = async (email) => {
@@ -226,32 +173,19 @@ export const forgotPassword = async (email) => {
     AUTH_ENDPOINTS.FORGOT_PASSWORD,
     email, // Send as plain string
     {
-      headers: {
-        Accept: "*/*",
-        "Content-Type": "application/json",
-      },
+      headers: SERVICE_HEADERS.JSON_WILDCARD,
     }
   );
 
-  return {
-    isSuccess: response.data.success,
-    msg: response.data.message,
-    data: response.data.data,
-  };
+  return normalizeResponse(response, "Password reset email sent successfully");
 };
 
 export const checkResetToken = async (userId) => {
   const response = await client.get(AUTH_ENDPOINTS.CHECK_RESET_TOKEN(userId), {
-    headers: {
-      Accept: "*/*",
-    },
+    headers: SERVICE_HEADERS.TEXT_PLAIN,
   });
 
-  return {
-    isSuccess: response.data.success,
-    msg: response.data.message,
-    data: response.data.data,
-  };
+  return normalizeResponse(response, "Reset token validated successfully");
 };
 
 export const resetPassword = async (userId, password, token) => {
@@ -263,18 +197,11 @@ export const resetPassword = async (userId, password, token) => {
       token: token,
     },
     {
-      headers: {
-        Accept: "*/*",
-        "Content-Type": "application/json",
-      },
+      headers: SERVICE_HEADERS.JSON_WILDCARD,
     }
   );
 
-  return {
-    isSuccess: response.data.success,
-    msg: response.data.message,
-    data: response.data.data,
-  };
+  return normalizeResponse(response, "Password reset successfully");
 };
 
 export const updateUser = async (
@@ -292,18 +219,11 @@ export const updateUser = async (
       lastName,
     },
     {
-      headers: {
-        Accept: "*/*",
-        "Content-Type": "application/json",
-      },
+      headers: SERVICE_HEADERS.JSON_WILDCARD,
     }
   );
 
-  return {
-    isSuccess: response.data.success,
-    msg: response.data.message,
-    data: response.data.data,
-  };
+  return normalizeResponse(response, "User updated successfully");
 };
 
 export const getUserById = async (userId) => {
@@ -311,18 +231,11 @@ export const getUserById = async (userId) => {
     AUTH_ENDPOINTS.GET_USER_BY_ID(userId),
     {}, // Empty body as per API spec
     {
-      headers: {
-        Accept: "*/*",
-        "Content-Type": "application/json",
-      },
+      headers: SERVICE_HEADERS.JSON_WILDCARD,
     }
   );
 
-  return {
-    isSuccess: response.data.success,
-    msg: response.data.message,
-    data: response.data.data,
-  };
+  return normalizeResponse(response, "User fetched successfully");
 };
 
 export const uploadUserSignature = async (userId, signatureFile) => {
@@ -341,11 +254,7 @@ export const uploadUserSignature = async (userId, signatureFile) => {
     }
   );
 
-  return {
-    isSuccess: response.data.success,
-    msg: response.data.message,
-    data: response.data.data,
-  };
+  return normalizeResponse(response, "Signature uploaded successfully");
 };
 
 export const getSignatureById = async (userId) => {
@@ -353,18 +262,11 @@ export const getSignatureById = async (userId) => {
     AUTH_ENDPOINTS.GET_SIGNATURE_BY_ID(userId),
     {},
     {
-      headers: {
-        Accept: "text/plain",
-        "Content-Type": "application/json",
-      },
+      headers: SERVICE_HEADERS.JSON,
     }
   );
 
-  return {
-    isSuccess: response.data.success,
-    msg: response.data.message,
-    data: response.data.data,
-  };
+  return normalizeResponse(response, "Signature fetched successfully");
 };
 
 export const getBase64ByS3Key = async (s3Key) => {
@@ -374,18 +276,11 @@ export const getBase64ByS3Key = async (s3Key) => {
       s3Key: s3Key,
     },
     {
-      headers: {
-        Accept: "text/plain",
-        "Content-Type": "application/json",
-      },
+      headers: SERVICE_HEADERS.JSON,
     }
   );
 
-  return {
-    isSuccess: response.data.success,
-    msg: response.data.message,
-    data: response.data.data,
-  };
+  return normalizeResponse(response, "Base64 data fetched successfully");
 };
 
 export const sendSignatureOtp = async (userId) => {
@@ -395,18 +290,11 @@ export const sendSignatureOtp = async (userId) => {
       userId: userId,
     },
     {
-      headers: {
-        Accept: "text/plain",
-        "Content-Type": "application/json",
-      },
+      headers: SERVICE_HEADERS.JSON,
     }
   );
 
-  return {
-    isSuccess: response.data.success,
-    msg: response.data.message,
-    data: response.data.data,
-  };
+  return normalizeResponse(response, "Signature OTP sent successfully");
 };
 
 export const verifySignatureOtp = async (userId, otpCode) => {
@@ -417,18 +305,11 @@ export const verifySignatureOtp = async (userId, otpCode) => {
       otpCode: otpCode,
     },
     {
-      headers: {
-        Accept: "text/plain",
-        "Content-Type": "application/json",
-      },
+      headers: SERVICE_HEADERS.JSON,
     }
   );
 
-  return {
-    isSuccess: response.data.success,
-    msg: response.data.message,
-    data: response.data.data,
-  };
+  return normalizeResponse(response, "Signature OTP verified successfully");
 };
 
 // Impersonation APIs
@@ -437,17 +318,11 @@ export const impersonateByUserId = async (userId) => {
     AUTH_ENDPOINTS.IMPERSONATE_BY_USER_ID(userId),
     "",
     {
-      headers: {
-        Accept: "text/plain",
-      },
+      headers: SERVICE_HEADERS.TEXT_PLAIN,
     }
   );
 
-  return {
-    isSuccess: response.data.success,
-    msg: response.data.message,
-    data: response.data.data,
-  };
+  return normalizeResponse(response, "Impersonation started successfully");
 };
 
 export const managerImpersonate = async (managerUserId, userId) => {
@@ -455,31 +330,19 @@ export const managerImpersonate = async (managerUserId, userId) => {
     AUTH_ENDPOINTS.MANAGER_IMPERSONATE(managerUserId, userId),
     "",
     {
-      headers: {
-        Accept: "text/plain",
-      },
+      headers: SERVICE_HEADERS.TEXT_PLAIN,
     }
   );
 
-  return {
-    isSuccess: response.data.success,
-    msg: response.data.message,
-    data: response.data.data,
-  };
+  return normalizeResponse(response, "Manager impersonation started successfully");
 };
 
 export const exitImpersonation = async () => {
   const response = await client.post(AUTH_ENDPOINTS.EXIT_IMPERSONATION, "", {
-    headers: {
-      Accept: "text/plain",
-    },
+    headers: SERVICE_HEADERS.TEXT_PLAIN,
   });
 
-  return {
-    isSuccess: response.data.success,
-    msg: response.data.message,
-    data: response.data.data,
-  };
+  return normalizeResponse(response, "Impersonation exited successfully");
 };
 
 export const performExitImpersonation = async () => {

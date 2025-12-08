@@ -1,13 +1,12 @@
 import axiosInstance from '../api/axiosInstance';
 import { COMMON_ENDPOINTS, FAQ_ENDPOINTS } from '../constants/apiEndpoints';
+import { SERVICE_HEADERS } from '../utils/serviceUtils';
 
 class FAQService {
   // Get FAQ categories
   async getFAQCategories() {
     const response = await axiosInstance.get(COMMON_ENDPOINTS.GET_FAQ_CATEGORIES, {
-      headers: {
-        Accept: "text/plain",
-      },
+      headers: SERVICE_HEADERS.TEXT_PLAIN,
     });
     return response.data;
   }
@@ -18,10 +17,7 @@ class FAQService {
       FAQ_ENDPOINTS.GET_QUESTIONS_BY_CATEGORY,
       { categoryId },
       {
-        headers: {
-          Accept: "text/plain",
-          "Content-Type": "application/json",
-        },
+        headers: SERVICE_HEADERS.JSON,
       }
     );
     return response.data;

@@ -1,5 +1,6 @@
 import axiosInstance from '../api/axiosInstance';
 import { FORM35B_ENDPOINTS } from '../constants/apiEndpoints';
+import { SERVICE_HEADERS, normalizeResponse } from '../utils/serviceUtils';
 
 class Form35BService {
   // Calculate Form 35B data based on organization, year, and reporting period
@@ -8,18 +9,11 @@ class Form35BService {
       FORM35B_ENDPOINTS.CALCULATE,
       calculationData,
       {
-        headers: {
-          Accept: 'text/plain',
-          'Content-Type': 'application/json',
-        },
+        headers: SERVICE_HEADERS.JSON,
       }
     );
 
-    return {
-      isSuccess: response.data.success,
-      msg: response.data.message,
-      data: response.data.data,
-    };
+    return normalizeResponse(response, "Form 35B data calculated successfully");
   }
 
   // Submit or update Form 35B
@@ -28,18 +22,11 @@ class Form35BService {
       FORM35B_ENDPOINTS.ADD_UPDATE,
       formData,
       {
-        headers: {
-          Accept: '*/*',
-          'Content-Type': 'application/json',
-        },
+        headers: SERVICE_HEADERS.JSON_WILDCARD,
       }
     );
 
-    return {
-      isSuccess: response.data.success,
-      msg: response.data.message,
-      data: response.data.data,
-    };
+    return normalizeResponse(response, "Form 35B submitted successfully");
   }
 }
 
