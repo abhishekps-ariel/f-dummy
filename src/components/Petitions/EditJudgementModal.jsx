@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import CustomDropdown from "../shared/CustomDropdown";
 import { toast } from "react-toastify";
+import { formatDateForInput } from "../../utils/dateUtils";
 
 const EditJudgementModal = ({ isOpen, onClose, petition, onSave, formData, setFormData, getJudgmentTypes, findOptionByValue }) => {
   const { t } = useTranslation();
@@ -25,7 +26,7 @@ const EditJudgementModal = ({ isOpen, onClose, petition, onSave, formData, setFo
         setJudgmentData({
           judgmentDate: formData.judgment.judgmentDate 
             ? (formData.judgment.judgmentDate.includes("T") 
-                ? formData.judgment.judgmentDate.split("T")[0] 
+                ? formatDateForInput(formData.judgment.judgmentDate)
                 : formData.judgment.judgmentDate)
             : "",
           judgmentType: judgmentTypeValue,
@@ -177,7 +178,7 @@ const EditJudgementModal = ({ isOpen, onClose, petition, onSave, formData, setFo
       setJudgmentData({
         judgmentDate: formData.judgment.judgmentDate 
           ? (formData.judgment.judgmentDate.includes("T") 
-              ? formData.judgment.judgmentDate.split("T")[0] 
+              ? formatDateForInput(formData.judgment.judgmentDate)
               : formData.judgment.judgmentDate)
           : "",
         judgmentType: judgmentTypeValue,

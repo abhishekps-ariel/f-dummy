@@ -4,6 +4,7 @@
 
 import { STORAGE_KEYS } from '../../constants/appConstants';
 import { logger } from '../../utils/logger';
+import { formatDateForInput } from '../../utils/dateUtils';
 
 /**
  * Default form data structure for petitions
@@ -237,7 +238,7 @@ export const transformTakeOverPetitionData = (petitionData) => {
     petitionLoanTypeId: loan.petitionLoanTypeId || loan.loanTypeId || "",
     petitionLoanTypeName: loan.petitionLoanTypeName || loan.loanTypeName || "",
     lienPosition: loan.lienPosition != null ? loan.lienPosition : "",
-    originationDate: loan.originationDate ? loan.originationDate.split("T")[0] : "",
+    originationDate: loan.originationDate ? formatDateForInput(loan.originationDate) : "",
     originalPrincipalAmount: loan.originalPrincipalAmount || 0,
     currentPrincipalBalance: loan.currentPrincipalBalance || 0,
     interestRatePercent: loan.interestRatePercent || null,
@@ -278,43 +279,43 @@ export const transformTakeOverPetitionData = (petitionData) => {
       ? details.rightToCures.map((rtc) => ({
           id: rtc.id || null,
           noticeSent: rtc.noticeSent ?? null,
-          noticeDate: rtc.noticeDate ? rtc.noticeDate.split("T")[0] : "",
+          noticeDate: rtc.noticeDate ? formatDateForInput(rtc.noticeDate) : "",
           amountInDefault: rtc.amountInDefault || 0,
           daysDelinquentAtNotice: rtc.daysDelinquentAtNotice || 0,
-          cureExpirationDate: rtc.cureExpirationDate ? rtc.cureExpirationDate.split("T")[0] : "",
+          cureExpirationDate: rtc.cureExpirationDate ? formatDateForInput(rtc.cureExpirationDate) : "",
           noticeAddressStreet1: rtc.noticeAddressStreet1 || "",
           noticeAddressCity: rtc.noticeAddressCity || "",
           noticeAddressState: rtc.noticeAddressState || "",
           noticeAddressZip: rtc.noticeAddressZip || "",
           manualOverrideReason: rtc.manualOverrideReason || "",
           borrowerRespondedWithin30Days: rtc.borrowerRespondedWithin30Days ?? null,
-          borrowerResponseDate: rtc.borrowerResponseDate ? rtc.borrowerResponseDate.split("T")[0] : "",
+          borrowerResponseDate: rtc.borrowerResponseDate ? formatDateForInput(rtc.borrowerResponseDate) : "",
           proceededWithRightToCure: rtc.proceededWithRightToCure ?? null,
         }))
       : details.rightToCure
       ? [{
           id: details.rightToCure.id || null,
           noticeSent: details.rightToCure.noticeSent ?? null,
-          noticeDate: details.rightToCure.noticeDate ? details.rightToCure.noticeDate.split("T")[0] : "",
+          noticeDate: details.rightToCure.noticeDate ? formatDateForInput(details.rightToCure.noticeDate) : "",
           amountInDefault: details.rightToCure.amountInDefault || 0,
           daysDelinquentAtNotice: details.rightToCure.daysDelinquentAtNotice || 0,
-          cureExpirationDate: details.rightToCure.cureExpirationDate ? details.rightToCure.cureExpirationDate.split("T")[0] : "",
+          cureExpirationDate: details.rightToCure.cureExpirationDate ? formatDateForInput(details.rightToCure.cureExpirationDate) : "",
           noticeAddressStreet1: details.rightToCure.noticeAddressStreet1 || "",
           noticeAddressCity: details.rightToCure.noticeAddressCity || "",
           noticeAddressState: details.rightToCure.noticeAddressState || "",
           noticeAddressZip: details.rightToCure.noticeAddressZip || "",
           manualOverrideReason: details.rightToCure.manualOverrideReason || "",
           borrowerRespondedWithin30Days: details.rightToCure.borrowerRespondedWithin30Days ?? null,
-          borrowerResponseDate: details.rightToCure.borrowerResponseDate ? details.rightToCure.borrowerResponseDate.split("T")[0] : "",
+          borrowerResponseDate: details.rightToCure.borrowerResponseDate ? formatDateForInput(details.rightToCure.borrowerResponseDate) : "",
           proceededWithRightToCure: details.rightToCure.proceededWithRightToCure ?? null,
         }]
       : [],
     // Legacy fields for backward compatibility
     noticeSent: details.rightToCures?.[0]?.noticeSent ?? details.rightToCure?.noticeSent ?? null,
-    noticeDate: details.rightToCures?.[0]?.noticeDate ? details.rightToCures[0].noticeDate.split("T")[0] : (details.rightToCure?.noticeDate ? details.rightToCure.noticeDate.split("T")[0] : ""),
+    noticeDate: details.rightToCures?.[0]?.noticeDate ? formatDateForInput(details.rightToCures[0].noticeDate) : (details.rightToCure?.noticeDate ? formatDateForInput(details.rightToCure.noticeDate) : ""),
     amountInDefault: details.rightToCures?.[0]?.amountInDefault ?? details.rightToCure?.amountInDefault ?? 0,
     daysDelinquentAtNotice: details.rightToCures?.[0]?.daysDelinquentAtNotice ?? details.rightToCure?.daysDelinquentAtNotice ?? 0,
-    cureExpirationDate: details.rightToCures?.[0]?.cureExpirationDate ? details.rightToCures[0].cureExpirationDate.split("T")[0] : (details.rightToCure?.cureExpirationDate ? details.rightToCure.cureExpirationDate.split("T")[0] : ""),
+    cureExpirationDate: details.rightToCures?.[0]?.cureExpirationDate ? formatDateForInput(details.rightToCures[0].cureExpirationDate) : (details.rightToCure?.cureExpirationDate ? formatDateForInput(details.rightToCure.cureExpirationDate) : ""),
     noticeAddressStreet1: details.rightToCures?.[0]?.noticeAddressStreet1 || details.rightToCure?.noticeAddressStreet1 || "",
     noticeAddressCity: details.rightToCures?.[0]?.noticeAddressCity || details.rightToCure?.noticeAddressCity || "",
     noticeAddressState: details.rightToCures?.[0]?.noticeAddressState || details.rightToCure?.noticeAddressState || "",
@@ -327,7 +328,7 @@ export const transformTakeOverPetitionData = (petitionData) => {
     form35bNonApplicabilityAffidavitPdf: details.affidavit?.form35bNonApplicabilityAffidavitPdf || "",
     affiantName: details.affidavit?.affiantName || "",
     affiantTitle: details.affidavit?.affiantTitle || "",
-    affidavitExecutionDate: details.affidavit?.affidavitExecutionDate ? details.affidavit.affidavitExecutionDate.split("T")[0] : "",
+    affidavitExecutionDate: details.affidavit?.affidavitExecutionDate ? formatDateForInput(details.affidavit.affidavitExecutionDate) : "",
 
     // Loan Assignees
     loanAssignees: details.loanAssignees?.map((a, idx) => ({

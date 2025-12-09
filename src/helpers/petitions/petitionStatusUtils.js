@@ -4,6 +4,15 @@
 
 /**
  * Get status value from status filter string
+ * Maps to petition status enum values:
+ * 0: Draft
+ * 1: Submitted
+ * 2: ForeclosureSaleInitiated
+ * 3: JudgmentSubmitted
+ * 4: Returned
+ * 5: Resubmitted
+ * 6: Accepted
+ * 7: Closed
  * @param {string} status - Status filter string (e.g., "all", "draft", "submitted")
  * @returns {number|null} Status value for API or null
  */
@@ -12,12 +21,12 @@ export const getStatusValue = (status) => {
     all: null,
     draft: 0,
     submitted: 1,
-    resubmitted: 3,
-    accepted: 4,
-    returned: 2,
-    closed: 5,
-    judgmentSubmitted: 3,
     foreclosureSaleInitiated: 2,
+    judgmentSubmitted: 3,
+    returned: 4,
+    resubmitted: 5,
+    accepted: 6,
+    closed: 7,
   };
   return statusMap[status] !== undefined ? statusMap[status] : null;
 };

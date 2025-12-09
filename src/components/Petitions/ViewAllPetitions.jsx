@@ -19,7 +19,7 @@ import { useAuth } from "../../context/AuthContext";
 import { ROUTES } from "../../constants/routerConstants";
 import { getActiveOrganizationId, getUserRole } from "../../utils/storage";
 import { getStatusValue, getStatusBadgeClass, getSortColumn } from "../../helpers/petitions/petitionStatusUtils";
-import { getFromDate, getToDate } from "../../utils/dateUtils";
+import { getFromDate, getToDate, formatDateForInput } from "../../utils/dateUtils";
 
 const ViewAllPetitions = ({ onBack }) => {
   const { t } = useTranslation();
@@ -378,7 +378,7 @@ const ViewAllPetitions = ({ onBack }) => {
       link.setAttribute("href", url);
       link.setAttribute(
         "download",
-        `petitions_${new Date().toISOString().split("T")[0]}.csv`
+        `petitions_${formatDateForInput(new Date())}.csv`
       );
       link.style.visibility = "hidden";
       document.body.appendChild(link);
@@ -455,7 +455,7 @@ const ViewAllPetitions = ({ onBack }) => {
       doc.text(t("viewAllPetitions.totalPetitions", { count: allPetitions.length }), 14, finalY);
 
       // Save the PDF
-      doc.save(`petitions_${new Date().toISOString().split("T")[0]}.pdf`);
+      doc.save(`petitions_${formatDateForInput(new Date())}.pdf`);
     } catch (err) {
       toast.error(err?.message || t("viewAllPetitions.failedExportPDF"));
     }

@@ -33,6 +33,7 @@ import { useAuth } from "../../context/AuthContext";
 import { getUserRole } from "../../utils/storage";
 import PetitionSteps from "./PetitionSteps";
 import petitionApiService from "../../services/petitionApiService";
+import { formatDateForInput } from "../../utils/dateUtils";
 
 const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) => {
   const { t } = useTranslation();
@@ -592,7 +593,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
       petitionLoanTypeName: details.loan?.petitionLoanTypeName || "",
       lienPosition: details.loan?.lienPosition ?? "",
       originationDate: details.loan?.originationDate
-        ? details.loan.originationDate.split("T")[0]
+        ? formatDateForInput(details.loan.originationDate)
         : "",
       originalPrincipalAmount: details.loan?.originalPrincipalAmount || 0,
       currentPrincipalBalance: details.loan?.currentPrincipalBalance || 0,
@@ -633,17 +634,17 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
           return details.rightToCures.map((rtc) => ({
             id: rtc.id || null,
             noticeSent: rtc.noticeSent !== undefined ? rtc.noticeSent : null,
-            noticeDate: rtc.noticeDate ? rtc.noticeDate.split("T")[0] : "",
+            noticeDate: rtc.noticeDate ? formatDateForInput(rtc.noticeDate) : "",
             amountInDefault: rtc.amountInDefault || 0,
             daysDelinquentAtNotice: rtc.daysDelinquentAtNotice || 0,
-            cureExpirationDate: rtc.cureExpirationDate ? rtc.cureExpirationDate.split("T")[0] : "",
+            cureExpirationDate: rtc.cureExpirationDate ? formatDateForInput(rtc.cureExpirationDate) : "",
             noticeAddressStreet1: rtc.noticeAddressStreet1 || "",
             noticeAddressCity: rtc.noticeAddressCity || "",
             noticeAddressState: rtc.noticeAddressState || "",
             noticeAddressZip: rtc.noticeAddressZip || "",
             manualOverrideReason: rtc.manualOverrideReason || "",
             borrowerRespondedWithin30Days: rtc.borrowerRespondedWithin30Days !== undefined ? rtc.borrowerRespondedWithin30Days : null,
-            borrowerResponseDate: rtc.borrowerResponseDate ? rtc.borrowerResponseDate.split("T")[0] : "",
+            borrowerResponseDate: rtc.borrowerResponseDate ? formatDateForInput(rtc.borrowerResponseDate) : "",
             proceededWithRightToCure: rtc.proceededWithRightToCure !== undefined ? rtc.proceededWithRightToCure : null,
           }));
         }
@@ -652,17 +653,17 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
           return [{
             id: details.rightToCure.id || null,
             noticeSent: details.rightToCure.noticeSent !== undefined ? details.rightToCure.noticeSent : null,
-            noticeDate: details.rightToCure.noticeDate ? details.rightToCure.noticeDate.split("T")[0] : "",
+            noticeDate: details.rightToCure.noticeDate ? formatDateForInput(details.rightToCure.noticeDate) : "",
             amountInDefault: details.rightToCure.amountInDefault || 0,
             daysDelinquentAtNotice: details.rightToCure.daysDelinquentAtNotice || 0,
-            cureExpirationDate: details.rightToCure.cureExpirationDate ? details.rightToCure.cureExpirationDate.split("T")[0] : "",
+            cureExpirationDate: details.rightToCure.cureExpirationDate ? formatDateForInput(details.rightToCure.cureExpirationDate) : "",
             noticeAddressStreet1: details.rightToCure.noticeAddressStreet1 || "",
             noticeAddressCity: details.rightToCure.noticeAddressCity || "",
             noticeAddressState: details.rightToCure.noticeAddressState || "",
             noticeAddressZip: details.rightToCure.noticeAddressZip || "",
             manualOverrideReason: details.rightToCure.manualOverrideReason || "",
             borrowerRespondedWithin30Days: details.rightToCure.borrowerRespondedWithin30Days !== undefined ? details.rightToCure.borrowerRespondedWithin30Days : null,
-            borrowerResponseDate: details.rightToCure.borrowerResponseDate ? details.rightToCure.borrowerResponseDate.split("T")[0] : "",
+            borrowerResponseDate: details.rightToCure.borrowerResponseDate ? formatDateForInput(details.rightToCure.borrowerResponseDate) : "",
             proceededWithRightToCure: details.rightToCure.proceededWithRightToCure !== undefined ? details.rightToCure.proceededWithRightToCure : null,
           }];
         }
@@ -674,7 +675,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
       foreclosureSale: details.foreclosureSale
         ? {
             saleDate: details.foreclosureSale.saleDate
-              ? details.foreclosureSale.saleDate.split("T")[0]
+              ? formatDateForInput(details.foreclosureSale.saleDate)
               : "",
             soldToId: details.foreclosureSale.soldToId || "",
             vestingEntityName: details.foreclosureSale.vestingEntityName || "",
@@ -713,7 +714,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
       affiantName: details.affidavit?.affiantName || "",
       affiantTitle: details.affidavit?.affiantTitle || "",
       affidavitExecutionDate: details.affidavit?.affidavitExecutionDate
-        ? details.affidavit.affidavitExecutionDate.split("T")[0]
+        ? formatDateForInput(details.affidavit.affidavitExecutionDate)
         : "",
 
       // Loan Assignees

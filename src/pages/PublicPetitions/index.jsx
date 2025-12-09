@@ -10,6 +10,7 @@ import { toast } from "react-toastify";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import ScrollToTop from "../../components/shared/ScrollToTop";
+import { formatDateForInput } from "../../utils/dateUtils";
 
 function PublicPetitions() {
   const { t } = useTranslation();
@@ -250,7 +251,7 @@ function PublicPetitions() {
       link.setAttribute("href", url);
       link.setAttribute(
         "download",
-        `public_petitions_${new Date().toISOString().split("T")[0]}.csv`
+        `public_petitions_${formatDateForInput(new Date())}.csv`
       );
       link.style.visibility = "hidden";
       document.body.appendChild(link);
@@ -320,7 +321,7 @@ function PublicPetitions() {
       doc.text(t("publicPetitions.totalPetitions", { count: allPetitions.length }), 14, finalY);
 
       // Save the PDF
-      doc.save(`public_petitions_${new Date().toISOString().split("T")[0]}.pdf`);
+      doc.save(`public_petitions_${formatDateForInput(new Date())}.pdf`);
     } catch (err) {
       toast.error(err?.message || t("publicPetitions.failedExportPDF"));
     }

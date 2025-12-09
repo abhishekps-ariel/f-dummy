@@ -1,6 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import CustomDropdown from "../../shared/CustomDropdown";
+import { formatDateForInput } from "../../../utils/dateUtils";
 
 const ForeclosureSaleDisplaySection = ({
   SectionHeader,
@@ -98,13 +99,13 @@ const ForeclosureSaleDisplaySection = ({
   const formatSaleDate = () => {
     if (!foreclosureSale.saleDate) return isEditing ? "" : "N/A";
     if (isEditing && typeof foreclosureSale.saleDate === 'string' && foreclosureSale.saleDate.includes('T')) {
-      return foreclosureSale.saleDate.split('T')[0];
+      return formatDateForInput(foreclosureSale.saleDate);
     }
     if (formatDate) {
       return formatDate(foreclosureSale.saleDate);
     }
     const dateStr = typeof foreclosureSale.saleDate === 'string' && foreclosureSale.saleDate.includes("T")
-      ? foreclosureSale.saleDate.split("T")[0]
+      ? formatDateForInput(foreclosureSale.saleDate)
       : foreclosureSale.saleDate;
     try {
       return new Date(dateStr).toLocaleDateString("en-US", {

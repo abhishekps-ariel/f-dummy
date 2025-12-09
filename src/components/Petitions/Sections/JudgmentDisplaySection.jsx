@@ -2,6 +2,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import CustomDropdown from "../../shared/CustomDropdown";
 import { formatCurrencyDisplay, parseCurrencyInput } from "../../../utils/currencyUtils";
+import { formatDateForInput } from "../../../utils/dateUtils";
 
 const JudgmentDisplaySection = ({
   SectionHeader,
@@ -70,13 +71,13 @@ const JudgmentDisplaySection = ({
   const formatJudgmentDate = () => {
     if (!judgment.judgmentDate) return "N/A";
     if (isEditing && typeof judgment.judgmentDate === 'string' && judgment.judgmentDate.includes('T')) {
-      return judgment.judgmentDate.split('T')[0];
+      return formatDateForInput(judgment.judgmentDate);
     }
     if (formatDate) {
       return formatDate(judgment.judgmentDate);
     }
     const dateStr = typeof judgment.judgmentDate === 'string' && judgment.judgmentDate.includes("T")
-      ? judgment.judgmentDate.split("T")[0]
+      ? formatDateForInput(judgment.judgmentDate)
       : judgment.judgmentDate;
     try {
       return new Date(dateStr).toLocaleDateString("en-US", {

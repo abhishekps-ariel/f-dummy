@@ -3,28 +3,7 @@ import { useTranslation } from 'react-i18next';
 import CustomInput from '../shared/CustomInput';
 import { useDebounce } from '../../hooks/useDebounce';
 import { getChatUserList } from '../../services/chatService';
-
-// Helper function to get two initials from a name (first letter of first name and first letter of last name)
-const getInitials = (name) => {
-  if (!name || typeof name !== 'string') return 'U';
-  
-  const trimmedName = name.trim();
-  if (!trimmedName) return 'U';
-  
-  const parts = trimmedName.split(/\s+/).filter(part => part.length > 0);
-  
-  if (parts.length === 0) return 'U';
-  
-  if (parts.length === 1) {
-    // Only one word, return first letter
-    return parts[0].charAt(0).toUpperCase();
-  }
-  
-  // Two or more words: return first letter of first word and first letter of last word
-  const firstInitial = parts[0].charAt(0).toUpperCase();
-  const lastInitial = parts[parts.length - 1].charAt(0).toUpperCase();
-  return `${firstInitial}${lastInitial}`;
-};
+import { getInitials } from '../../helpers/messages/messageUtils';
 
 const ConversationsSidebar = ({ conversations, selectedConversation, onConversationClick, userId, onUserSelect }) => {
   const { t } = useTranslation();
