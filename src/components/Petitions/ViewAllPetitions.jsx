@@ -3,8 +3,6 @@ import { useTranslation } from "react-i18next";
 import { PAGINATION } from "../../constants/appConstants";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 import PetitionSteps from "./PetitionSteps";
 import TabBar from "./TabBar";
 import PetitionTabContent from "./PetitionTabContent";
@@ -14,12 +12,13 @@ import petitionApiService from "../../services/petitionApiService";
 import CustomDropdown from "../shared/CustomDropdown";
 import "../shared/CustomDropdown.css";
 import "./TabbedWorkspace.css";
-import { getUserById, getSignatureById } from "../../services/authService";
 import { useAuth } from "../../context/AuthContext";
 import { ROUTES } from "../../constants/routerConstants";
 import { getActiveOrganizationId, getUserRole } from "../../utils/storage";
 import { getStatusValue, getStatusBadgeClass, getSortColumn } from "../../helpers/petitions/petitionStatusUtils";
 import { getFromDate, getToDate, formatDateForInput } from "../../utils/dateUtils";
+import { exportPetitions } from "../../helpers/petitions/pdfExport";
+import { validateUserProfileForPetition } from "../../helpers/petitions/profileValidation";
 
 const ViewAllPetitions = ({ onBack }) => {
   const { t } = useTranslation();
@@ -69,54 +68,17 @@ const ViewAllPetitions = ({ onBack }) => {
 
   // Validate user profile before opening petition creation modal
   const validateUserProfileBeforeCreate = async () => {
-    if (!user?.id) {
-      toast.error(t("viewAllPetitions.userInfoNotFound"));
-      return false;
-    }
-
     setIsValidatingProfile(true);
     try {
-      // Load user profile
-      const profileResponse = await getUserById(user.id);
-
-      if (!profileResponse.isSuccess) {
-        toast.error(t("viewAllPetitions.failedLoadProfile"));
-        setIsValidatingProfile(false);
-        return false;
-      }
-
-      const userProfile = profileResponse.data;
-      let hasErrors = false;
-      const errors = {
-        missingFilingEntityType: false,
-        missingSignature: false
-      };
-
-      // Check if filing entity type is set
-      if (!userProfile.filingEntityTypeId) {
-        errors.missingFilingEntityType = true;
-        hasErrors = true;
-      }
-
-      // Check if signature is uploaded
-      try {
-        const signatureResponse = await getSignatureById(user.id);
-        // Check for new format: signatureBase64 and signatureImageName
-        // Also support old format: signatureUrl for backward compatibility
-        if (!signatureResponse.isSuccess || !signatureResponse.data || 
-            (!signatureResponse.data.signatureImageName && !signatureResponse.data.signatureUrl)) {
-          errors.missingSignature = true;
-          hasErrors = true;
-        }
-      } catch (error) {
-        errors.missingSignature = true;
-        hasErrors = true;
-      }
-
+      const validation = await validateUserProfileForPetition(user, t);
+      
       setIsValidatingProfile(false);
 
-      if (hasErrors) {
-        setProfileValidationErrors(errors);
+      if (!validation.isValid) {
+        if (validation.errorMessage) {
+          toast.error(validation.errorMessage);
+        }
+        setProfileValidationErrors(validation.errors);
         setShowProfileValidationDialog(true);
         return false;
       }
@@ -331,135 +293,18 @@ const ViewAllPetitions = ({ onBack }) => {
         allPetitions = petitions;
       }
 
-      if (format === "csv") {
-        await exportToCSV(allPetitions);
-      } else if (format === "pdf") {
-        await exportToPDF(allPetitions);
-      }
+      await exportPetitions(allPetitions, format, t);
       toast.success(
         t("viewAllPetitions.exportSuccess", { format: format.toUpperCase() })
       );
     } catch (err) {
-      toast.error(err?.message || t("viewAllPetitions.failedExport"));
+      const errorMessage = err?.message || t("viewAllPetitions.failedExport");
+      toast.error(errorMessage);
     } finally {
       setExporting(false);
     }
   };
 
-  // Export to CSV
-  const exportToCSV = async (allPetitions) => {
-    try {
-      // Use all petitions passed from handleExport
-      const headers = [
-        t("viewAllPetitions.petitionNumber"),
-        t("viewAllPetitions.propertyAddress"),
-        t("viewAllPetitions.borrower"),
-        t("viewAllPetitions.status"),
-        t("viewAllPetitions.filingDate"),
-        t("viewAllPetitions.lastUpdated"),
-      ];
-      const csvContent = [
-        headers.join(","),
-        ...allPetitions.map((petition) =>
-          [
-            petition.petitionNumber || petition.id,
-            `"${petition.propertyAddress}"`,
-            `"${petition.borrower}"`,
-            petition.status,
-            petition.filingDate,
-            petition.lastUpdated,
-          ].join(",")
-        ),
-      ].join("\n");
-
-      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-      const link = document.createElement("a");
-      const url = URL.createObjectURL(blob);
-      link.setAttribute("href", url);
-      link.setAttribute(
-        "download",
-        `petitions_${formatDateForInput(new Date())}.csv`
-      );
-      link.style.visibility = "hidden";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch (err) {
-      toast.error(err?.message || t("viewAllPetitions.failedExportCSV"));
-    }
-  };
-
-  // Export to PDF
-  const exportToPDF = async (allPetitions) => {
-    try {
-      // Use all petitions passed from handleExport
-      const doc = new jsPDF();
-
-      // Add title
-      doc.setFontSize(18);
-      doc.text(t("viewAllPetitions.title") + " Report", 14, 22);
-
-      // Add date
-      doc.setFontSize(10);
-      doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 32);
-
-      // Prepare table data
-      const headers = [
-        t("viewAllPetitions.petitionNumber"),
-        t("viewAllPetitions.propertyAddress"),
-        t("viewAllPetitions.borrower"),
-        t("viewAllPetitions.status"),
-        t("viewAllPetitions.filingDate"),
-        t("viewAllPetitions.lastUpdated"),
-      ];
-      const tableData = allPetitions.map((petition) => [
-        petition.petitionNumber || petition.id,
-        petition.propertyAddress,
-        petition.borrower,
-        petition.status,
-        petition.filingDate,
-        petition.lastUpdated,
-      ]);
-
-      // Add table using autoTable plugin
-      autoTable(doc, {
-        head: [headers],
-        body: tableData,
-        startY: 40,
-        styles: {
-          fontSize: 8,
-          cellPadding: 3,
-        },
-        headStyles: {
-          fillColor: [52, 73, 94], // Dark blue-gray color
-          textColor: 255,
-          fontStyle: "bold",
-        },
-        alternateRowStyles: {
-          fillColor: [245, 245, 245], // Light gray for alternating rows
-        },
-        margin: { top: 40 },
-        columnStyles: {
-          0: { cellWidth: 25 }, // Petition Number
-          1: { cellWidth: 60 }, // Property Address
-          2: { cellWidth: 30 }, // Borrower
-          3: { cellWidth: 20 }, // Status
-          4: { cellWidth: 25 }, // Filing Date
-          5: { cellWidth: 25 }, // Last Updated
-        },
-      });
-
-      // Add summary at the bottom
-      const finalY = doc.lastAutoTable.finalY + 10;
-      doc.setFontSize(10);
-      doc.text(t("viewAllPetitions.totalPetitions", { count: allPetitions.length }), 14, finalY);
-
-      // Save the PDF
-      doc.save(`petitions_${formatDateForInput(new Date())}.pdf`);
-    } catch (err) {
-      toast.error(err?.message || t("viewAllPetitions.failedExportPDF"));
-    }
-  };
 
   // Load initial data when component mounts
   useEffect(() => {

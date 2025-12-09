@@ -42,6 +42,30 @@ import Step10ReviewSubmit from "./MultiStepForm/Step10ReviewSubmit";
 import TakeOverPetitionModal from "./TakeOverPetitionModal";
 import { formatCurrencyInput, parseCurrencyInput } from "../../utils/currencyUtils";
 import { defaultFormData, loadFormDataFromStorage, saveFormDataToStorage, clearFormDataFromStorage, transformTakeOverPetitionData } from "../../helpers/petitions/petitionFormData";
+import {
+  validatePropertyDetails as validatePropertyDetailsHelper,
+  validateLoanDetails as validateLoanDetailsHelper,
+  validateBorrowerDetails as validateBorrowerDetailsHelper,
+  validateRightToCureDetails as validateRightToCureDetailsHelper,
+  validateForm35BCompliance as validateForm35BComplianceHelper,
+  validateFilingEntity as validateFilingEntityHelper,
+  validateLoanAssignees as validateLoanAssigneesHelper,
+  validatePetitionAttestation as validatePetitionAttestationHelper,
+} from "../../helpers/petitions/formValidation";
+import {
+  extractAddressComponents,
+  isAddressInMassachusetts,
+  matchCity,
+  matchZip,
+  matchCounty,
+} from "../../helpers/petitions/addressValidation";
+import {
+  getFieldType,
+  processInputValue,
+  shouldAutoSetCertainMortgageLoan,
+  validateDateInPast,
+  validateInterestRate,
+} from "../../helpers/petitions/inputProcessing";
 
 // Static libraries array to prevent LoadScript reload
 const LIBRARIES = ["places"];
@@ -2468,52 +2492,8 @@ const PetitionSteps = ({
     });
   };
 
-  // Validation functions
-
-  const validateAddressFields = () => {
-    const errors = {};
-
-    let hasErrors = false;
-
-    if (!formData.propertyStreet1.trim()) {
-      errors.propertyStreet1 = "Street address is required";
-
-      hasErrors = true;
-    }
-
-    if (!formData.propertyCity.trim()) {
-      errors.propertyCity = "City is required";
-
-      hasErrors = true;
-    }
-
-    if (!formData.propertyState.trim()) {
-      errors.propertyState = "State is required";
-
-      hasErrors = true;
-    }
-
-    const zipPattern = /^\d{5}(-\d{4})?$/;
-
-    if (!formData.propertyZip.trim()) {
-      errors.propertyZip = "ZIP code is required";
-
-      hasErrors = true;
-    } else if (!zipPattern.test(formData.propertyZip)) {
-      errors.propertyZip =
-        "ZIP code must be in valid format (12345 or 12345-6789)";
-
-      hasErrors = true;
-    }
-
-    if (!formData.propertyCounty.trim()) {
-      errors.propertyCounty = "County is required";
-
-      hasErrors = true;
-    }
-
-    return { hasErrors, errors };
-  };
+  // Validation functions - using helpers
+  const validateAddressFields = () => validatePropertyDetailsHelper(formData);
 
   // Validate Property Details step
 
@@ -3667,406 +3647,19 @@ const PetitionSteps = ({
     }
   };
 
-  // Validate loan details
+  // Validate loan details - using helper
+  const validateLoanDetails = () => validateLoanDetailsHelper(formData);
 
-  const validateLoanDetails = () => {
-    const errors = {};
-
-    let hasErrors = false;
-
-    // Is MIN Applicable is required
-    if (!formData.isMinApplicable || (formData.isMinApplicable !== "yes" && formData.isMinApplicable !== "no")) {
-      errors.isMinApplicable = "Please select if MIN is applicable";
-      hasErrors = true;
-    }
-
-    // MIN Number is required if MIN is applicable
-    if (formData.isMinApplicable === "yes" && !formData.minNumber?.trim()) {
-      errors.minNumber = "MIN Number is required when MIN is applicable";
-      hasErrors = true;
-    }
-
-    // Loan Number is required
-
-    if (!formData.loanNumber.trim()) {
-      errors.loanNumber = "Loan Number is required";
-
-      hasErrors = true;
-    }
-
-    // Loan Type is required (from lookup)
-
-    if (!formData.petitionLoanTypeId) {
-      errors.petitionLoanTypeId = "Loan Type is required";
-
-      hasErrors = true;
-    }
-
-    // Lien Position is required
-    // Note: lienPosition can be 0 (for "First"), so we need to check for null/undefined/empty string specifically
-
-    if (
-      formData.lienPosition == null ||
-      formData.lienPosition === ""
-    ) {
-      errors.lienPosition = "Lien Position is required";
-
-      hasErrors = true;
-    }
-
-    // Origination Date is required and must be in the past
-
-    if (!formData.originationDate.trim()) {
-      errors.originationDate = "Origination Date is required";
-
-      hasErrors = true;
-    } else {
-      const originationDate = new Date(formData.originationDate);
-
-      const today = new Date();
-
-      today.setHours(0, 0, 0, 0); // Reset time to start of day for comparison
-
-      if (originationDate >= today) {
-        errors.originationDate = "Origination Date must be in the past";
-
-        hasErrors = true;
-      }
-    }
-
-    // Original Principal Amount is required and must be positive
-
-    if (
-      !formData.originalPrincipalAmount ||
-      formData.originalPrincipalAmount <= 0
-    ) {
-      errors.originalPrincipalAmount =
-        "Original Principal Amount is required and must be greater than 0";
-
-      hasErrors = true;
-    }
-
-    // Current Principal Balance is required and must be positive
-
-    if (
-      !formData.currentPrincipalBalance ||
-      formData.currentPrincipalBalance <= 0
-    ) {
-      errors.currentPrincipalBalance =
-        "Current Principal Balance is required and must be greater than 0";
-
-      hasErrors = true;
-    }
-
-    // Interest Rate is required and must be between 0-100%
-
-    if (
-      formData.interestRatePercent === "" ||
-      formData.interestRatePercent === null ||
-      formData.interestRatePercent === undefined
-    ) {
-      errors.interestRatePercent = "Interest Rate is required";
-
-      hasErrors = true;
-    } else if (
-      formData.interestRatePercent < 0 ||
-      formData.interestRatePercent > 100
-    ) {
-      errors.interestRatePercent = "Interest Rate must be between 0% and 100%";
-
-      hasErrors = true;
-    } else if (formData.interestRatePercent === 0) {
-      // 0% interest rate is not valid for a loan
-      errors.interestRatePercent = "Interest Rate must be greater than 0%";
-
-      hasErrors = true;
-    }
-
-    // Monthly Payment Amount is required and must be positive
-
-    if (!formData.monthlyPaymentAmount || formData.monthlyPaymentAmount <= 0) {
-      errors.monthlyPaymentAmount =
-        "Monthly Payment Amount is required and must be greater than 0";
-
-      hasErrors = true;
-    }
-
-    // Delinquency Days at Filing is required and must be non-negative
-    if (
-      formData.delinquencyDaysAtFiling === "" ||
-      formData.delinquencyDaysAtFiling === null ||
-      formData.delinquencyDaysAtFiling === undefined ||
-      (typeof formData.delinquencyDaysAtFiling === 'number' && formData.delinquencyDaysAtFiling < 0) ||
-      (typeof formData.delinquencyDaysAtFiling === 'string' && (formData.delinquencyDaysAtFiling.trim() === "" || parseFloat(formData.delinquencyDaysAtFiling) < 0))
-    ) {
-      errors.delinquencyDaysAtFiling =
-        "Delinquency Days at Filing is required and must be 0 or greater";
-
-      hasErrors = true;
-    }
-
-    // Validate borrower requested loan modification (required)
-    if (formData.borrowerRequestedLoanModification === null || formData.borrowerRequestedLoanModification === undefined) {
-      errors.borrowerRequestedLoanModification = "Please select if the borrower requested a loan modification";
-      hasErrors = true;
-    }
-
-    // Validate loan modification request finalized (required if modification was requested)
-    if (formData.borrowerRequestedLoanModification === true) {
-      if (formData.loanModificationRequestFinalized === null || formData.loanModificationRequestFinalized === undefined) {
-        errors.loanModificationRequestFinalized = "Please select if the loan modification request was finalized";
-        hasErrors = true;
-      }
-    }
-
-    return { hasErrors, errors };
-  };
-
-  // Validate borrower details
-
-  const validateBorrowerDetails = () => {
-    const errors = {};
-
-    let hasErrors = false;
-
-    // Valid name pattern: letters, spaces, hyphens, apostrophes only
-
-    const validNamePattern = /^[a-zA-Z\s\-']+$/;
-
-    if (!formData.borrowers || formData.borrowers.length === 0) {
-      errors.borrowers = "At least one borrower must be entered";
-
-      hasErrors = true;
-    } else {
-      formData.borrowers.forEach((borrower, index) => {
-        if (!borrower.firstName.trim()) {
-          errors[`borrower_${borrower.id}_firstName`] =
-            "First name is required";
-
-          hasErrors = true;
-        } else if (!validNamePattern.test(borrower.firstName.trim())) {
-          errors[`borrower_${borrower.id}_firstName`] =
-            "First name must contain only valid characters (no numbers or invalid symbols)";
-
-          hasErrors = true;
-        }
-
-        if (!borrower.lastName.trim()) {
-          errors[`borrower_${borrower.id}_lastName`] = "Last name is required";
-
-          hasErrors = true;
-        } else if (!validNamePattern.test(borrower.lastName.trim())) {
-          errors[`borrower_${borrower.id}_lastName`] =
-            "Last name must contain only valid characters (no numbers or invalid symbols)";
-
-          hasErrors = true;
-        }
-
-        // Validate middle name if provided
-
-        if (
-          borrower.middleName.trim() &&
-          !validNamePattern.test(borrower.middleName.trim())
-        ) {
-          errors[`borrower_${borrower.id}_middleName`] =
-            "Middle name must contain only valid characters (no numbers or invalid symbols)";
-
-          hasErrors = true;
-        }
-
-        // Validate suffix if provided
-
-        if (
-          borrower.suffix.trim() &&
-          !validNamePattern.test(borrower.suffix.trim())
-        ) {
-          errors[`borrower_${borrower.id}_suffix`] =
-            "Suffix must contain only valid characters (no numbers or invalid symbols)";
-
-          hasErrors = true;
-        }
-      });
-    }
-
-    return { hasErrors, errors };
-  };
+  // Validate borrower details - using helper
+  const validateBorrowerDetails = () => validateBorrowerDetailsHelper(formData);
 
   // Validate Right-to-Cure details
 
-  const validateRightToCureDetails = () => {
-    const errors = {};
+  // Validate Right-to-Cure details - using helper
+  const validateRightToCureDetails = () => validateRightToCureDetailsHelper(formData);
 
-    let hasErrors = false;
-
-    // Check if rightToCures array exists (new format)
-    const rightToCures = formData.rightToCures || [];
-    const currentRTC = rightToCures.length > 0 ? rightToCures[0] : null;
-    
-    // Use rightToCures array data if available, otherwise fallback to single-object format
-    const noticeSent = currentRTC ? currentRTC.noticeSent : formData.noticeSent;
-    const noticeDate = currentRTC ? currentRTC.noticeDate : formData.noticeDate;
-    const amountInDefault = currentRTC ? currentRTC.amountInDefault : formData.amountInDefault;
-    const daysDelinquentAtNotice = currentRTC ? currentRTC.daysDelinquentAtNotice : formData.daysDelinquentAtNotice;
-    const cureExpirationDate = currentRTC ? currentRTC.cureExpirationDate : formData.cureExpirationDate;
-    const noticeAddressStreet1 = currentRTC ? currentRTC.noticeAddressStreet1 : formData.noticeAddressStreet1;
-    const noticeAddressCity = currentRTC ? currentRTC.noticeAddressCity : formData.noticeAddressCity;
-    const noticeAddressState = currentRTC ? currentRTC.noticeAddressState : formData.noticeAddressState;
-    const noticeAddressZip = currentRTC ? currentRTC.noticeAddressZip : formData.noticeAddressZip;
-    const manualOverrideReason = currentRTC ? currentRTC.manualOverrideReason : formData.manualOverrideReason;
-    const borrowerRespondedWithin30Days = currentRTC ? currentRTC.borrowerRespondedWithin30Days : formData.borrowerRespondedWithin30Days;
-    const borrowerResponseDate = currentRTC ? currentRTC.borrowerResponseDate : formData.borrowerResponseDate;
-    const proceededWithRightToCure = currentRTC ? currentRTC.proceededWithRightToCure : formData.proceededWithRightToCure;
-
-    // Validate notice sent selection
-    if (noticeSent === null || noticeSent === undefined) {
-      errors.noticeSent =
-        "Please select whether the Right-to-Cure notice was sent";
-
-      hasErrors = true;
-    }
-
-    if (noticeSent === true) {
-      // Validate notice date
-      if (!noticeDate || !noticeDate.trim()) {
-        errors.noticeDate = "Notice date is required";
-        hasErrors = true;
-      }
-
-      // Validate amount in default
-      if (!amountInDefault || amountInDefault <= 0) {
-        errors.amountInDefault =
-          "Amount in default is required and must be greater than 0";
-        hasErrors = true;
-      }
-
-      // Validate days delinquent
-      if (
-        daysDelinquentAtNotice === "" ||
-        daysDelinquentAtNotice === null ||
-        daysDelinquentAtNotice === undefined ||
-        daysDelinquentAtNotice < 0
-      ) {
-        errors.daysDelinquentAtNotice =
-          "Days delinquent is required and must be 0 or greater";
-        hasErrors = true;
-      }
-
-      // Validate cure expiration date
-      if (!cureExpirationDate || !cureExpirationDate.trim()) {
-        errors.cureExpirationDate = "Cure expiration date is required";
-        hasErrors = true;
-      } else if (
-        noticeDate &&
-        cureExpirationDate &&
-        new Date(cureExpirationDate) <= new Date(noticeDate)
-      ) {
-        errors.cureExpirationDate =
-          "Cure expiration date must be after notice date";
-        hasErrors = true;
-      }
-
-      // Validate notice address
-      if (!noticeAddressStreet1 || !noticeAddressStreet1.trim()) {
-        errors.noticeAddressStreet1 = "Notice mailing address is required";
-        hasErrors = true;
-      }
-
-      if (!noticeAddressCity || !noticeAddressCity.trim()) {
-        errors.noticeAddressCity = "City is required";
-        hasErrors = true;
-      }
-
-      if (!noticeAddressState || !noticeAddressState.trim()) {
-        errors.noticeAddressState = "State is required";
-        hasErrors = true;
-      }
-
-      if (!noticeAddressZip || !noticeAddressZip.trim()) {
-        errors.noticeAddressZip = "ZIP code is required";
-        hasErrors = true;
-      }
-
-      // Validate borrower responded within 30 days (required if notice was sent)
-      if (borrowerRespondedWithin30Days === null || borrowerRespondedWithin30Days === undefined) {
-        errors.borrowerRespondedWithin30Days = "Please select if the borrower responded to the notice within 30 days";
-        hasErrors = true;
-      }
-
-      // Validate borrower response date (required if borrower responded)
-      if (borrowerRespondedWithin30Days === true) {
-        if (!borrowerResponseDate || !borrowerResponseDate.trim()) {
-          errors.borrowerResponseDate = "Date on which the borrower responded is required";
-          hasErrors = true;
-        } else {
-          // Validate borrower response date must be on or after notice date
-          if (noticeDate && noticeDate.trim()) {
-            const noticeDateObj = new Date(noticeDate);
-            const responseDate = new Date(borrowerResponseDate);
-            
-            if (!isNaN(noticeDateObj.getTime()) && !isNaN(responseDate.getTime())) {
-              // Set time to midnight for accurate date comparison
-              noticeDateObj.setHours(0, 0, 0, 0);
-              responseDate.setHours(0, 0, 0, 0);
-              
-              if (responseDate < noticeDateObj) {
-                errors.borrowerResponseDate = "Borrower Response Date must be on or after Notice Date";
-                hasErrors = true;
-              }
-            }
-          }
-        }
-
-        // Validate proceeded with right to cure (required if borrower responded)
-        if (proceededWithRightToCure === null || proceededWithRightToCure === undefined) {
-          errors.proceededWithRightToCure = "Please select if the borrower proceeded with the right to cure";
-          hasErrors = true;
-        }
-      }
-    } else if (noticeSent === false) {
-      // Validate acceleration date for non-notice path
-      if (!manualOverrideReason || !manualOverrideReason.trim()) {
-        errors.manualOverrideReason = "Acceleration date is required";
-        hasErrors = true;
-      } else {
-        const accelerationDate = new Date(manualOverrideReason);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0); // Reset time to start of day for comparison
-
-        if (accelerationDate >= today) {
-          errors.manualOverrideReason = "Acceleration date must be in the past";
-          hasErrors = true;
-        }
-      }
-    }
-
-    return { hasErrors, errors };
-  };
-
-  // Validate Form 35B Compliance details
-
-  const validateForm35BCompliance = () => {
-    const errors = {};
-
-    let hasErrors = false;
-
-    // Validate certain mortgage loan selection
-
-    if (
-      formData.certainMortgageLoan === null ||
-      formData.certainMortgageLoan === undefined
-    ) {
-      errors.certainMortgageLoan =
-        "Please select whether this loan qualifies as a certain mortgage loan";
-
-      hasErrors = true;
-    }
-
-    // No file validation needed - just yes/no question
-
-    // API will receive empty strings for file fields
-
-    return { hasErrors, errors };
-  };
+  // Validate Form 35B Compliance details - using helper
+  const validateForm35BCompliance = () => validateForm35BComplianceHelper(formData);
 
   // Track step 3 (Loan Details) completion when formData changes
   useEffect(() => {
@@ -4150,152 +3743,11 @@ const PetitionSteps = ({
 
   // Validate Filing Entity details
 
-  const validateFilingEntity = () => {
-    const errors = {};
+  // Validate Filing Entity - using helper
+  const validateFilingEntity = () => validateFilingEntityHelper(formData);
 
-    let hasErrors = false;
-
-    // Validate required fields
-
-    if (
-      !formData.filingEntityLegalName ||
-      formData.filingEntityLegalName.trim() === ""
-    ) {
-      errors.filingEntityLegalName = "Filing Entity Legal Name is required";
-
-      hasErrors = true;
-    }
-
-    // Filing Entity Role is read-only from profile, no validation needed
-
-    if (
-      !formData.filingEntityStreet1 ||
-      formData.filingEntityStreet1.trim() === ""
-    ) {
-      errors.filingEntityStreet1 = "Street Address Line 1 is required";
-
-      hasErrors = true;
-    }
-
-    if (!formData.filingEntityCity || formData.filingEntityCity.trim() === "") {
-      errors.filingEntityCity = "City is required";
-
-      hasErrors = true;
-    }
-
-    if (
-      !formData.filingEntityState ||
-      formData.filingEntityState.trim() === ""
-    ) {
-      errors.filingEntityState = "State is required";
-
-      hasErrors = true;
-    }
-
-    if (!formData.filingEntityZip || formData.filingEntityZip.trim() === "") {
-      errors.filingEntityZip = "ZIP Code is required";
-
-      hasErrors = true;
-    }
-
-    if (
-      !formData.filingContactName ||
-      formData.filingContactName.trim() === ""
-    ) {
-      errors.filingContactName = "Filing Contact Name is required";
-
-      hasErrors = true;
-    }
-
-    if (
-      !formData.filingContactEmail ||
-      formData.filingContactEmail.trim() === ""
-    ) {
-      errors.filingContactEmail = "Filing Contact Email is required";
-
-      hasErrors = true;
-    } else {
-      // Validate email format
-
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-      if (!emailRegex.test(formData.filingContactEmail)) {
-        errors.filingContactEmail = "Please enter a valid email address";
-
-        hasErrors = true;
-      }
-    }
-
-    if (
-      !formData.filingContactPhone ||
-      formData.filingContactPhone.trim() === ""
-    ) {
-      errors.filingContactPhone = "Filing Contact Phone is required";
-
-      hasErrors = true;
-    }
-
-    return { hasErrors, errors };
-  };
-
-  // Validate Loan Assignees details
-
-  const validateLoanAssignees = () => {
-    const errors = {};
-
-    let hasErrors = false;
-
-    // Validate each assignee
-
-    formData.loanAssignees.forEach((assignee, index) => {
-      if (!assignee.assigneeName || assignee.assigneeName.trim() === "") {
-        errors[`loanAssignees.${index}.assigneeName`] =
-          "Assignee Name is required";
-
-        hasErrors = true;
-      }
-
-      if (!assignee.assigneeTypeId || assignee.assigneeTypeId.trim() === "") {
-        errors[`loanAssignees.${index}.assigneeTypeId`] =
-          "Assignee Type is required";
-
-        hasErrors = true;
-      }
-
-      if (!assignee.assigneeRoleId || assignee.assigneeRoleId.trim() === "") {
-        errors[`loanAssignees.${index}.assigneeRoleId`] =
-          "Assignee Role is required";
-
-        hasErrors = true;
-      }
-
-      if (!assignee.street1 || assignee.street1.trim() === "") {
-        errors[`loanAssignees.${index}.street1`] = "Street Address is required";
-
-        hasErrors = true;
-      }
-
-      if (!assignee.city || assignee.city.trim() === "") {
-        errors[`loanAssignees.${index}.city`] = "City is required";
-
-        hasErrors = true;
-      }
-
-      if (!assignee.addressState || assignee.addressState.trim() === "") {
-        errors[`loanAssignees.${index}.addressState`] = "State is required";
-
-        hasErrors = true;
-      }
-
-      if (!assignee.zip || assignee.zip.trim() === "") {
-        errors[`loanAssignees.${index}.zip`] = "ZIP Code is required";
-
-        hasErrors = true;
-      }
-    });
-
-    return { hasErrors, errors };
-  };
+  // Validate Loan Assignees details - using helper
+  const validateLoanAssignees = () => validateLoanAssigneesHelper(formData);
 
   // Validate borrower address with Google Geocoding API
 
