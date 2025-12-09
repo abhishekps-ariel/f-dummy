@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import faqService from "../../services/faqService";
+import { useTranslateObjectArray, useTranslateArray } from "../../hooks/useDynamicTranslation";
 import "./FAQ.css";
 
 const FAQcomponent = () => {
@@ -12,6 +13,55 @@ const FAQcomponent = () => {
   const [loading, setLoading] = useState(true);
   const [loadingQuestions, setLoadingQuestions] = useState(false);
   const [error, setError] = useState(null);
+
+  // Translate categories (name field)
+  const translatedCategories = useTranslateObjectArray(categories, ['name']);
+
+  // Translate questions - handle nested structure by translating questions and answers separately
+  // Flatten structure: translate all question texts and all answer texts, then reconstruct
+  const questionTexts = questions.map(q => q.question);
+  const translatedQuestionTexts = useTranslateArray(questionTexts);
+
+  // Collect all answers with their question index
+  const allAnswersWithIndex = [];
+  questions.forEach((q, qIdx) => {
+    if (q.answers && Array.isArray(q.answers)) {
+      q.answers.forEach((answer, aIdx) => {
+        allAnswersWithIndex.push({ ...answer, _qIndex: qIdx, _aIndex: aIdx });
+      });
+    }
+  });
+
+  // Translate all answer texts
+  const answerTexts = allAnswersWithIndex.map(a => a.answerText);
+  const translatedAnswerTexts = useTranslateArray(answerTexts);
+
+  // Reconstruct questions with translated texts
+  const translatedQuestions = questions.map((question, qIndex) => {
+    const translatedQuestionText = translatedQuestionTexts[qIndex] || question.question;
+    
+    // Reconstruct answers for this question
+    const translatedAnswers = (question.answers || []).map((answer, aIndex) => {
+      // Find the translated answer text for this specific answer
+      const answerIndex = allAnswersWithIndex.findIndex(
+        a => a._qIndex === qIndex && a._aIndex === aIndex
+      );
+      const translatedAnswerText = answerIndex >= 0 
+        ? translatedAnswerTexts[answerIndex] 
+        : answer.answerText;
+
+      return {
+        ...answer,
+        answerText: translatedAnswerText
+      };
+    });
+
+    return {
+      ...question,
+      question: translatedQuestionText,
+      answers: translatedAnswers
+    };
+  });
 
   // Fetch FAQ categories on component mount
   useEffect(() => {
@@ -105,13 +155,13 @@ const FAQcomponent = () => {
     <div className="faq-container">
       {/* Category Tabs */}
       <div className="faq-categories">
-        {categories.map((category) => (
+        {translatedCategories.map((category, index) => (
           <button
-            key={category.id}
+            key={categories[index]?.id || category.id}
             className={`faq-category-btn ${
-              selectedCategoryId === category.id ? "active" : ""
+              selectedCategoryId === (categories[index]?.id || category.id) ? "active" : ""
             }`}
-            onClick={() => handleCategoryClick(category.id)}
+            onClick={() => handleCategoryClick(categories[index]?.id || category.id)}
             disabled={loadingQuestions}
           >
             {category.name}
@@ -139,9 +189,9 @@ const FAQcomponent = () => {
             <p className="text-muted">No QNA found for this category</p>
           </div>
         ) : (
-          questions.map((questionItem, index) => (
+          translatedQuestions.map((questionItem, index) => (
             <div
-              key={questionItem.id || index}
+              key={questionItem.id || questions[index]?.id || index}
               className={`faq-item ${
                 activeQuestion === index ? "active" : ""
               }`}
