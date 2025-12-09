@@ -4,16 +4,7 @@ import { useTranslation } from "react-i18next";
 import { ROUTES } from "../../constants/routerConstants";
 import { STORAGE_KEYS, INTERVALS } from "../../constants/appConstants";
 import loginImg from "../../assets/logo-sample.png";
-
-// Helper function to get unread message count from localStorage
-const getUnreadMessageCount = () => {
-  try {
-    const count = sessionStorage.getItem(STORAGE_KEYS.MESSAGES_UNREAD_COUNT);
-    return count ? parseInt(count, 10) : 0;
-  } catch {
-    return 0;
-  }
-};
+import { getUnreadMessageCount } from "../../helpers/messages/messageUtils";
 
 const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
   const { t } = useTranslation();

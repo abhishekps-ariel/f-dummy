@@ -3,17 +3,7 @@ import { toast } from 'react-toastify';
 import { performExitImpersonation } from '../../services/authService';
 import { getImpersonationState, setImpersonationState } from '../../utils/storage';
 import { ROUTES } from '../../constants/routerConstants';
-
-const bannerStyle = {
-  background: '#fff3cd',
-  border: '1px solid #ffeeba',
-  color: '#856404',
-  padding: '8px 12px',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  gap: '12px',
-};
+import './ImpersonationBanner.css';
 
 function ImpersonationBanner() {
   const [{ isImpersonating, impersonatedUserName }, setState] = useState(getImpersonationState());
@@ -41,14 +31,13 @@ function ImpersonationBanner() {
   if (!isImpersonating) return null;
 
   return (
-    <div style={bannerStyle}>
+    <div className="impersonation-banner">
       <div>
         <strong>Impersonating</strong>: {impersonatedUserName || 'User'}
       </div>
       <button 
         className="dashboard-btn-refresh" 
         onClick={exit}
-        style={{ fontSize: '14px', padding: '6px 12px' }}
       >
         Exit impersonation
       </button>

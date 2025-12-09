@@ -8,25 +8,6 @@ import { ROUTES } from "../../constants/routerConstants";
 import loginImg from "../../assets/logo-sample.png";
 import "../../styles/custom.css";
 
-// Helper function to check if user is org admin
-const isOrgAdmin = (userData) => {
-  if (!userData) return false;
-  
-  // Check if isManager is true
-  if (userData.isManager === true) {
-    return true;
-  }
-  
-  // Check roles array for "Organization Admin"
-  if (userData.roles && Array.isArray(userData.roles)) {
-    return userData.roles.some(
-      (role) => role === "Organization Admin"
-    );
-  }
-  
-  return false;
-};
-
 function TwoFactorAuth() {
   const [codes, setCodes] = useState(["", "", "", "", "", ""]);
   const [isSubmitting, setIsSubmitting] = useState(false);

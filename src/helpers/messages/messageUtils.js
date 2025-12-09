@@ -2,6 +2,21 @@
  * Message formatting and utility functions
  */
 
+import { STORAGE_KEYS } from '../../constants/appConstants';
+
+/**
+ * Get unread message count from sessionStorage
+ * @returns {number} Unread message count, defaults to 0 if not found or on error
+ */
+export const getUnreadMessageCount = () => {
+  try {
+    const count = sessionStorage.getItem(STORAGE_KEYS.MESSAGES_UNREAD_COUNT);
+    return count ? parseInt(count, 10) : 0;
+  } catch {
+    return 0;
+  }
+};
+
 /**
  * Get user initials from a name (first letter of first name and first letter of last name)
  * @param {string} name - Full name
