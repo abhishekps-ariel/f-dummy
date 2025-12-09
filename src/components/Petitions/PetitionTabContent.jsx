@@ -2827,15 +2827,12 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
         docketNumbers: judgment.docketNumbers || ""
       };
 
-      // If first time adding judgment, call both APIs simultaneously
+      // First, save/update judgment
+      await petitionApiService.updateJudgment(petition.id, judgmentData);
+      
+      // Only update status if judgment was saved successfully and it's the first time
       if (isFirstTime) {
-        await Promise.all([
-          petitionApiService.updateJudgment(petition.id, judgmentData),
-          petitionApiService.updateStatus(petition.id, "3") // Status value 3 (JudgmentSubmitted)
-        ]);
-      } else {
-        // Call update judgment API only
-        await petitionApiService.updateJudgment(petition.id, judgmentData);
+        await petitionApiService.updateStatus(petition.id, "3"); // Status value 3 (JudgmentSubmitted)
       }
       
       toast.success("Judgment saved successfully.");
@@ -2920,15 +2917,12 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
           : null
       };
 
-      // If first time adding foreclosure, call both APIs simultaneously
+      // First, save/update foreclosure
+      await petitionApiService.updateForeclosure(petition.id, foreclosureData);
+      
+      // Only update status if foreclosure was saved successfully and it's the first time
       if (isFirstTime) {
-        await Promise.all([
-          petitionApiService.updateForeclosure(petition.id, foreclosureData),
-          petitionApiService.updateStatus(petition.id, "2") // Status value 2 (ForeclosureSaleInitiated)
-        ]);
-      } else {
-        // Call update foreclosure API only
-        await petitionApiService.updateForeclosure(petition.id, foreclosureData);
+        await petitionApiService.updateStatus(petition.id, "2"); // Status value 2 (ForeclosureSaleInitiated)
       }
       
       toast.success("Foreclosure saved successfully.");
