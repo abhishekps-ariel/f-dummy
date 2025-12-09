@@ -19,7 +19,7 @@ const Form35 = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const [activeSection, setActiveSection] = useState('dashboard');
+  const [activeSection, setActiveSection] = useState('form35');
   
   const [formData, setFormData] = useState({
     companyName: '',
@@ -442,6 +442,8 @@ const Form35 = () => {
             navigate(ROUTES.DASHBOARD);
           } else if (section === 'petitions') {
             navigate(ROUTES.PETITIONS);
+          } else if (section === 'form35') {
+            navigate(ROUTES.FORM35);
           } else if (section === 'messages') {
             navigate(ROUTES.MESSAGES);
           } else if (section === 'faq') {

@@ -617,6 +617,8 @@ const Messages = () => {
             navigate(ROUTES.ORGANIZATIONS);
           } else if (section === 'petitions') {
             navigate(ROUTES.PETITIONS);
+          } else if (section === 'form35') {
+            navigate(ROUTES.FORM35);
           } else if (section === 'faq') {
             navigate(ROUTES.FAQ);
           } else if (section === 'training') {

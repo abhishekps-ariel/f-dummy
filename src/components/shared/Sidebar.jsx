@@ -79,6 +79,12 @@ const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
       route: ROUTES.PETITIONS,
     },
     {
+      key: "form35",
+      label: t("sidebar.form35"),
+      icon: "fa-file-alt",
+      route: ROUTES.FORM35,
+    },
+    {
       key: "messages",
       label: t("sidebar.messages"),
       icon: "fa-envelope",

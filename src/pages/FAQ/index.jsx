@@ -43,6 +43,8 @@ const FAQ = () => {
             navigate(ROUTES.DASHBOARD);
           } else if (section === 'petitions') {
             navigate(ROUTES.PETITIONS);
+          } else if (section === 'form35') {
+            navigate(ROUTES.FORM35);
           } else if (section === 'messages') {
             navigate(ROUTES.MESSAGES);
           } else if (section === 'training') {
