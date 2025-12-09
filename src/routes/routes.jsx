@@ -16,6 +16,7 @@ const Messages = lazyWithRetry(() => import('../pages/Messages'));
 const FAQ = lazyWithRetry(() => import('../pages/FAQ'));
 const Training = lazyWithRetry(() => import('../pages/Training'));
 const Form35 = lazyWithRetry(() => import('../pages/Form35'));
+const Notifications = lazyWithRetry(() => import('../pages/Notifications'));
 const Login = lazyWithRetry(() => import('../pages/Auth/Login'));
 const Register = lazyWithRetry(() => import('../pages/Auth/Register'));
 const ForgotPassword = lazyWithRetry(() => import('../pages/Auth/ForgotPassword'));
@@ -152,6 +153,15 @@ export const router = createBrowserRouter([
     element: (
       <Layout>
         <Form35 />
+      </Layout>
+    ),
+    errorElement: <RouteError />,
+  },
+  {
+    path: ROUTES.NOTIFICATIONS,
+    element: (
+      <Layout>
+        <Notifications />
       </Layout>
     ),
     errorElement: <RouteError />,

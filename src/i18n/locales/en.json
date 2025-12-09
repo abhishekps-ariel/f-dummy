@@ -333,6 +333,7 @@
     "dashboard": "Dashboard",
     "petitions": "Petitions",
     "form35": "Form 35",
+    "notifications": "Notifications",
     "messages": "Messages",
     "faq": "FAQ",
     "training": "Training",
@@ -1040,6 +1041,28 @@
     "description": "Access training materials and resources to learn about the FILIR system.",
     "trainingResources": "Training Resources",
     "placeholderText": "This section will contain training materials and educational resources."
+  },
+  "notifications": {
+    "title": "Notifications",
+    "pageTitle": "Email Notifications",
+    "subtitle": "To keep you informed about important updates regarding your petition submissions, including status changes, required actions, and system notifications.",
+    "subject": "Subject",
+    "emailAddress": "Email Address",
+    "dateSent": "Date Sent",
+    "status": "Status",
+    "actions": "Actions",
+    "unread": "Unread",
+    "read": "Read",
+    "viewDetails": "View Details",
+    "hideDetails": "Hide Details",
+    "details": "Notification Details",
+    "propertyAddress": "Property Address",
+    "loanType": "Loan Type",
+    "borrowerNames": "Borrower Name(s)",
+    "organizationName": "Organization Name",
+    "viewPetition": "View Petition",
+    "viewAll": "View All Notifications",
+    "noNotifications": "No notifications available"
   }
 }
 

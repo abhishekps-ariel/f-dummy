@@ -333,6 +333,7 @@
     "dashboard": "Panel de Control",
     "petitions": "Peticiones",
     "form35": "Formulario 35",
+    "notifications": "Notificaciones",
     "messages": "Mensajes",
     "faq": "Preguntas Frecuentes",
     "training": "Capacitación",
@@ -1040,6 +1041,28 @@
     "description": "Acceda a materiales de capacitación y recursos para aprender sobre el sistema FILIR.",
     "trainingResources": "Recursos de Capacitación",
     "placeholderText": "Esta sección contendrá materiales de capacitación y recursos educativos."
+  },
+  "notifications": {
+    "title": "Notificaciones",
+    "pageTitle": "Notificaciones por Correo Electrónico",
+    "subtitle": "Para mantenerlo informado sobre actualizaciones importantes relacionadas con sus envíos de peticiones, incluidos cambios de estado, acciones requeridas y notificaciones del sistema.",
+    "subject": "Asunto",
+    "emailAddress": "Dirección de Correo Electrónico",
+    "dateSent": "Fecha de Envío",
+    "status": "Estado",
+    "actions": "Acciones",
+    "unread": "No Leído",
+    "read": "Leído",
+    "viewDetails": "Ver Detalles",
+    "hideDetails": "Ocultar Detalles",
+    "details": "Detalles de la Notificación",
+    "propertyAddress": "Dirección de la Propiedad",
+    "loanType": "Tipo de Préstamo",
+    "borrowerNames": "Nombre(s) del Prestatario",
+    "organizationName": "Nombre de la Organización",
+    "viewPetition": "Ver Petición",
+    "viewAll": "Ver Todas las Notificaciones",
+    "noNotifications": "No hay notificaciones disponibles"
   }
 }
 

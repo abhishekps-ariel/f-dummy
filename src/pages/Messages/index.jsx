@@ -619,6 +619,8 @@ const Messages = () => {
             navigate(ROUTES.PETITIONS);
           } else if (section === 'form35') {
             navigate(ROUTES.FORM35);
+          } else if (section === 'notifications') {
+            navigate(ROUTES.NOTIFICATIONS);
           } else if (section === 'faq') {
             navigate(ROUTES.FAQ);
           } else if (section === 'training') {

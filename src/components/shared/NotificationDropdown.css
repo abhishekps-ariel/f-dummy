@@ -1,0 +1,25 @@
+/* Custom scrollbar for notification dropdown */
+.notification-dropdown-scrollable {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e0 #f1f5f9;
+}
+
+.notification-dropdown-scrollable::-webkit-scrollbar {
+  width: 6px;
+}
+
+.notification-dropdown-scrollable::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 10px;
+}
+
+.notification-dropdown-scrollable::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 10px;
+  transition: background 0.2s ease;
+}
+
+.notification-dropdown-scrollable::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+

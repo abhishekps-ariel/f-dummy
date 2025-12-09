@@ -9,6 +9,7 @@ export const ROUTES = {
   FAQ: '/faq',
   TRAINING: '/training',
   FORM35: '/form35',
+  NOTIFICATIONS: '/notifications',
   LOGIN: '/login',
   REGISTER: '/register',
   FORGOT_PASSWORD: '/forgot-password',
