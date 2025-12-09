@@ -7,8 +7,6 @@ import { STORAGE_KEYS } from "../../constants/appConstants";
 import { usePetitionCommonData } from "../../hooks/usePetitionCommonData";
 import { usePetitions } from "../../hooks/usePetitions";
 import { toast } from "react-toastify";
-import CustomDropdown from "../shared/CustomDropdown";
-import "../shared/CustomDropdown.css";
 import "./PetitionForm.css";
 import { useJsApiLoader } from "@react-google-maps/api";
 import Config from "../../config/index";
@@ -30,10 +28,9 @@ import NotesModal from "./NotesModal";
 import PetitionContentSidebar from "./PetitionContentSidebar";
 import "./PetitionContentSidebar.css";
 import { useAuth } from "../../context/AuthContext";
-import { getUserRole } from "../../utils/storage";
 import PetitionSteps from "./PetitionSteps";
 import petitionApiService from "../../services/petitionApiService";
-import { formatDateForInput, isDateInPast } from "../../utils/dateUtils";
+import { formatDateForInput } from "../../utils/dateUtils";
 import {
   validatePropertyDetails as validatePropertyDetailsHelper,
   validateLoanDetails as validateLoanDetailsHelper,
@@ -46,7 +43,7 @@ import {
 
 const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) => {
   const { t } = useTranslation();
-  const { loadingTabs, activeTabId, refreshTab, tabs } = useTabs();
+  const { loadingTabs, activeTabId, refreshTab } = useTabs();
   const {
     getLoanTypes,
     getAssigneeTypes,
@@ -56,17 +53,15 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
     getLenderTypes,
     getJudgmentTypes,
     getForeclosureAlternativeOptions,
-    getPetitionStatuses,
     getOptionName,
     findOptionByValue,
     loading: commonDataLoading,
   } = usePetitionCommonData();
-  const { submitPetition, fetchPetitions } = usePetitions();
+  const { submitPetition } = usePetitions();
 
   // Section-level editing state - each section can be edited independently
   const [editingSections, setEditingSections] = useState({});
   const [isSavingDraft, setIsSavingDraft] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
   
   // Sidebar state for section navigation
@@ -135,8 +130,9 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
       autocompleteServiceRef.current =
         new window.google.maps.places.AutocompleteService();
       geocoderRef.current = new window.google.maps.Geocoder();
-    } catch {
+    } catch (error) {
       // Google Maps API initialization failed - will retry on next load
+      console.error("Failed to initialize Google Maps services:", error);
     }
   }, [isLoaded, loadError]);
 
@@ -221,7 +217,10 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
               propertyZip: zip || prev.propertyZip,
             }));
           }
-        } catch {}
+        } catch (error) {
+          // Error geocoding address - non-critical, continue with form data
+          console.error("Failed to geocode address:", error);
+        }
       }
     );
     if (propertyAddressInputRef.current) propertyAddressInputRef.current.blur();
@@ -468,83 +467,6 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
         if (zip) updateRightToCure(index, "noticeAddressZip", zip);
       }
     );
-  };
-
-  const validatePropertyAddressWithGeocoding = async () => {
-    return new Promise((resolve) => {
-      if (!geocoderRef.current || !formData.propertyStreet1?.trim()) {
-        resolve({ isValid: false, error: "Street address is required" });
-        return;
-      }
-      const address = `${formData.propertyStreet1}, ${
-        formData.propertyCity || ""
-      }, ${formData.propertyState || "MA"} ${
-        formData.propertyZip || ""
-      }`.trim();
-      try {
-        geocoderRef.current.geocode({ address }, (results, status) => {
-          if (
-            status === window.google.maps.GeocoderStatus.OK &&
-            results &&
-            results.length > 0
-          ) {
-            const result = results[0];
-            let foundState = false;
-            let cityMatch = false;
-            let zipMatch = false;
-            let countyMatch = false;
-            let county = "";
-            result.address_components.forEach((component) => {
-              const types = component.types;
-              if (types.includes("administrative_area_level_1")) {
-                foundState =
-                  component.short_name === (formData.propertyState || "MA");
-              }
-              if (types.includes("locality")) {
-                const componentCity = component.long_name.toLowerCase();
-                const inputCity = (formData.propertyCity || "").toLowerCase();
-                if (
-                  componentCity.includes(inputCity) ||
-                  inputCity.includes(componentCity)
-                ) {
-                  cityMatch = true;
-                }
-              }
-              if (types.includes("postal_code")) {
-                if (component.long_name === (formData.propertyZip || "")) {
-                  zipMatch = true;
-                }
-              }
-              if (types.includes("administrative_area_level_2")) {
-                const componentCounty = component.long_name.toLowerCase();
-                const inputCounty = (
-                  formData.propertyCounty || ""
-                ).toLowerCase();
-                county = component.long_name;
-                if (
-                  componentCounty.includes(inputCounty) ||
-                  inputCounty.includes(componentCounty)
-                ) {
-                  countyMatch = true;
-                }
-              }
-            });
-            if (foundState && cityMatch && zipMatch && countyMatch) {
-              if (county && !formData.propertyCounty) {
-                setFormData((prev) => ({ ...prev, propertyCounty: county }));
-              }
-              resolve({ isValid: true });
-            } else {
-              resolve({ isValid: false, error: "Address verification failed" });
-            }
-          } else {
-            resolve({ isValid: false, error: "Invalid address" });
-          }
-        });
-      } catch {
-        resolve({ isValid: false, error: "Address validation failed" });
-      }
-    });
   };
 
   // Transform petition.details to formData structure matching PetitionSteps
@@ -886,7 +808,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
     }
     
     return baseSections;
-  }, [formData, showNotesSection, isPublic, t, hasJudgmentData, hasForeclosureSaleData]);
+  }, [formData, showNotesSection, isPublic, t]);
   
   // Handle section click - scroll to section (don't change sidebar collapsed state)
   const handleSectionClick = (sectionId, e) => {
@@ -957,7 +879,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
     handleScroll();
     
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [formData, showNotesSection]);
+  }, [showNotesSection]);
   
   // Toggle section editing
   const toggleSectionEditing = (sectionId) => {
@@ -991,8 +913,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
     }
 
     switch (sectionId) {
-      case "property":
-        // Validate property fields using helper function
+      case "property": {
         const propertyValidation = validatePropertyDetailsHelper(formData);
         if (propertyValidation.hasErrors) {
           setFieldErrors(prev => ({ ...prev, ...propertyValidation.errors }));
@@ -1089,8 +1010,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
               duplicateError.toastShown = true;
               throw duplicateError;
             } else {
-              // Other API errors
-              const errorMessage = errorData.message || error.message || "Failed to update property details.";
+              const errorMessage = errorData.message || err.message || "Failed to update property details.";
               setFieldErrors(prev => ({ 
                 ...prev, 
                 propertyStreet1: errorMessage 
@@ -1100,10 +1020,8 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
               apiError.toastShown = true;
               throw apiError;
             }
-          } else if (error.message) {
-            // Re-throw validation errors or other errors that already have messages
-            // Don't set toastShown flag - let outer catch handle it
-            throw error;
+          } else if (err.message) {
+            throw err;
           } else {
             // Unknown error
             const errorMessage = "Failed to update property details. Please try again.";
@@ -1116,9 +1034,9 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
           }
         }
         break;
+      }
 
-      case "loan":
-        // Validate loan fields using helper function
+      case "loan": {
         const loanValidation = validateLoanDetailsHelper(formData);
         if (loanValidation.hasErrors) {
           setFieldErrors(prev => ({ ...prev, ...loanValidation.errors }));
@@ -1185,9 +1103,9 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
           return newErrors;
         });
         break;
+      }
 
-      case "filing-entity":
-        // Validate filing entity fields using helper function
+      case "filing-entity": {
         const filingEntityValidation = validateFilingEntityHelper(formData);
         if (filingEntityValidation.hasErrors) {
           setFieldErrors(prev => ({ ...prev, ...filingEntityValidation.errors }));
@@ -1244,9 +1162,9 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
           return newErrors;
         });
         break;
+      }
 
-      case "borrower":
-        // Validate borrower fields using helper function
+      case "borrower": {
         const borrowerValidation = validateBorrowerDetailsHelper(formData);
         if (borrowerValidation.hasErrors) {
           setFieldErrors(prev => ({ ...prev, ...borrowerValidation.errors }));
@@ -1326,9 +1244,9 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
           return newErrors;
         });
         break;
+      }
 
-      case "form35b":
-        // Validate Form 35B Compliance fields using helper function
+      case "form35b": {
         const form35BValidation = validateForm35BComplianceHelper(formData);
         if (form35BValidation.hasErrors) {
           setFieldErrors(prev => ({ ...prev, ...form35BValidation.errors }));
@@ -1376,9 +1294,9 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
           return newErrors;
         });
         break;
+      }
 
-      case "right-to-cure":
-        // Validate right to cure fields using helper function
+      case "right-to-cure": {
         const rightToCureValidation = validateRightToCureDetailsHelper(formData);
         if (rightToCureValidation.hasErrors) {
           setFieldErrors(prev => ({ ...prev, ...rightToCureValidation.errors }));
@@ -1467,9 +1385,9 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
           return newErrors;
         });
         break;
+      }
 
-      case "loan-assignees":
-        // Validate loan assignee fields using helper function
+      case "loan-assignees": {
         const loanAssigneesValidation = validateLoanAssigneesHelper(formData);
         if (loanAssigneesValidation.hasErrors) {
           setFieldErrors(prev => ({ ...prev, ...loanAssigneesValidation.errors }));
@@ -1550,9 +1468,9 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
           return newErrors;
         });
         break;
+      }
 
-      case "signatures":
-        // Validate signature fields
+      case "signatures": {
         if (!formData.signatures || !Array.isArray(formData.signatures) || formData.signatures.length === 0) {
           setFieldErrors(prev => ({ ...prev, signatures: "At least one signature is required" }));
           throw new Error("At least one signature is required");
@@ -1657,9 +1575,9 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
           return newErrors;
         });
         break;
+      }
 
-      case "judgment":
-        // Validate judgment fields
+      case "judgment": {
         if (!formData.judgment) {
           setFieldErrors(prev => ({ ...prev, judgment: "Judgment data is required" }));
           throw new Error("Judgment data is required");
@@ -1731,9 +1649,9 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
           return newErrors;
         });
         break;
+      }
 
-      case "foreclosure":
-        // Validate foreclosure fields
+      case "foreclosure": {
         if (!formData.foreclosureSale) {
           setFieldErrors(prev => ({ ...prev, foreclosureSale: "Foreclosure sale data is required" }));
           throw new Error("Foreclosure sale data is required");
@@ -1846,6 +1764,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
           return newErrors;
         });
         break;
+      }
       
       default:
         throw new Error(`Save handler not implemented for section: ${sectionId}`);
@@ -1954,135 +1873,6 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
       minute: "2-digit",
       hour12: true,
     });
-  };
-
-  // Validate required fields across sections for final submit
-  const validateFormForSubmit = () => {
-    const errors = {};
-
-    // Property
-    if (!formData.propertyStreet1 || formData.propertyStreet1.trim() === "") errors.propertyStreet1 = "Required";
-    if (!formData.propertyCity || formData.propertyCity.trim() === "") errors.propertyCity = "Required";
-    if (!formData.propertyState || formData.propertyState.trim() === "") errors.propertyState = "Required";
-    if (!formData.propertyZip || formData.propertyZip.trim() === "") errors.propertyZip = "Required";
-
-    // Loan basics
-    if (!formData.isMinApplicable || (formData.isMinApplicable !== "yes" && formData.isMinApplicable !== "no")) {
-      errors.isMinApplicable = "Please select if MIN is applicable";
-    }
-    if (formData.isMinApplicable === "yes" && (!formData.minNumber || !formData.minNumber.trim())) {
-      errors.minNumber = "MIN Number is required when MIN is applicable";
-    }
-    if (!formData.loanNumber || formData.loanNumber.trim() === "") errors.loanNumber = "Required";
-    if (!formData.petitionLoanTypeId || formData.petitionLoanTypeId === "") errors.petitionLoanTypeId = "Required";
-    // Note: lienPosition can be 0 (for "First"), so we check for null/undefined/empty string specifically
-    if (formData.lienPosition == null || formData.lienPosition === "")
-      errors.lienPosition = "Required";
-    
-    // Loan Modification fields (required)
-    if (formData.borrowerRequestedLoanModification === null || formData.borrowerRequestedLoanModification === undefined) {
-      errors.borrowerRequestedLoanModification = "Please select if the borrower requested a loan modification";
-    }
-    if (formData.borrowerRequestedLoanModification === true) {
-      if (formData.loanModificationRequestFinalized === null || formData.loanModificationRequestFinalized === undefined) {
-        errors.loanModificationRequestFinalized = "Please select if the loan modification request was finalized";
-      }
-    }
-
-    // Borrowers: require at least one primary with name
-    const primaryBorrower = (formData.borrowers || []).find(
-      (b) => b.borrowerIsPrimary
-    );
-    if (!primaryBorrower) {
-      errors.borrowers = "Primary borrower is required";
-    } else {
-      const pbKey = primaryBorrower.id || "primary";
-      if (!primaryBorrower.firstName || primaryBorrower.firstName.trim() === "")
-        errors[`borrower_${pbKey}_firstName`] = "Required";
-      if (!primaryBorrower.lastName || primaryBorrower.lastName.trim() === "")
-        errors[`borrower_${pbKey}_lastName`] = "Required";
-      // Borrower mailing address is optional in wizard; do not require here.
-    }
-
-    // Loan Assignees: if present, validate required fields for each
-    // Only validate if the assignee has at least one field filled (to avoid validating empty/partial entries)
-    (formData.loanAssignees || []).forEach((a, idx) => {
-      // Check if this assignee has any data - if it's completely empty, skip validation
-      const hasAnyData = a.assigneeName || a.assigneeTypeId || a.assigneeRoleId || a.street1 || a.city || a.addressState || a.zip;
-      
-      if (hasAnyData) {
-        // If assignee has any data, validate all required fields
-        if (!a.assigneeName || a.assigneeName.trim() === "")
-          errors[`loanAssignees.${idx}.assigneeName`] = "Required";
-        if (!a.assigneeTypeId || a.assigneeTypeId === "")
-          errors[`loanAssignees.${idx}.assigneeTypeId`] = "Required";
-        if (!a.assigneeRoleId || a.assigneeRoleId === "")
-          errors[`loanAssignees.${idx}.assigneeRoleId`] = "Required";
-        if (!a.street1 || a.street1.trim() === "") errors[`loanAssignees.${idx}.street1`] = "Required";
-        if (!a.city || a.city.trim() === "") errors[`loanAssignees.${idx}.city`] = "Required";
-        if (!a.addressState || a.addressState.trim() === "")
-          errors[`loanAssignees.${idx}.addressState`] = "Required";
-        if (!a.zip || a.zip.trim() === "") errors[`loanAssignees.${idx}.zip`] = "Required";
-      }
-    });
-
-    // Filing entity core fields
-    if (!formData.filingEntityLegalName || formData.filingEntityLegalName.trim() === "")
-      errors.filingEntityLegalName = "Required";
-    if (!formData.filingEntityStreet1 || formData.filingEntityStreet1.trim() === "") errors.filingEntityStreet1 = "Required";
-    if (!formData.filingEntityCity || formData.filingEntityCity.trim() === "") errors.filingEntityCity = "Required";
-    if (!formData.filingEntityState || formData.filingEntityState.trim() === "") errors.filingEntityState = "Required";
-    if (!formData.filingEntityZip || formData.filingEntityZip.trim() === "") errors.filingEntityZip = "Required";
-    if (!formData.filingContactName || formData.filingContactName.trim() === "") errors.filingContactName = "Required";
-    if (!formData.filingContactEmail || formData.filingContactEmail.trim() === "") {
-      errors.filingContactEmail = "Required";
-    } else {
-      const emailOk = /.+@.+\..+/.test(formData.filingContactEmail.trim());
-      if (!emailOk) errors.filingContactEmail = "Invalid email";
-    }
-
-    // E-consent validation - check if at least one signature has e-consent checked
-    const signatures = formData.signatures || [];
-    if (signatures.length > 0) {
-      const hasEconsent = signatures.some((sig) => sig.esignConsent === true);
-      if (!hasEconsent) {
-        errors.esignConsent = "E-sign consent is required before submission";
-      }
-    } else {
-      // If no signatures exist, that's also an error
-      errors.signatures = "At least one signature is required";
-    }
-
-    // Foreclosure Sale validation removed - it's now handled separately in the Foreclosure Sale modal
-    // Users can edit foreclosure sale independently without blocking main form submission
-
-    if (Object.keys(errors).length) {
-      setFieldErrors((prev) => ({ ...prev, ...errors }));
-      
-      // Special handling for e-consent error - scroll to signature section if it's present
-      if (errors.esignConsent && signatureSectionRef.current) {
-        setTimeout(() => {
-          signatureSectionRef.current?.scrollIntoView({ 
-            behavior: "smooth", 
-            block: "center" 
-          });
-        }, 100);
-      } else {
-        // Attempt to focus first invalid field
-        const firstKey = Object.keys(errors)[0];
-        const el =
-          document.querySelector(`[name="${firstKey}"]`) ||
-          document.querySelector(`[data-error-key="${firstKey}"]`);
-        if (el && typeof el.scrollIntoView === "function") {
-          setTimeout(() => {
-            el.scrollIntoView({ behavior: "smooth", block: "center" });
-            if (typeof el.focus === "function") el.focus();
-          }, 100);
-        }
-      }
-      return false;
-    }
-    return true;
   };
 
   const getStatusBadgeClass = (status, statusClass) => {
@@ -2500,37 +2290,6 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
     }));
   };
 
-  // Handle foreclosure sale field changes
-  const updateForeclosureSale = (field, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      foreclosureSale: prev.foreclosureSale
-        ? {
-            ...prev.foreclosureSale,
-            [field]: value,
-            // Clear Mortgagee/Investor required fields if soldToId changes to Third Party
-            ...(field === "soldToId" && value !== prev.foreclosureSale.soldToId
-              ? {
-                  vestingEntityName: "",
-                  reoContactFirstName: "",
-                  reoContactLastName: "",
-                  reoBusinessPhone: "",
-                }
-              : {}),
-          }
-        : {
-            saleDate: "",
-            soldToId: "",
-            vestingEntityName: "",
-            reoEntityName: "",
-            reoContactFirstName: "",
-            reoContactLastName: "",
-            reoBusinessPhone: "",
-            reoEmergencyPhone: "",
-            [field]: value,
-          },
-    }));
-  };
 
   // Add borrower
   const addBorrower = () => {
@@ -2700,27 +2459,6 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
     });
   };
 
-  // Handle edit mode toggle (legacy - for backward compatibility)
-  const handleEditToggle = () => {
-    const allSectionIds = sections.map(s => s.id);
-    const allEditing = allSectionIds.every(id => isSectionEditing(id));
-    
-    if (allEditing) {
-      setEditingSections({});
-      if (initialFormData) {
-        setFormData(initialFormData);
-      }
-      setFieldErrors({});
-    } else {
-      const newEditingState = {};
-      allSectionIds.forEach(id => {
-        newEditingState[id] = true;
-      });
-      setEditingSections(newEditingState);
-    }
-    setShowEditDropdown(false);
-  };
-
   // Helper function to check if judgment has been submitted (has meaningful data)
   const hasJudgmentBeenSubmitted = () => {
     const judgment = formData?.judgment;
@@ -2827,7 +2565,6 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
         docketNumbers: judgment.docketNumbers || ""
       };
 
-      // First, save/update judgment
       await petitionApiService.updateJudgment(petition.id, judgmentData);
       
       // Only update status if judgment was saved successfully and it's the first time
@@ -2918,7 +2655,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
       };
 
       // First, save/update foreclosure
-      await petitionApiService.updateForeclosure(petition.id, foreclosureData);
+        await petitionApiService.updateForeclosure(petition.id, foreclosureData);
       
       // Only update status if foreclosure was saved successfully and it's the first time
       if (isFirstTime) {
@@ -2945,80 +2682,6 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
     }
   };
 
-  // Save as Draft (does not mark submitted) - no validation required for drafts
-  const handleSaveDraft = async () => {
-    setIsSavingDraft(true);
-    try {
-      // No address validation required for drafts - user can save incomplete data
-      // Ensure organizationId is set from petition if not in formData
-      const petitionData = { 
-        ...formData, 
-        isAllStepsCompleted: false,
-        organizationId: formData.organizationId || petition.organizationId,
-      };
-      await submitPetition(petitionData, true, petition.id);
-      // Toast message is shown by submitPetition function
-      setEditingSections({});
-      
-      // Call the callback to refresh the petitions list (just like delete does)
-      // Small delay to ensure backend has processed the update
-      setTimeout(() => {
-        if (onPetitionUpdated) {
-          onPetitionUpdated();
-        }
-      }, 200);
-      // Then refresh the tab data
-      if (activeTabId && refreshTab) {
-        await refreshTab(activeTabId);
-      }
-    } catch (err) {
-      toast.error(err?.message || t("petitionTabContent.failedSaveDraft"));
-    } finally {
-      setIsSavingDraft(false);
-    }
-  };
-
-  // Submit Petition (requires full info)
-  const handleFinalSubmit = async () => {
-    setIsSubmitting(true);
-    try {
-      // Validate all sections
-      if (!validateFormForSubmit()) {
-        toast.error(t("petitionTabContent.fillAllRequiredFields"));
-        return;
-      }
-      const addressValidation = await validatePropertyAddressWithGeocoding();
-      if (!addressValidation.isValid) {
-        toast.error(t("petitionTabContent.propertyAddressNotValidated"));
-        return;
-      }
-      // Ensure organizationId is set from petition if not in formData
-      const petitionData = { 
-        ...formData, 
-        isAllStepsCompleted: true,
-        organizationId: formData.organizationId || petition.organizationId,
-      };
-      await submitPetition(petitionData, false, petition.id);
-      // Toast message is shown by submitPetition function
-      setEditingSections({});
-      
-      // Call the callback to refresh the petitions list (just like delete does)
-      // Small delay to ensure backend has processed the update
-      setTimeout(() => {
-        if (onPetitionUpdated) {
-          onPetitionUpdated();
-        }
-      }, 200);
-      // Then refresh the tab data
-      if (activeTabId && refreshTab) {
-        await refreshTab(activeTabId);
-      }
-    } catch {
-      // Error toast is already shown by submitPetition function, so we don't show another one here
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   // Reusable section header component with section-level edit button
   const SectionHeader = ({ title, sectionId }) => {
