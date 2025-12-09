@@ -4,6 +4,20 @@ import { PETITION_ENDPOINTS } from '../constants/apiEndpoints';
 import axios from 'axios';
 import Config from '../config/index';
 import { SERVICE_HEADERS, safeDateConversion, dateToISO, fileToBase64, safeParseInt, safeParseFloat, safeString, isValidUUID } from '../utils/serviceUtils';
+import {
+  getStatusDisplay,
+  mapBorrowerToApi,
+  mapBorrowerForSubmission,
+  mapLoanAssigneeToApi,
+  mapLoanAssigneeForSubmission,
+  mapSignatureToApi,
+  mapSignatureForSubmission,
+  mapRightToCureToApi,
+  mapRightToCureForSubmission,
+  getPrimaryBorrowerName,
+  formatPropertyAddress,
+  formatLoanAmount
+} from '../helpers/petitions/petitionDataMappers';
 
 class PetitionApiService {
   // Submit a new petition
@@ -165,20 +179,7 @@ class PetitionApiService {
   async updateBorrowers(petitionId, borrowersData) {
     const requestBody = {
       petitionId: petitionId,
-      petitionBorrowers: borrowersData.map(borrower => ({
-        id: borrower.id || null,
-        firstName: borrower.firstName || "",
-        middleName: borrower.middleName || "",
-        lastName: borrower.lastName || "",
-        suffix: borrower.suffix || "",
-        borrowerIsPrimary: borrower.borrowerIsPrimary || false,
-        mailingStreet1: borrower.mailingStreet1 || "",
-        mailingCity: borrower.mailingCity || "",
-        mailingState: borrower.mailingState || "",
-        mailingZip: borrower.mailingZip || "",
-        phone: borrower.phone || "",
-        email: borrower.email || ""
-      }))
+      petitionBorrowers: borrowersData.map(mapBorrowerToApi)
     };
     
     const response = await axiosInstance.post(PETITION_ENDPOINTS.UPDATE_BORROWERS, requestBody, {
@@ -217,27 +218,7 @@ class PetitionApiService {
   // Update right to cures
   async updateRightToCures(petitionId, rightToCuresData) {
     // Map right to cures data, ensuring new entries have id: null
-    const mappedRightToCures = rightToCuresData.map((rtc) => {
-      // Determine ID: if it's a valid UUID, use it; otherwise set to null for new entries
-      const rtcId = isValidUUID(rtc.id) ? rtc.id : null;
-
-      return {
-        id: rtcId,
-        noticeSent: rtc.noticeSent !== null && rtc.noticeSent !== undefined ? rtc.noticeSent : null,
-        noticeDate: safeDateConversion(rtc.noticeDate),
-        amountInDefault: safeParseFloat(rtc.amountInDefault),
-        daysDelinquentAtNotice: safeParseInt(rtc.daysDelinquentAtNotice),
-        cureExpirationDate: safeDateConversion(rtc.cureExpirationDate),
-        noticeAddressStreet1: rtc.noticeAddressStreet1 || "",
-        noticeAddressCity: rtc.noticeAddressCity || "",
-        noticeAddressState: rtc.noticeAddressState || "",
-        noticeAddressZip: rtc.noticeAddressZip || "",
-        manualOverrideReason: rtc.manualOverrideReason || "",
-        borrowerRespondedWithin30Days: (rtc.noticeSent === false || rtc.noticeSent === null || rtc.noticeSent === undefined) ? null : (rtc.borrowerRespondedWithin30Days !== null && rtc.borrowerRespondedWithin30Days !== undefined ? rtc.borrowerRespondedWithin30Days : false),
-        borrowerResponseDate: safeDateConversion(rtc.borrowerResponseDate),
-        proceededWithRightToCure: (rtc.noticeSent === false || rtc.noticeSent === null || rtc.noticeSent === undefined) ? null : (rtc.proceededWithRightToCure !== null && rtc.proceededWithRightToCure !== undefined ? rtc.proceededWithRightToCure : false)
-      };
-    });
+    const mappedRightToCures = rightToCuresData.map(mapRightToCureToApi);
 
     const requestBody = {
       petitionId: petitionId,
@@ -245,10 +226,7 @@ class PetitionApiService {
     };
     
     const response = await axiosInstance.post(PETITION_ENDPOINTS.UPDATE_RIGHT_TO_CURE, requestBody, {
-      headers: {
-        'Accept': '*/*',
-        'Content-Type': 'application/json'
-      }
+      headers: SERVICE_HEADERS.JSON_WILDCARD
     });
     
     return response.data;
@@ -257,31 +235,7 @@ class PetitionApiService {
   // Update loan assignees
   async updateLoanAssignees(petitionId, loanAssigneesData) {
     // Map loan assignees data, ensuring new entries have id: null
-    const mappedLoanAssignees = loanAssigneesData.map((assignee) => {
-      // Determine ID: if it's a number (temporary) or not a valid UUID, set to null
-      let assigneeId = null;
-      if (assignee.id && typeof assignee.id === 'string' && assignee.id.includes('-')) {
-        // It's a UUID string, use it
-        assigneeId = assignee.id;
-      } else if (assignee.id && typeof assignee.id === 'number') {
-        // It's a temporary ID (number), set to null for new entries
-        assigneeId = null;
-      }
-
-      return {
-        id: assigneeId,
-        assigneeName: assignee.assigneeName || "",
-        assigneeTypeId: assignee.assigneeTypeId && assignee.assigneeTypeId.trim() !== '' ? assignee.assigneeTypeId : null,
-        assigneeRoleId: assignee.assigneeRoleId && assignee.assigneeRoleId.trim() !== '' ? assignee.assigneeRoleId : null,
-        street1: assignee.street1 || "",
-        street2: assignee.street2 || "",
-        city: assignee.city || "",
-        addressState: assignee.addressState || "",
-        zip: assignee.zip || "",
-        licenseNumber: assignee.licenseNumber || "",
-        licenseState: assignee.licenseState || ""
-      };
-    });
+    const mappedLoanAssignees = loanAssigneesData.map(mapLoanAssigneeToApi);
 
     const requestBody = {
       petitionId: petitionId,
@@ -289,10 +243,7 @@ class PetitionApiService {
     };
     
     const response = await axiosInstance.post(PETITION_ENDPOINTS.UPDATE_LOAN_ASSIGNEES, requestBody, {
-      headers: {
-        'Accept': '*/*',
-        'Content-Type': 'application/json'
-      }
+      headers: SERVICE_HEADERS.JSON_WILDCARD
     });
     
     return response.data;
@@ -300,46 +251,8 @@ class PetitionApiService {
 
   // Update signatures
   async updateSignatures(petitionId, signaturesData) {
-    // Helper function to safely convert dates
-    const safeDateConversion = (dateString) => {
-      if (!dateString || !dateString.trim()) return null;
-      try {
-        // If already in ISO format, return as is
-        if (dateString.includes('T')) {
-          return dateString;
-        }
-        // Otherwise, convert to ISO format
-        const date = new Date(dateString + 'T00:00:00');
-        return isNaN(date.getTime()) ? null : date.toISOString();
-      } catch {
-        return null;
-      }
-    };
-
     // Map signatures data, ensuring new entries have id: null
-    const mappedSignatures = signaturesData.map((signature) => {
-      // Determine ID: if it's a number (temporary) or not a valid UUID, set to null
-      let signatureId = null;
-      if (signature.id && typeof signature.id === 'string' && signature.id.includes('-')) {
-        // It's a UUID string, use it
-        signatureId = signature.id;
-      } else if (signature.id && typeof signature.id === 'number') {
-        // It's a temporary ID (number), set to null for new entries
-        signatureId = null;
-      }
-
-      return {
-        id: signatureId,
-        signerFullName: signature.signerFullName || "",
-        signerTitle: signature.signerTitle || "",
-        signerEmail: signature.signerEmail || "",
-        esignConsent: signature.esignConsent !== null && signature.esignConsent !== undefined ? signature.esignConsent : false,
-        signatureDrawnOrTyped: signature.signatureDrawnOrTyped || "",
-        signedAt: safeDateConversion(signature.signedAt),
-        signerIp: signature.signerIp || "",
-        otpCode: signature.otpCode || ""
-      };
-    });
+    const mappedSignatures = signaturesData.map(mapSignatureToApi);
 
     const requestBody = {
       petitionId: petitionId,
@@ -347,10 +260,7 @@ class PetitionApiService {
     };
     
     const response = await axiosInstance.post(PETITION_ENDPOINTS.UPDATE_SIGNATURES, requestBody, {
-      headers: {
-        'Accept': 'text/plain',
-        'Content-Type': 'application/json'
-      }
+      headers: SERVICE_HEADERS.JSON
     });
     
     return response.data;
@@ -358,21 +268,6 @@ class PetitionApiService {
 
   // Update foreclosure sale
   async updateForeclosure(petitionId, foreclosureData) {
-    // Helper function to safely convert dates
-    const safeDateConversion = (dateString) => {
-      if (!dateString || !dateString.trim()) return null;
-      try {
-        // If already in ISO format, return as is
-        if (dateString.includes('T')) {
-          return dateString;
-        }
-        // Otherwise, convert to ISO format
-        const date = new Date(dateString + 'T00:00:00');
-        return isNaN(date.getTime()) ? null : date.toISOString();
-      } catch {
-        return null;
-      }
-    };
 
     const requestBody = {
       petitionId: petitionId,
@@ -396,10 +291,7 @@ class PetitionApiService {
     };
     
     const response = await axiosInstance.post(PETITION_ENDPOINTS.UPDATE_FORECLOSURE, requestBody, {
-      headers: {
-        'Accept': '*/*',
-        'Content-Type': 'application/json'
-      }
+      headers: SERVICE_HEADERS.JSON_WILDCARD
     });
     
     return response.data;
@@ -407,21 +299,6 @@ class PetitionApiService {
 
   // Update judgment
   async updateJudgment(petitionId, judgmentData) {
-    // Helper function to safely convert dates
-    const safeDateConversion = (dateString) => {
-      if (!dateString || !dateString.trim()) return null;
-      try {
-        // If already in ISO format, return as is
-        if (dateString.includes('T')) {
-          return dateString;
-        }
-        // Otherwise, convert to ISO format
-        const date = new Date(dateString + 'T00:00:00');
-        return isNaN(date.getTime()) ? null : date.toISOString();
-      } catch {
-        return null;
-      }
-    };
 
     const requestBody = {
       petitionId: petitionId,
@@ -440,10 +317,7 @@ class PetitionApiService {
     };
     
     const response = await axiosInstance.post(PETITION_ENDPOINTS.UPDATE_JUDGMENT, requestBody, {
-      headers: {
-        'Accept': '*/*',
-        'Content-Type': 'application/json'
-      }
+      headers: SERVICE_HEADERS.JSON_WILDCARD
     });
     
     return response.data;
@@ -464,10 +338,7 @@ class PetitionApiService {
     };
     
     const response = await axiosInstance.post(PETITION_ENDPOINTS.UPDATE_STATUS, requestBody, {
-      headers: {
-        'Accept': '*/*',
-        'Content-Type': 'application/json'
-      }
+      headers: SERVICE_HEADERS.JSON_WILDCARD
     });
     
     return response.data;
@@ -563,36 +434,6 @@ class PetitionApiService {
 
   // Transform form data to API format
   async transformFormDataToApiFormat(formData, organizationId, petitionId = null, statusString = null) {
-    // Helper function to safely convert dates
-    const safeDateConversion = (dateString) => {
-      if (!dateString) return null;
-      try {
-        const date = new Date(dateString);
-        return isNaN(date.getTime()) ? null : date.toISOString();
-      } catch {
-        return null;
-      }
-    };
-
-    // Helper function to convert File object to base64 string
-    const fileToBase64 = (file) => {
-      if (!file || typeof file === 'string') {
-        return file || "";
-      }
-      
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          // Remove the data URL prefix (data:application/pdf;base64,) to get just the base64 string
-          const base64 = reader.result.split(',')[1];
-          resolve(base64);
-        };
-        reader.onerror = () => {
-          resolve("");
-        };
-        reader.readAsDataURL(file);
-      });
-    };
 
     
     const petitionData = {
@@ -638,41 +479,26 @@ class PetitionApiService {
       rightToCures: (() => {
         // If rightToCures array exists and has entries, use it (from edit mode in PetitionTabContent)
         if (formData.rightToCures && Array.isArray(formData.rightToCures) && formData.rightToCures.length > 0) {
-          return formData.rightToCures.map(rightToCure => ({
-            id: rightToCure.id || null,
-            noticeSent: rightToCure.noticeSent !== null && rightToCure.noticeSent !== undefined ? rightToCure.noticeSent : null,
-            noticeDate: safeDateConversion(rightToCure.noticeDate),
-            amountInDefault: parseFloat(rightToCure.amountInDefault) || 0,
-            daysDelinquentAtNotice: parseInt(rightToCure.daysDelinquentAtNotice) || 0,
-            cureExpirationDate: safeDateConversion(rightToCure.cureExpirationDate),
-            noticeAddressStreet1: rightToCure.noticeAddressStreet1 || "",
-            noticeAddressCity: rightToCure.noticeAddressCity || "",
-            noticeAddressState: rightToCure.noticeAddressState || "",
-            noticeAddressZip: rightToCure.noticeAddressZip || "",
-            manualOverrideReason: rightToCure.manualOverrideReason || "",
-            borrowerRespondedWithin30Days: (rightToCure.noticeSent === false || rightToCure.noticeSent === null || rightToCure.noticeSent === undefined) ? null : (rightToCure.borrowerRespondedWithin30Days !== null && rightToCure.borrowerRespondedWithin30Days !== undefined ? rightToCure.borrowerRespondedWithin30Days : false),
-            borrowerResponseDate: safeDateConversion(rightToCure.borrowerResponseDate),
-            proceededWithRightToCure: (rightToCure.noticeSent === false || rightToCure.noticeSent === null || rightToCure.noticeSent === undefined) ? null : (rightToCure.proceededWithRightToCure !== null && rightToCure.proceededWithRightToCure !== undefined ? rightToCure.proceededWithRightToCure : false)
-          }));
+          return formData.rightToCures.map(mapRightToCureForSubmission);
         }
         // If old single-object format exists (from wizard form - first submission), convert to array with one object
         if (formData.noticeSent !== null && formData.noticeSent !== undefined) {
-          return [{
+          return [mapRightToCureForSubmission({
             id: null,
             noticeSent: formData.noticeSent,
-            noticeDate: safeDateConversion(formData.noticeDate),
-            amountInDefault: parseFloat(formData.amountInDefault) || 0,
-            daysDelinquentAtNotice: parseInt(formData.daysDelinquentAtNotice) || 0,
-            cureExpirationDate: safeDateConversion(formData.cureExpirationDate),
-            noticeAddressStreet1: formData.noticeAddressStreet1 || "",
-            noticeAddressCity: formData.noticeAddressCity || "",
-            noticeAddressState: formData.noticeAddressState || "",
-            noticeAddressZip: formData.noticeAddressZip || "",
-            manualOverrideReason: formData.manualOverrideReason || "",
-            borrowerRespondedWithin30Days: (formData.noticeSent === false || formData.noticeSent === null || formData.noticeSent === undefined) ? null : (formData.borrowerRespondedWithin30Days !== null && formData.borrowerRespondedWithin30Days !== undefined ? formData.borrowerRespondedWithin30Days : false),
-            borrowerResponseDate: safeDateConversion(formData.borrowerResponseDate),
-            proceededWithRightToCure: (formData.noticeSent === false || formData.noticeSent === null || formData.noticeSent === undefined) ? null : (formData.proceededWithRightToCure !== null && formData.proceededWithRightToCure !== undefined ? formData.proceededWithRightToCure : false)
-          }];
+            noticeDate: formData.noticeDate,
+            amountInDefault: formData.amountInDefault,
+            daysDelinquentAtNotice: formData.daysDelinquentAtNotice,
+            cureExpirationDate: formData.cureExpirationDate,
+            noticeAddressStreet1: formData.noticeAddressStreet1,
+            noticeAddressCity: formData.noticeAddressCity,
+            noticeAddressState: formData.noticeAddressState,
+            noticeAddressZip: formData.noticeAddressZip,
+            manualOverrideReason: formData.manualOverrideReason,
+            borrowerRespondedWithin30Days: formData.borrowerRespondedWithin30Days,
+            borrowerResponseDate: formData.borrowerResponseDate,
+            proceededWithRightToCure: formData.proceededWithRightToCure
+          })];
         }
         // Return empty array if no rightToCure data exists
         return [];
@@ -740,37 +566,9 @@ class PetitionApiService {
         stateLicenseNumber: formData.stateLicenseNumber || "",
         stateLicenseState: formData.stateLicenseState || ""
       },
-      signatures: (formData.signatures || []).map(signature => ({
-        ...signature,
-        signedAt: safeDateConversion(signature.signedAt)
-      })),
-      borrowers: (formData.borrowers || []).map(borrower => ({
-        firstName: borrower.firstName,
-        middleName: borrower.middleName,
-        lastName: borrower.lastName,
-        suffix: borrower.suffix,
-        borrowerIsPrimary: borrower.borrowerIsPrimary,
-        mailingStreet1: borrower.mailingStreet1,
-        mailingCity: borrower.mailingCity,
-        mailingState: borrower.mailingState,
-        mailingZip: borrower.mailingZip,
-        phone: borrower.phone,
-        email: borrower.email
-      })),
-      loanAssignees: (formData.loanAssignees || []).map(assignee => {
-        return {
-          assigneeName: assignee.assigneeName && assignee.assigneeName.trim() !== '' ? assignee.assigneeName : null,
-          assigneeTypeId: assignee.assigneeTypeId && assignee.assigneeTypeId.trim() !== '' ? assignee.assigneeTypeId : null,
-          assigneeRoleId: assignee.assigneeRoleId && assignee.assigneeRoleId.trim() !== '' ? assignee.assigneeRoleId : null,
-          street1: assignee.street1 || null,
-          street2: assignee.street2 || null,
-          city: assignee.city || null,
-          addressState: assignee.addressState || null,
-          zip: assignee.zip || null,
-          licenseNumber: assignee.licenseNumber || null,
-          licenseState: assignee.licenseState || null
-        };
-      }),
+      signatures: (formData.signatures || []).map(mapSignatureForSubmission),
+      borrowers: (formData.borrowers || []).map(mapBorrowerForSubmission),
+      loanAssignees: (formData.loanAssignees || []).map(mapLoanAssigneeForSubmission),
       documents: (formData.documents || []).map(document => ({
         ...document,
         uploadedOn: safeDateConversion(document.uploadedOn)
@@ -789,22 +587,6 @@ class PetitionApiService {
     }
 
     const petition = apiResponse.data;
-
-    // Map status number to readable status
-    const getStatusDisplay = (status) => {
-      switch (status) {
-        case "0": return { text: "Draft", class: "Draft" };
-        case "1": return { text: "Submitted", class: "Submitted" };
-        case "2": return { text: "Foreclosure Sale Initiated", class: "ForeclosureSaleInitiated" };
-        case "3": return { text: "Judgment Submitted", class: "JudgmentSubmitted" };
-        case "4": return { text: "Returned", class: "Returned" };
-        case "5": return { text: "Resubmitted", class: "Resubmitted" };
-        case "6": return { text: "Accepted", class: "Accepted" };
-        case "7": return { text: "Closed", class: "Closed" };
-        default: return { text: "Unknown", class: "Unknown" };
-      }
-    };
-
     const statusDisplay = getStatusDisplay(petition.status);
 
     return {
@@ -847,58 +629,10 @@ class PetitionApiService {
     const petitions = Array.isArray(apiResponse.data) ? apiResponse.data : [apiResponse.data];
 
     const transformedPetitions = petitions.map(petition => {
-      // Map status number to readable status
-      const getStatusDisplay = (status) => {
-        switch (status) {
-          case "0": return { text: "Draft", class: "Draft" };
-          case "1": return { text: "Submitted", class: "Submitted" };
-          case "2": return { text: "Foreclosure Sale Initiated", class: "ForeclosureSaleInitiated" };
-          case "3": return { text: "Judgment Submitted", class: "JudgmentSubmitted" };
-          case "4": return { text: "Returned", class: "Returned" };
-          case "5": return { text: "Resubmitted", class: "Resubmitted" };
-          case "6": return { text: "Accepted", class: "Accepted" };
-          case "7": return { text: "Closed", class: "Closed" };
-          default: return { text: "Unknown", class: "Unknown" };
-        }
-      };
-
       const statusInfo = getStatusDisplay(petition.status);
-
-      // Get borrower name from the primary borrower
-      // This ensures that the borrower column in tables shows the primary borrower's name
-      let borrowerName = 'N/A';
-      if (petition.borrowers && petition.borrowers.length > 0) {
-        // Find the primary borrower first (borrowerIsPrimary === true)
-        let borrower = petition.borrowers.find(b => b.borrowerIsPrimary === true);
-        
-        // If no primary borrower found, fall back to the first borrower
-        if (!borrower) {
-          borrower = petition.borrowers[0];
-        }
-        
-        const nameParts = [borrower.firstName, borrower.middleName, borrower.lastName, borrower.suffix]
-          .filter(part => part && part.trim())
-          .map(part => part.trim());
-        borrowerName = nameParts.join(' ') || 'N/A';
-      }
-
-      // Format loan amount
-      let loanAmount = 'N/A';
-      if (petition.loan?.currentPrincipalBalance) {
-        loanAmount = `$${parseFloat(petition.loan.currentPrincipalBalance).toLocaleString()}`;
-      } else if (petition.loan?.originalPrincipalAmount) {
-        loanAmount = `$${parseFloat(petition.loan.originalPrincipalAmount).toLocaleString()}`;
-      }
-
-      // Format property address
-      const addressParts = [
-        petition.property?.propertyStreet1,
-        petition.property?.propertyStreet2,
-        petition.property?.propertyCity,
-        petition.property?.propertyState,
-        petition.property?.propertyZip
-      ].filter(part => part && part.trim());
-      const propertyAddress = addressParts.join(', ') || 'N/A';
+      const borrowerName = getPrimaryBorrowerName(petition.borrowers);
+      const loanAmount = formatLoanAmount(petition.loan);
+      const propertyAddress = formatPropertyAddress(petition.property);
 
       return {
         id: petition.id,
@@ -951,10 +685,7 @@ class PetitionApiService {
       `${Config.API_URL}${PETITION_ENDPOINTS.GET_PUBLIC_PETITIONS_PAGED}`,
       requestBody,
       {
-        headers: {
-          'Accept': 'text/plain',
-          'Content-Type': 'application/json'
-        }
+        headers: SERVICE_HEADERS.JSON
       }
     );
     
