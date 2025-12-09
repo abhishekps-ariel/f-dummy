@@ -2,7 +2,7 @@
  * Password validation and strength checking utilities
  */
 
-import { VALIDATION } from '../constants/appConstants';
+import { VALIDATION } from '../../constants/appConstants';
 
 /**
  * Check password against guidelines and return validation object
