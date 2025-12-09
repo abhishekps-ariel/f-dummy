@@ -33,7 +33,16 @@ import { useAuth } from "../../context/AuthContext";
 import { getUserRole } from "../../utils/storage";
 import PetitionSteps from "./PetitionSteps";
 import petitionApiService from "../../services/petitionApiService";
-import { formatDateForInput } from "../../utils/dateUtils";
+import { formatDateForInput, isDateInPast } from "../../utils/dateUtils";
+import {
+  validatePropertyDetails as validatePropertyDetailsHelper,
+  validateLoanDetails as validateLoanDetailsHelper,
+  validateBorrowerDetails as validateBorrowerDetailsHelper,
+  validateRightToCureDetails as validateRightToCureDetailsHelper,
+  validateForm35BCompliance as validateForm35BComplianceHelper,
+  validateFilingEntity as validateFilingEntityHelper,
+  validateLoanAssignees as validateLoanAssigneesHelper,
+} from "../../helpers/petitions/formValidation";
 
 const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) => {
   const { t } = useTranslation();
@@ -983,22 +992,12 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
 
     switch (sectionId) {
       case "property":
-        // Validate property fields
-        if (!formData.propertyStreet1?.trim()) {
-          setFieldErrors(prev => ({ ...prev, propertyStreet1: "Required" }));
-          throw new Error("Street address is required");
-        }
-        if (!formData.propertyCity?.trim()) {
-          setFieldErrors(prev => ({ ...prev, propertyCity: "Required" }));
-          throw new Error("City is required");
-        }
-        if (!formData.propertyState?.trim()) {
-          setFieldErrors(prev => ({ ...prev, propertyState: "Required" }));
-          throw new Error("State is required");
-        }
-        if (!formData.propertyZip?.trim()) {
-          setFieldErrors(prev => ({ ...prev, propertyZip: "Required" }));
-          throw new Error("Zip code is required");
+        // Validate property fields using helper function
+        const propertyValidation = validatePropertyDetailsHelper(formData);
+        if (propertyValidation.hasErrors) {
+          setFieldErrors(prev => ({ ...prev, ...propertyValidation.errors }));
+          const firstError = Object.values(propertyValidation.errors)[0];
+          throw new Error(firstError || "Please correct property details errors");
         }
 
         // Get property ID from petition details
@@ -1119,38 +1118,12 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
         break;
 
       case "loan":
-        // Validate loan fields
-        if (!formData.isMinApplicable || (formData.isMinApplicable !== "yes" && formData.isMinApplicable !== "no")) {
-          setFieldErrors(prev => ({ ...prev, isMinApplicable: "Please select if MIN is applicable" }));
-          throw new Error("Please select if MIN is applicable");
-        }
-        if (formData.isMinApplicable === "yes" && (!formData.minNumber || !formData.minNumber.trim())) {
-          setFieldErrors(prev => ({ ...prev, minNumber: "MIN Number is required when MIN is applicable" }));
-          throw new Error("MIN Number is required when MIN is applicable");
-        }
-        if (!formData.loanNumber || formData.loanNumber.trim() === "") {
-          setFieldErrors(prev => ({ ...prev, loanNumber: "Required" }));
-          throw new Error("Loan number is required");
-        }
-        if (!formData.petitionLoanTypeId || formData.petitionLoanTypeId === "") {
-          setFieldErrors(prev => ({ ...prev, petitionLoanTypeId: "Required" }));
-          throw new Error("Loan type is required");
-        }
-        if (formData.lienPosition == null || formData.lienPosition === "") {
-          setFieldErrors(prev => ({ ...prev, lienPosition: "Required" }));
-          throw new Error("Lien position is required");
-        }
-
-        // Validate loan modification fields (required)
-        if (formData.borrowerRequestedLoanModification === null || formData.borrowerRequestedLoanModification === undefined) {
-          setFieldErrors(prev => ({ ...prev, borrowerRequestedLoanModification: "Please select if the borrower requested a loan modification" }));
-          throw new Error("Please select if the borrower requested a loan modification");
-        }
-        if (formData.borrowerRequestedLoanModification === true) {
-          if (formData.loanModificationRequestFinalized === null || formData.loanModificationRequestFinalized === undefined) {
-            setFieldErrors(prev => ({ ...prev, loanModificationRequestFinalized: "Please select if the loan modification request was finalized" }));
-            throw new Error("Please select if the loan modification request was finalized");
-          }
+        // Validate loan fields using helper function
+        const loanValidation = validateLoanDetailsHelper(formData);
+        if (loanValidation.hasErrors) {
+          setFieldErrors(prev => ({ ...prev, ...loanValidation.errors }));
+          const firstError = Object.values(loanValidation.errors)[0];
+          throw new Error(firstError || "Please correct loan details errors");
         }
 
         // Get loan ID from petition details
@@ -1214,41 +1187,12 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
         break;
 
       case "filing-entity":
-        // Validate filing entity fields
-        if (!formData.filingEntityLegalName || formData.filingEntityLegalName.trim() === "") {
-          setFieldErrors(prev => ({ ...prev, filingEntityLegalName: "Required" }));
-          throw new Error("Filing entity legal name is required");
-        }
-        if (!formData.filingEntityStreet1 || formData.filingEntityStreet1.trim() === "") {
-          setFieldErrors(prev => ({ ...prev, filingEntityStreet1: "Required" }));
-          throw new Error("Filing entity street address is required");
-        }
-        if (!formData.filingEntityCity || formData.filingEntityCity.trim() === "") {
-          setFieldErrors(prev => ({ ...prev, filingEntityCity: "Required" }));
-          throw new Error("Filing entity city is required");
-        }
-        if (!formData.filingEntityState || formData.filingEntityState.trim() === "") {
-          setFieldErrors(prev => ({ ...prev, filingEntityState: "Required" }));
-          throw new Error("Filing entity state is required");
-        }
-        if (!formData.filingEntityZip || formData.filingEntityZip.trim() === "") {
-          setFieldErrors(prev => ({ ...prev, filingEntityZip: "Required" }));
-          throw new Error("Filing entity zip code is required");
-        }
-        if (!formData.filingContactName || formData.filingContactName.trim() === "") {
-          setFieldErrors(prev => ({ ...prev, filingContactName: "Required" }));
-          throw new Error("Filing contact name is required");
-        }
-        if (!formData.filingContactEmail || formData.filingContactEmail.trim() === "") {
-          setFieldErrors(prev => ({ ...prev, filingContactEmail: "Required" }));
-          throw new Error("Filing contact email is required");
-        } else {
-          // Validate email format
-          const emailRegex = /.+@.+\..+/;
-          if (!emailRegex.test(formData.filingContactEmail.trim())) {
-            setFieldErrors(prev => ({ ...prev, filingContactEmail: "Invalid email format" }));
-            throw new Error("Invalid email format");
-          }
+        // Validate filing entity fields using helper function
+        const filingEntityValidation = validateFilingEntityHelper(formData);
+        if (filingEntityValidation.hasErrors) {
+          setFieldErrors(prev => ({ ...prev, ...filingEntityValidation.errors }));
+          const firstError = Object.values(filingEntityValidation.errors)[0];
+          throw new Error(firstError || "Please correct filing entity errors");
         }
 
         // Get filing entity ID from petition details
@@ -1302,28 +1246,19 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
         break;
 
       case "borrower":
-        // Validate borrower fields
-        if (!formData.borrowers || !Array.isArray(formData.borrowers) || formData.borrowers.length === 0) {
-          setFieldErrors(prev => ({ ...prev, borrowers: "At least one borrower is required" }));
-          throw new Error("At least one borrower is required");
+        // Validate borrower fields using helper function
+        const borrowerValidation = validateBorrowerDetailsHelper(formData);
+        if (borrowerValidation.hasErrors) {
+          setFieldErrors(prev => ({ ...prev, ...borrowerValidation.errors }));
+          const firstError = Object.values(borrowerValidation.errors)[0];
+          throw new Error(firstError || "Please correct borrower details errors");
         }
 
-        // Check for primary borrower
-        const primaryBorrower = formData.borrowers.find(b => b.borrowerIsPrimary === true);
+        // Additional check for primary borrower (helper doesn't check this)
+        const primaryBorrower = formData.borrowers?.find(b => b.borrowerIsPrimary === true);
         if (!primaryBorrower) {
           setFieldErrors(prev => ({ ...prev, borrowers: "Primary borrower is required" }));
           throw new Error("Primary borrower is required");
-        }
-
-        // Validate primary borrower required fields
-        const pbKey = primaryBorrower.id || "primary";
-        if (!primaryBorrower.firstName || primaryBorrower.firstName.trim() === "") {
-          setFieldErrors(prev => ({ ...prev, [`borrower_${pbKey}_firstName`]: "Required" }));
-          throw new Error("Primary borrower first name is required");
-        }
-        if (!primaryBorrower.lastName || primaryBorrower.lastName.trim() === "") {
-          setFieldErrors(prev => ({ ...prev, [`borrower_${pbKey}_lastName`]: "Required" }));
-          throw new Error("Primary borrower last name is required");
         }
 
         // Get borrower IDs from petition details (map by matching order or id)
@@ -1393,10 +1328,12 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
         break;
 
       case "form35b":
-        // Validate Form 35B Compliance fields
-        if (formData.certainMortgageLoan === null || formData.certainMortgageLoan === undefined) {
-          setFieldErrors(prev => ({ ...prev, certainMortgageLoan: "Please select if this is a certain mortgage loan" }));
-          throw new Error("Please select if this is a certain mortgage loan");
+        // Validate Form 35B Compliance fields using helper function
+        const form35BValidation = validateForm35BComplianceHelper(formData);
+        if (form35BValidation.hasErrors) {
+          setFieldErrors(prev => ({ ...prev, ...form35BValidation.errors }));
+          const firstError = Object.values(form35BValidation.errors)[0];
+          throw new Error(firstError || "Please correct Form 35B compliance errors");
         }
 
         // Get affidavit ID from petition details
@@ -1441,56 +1378,13 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
         break;
 
       case "right-to-cure":
-        // Validate right to cure fields
-        if (!formData.rightToCures || !Array.isArray(formData.rightToCures) || formData.rightToCures.length === 0) {
-          setFieldErrors(prev => ({ ...prev, rightToCures: "At least one right to cure entry is required" }));
-          throw new Error("At least one right to cure entry is required");
+        // Validate right to cure fields using helper function
+        const rightToCureValidation = validateRightToCureDetailsHelper(formData);
+        if (rightToCureValidation.hasErrors) {
+          setFieldErrors(prev => ({ ...prev, ...rightToCureValidation.errors }));
+          const firstError = Object.values(rightToCureValidation.errors)[0];
+          throw new Error(firstError || "Please correct right-to-cure details errors");
         }
-
-        // Validate each right to cure entry
-        formData.rightToCures.forEach((rtc, index) => {
-          if (rtc.noticeSent === null || rtc.noticeSent === undefined) {
-            setFieldErrors(prev => ({ ...prev, [`rightToCure_${index}_noticeSent`]: "Please select whether the notice was sent" }));
-            throw new Error(`Right to cure entry ${index + 1}: Please select whether the notice was sent`);
-          }
-          
-          // Validate borrower response fields (required if notice was sent)
-          if (rtc.noticeSent === true) {
-            if (rtc.borrowerRespondedWithin30Days === null || rtc.borrowerRespondedWithin30Days === undefined) {
-              setFieldErrors(prev => ({ ...prev, [`rightToCures.${index}.borrowerRespondedWithin30Days`]: "Please select if the borrower responded to the notice within 30 days" }));
-              throw new Error(`Right to cure entry ${index + 1}: Please select if the borrower responded to the notice within 30 days`);
-            }
-            
-            if (rtc.borrowerRespondedWithin30Days === true) {
-              if (!rtc.borrowerResponseDate || !rtc.borrowerResponseDate.trim()) {
-                setFieldErrors(prev => ({ ...prev, [`rightToCures.${index}.borrowerResponseDate`]: "Date on which the borrower responded is required" }));
-                throw new Error(`Right to cure entry ${index + 1}: Date on which the borrower responded is required`);
-              } else {
-                // Validate borrower response date must be on or after notice date
-                if (rtc.noticeDate && rtc.noticeDate.trim()) {
-                  const noticeDate = new Date(rtc.noticeDate);
-                  const responseDate = new Date(rtc.borrowerResponseDate);
-                  
-                  if (!isNaN(noticeDate.getTime()) && !isNaN(responseDate.getTime())) {
-                    // Set time to midnight for accurate date comparison
-                    noticeDate.setHours(0, 0, 0, 0);
-                    responseDate.setHours(0, 0, 0, 0);
-                    
-                    if (responseDate < noticeDate) {
-                      setFieldErrors(prev => ({ ...prev, [`rightToCures.${index}.borrowerResponseDate`]: "Borrower Response Date must be on or after Notice Date" }));
-                      throw new Error(`Right to cure entry ${index + 1}: Borrower Response Date must be on or after Notice Date`);
-                    }
-                  }
-                }
-              }
-              
-              if (rtc.proceededWithRightToCure === null || rtc.proceededWithRightToCure === undefined) {
-                setFieldErrors(prev => ({ ...prev, [`rightToCures.${index}.proceededWithRightToCure`]: "Please select if the borrower proceeded with the right to cure" }));
-                throw new Error(`Right to cure entry ${index + 1}: Please select if the borrower proceeded with the right to cure`);
-              }
-            }
-          }
-        });
 
         // Get existing right to cures from petition details
         const existingRightToCures = petition.details?.rightToCures || [];
@@ -1575,50 +1469,13 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
         break;
 
       case "loan-assignees":
-        // Validate loan assignee fields
-        if (!formData.loanAssignees || !Array.isArray(formData.loanAssignees)) {
-          setFieldErrors(prev => ({ ...prev, loanAssignees: "Loan assignees data is invalid" }));
-          throw new Error("Loan assignees data is invalid");
+        // Validate loan assignee fields using helper function
+        const loanAssigneesValidation = validateLoanAssigneesHelper(formData);
+        if (loanAssigneesValidation.hasErrors) {
+          setFieldErrors(prev => ({ ...prev, ...loanAssigneesValidation.errors }));
+          const firstError = Object.values(loanAssigneesValidation.errors)[0];
+          throw new Error(firstError || "Please correct loan assignees errors");
         }
-
-        // Validate each loan assignee entry (only if it has any data)
-        formData.loanAssignees.forEach((assignee, index) => {
-          // Check if this assignee has any data - if it's completely empty, skip validation
-          const hasAnyData = assignee.assigneeName || assignee.assigneeTypeId || assignee.assigneeRoleId || 
-                            assignee.street1 || assignee.city || assignee.addressState || assignee.zip;
-          
-          if (hasAnyData) {
-            // If assignee has any data, validate all required fields
-            if (!assignee.assigneeName || assignee.assigneeName.trim() === "") {
-              setFieldErrors(prev => ({ ...prev, [`loanAssignees.${index}.assigneeName`]: "Required" }));
-              throw new Error(`Loan assignee ${index + 1}: Assignee name is required`);
-            }
-            if (!assignee.assigneeTypeId || assignee.assigneeTypeId === "") {
-              setFieldErrors(prev => ({ ...prev, [`loanAssignees.${index}.assigneeTypeId`]: "Required" }));
-              throw new Error(`Loan assignee ${index + 1}: Assignee type is required`);
-            }
-            if (!assignee.assigneeRoleId || assignee.assigneeRoleId === "") {
-              setFieldErrors(prev => ({ ...prev, [`loanAssignees.${index}.assigneeRoleId`]: "Required" }));
-              throw new Error(`Loan assignee ${index + 1}: Assignee role is required`);
-            }
-            if (!assignee.street1 || assignee.street1.trim() === "") {
-              setFieldErrors(prev => ({ ...prev, [`loanAssignees.${index}.street1`]: "Required" }));
-              throw new Error(`Loan assignee ${index + 1}: Street address is required`);
-            }
-            if (!assignee.city || assignee.city.trim() === "") {
-              setFieldErrors(prev => ({ ...prev, [`loanAssignees.${index}.city`]: "Required" }));
-              throw new Error(`Loan assignee ${index + 1}: City is required`);
-            }
-            if (!assignee.addressState || assignee.addressState.trim() === "") {
-              setFieldErrors(prev => ({ ...prev, [`loanAssignees.${index}.addressState`]: "Required" }));
-              throw new Error(`Loan assignee ${index + 1}: State is required`);
-            }
-            if (!assignee.zip || assignee.zip.trim() === "") {
-              setFieldErrors(prev => ({ ...prev, [`loanAssignees.${index}.zip`]: "Required" }));
-              throw new Error(`Loan assignee ${index + 1}: Zip code is required`);
-            }
-          }
-        });
 
         // Filter out completely empty assignees before sending
         const validAssignees = formData.loanAssignees.filter(assignee => {
@@ -2408,7 +2265,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
       }
     }
 
-    // Real-time validation for interest rate - must be 0-100%
+    // Real-time validation for interest rate - must be 0-100% and > 0%
     if (name === "interestRatePercent" && processedValue !== "" && processedValue !== null && processedValue !== undefined) {
       const interestRate = parseFloat(processedValue) || 0;
       
@@ -2417,12 +2274,82 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
           ...prev,
           interestRatePercent: "Interest Rate must be between 0% and 100%",
         }));
+      } else if (interestRate === 0) {
+        setFieldErrors((prev) => ({
+          ...prev,
+          interestRatePercent: "Interest Rate must be greater than 0%",
+        }));
       } else if (
-        fieldErrors.interestRatePercent === "Interest Rate must be between 0% and 100%"
+        fieldErrors.interestRatePercent === "Interest Rate must be between 0% and 100%" ||
+        fieldErrors.interestRatePercent === "Interest Rate must be greater than 0%"
       ) {
         setFieldErrors((prev) => {
           const newErrors = { ...prev };
           delete newErrors.interestRatePercent;
+          return newErrors;
+        });
+      }
+    }
+
+    // Real-time validation for amount fields - must be > 0
+    const amountFields = ["originalPrincipalAmount", "currentPrincipalBalance", "monthlyPaymentAmount", "amountInDefault"];
+    if (amountFields.includes(name) && processedValue !== "" && processedValue !== null && processedValue !== undefined) {
+      const amount = parseFloat(processedValue) || 0;
+      
+      if (amount <= 0) {
+        const fieldLabels = {
+          originalPrincipalAmount: "Original Principal Amount must be greater than 0",
+          currentPrincipalBalance: "Current Principal Balance must be greater than 0",
+          monthlyPaymentAmount: "Monthly Payment Amount must be greater than 0",
+          amountInDefault: "Amount in default must be greater than 0",
+        };
+        setFieldErrors((prev) => ({
+          ...prev,
+          [name]: fieldLabels[name] || "Amount must be greater than 0",
+        }));
+      } else if (fieldErrors[name] && fieldErrors[name].includes("must be greater than 0")) {
+        setFieldErrors((prev) => {
+          const newErrors = { ...prev };
+          delete newErrors[name];
+          return newErrors;
+        });
+      }
+    }
+
+    // Real-time validation for delinquency days - must be >= 0
+    if ((name === "delinquencyDaysAtFiling" || name === "daysDelinquentAtNotice") && processedValue !== "" && processedValue !== null && processedValue !== undefined) {
+      const days = parseInt(processedValue, 10);
+      
+      if (isNaN(days) || days < 0) {
+        const fieldLabels = {
+          delinquencyDaysAtFiling: "Delinquency Days at Filing must be 0 or greater",
+          daysDelinquentAtNotice: "Days delinquent must be 0 or greater",
+        };
+        setFieldErrors((prev) => ({
+          ...prev,
+          [name]: fieldLabels[name] || "Days must be 0 or greater",
+        }));
+      } else if (fieldErrors[name] && fieldErrors[name].includes("must be 0 or greater")) {
+        setFieldErrors((prev) => {
+          const newErrors = { ...prev };
+          delete newErrors[name];
+          return newErrors;
+        });
+      }
+    }
+
+    // Real-time validation for ZIP code format
+    if ((name === "propertyZip" || name === "filingEntityZip" || name === "noticeAddressZip") && processedValue.trim()) {
+      const zipPattern = /^\d{5}(-\d{4})?$/;
+      if (!zipPattern.test(processedValue.trim())) {
+        setFieldErrors((prev) => ({
+          ...prev,
+          [name]: "ZIP code must be in valid format (12345 or 12345-6789)",
+        }));
+      } else if (fieldErrors[name] === "ZIP code must be in valid format (12345 or 12345-6789)") {
+        setFieldErrors((prev) => {
+          const newErrors = { ...prev };
+          delete newErrors[name];
           return newErrors;
         });
       }
@@ -2525,6 +2452,36 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
 
   // Handle borrower field changes
   const updateBorrower = (borrowerId, field, value) => {
+    // Real-time validation for borrower name fields
+    const validNamePattern = /^[a-zA-Z\s\-']*$/;
+    const nameFields = ["firstName", "lastName", "middleName", "suffix"];
+    
+    if (nameFields.includes(field) && value && value.trim()) {
+      if (!validNamePattern.test(value.trim())) {
+        const fieldLabel = field === "firstName" ? "First name" : 
+                          field === "lastName" ? "Last name" :
+                          field === "middleName" ? "Middle name" : "Suffix";
+        setFieldErrors(prev => ({
+          ...prev,
+          [`borrower_${borrowerId}_${field}`]: `${fieldLabel} must contain only valid characters (no numbers or invalid symbols)`,
+        }));
+      } else {
+        // Clear error if pattern is valid
+        setFieldErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors[`borrower_${borrowerId}_${field}`];
+          return newErrors;
+        });
+      }
+    } else if (nameFields.includes(field) && fieldErrors[`borrower_${borrowerId}_${field}`]) {
+      // Clear error if field is empty
+      setFieldErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[`borrower_${borrowerId}_${field}`];
+        return newErrors;
+      });
+    }
+
     setFormData((prev) => ({
       ...prev,
       borrowers: prev.borrowers.map((borrower) =>
