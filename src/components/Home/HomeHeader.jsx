@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import logo from "../../assets/logo-index.png";
 import { ROUTES } from "../../constants/routerConstants";
 import LanguageSwitcher from "../shared/LanguageSwitcher";
-
+//
 function HomeHeader({
   featureRef,
   contactRef,
