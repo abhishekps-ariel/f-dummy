@@ -207,6 +207,7 @@ const PetitionSteps = ({
   const [isTakenOverPetition, setIsTakenOverPetition] = useState(false);
   const [takenOverPetitionId, setTakenOverPetitionId] = useState(null);
   const [takenOverPetitionNumber, setTakenOverPetitionNumber] = useState(null);
+  const [takenOverPetitionStatus, setTakenOverPetitionStatus] = useState(null); // Store original status
 
   // Load petition common data
 
@@ -1481,6 +1482,7 @@ const PetitionSteps = ({
     setIsTakenOverPetition(false);
     setTakenOverPetitionId(null);
     setTakenOverPetitionNumber(null);
+    setTakenOverPetitionStatus(null);
     try {
       // Reapply organization prefilled info while clearing user-entered values
       const orgPrefill = (() => {
@@ -4254,8 +4256,11 @@ const PetitionSteps = ({
       // Use the editingPetitionId we already retrieved above
       const petitionIdToUse = editingPetitionId || (isTakenOverPetition ? takenOverPetitionId : null);
 
+      // For taken over petitions, preserve the original status
+      const statusToSend = isTakenOverPetition ? takenOverPetitionStatus : null;
+
       // Submit petition as draft using API
-      await submitPetition(finalDraftData, true, petitionIdToUse); // Pass isDraft: true
+      await submitPetition(finalDraftData, true, petitionIdToUse, false, statusToSend); // Pass isDraft: true, statusString: statusToSend
 
       // Notify parent component that petition was saved as draft
 
@@ -5048,8 +5053,11 @@ const PetitionSteps = ({
       // Use the editingPetitionId we already retrieved above
       const petitionIdToUse = editingPetitionId || (isTakenOverPetition ? takenOverPetitionId : null);
 
+      // For taken over petitions, preserve the original status
+      const statusToSend = isTakenOverPetition ? takenOverPetitionStatus : null;
+
       // Submit petition using API - false means NOT a draft (final submission)
-      await submitPetition(finalPetitionData, false, petitionIdToUse);
+      await submitPetition(finalPetitionData, false, petitionIdToUse, false, statusToSend); // Pass statusString: statusToSend
 
       // Notify parent component that petition was submitted successfully
 
@@ -5350,6 +5358,9 @@ const PetitionSteps = ({
       // petitionData is the raw API response, which should have petitionNumber at root level
       const petitionNumber = petitionData?.petitionNumber || null;
       setTakenOverPetitionNumber(petitionNumber);
+      // Store the original petition status to preserve it when submitting
+      const originalStatus = petitionData?.status || null;
+      setTakenOverPetitionStatus(originalStatus);
       
       // Clear any pending actions since we're not submitting
       setPendingAction(null);
@@ -5474,8 +5485,11 @@ const PetitionSteps = ({
         organizationId: finalOrganizationId,
       };
 
+      // For taken over petitions, preserve the original status
+      const statusToSend = takenOverPetitionStatus;
+
       // Pass the duplicate petition ID to update the existing petition (like editing)
-      await submitPetition(finalDraftData, true, duplicateInfo?.petitionId || null);
+      await submitPetition(finalDraftData, true, duplicateInfo?.petitionId || null, false, statusToSend);
 
       if (onPetitionSubmitted) {
         onPetitionSubmitted();
@@ -5534,8 +5548,11 @@ const PetitionSteps = ({
         organizationId: finalOrganizationId,
       };
 
+      // For taken over petitions, preserve the original status
+      const statusToSend = takenOverPetitionStatus;
+
       // Pass the duplicate petition ID to update the existing petition (like editing)
-      await submitPetition(finalPetitionData, false, duplicateInfo?.petitionId || null);
+      await submitPetition(finalPetitionData, false, duplicateInfo?.petitionId || null, false, statusToSend);
 
       if (onPetitionSubmitted) {
         onPetitionSubmitted();
