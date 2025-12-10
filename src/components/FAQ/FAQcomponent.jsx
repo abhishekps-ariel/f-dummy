@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import faqService from "../../services/faqService";
 import { useTranslateObjectArray, useTranslateArray } from "../../hooks/useDynamicTranslation";
@@ -14,54 +14,67 @@ const FAQcomponent = () => {
   const [loadingQuestions, setLoadingQuestions] = useState(false);
   const [error, setError] = useState(null);
 
-  // Translate categories (name field)
-  const translatedCategories = useTranslateObjectArray(categories, ['name']);
+  // Memoize fields array to prevent unnecessary re-renders
+  const categoryFields = useMemo(() => ['name'], []);
 
-  // Translate questions - handle nested structure by translating questions and answers separately
-  // Flatten structure: translate all question texts and all answer texts, then reconstruct
-  const questionTexts = questions.map(q => q.question);
+  // Translate categories (name field)
+  const translatedCategories = useTranslateObjectArray(categories, categoryFields);
+
+  // Memoize question texts to prevent infinite loops
+  const questionTexts = useMemo(() => {
+    return questions.map(q => q.question);
+  }, [questions]);
+
   const translatedQuestionTexts = useTranslateArray(questionTexts);
 
-  // Collect all answers with their question index
-  const allAnswersWithIndex = [];
-  questions.forEach((q, qIdx) => {
-    if (q.answers && Array.isArray(q.answers)) {
-      q.answers.forEach((answer, aIdx) => {
-        allAnswersWithIndex.push({ ...answer, _qIndex: qIdx, _aIndex: aIdx });
-      });
-    }
-  });
+  // Memoize all answers with index to prevent infinite loops
+  const allAnswersWithIndex = useMemo(() => {
+    const answers = [];
+    questions.forEach((q, qIdx) => {
+      if (q.answers && Array.isArray(q.answers)) {
+        q.answers.forEach((answer, aIdx) => {
+          answers.push({ ...answer, _qIndex: qIdx, _aIndex: aIdx });
+        });
+      }
+    });
+    return answers;
+  }, [questions]);
 
-  // Translate all answer texts
-  const answerTexts = allAnswersWithIndex.map(a => a.answerText);
+  // Memoize answer texts to prevent infinite loops
+  const answerTexts = useMemo(() => {
+    return allAnswersWithIndex.map(a => a.answerText);
+  }, [allAnswersWithIndex]);
+
   const translatedAnswerTexts = useTranslateArray(answerTexts);
 
-  // Reconstruct questions with translated texts
-  const translatedQuestions = questions.map((question, qIndex) => {
-    const translatedQuestionText = translatedQuestionTexts[qIndex] || question.question;
-    
-    // Reconstruct answers for this question
-    const translatedAnswers = (question.answers || []).map((answer, aIndex) => {
-      // Find the translated answer text for this specific answer
-      const answerIndex = allAnswersWithIndex.findIndex(
-        a => a._qIndex === qIndex && a._aIndex === aIndex
-      );
-      const translatedAnswerText = answerIndex >= 0 
-        ? translatedAnswerTexts[answerIndex] 
-        : answer.answerText;
+  // Memoize reconstructed questions with translated texts
+  const translatedQuestions = useMemo(() => {
+    return questions.map((question, qIndex) => {
+      const translatedQuestionText = translatedQuestionTexts[qIndex] || question.question;
+      
+      // Reconstruct answers for this question
+      const translatedAnswers = (question.answers || []).map((answer, aIndex) => {
+        // Find the translated answer text for this specific answer
+        const answerIndex = allAnswersWithIndex.findIndex(
+          a => a._qIndex === qIndex && a._aIndex === aIndex
+        );
+        const translatedAnswerText = answerIndex >= 0 
+          ? translatedAnswerTexts[answerIndex] 
+          : answer.answerText;
+
+        return {
+          ...answer,
+          answerText: translatedAnswerText
+        };
+      });
 
       return {
-        ...answer,
-        answerText: translatedAnswerText
+        ...question,
+        question: translatedQuestionText,
+        answers: translatedAnswers
       };
     });
-
-    return {
-      ...question,
-      question: translatedQuestionText,
-      answers: translatedAnswers
-    };
-  });
+  }, [questions, translatedQuestionTexts, translatedAnswerTexts, allAnswersWithIndex]);
 
   // Fetch FAQ categories on component mount
   useEffect(() => {
@@ -86,7 +99,8 @@ const FAQcomponent = () => {
     };
 
     fetchCategories();
-  }, [t]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Fetch questions when a category is selected
   useEffect(() => {
@@ -114,7 +128,8 @@ const FAQcomponent = () => {
     };
 
     fetchQuestions();
-  }, [selectedCategoryId, t]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCategoryId]);
 
   const handleCategoryClick = (categoryId) => {
     setSelectedCategoryId(categoryId);
