@@ -2,9 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 
 import { toast } from "react-toastify";
 
-import { useJsApiLoader } from "@react-google-maps/api";
-
-import Config from "../../config/index";
+import googlePlacesService from "../../services/googlePlacesService";
 import { STORAGE_KEYS } from "../../constants/appConstants";
 
 import { usePetitionCommonData } from "../../hooks/usePetitionCommonData";
@@ -68,7 +66,6 @@ import {
 } from "../../helpers/petitions/inputProcessing";
 
 // Static libraries array to prevent LoadScript reload
-const LIBRARIES = ["places"];
 
 const PetitionSteps = ({
   isOpen,
@@ -343,12 +340,6 @@ const PetitionSteps = ({
   ] = useState({});
 
   const autocompleteRef = useRef(null);
-
-  const placesServiceRef = useRef(null);
-
-  const autocompleteServiceRef = useRef(null);
-
-  const geocoderRef = useRef(null);
 
   // defaultFormData and loadFormDataFromStorage are now imported from helpers/petitions/petitionFormData
 
@@ -780,56 +771,6 @@ const PetitionSteps = ({
     }
   }, [user]);
 
-  // Initialize Google Maps API with React library
-
-  const { isLoaded, loadError } = useJsApiLoader({
-    id: "google-map-script",
-
-    googleMapsApiKey: Config.GOOGLE_PLACES_API_KEY,
-
-    libraries: LIBRARIES,
-
-    preventGoogleFontsLoading: true,
-  });
-
-  // Error logging
-
-  useEffect(() => {
-    if (loadError) {
-    }
-
-    // Check if API key is properly configured
-
-    if (Config.GOOGLE_PLACES_API_KEY === "YOUR_GOOGLE_PLACES_API_KEY_HERE") {
-    }
-  }, [isLoaded, loadError]);
-
-  // Initialize Google Places services when API is loaded
-
-  useEffect(() => {
-    if (isLoaded && window.google && window.google.maps) {
-      try {
-        // Initialize AutocompleteService
-
-        autocompleteServiceRef.current =
-          new window.google.maps.places.AutocompleteService();
-
-        // Initialize PlacesService
-
-        const map = new window.google.maps.Map(document.createElement("div"));
-
-        placesServiceRef.current = new window.google.maps.places.PlacesService(
-          map
-        );
-
-        // Initialize Geocoder
-
-        geocoderRef.current = new window.google.maps.Geocoder();
-      } catch {
-        // Error initializing Google Maps - will retry on next load
-      }
-    }
-  }, [isLoaded]);
 
   // Load saved drafts on component mount
 
@@ -1643,8 +1584,8 @@ const PetitionSteps = ({
 
   // Handle address input and get predictions
 
-  const handleAddressInput = (input) => {
-    if (!input.trim() || !autocompleteServiceRef.current) {
+  const handleAddressInput = async (input) => {
+    if (!input.trim()) {
       setPredictions([]);
 
       setShowPredictions(false);
@@ -1662,82 +1603,35 @@ const PetitionSteps = ({
 
     // Debounce the API call
 
-    window.autocompleteTimeout = setTimeout(() => {
+    window.autocompleteTimeout = setTimeout(async () => {
       setIsLoadingPredictions(true);
 
-      const request = {
-        input: input,
-
-        types: ["address"],
-
-        componentRestrictions: { country: "us" },
-      };
-
       try {
-        autocompleteServiceRef.current.getPlacePredictions(
-          request,
-          (predictions, status) => {
-            setIsLoadingPredictions(false);
-
-            if (
-              status === window.google.maps.places.PlacesServiceStatus.OK &&
-              predictions
-            ) {
-              setPredictions(predictions);
-
-              setShowPredictions(true);
-
-              setSelectedPredictionIndex(-1);
-            } else {
-              setPredictions([]);
-
-              setShowPredictions(false);
-
-              // Show specific error messages for debugging
-
-              if (
-                status ===
-                window.google.maps.places.PlacesServiceStatus.REQUEST_DENIED
-              ) {
-              } else if (
-                status ===
-                window.google.maps.places.PlacesServiceStatus.OVER_QUERY_LIMIT
-              ) {
-              } else if (
-                status ===
-                window.google.maps.places.PlacesServiceStatus.INVALID_REQUEST
-              ) {
-              }
-            }
-          }
-        );
+        const suggestions = await googlePlacesService.autocomplete(input);
+        const formattedPredictions = suggestions.map(s => ({
+          description: s.description,
+          place_id: s.placeId,
+        }));
+        setPredictions(formattedPredictions);
+        setShowPredictions(true);
+        setSelectedPredictionIndex(-1);
       } catch (error) {
-        setIsLoadingPredictions(false);
-
+        console.error("Error getting autocomplete suggestions:", error);
         setPredictions([]);
-
         setShowPredictions(false);
+      } finally {
+        setIsLoadingPredictions(false);
       }
     }, 300); // 300ms debounce
   };
 
   // Handle prediction selection
 
-  const selectPrediction = (placeId) => {
-    if (!placesServiceRef.current) return;
-
-    const request = {
-      placeId: placeId,
-
-      fields: ["address_components", "formatted_address", "geometry"],
-    };
-
-    placesServiceRef.current.getDetails(request, (place, status) => {
-      if (
-        status === window.google.maps.places.PlacesServiceStatus.OK &&
-        place
-      ) {
-        const addressComponents = place.address_components;
+  const selectPrediction = async (placeId) => {
+    try {
+      const placeDetails = await googlePlacesService.getPlaceDetails(placeId);
+      if (placeDetails && placeDetails.addressComponents) {
+        const addressComponents = placeDetails.addressComponents;
 
         let streetNumber = "";
 
@@ -1755,18 +1649,18 @@ const PetitionSteps = ({
           const types = component.types;
 
           if (types.includes("street_number")) {
-            streetNumber = component.long_name;
+            streetNumber = component.longName;
           } else if (types.includes("route")) {
-            route = component.long_name;
+            route = component.longName;
           } else if (types.includes("locality")) {
-            city = component.long_name;
+            city = component.longName;
           } else if (types.includes("administrative_area_level_1")) {
-            state = component.short_name;
+            state = component.shortName;
           } else if (types.includes("postal_code")) {
-            zipCode = component.long_name;
+            zipCode = component.longName;
           } else if (types.includes("administrative_area_level_2")) {
             // County information is typically found in administrative_area_level_2
-            county = component.long_name;
+            county = component.longName;
           }
         });
 
@@ -1796,7 +1690,9 @@ const PetitionSteps = ({
 
         setPredictions([]);
       }
-    });
+    } catch (error) {
+      console.error("Error getting place details:", error);
+    }
   };
 
   // Handle keyboard navigation
@@ -1843,8 +1739,8 @@ const PetitionSteps = ({
 
   // Handle borrower address input for autocomplete
 
-  const handleBorrowerAddressInput = (borrowerId, value) => {
-    if (!autocompleteServiceRef.current || !value.trim()) {
+  const handleBorrowerAddressInput = async (borrowerId, value) => {
+    if (!value.trim()) {
       setBorrowerPredictions((prev) => ({ ...prev, [borrowerId]: [] }));
 
       setShowBorrowerPredictions((prev) => ({ ...prev, [borrowerId]: false }));
@@ -1857,52 +1753,35 @@ const PetitionSteps = ({
       [borrowerId]: true,
     }));
 
-    const request = {
-      input: value,
-
-      types: ["address"],
-
-      componentRestrictions: { country: "us" },
-    };
-
     try {
-      autocompleteServiceRef.current.getPlacePredictions(
-        request,
-        (predictions, status) => {
-          setIsLoadingBorrowerPredictions((prev) => ({
-            ...prev,
-            [borrowerId]: false,
-          }));
+      const suggestions = await googlePlacesService.autocomplete(value);
+      const formattedPredictions = suggestions.map(s => ({
+        description: s.description,
+        place_id: s.placeId,
+      }));
+      setBorrowerPredictions((prev) => ({
+        ...prev,
+        [borrowerId]: formattedPredictions,
+      }));
 
-          if (
-            status === window.google.maps.places.PlacesServiceStatus.OK &&
-            predictions
-          ) {
-            setBorrowerPredictions((prev) => ({
-              ...prev,
-              [borrowerId]: predictions,
-            }));
+      setShowBorrowerPredictions((prev) => ({
+        ...prev,
+        [borrowerId]: true,
+      }));
 
-            setShowBorrowerPredictions((prev) => ({
-              ...prev,
-              [borrowerId]: true,
-            }));
-
-            setSelectedBorrowerPredictionIndex((prev) => ({
-              ...prev,
-              [borrowerId]: -1,
-            }));
-          } else {
-            setBorrowerPredictions((prev) => ({ ...prev, [borrowerId]: [] }));
-
-            setShowBorrowerPredictions((prev) => ({
-              ...prev,
-              [borrowerId]: false,
-            }));
-          }
-        }
-      );
+      setSelectedBorrowerPredictionIndex((prev) => ({
+        ...prev,
+        [borrowerId]: -1,
+      }));
     } catch (error) {
+      console.error("Error getting autocomplete suggestions:", error);
+      setBorrowerPredictions((prev) => ({ ...prev, [borrowerId]: [] }));
+
+      setShowBorrowerPredictions((prev) => ({
+        ...prev,
+        [borrowerId]: false,
+      }));
+    } finally {
       setIsLoadingBorrowerPredictions((prev) => ({
         ...prev,
         [borrowerId]: false,
@@ -1912,8 +1791,8 @@ const PetitionSteps = ({
 
   // Handle notice address input for autocomplete
 
-  const handleNoticeAddressInput = (value) => {
-    if (!autocompleteServiceRef.current || !value.trim()) {
+  const handleNoticeAddressInput = async (value) => {
+    if (!value.trim()) {
       setNoticePredictions([]);
 
       setShowNoticePredictions(false);
@@ -1923,45 +1802,28 @@ const PetitionSteps = ({
 
     setIsLoadingNoticePredictions(true);
 
-    const request = {
-      input: value,
-
-      types: ["address"],
-
-      componentRestrictions: { country: "us" },
-    };
-
     try {
-      autocompleteServiceRef.current.getPlacePredictions(
-        request,
-        (predictions, status) => {
-          setIsLoadingNoticePredictions(false);
-
-          if (
-            status === window.google.maps.places.PlacesServiceStatus.OK &&
-            predictions
-          ) {
-            setNoticePredictions(predictions);
-
-            setShowNoticePredictions(true);
-
-            setSelectedNoticePredictionIndex(-1);
-          } else {
-            setNoticePredictions([]);
-
-            setShowNoticePredictions(false);
-          }
-        }
-      );
+      const suggestions = await googlePlacesService.autocomplete(value);
+      const formattedPredictions = suggestions.map(s => ({
+        description: s.description,
+        place_id: s.placeId,
+      }));
+      setNoticePredictions(formattedPredictions);
+      setShowNoticePredictions(true);
+      setSelectedNoticePredictionIndex(-1);
     } catch (error) {
+      console.error("Error getting autocomplete suggestions:", error);
+      setNoticePredictions([]);
+      setShowNoticePredictions(false);
+    } finally {
       setIsLoadingNoticePredictions(false);
     }
   };
 
   // Handle loan assignee address input for autocomplete
 
-  const handleLoanAssigneeAddressInput = (assigneeIndex, value) => {
-    if (!autocompleteServiceRef.current || !value.trim()) {
+  const handleLoanAssigneeAddressInput = async (assigneeIndex, value) => {
+    if (!value.trim()) {
       setLoanAssigneePredictions((prev) => ({ ...prev, [assigneeIndex]: [] }));
 
       setShowLoanAssigneePredictions((prev) => ({
@@ -1977,55 +1839,38 @@ const PetitionSteps = ({
       [assigneeIndex]: true,
     }));
 
-    const request = {
-      input: value,
-
-      types: ["address"],
-
-      componentRestrictions: { country: "us" },
-    };
-
     try {
-      autocompleteServiceRef.current.getPlacePredictions(
-        request,
-        (predictions, status) => {
-          setIsLoadingLoanAssigneePredictions((prev) => ({
-            ...prev,
-            [assigneeIndex]: false,
-          }));
+      const suggestions = await googlePlacesService.autocomplete(value);
+      const formattedPredictions = suggestions.map(s => ({
+        description: s.description,
+        place_id: s.placeId,
+      }));
+      setLoanAssigneePredictions((prev) => ({
+        ...prev,
+        [assigneeIndex]: formattedPredictions,
+      }));
 
-          if (
-            status === window.google.maps.places.PlacesServiceStatus.OK &&
-            predictions
-          ) {
-            setLoanAssigneePredictions((prev) => ({
-              ...prev,
-              [assigneeIndex]: predictions,
-            }));
+      setShowLoanAssigneePredictions((prev) => ({
+        ...prev,
+        [assigneeIndex]: true,
+      }));
 
-            setShowLoanAssigneePredictions((prev) => ({
-              ...prev,
-              [assigneeIndex]: true,
-            }));
-
-            setSelectedLoanAssigneePredictionIndex((prev) => ({
-              ...prev,
-              [assigneeIndex]: -1,
-            }));
-          } else {
-            setLoanAssigneePredictions((prev) => ({
-              ...prev,
-              [assigneeIndex]: [],
-            }));
-
-            setShowLoanAssigneePredictions((prev) => ({
-              ...prev,
-              [assigneeIndex]: false,
-            }));
-          }
-        }
-      );
+      setSelectedLoanAssigneePredictionIndex((prev) => ({
+        ...prev,
+        [assigneeIndex]: -1,
+      }));
     } catch (error) {
+      console.error("Error getting autocomplete suggestions:", error);
+      setLoanAssigneePredictions((prev) => ({
+        ...prev,
+        [assigneeIndex]: [],
+      }));
+
+      setShowLoanAssigneePredictions((prev) => ({
+        ...prev,
+        [assigneeIndex]: false,
+      }));
+    } finally {
       setIsLoadingLoanAssigneePredictions((prev) => ({
         ...prev,
         [assigneeIndex]: false,
@@ -2035,21 +1880,12 @@ const PetitionSteps = ({
 
   // Handle borrower address prediction click
 
-  const handleBorrowerPredictionClick = (borrowerId, prediction) => {
-    if (!placesServiceRef.current) return;
-
-    const request = {
-      placeId: prediction.place_id,
-
-      fields: ["address_components", "formatted_address"],
-    };
-
-    placesServiceRef.current.getDetails(request, (place, status) => {
-      if (
-        status === window.google.maps.places.PlacesServiceStatus.OK &&
-        place
-      ) {
-        const addressComponents = place.address_components;
+  const handleBorrowerPredictionClick = async (borrowerId, prediction) => {
+    const placeId = prediction.place_id || prediction.placeId;
+    try {
+      const placeDetails = await googlePlacesService.getPlaceDetails(placeId);
+      if (placeDetails && placeDetails.addressComponents) {
+        const addressComponents = placeDetails.addressComponents;
 
         let streetNumber = "";
 
@@ -2065,15 +1901,15 @@ const PetitionSteps = ({
           const types = component.types;
 
           if (types.includes("street_number")) {
-            streetNumber = component.long_name;
+            streetNumber = component.longName;
           } else if (types.includes("route")) {
-            route = component.long_name;
+            route = component.longName;
           } else if (types.includes("locality")) {
-            city = component.long_name;
+            city = component.longName;
           } else if (types.includes("administrative_area_level_1")) {
-            state = component.short_name;
+            state = component.shortName;
           } else if (types.includes("postal_code")) {
-            zipCode = component.long_name;
+            zipCode = component.longName;
           }
         });
 
@@ -2094,26 +1930,19 @@ const PetitionSteps = ({
 
         setBorrowerPredictions((prev) => ({ ...prev, [borrowerId]: [] }));
       }
-    });
+    } catch (error) {
+      console.error("Error getting place details:", error);
+    }
   };
 
   // Handle notice address prediction click
 
-  const handleNoticePredictionClick = (prediction) => {
-    if (!placesServiceRef.current) return;
-
-    const request = {
-      placeId: prediction.place_id,
-
-      fields: ["address_components", "formatted_address"],
-    };
-
-    placesServiceRef.current.getDetails(request, (place, status) => {
-      if (
-        status === window.google.maps.places.PlacesServiceStatus.OK &&
-        place
-      ) {
-        const addressComponents = place.address_components;
+  const handleNoticePredictionClick = async (prediction) => {
+    const placeId = prediction.place_id || prediction.placeId;
+    try {
+      const placeDetails = await googlePlacesService.getPlaceDetails(placeId);
+      if (placeDetails && placeDetails.addressComponents) {
+        const addressComponents = placeDetails.addressComponents;
 
         let streetNumber = "";
 
@@ -2129,15 +1958,15 @@ const PetitionSteps = ({
           const types = component.types;
 
           if (types.includes("street_number")) {
-            streetNumber = component.long_name;
+            streetNumber = component.longName;
           } else if (types.includes("route")) {
-            route = component.long_name;
+            route = component.longName;
           } else if (types.includes("locality")) {
-            city = component.long_name;
+            city = component.longName;
           } else if (types.includes("administrative_area_level_1")) {
-            state = component.short_name;
+            state = component.shortName;
           } else if (types.includes("postal_code")) {
-            zipCode = component.long_name;
+            zipCode = component.longName;
           }
         });
 
@@ -2202,26 +2031,19 @@ const PetitionSteps = ({
 
         setNoticePredictions([]);
       }
-    });
+    } catch (error) {
+      console.error("Error getting place details:", error);
+    }
   };
 
   // Handle loan assignee address prediction click
 
-  const handleLoanAssigneePredictionClick = (assigneeIndex, prediction) => {
-    if (!placesServiceRef.current) return;
-
-    const request = {
-      placeId: prediction.place_id,
-
-      fields: ["address_components", "formatted_address"],
-    };
-
-    placesServiceRef.current.getDetails(request, (place, status) => {
-      if (
-        status === window.google.maps.places.PlacesServiceStatus.OK &&
-        place
-      ) {
-        const addressComponents = place.address_components;
+  const handleLoanAssigneePredictionClick = async (assigneeIndex, prediction) => {
+    const placeId = prediction.place_id || prediction.placeId;
+    try {
+      const placeDetails = await googlePlacesService.getPlaceDetails(placeId);
+      if (placeDetails && placeDetails.addressComponents) {
+        const addressComponents = placeDetails.addressComponents;
 
         let streetNumber = "";
 
@@ -2237,15 +2059,15 @@ const PetitionSteps = ({
           const types = component.types;
 
           if (types.includes("street_number")) {
-            streetNumber = component.long_name;
+            streetNumber = component.longName;
           } else if (types.includes("route")) {
-            route = component.long_name;
+            route = component.longName;
           } else if (types.includes("locality")) {
-            city = component.long_name;
+            city = component.longName;
           } else if (types.includes("administrative_area_level_1")) {
-            state = component.short_name;
+            state = component.shortName;
           } else if (types.includes("postal_code")) {
-            zipCode = component.long_name;
+            zipCode = component.longName;
           }
         });
 
@@ -2269,39 +2091,35 @@ const PetitionSteps = ({
           [assigneeIndex]: [],
         }));
       }
-    });
+    } catch (error) {
+      console.error("Error getting place details:", error);
+    }
   };
 
   // Validate address using Geocoding API
 
-  const validateAddressWithGeocoding = () => {
-    return new Promise((resolve) => {
-      if (!geocoderRef.current || !formData.propertyStreet1.trim()) {
-        resolve({ isValid: false, error: "Street address is required" });
+  const validateAddressWithGeocoding = async () => {
+    if (!formData.propertyStreet1.trim()) {
+      return { isValid: false, error: "Street address is required" };
+    }
 
-        return;
-      }
+    setIsValidatingAddress(true);
+    setAddressValidationError("");
 
-      setIsValidatingAddress(true);
+    const addressLine2 = formData.propertyStreet2
+      ? ` ${formData.propertyStreet2}`
+      : "";
 
-      setAddressValidationError("");
+    const fullAddress =
+      `${formData.propertyStreet1}${addressLine2}, ${formData.propertyCity}, ${formData.propertyState} ${formData.propertyZip}`.trim();
 
-      const addressLine2 = formData.propertyStreet2
-        ? ` ${formData.propertyStreet2}`
-        : "";
+    try {
+      const geocodeResult = await googlePlacesService.geocode(fullAddress);
+      
+      setIsValidatingAddress(false);
 
-      const fullAddress =
-        `${formData.propertyStreet1}${addressLine2}, ${formData.propertyCity}, ${formData.propertyState} ${formData.propertyZip}`.trim();
-
-      geocoderRef.current.geocode(
-        { address: fullAddress },
-        (results, status) => {
-          setIsValidatingAddress(false);
-
-          if (status === "OK" && results && results.length > 0) {
-            const result = results[0];
-
-            const addressComponents = result.address_components;
+      if (geocodeResult && geocodeResult.addressComponents) {
+        const addressComponents = geocodeResult.addressComponents;
 
             // Check if the geocoded result matches our input
 
@@ -2323,7 +2141,7 @@ const PetitionSteps = ({
                 types.includes("administrative_area_level_2")
               ) {
                 if (
-                  component.long_name
+                  component.longName
                     .toLowerCase()
                     .includes(formData.propertyCity.toLowerCase())
                 ) {
@@ -2332,15 +2150,15 @@ const PetitionSteps = ({
               }
 
               if (types.includes("administrative_area_level_1")) {
-                actualState = component.short_name;
+                actualState = component.shortName;
 
-                if (component.short_name === "MA") {
+                if (component.shortName === "MA") {
                   foundState = true;
                 }
               }
 
               if (types.includes("postal_code")) {
-                if (component.long_name === formData.propertyZip) {
+                if (component.longName === formData.propertyZip) {
                   foundZip = true;
                 }
               }
@@ -2348,7 +2166,7 @@ const PetitionSteps = ({
               if (types.includes("administrative_area_level_2")) {
                 // Extract county information for auto-filling
 
-                county = component.long_name;
+                county = component.longName;
               }
             });
 
@@ -2361,12 +2179,7 @@ const PetitionSteps = ({
                 `This address is in ${actualState}, but this system only accepts Massachusetts addresses. Please select a Massachusetts address.`
               );
 
-              resolve({
-                isValid: false,
-                error: "Address is not in Massachusetts",
-              });
-
-              return;
+              return { isValid: false, error: "Address is not in Massachusetts" };
             }
 
             // More strict validation - check if all components match
@@ -2385,14 +2198,14 @@ const PetitionSteps = ({
               const types = component.types;
 
               if (types.includes("locality")) {
-                geocodedCity = component.long_name.toLowerCase();
+                geocodedCity = component.longName.toLowerCase();
               }
 
               if (
                 types.includes("locality") ||
                 types.includes("administrative_area_level_2")
               ) {
-                const componentCity = component.long_name.toLowerCase();
+                const componentCity = component.longName.toLowerCase();
 
                 const inputCity = formData.propertyCity.toLowerCase().trim();
 
@@ -2418,13 +2231,13 @@ const PetitionSteps = ({
               }
 
               if (types.includes("postal_code")) {
-                if (component.long_name === formData.propertyZip) {
+                if (component.longName === formData.propertyZip) {
                   zipMatch = true;
                 }
               }
 
               if (types.includes("administrative_area_level_2")) {
-                const componentCounty = component.long_name.toLowerCase();
+                const componentCounty = component.longName.toLowerCase();
 
                 const inputCounty = formData.propertyCounty.toLowerCase().trim();
 
@@ -2461,7 +2274,7 @@ const PetitionSteps = ({
 
               setIsAddressVerified(true);
 
-              resolve({ isValid: true, coordinates: result.geometry.location });
+              return { isValid: true, coordinates: { lat: geocodeResult.latitude, lng: geocodeResult.longitude } };
             } else {
               setIsAddressVerified(false);
 
@@ -2478,7 +2291,7 @@ const PetitionSteps = ({
 
               setAddressValidationError(errorMessage);
 
-              resolve({ isValid: false, error: "Address verification failed" });
+              return { isValid: false, error: "Address verification failed" };
             }
           } else {
             setIsAddressVerified(false);
@@ -2487,12 +2300,15 @@ const PetitionSteps = ({
               "Invalid address. Please select from suggestions or enter a valid address."
             );
 
-            resolve({ isValid: false, error: "Invalid address" });
+            return { isValid: false, error: "Invalid address" };
           }
+        } catch (error) {
+          setIsValidatingAddress(false);
+          setIsAddressVerified(false);
+          setAddressValidationError("Error validating address. Please try again.");
+          return { isValid: false, error: "Error validating address" };
         }
-      );
-    });
-  };
+      };
 
   // Validation functions - using helpers
   const validateAddressFields = () => validatePropertyDetailsHelper(formData);
@@ -2528,45 +2344,38 @@ const PetitionSteps = ({
   };
 
   // Generic address validation function for any address type
-  const validateAddressWithGeocodingGeneric = (addressData) => {
-    return new Promise((resolve) => {
-      const { street1, street2, city, state, zip } = addressData;
-      
-      if (!geocoderRef.current || !street1?.trim()) {
-        resolve({ isValid: false, error: "Street address is required" });
-        return;
-      }
+  const validateAddressWithGeocodingGeneric = async (addressData) => {
+    const { street1, street2, city, state, zip } = addressData;
+    
+    if (!street1?.trim()) {
+      return { isValid: false, error: "Street address is required" };
+    }
 
-      // Require city and zip for validation
-      if (!city || !city.trim()) {
-        resolve({ isValid: false, error: "City is required for address validation" });
-        return;
-      }
+    // Require city and zip for validation
+    if (!city || !city.trim()) {
+      return { isValid: false, error: "City is required for address validation" };
+    }
 
-      if (city.trim().length < 3) {
-        resolve({ isValid: false, error: "City name must be at least 3 characters long" });
-        return;
-      }
+    if (city.trim().length < 3) {
+      return { isValid: false, error: "City name must be at least 3 characters long" };
+    }
 
-      if (!zip || !zip.trim()) {
-        resolve({ isValid: false, error: "ZIP code is required for address validation" });
-        return;
-      }
+    if (!zip || !zip.trim()) {
+      return { isValid: false, error: "ZIP code is required for address validation" };
+    }
 
-      setIsValidatingAddress(true);
-      setAddressValidationError("");
+    setIsValidatingAddress(true);
+    setAddressValidationError("");
 
-      const addressLine2 = street2 ? ` ${street2}` : "";
-      const fullAddress = `${street1}${addressLine2}, ${city || ""}, ${state || "MA"} ${zip || ""}`.trim();
+    const addressLine2 = street2 ? ` ${street2}` : "";
+    const fullAddress = `${street1}${addressLine2}, ${city || ""}, ${state || "MA"} ${zip || ""}`.trim();
 
-      geocoderRef.current.geocode(
-        { address: fullAddress },
-        (results, status) => {
-          setIsValidatingAddress(false);
+    try {
+      const geocodeResult = await googlePlacesService.geocode(fullAddress);
+      setIsValidatingAddress(false);
 
-          if (status === "OK" && results && results.length > 0) {
-            const result = results[0];
-            const addressComponents = result.address_components;
+      if (geocodeResult && geocodeResult.addressComponents) {
+        const addressComponents = geocodeResult.addressComponents;
 
             let foundCity = false;
             let foundState = false;
@@ -2577,20 +2386,20 @@ const PetitionSteps = ({
               const types = component.types;
 
               if (types.includes("locality") || types.includes("administrative_area_level_2")) {
-                if (city && component.long_name.toLowerCase().includes(city.toLowerCase())) {
+                if (city && component.longName.toLowerCase().includes(city.toLowerCase())) {
                   foundCity = true;
                 }
               }
 
               if (types.includes("administrative_area_level_1")) {
-                actualState = component.short_name;
-                if (component.short_name === "MA") {
+                actualState = component.shortName;
+                if (component.shortName === "MA") {
                   foundState = true;
                 }
               }
 
               if (types.includes("postal_code")) {
-                if (zip && component.long_name === zip) {
+                if (zip && component.longName === zip) {
                   foundZip = true;
                 }
               }
@@ -2601,11 +2410,7 @@ const PetitionSteps = ({
               setAddressValidationError(
                 `This address is in ${actualState}, but this system only accepts Massachusetts addresses. Please select a Massachusetts address.`
               );
-              resolve({
-                isValid: false,
-                error: "Address is not in Massachusetts",
-              });
-              return;
+              return { isValid: false, error: "Address is not in Massachusetts" };
             }
 
             // More strict validation - check if all components match
@@ -2617,7 +2422,7 @@ const PetitionSteps = ({
 
               if (types.includes("locality") || types.includes("administrative_area_level_2")) {
                 if (city && city.trim().length > 0) {
-                  const componentCity = component.long_name.toLowerCase();
+                  const componentCity = component.longName.toLowerCase();
                   const inputCity = city.toLowerCase().trim();
                   
                   // Stricter city matching: require meaningful match
@@ -2644,7 +2449,7 @@ const PetitionSteps = ({
               }
 
               if (types.includes("postal_code")) {
-                if (zip && zip.trim() && component.long_name === zip.trim()) {
+                if (zip && zip.trim() && component.longName === zip.trim()) {
                   zipMatch = true;
                 }
               }
@@ -2652,7 +2457,7 @@ const PetitionSteps = ({
 
             // Require state and both city AND zip to match (stricter validation)
             if (foundState && cityMatch && zipMatch) {
-              resolve({ isValid: true, coordinates: result.geometry.location });
+              return { isValid: true, coordinates: { lat: geocodeResult.latitude, lng: geocodeResult.longitude } };
             } else {
               let errorMessage = "Address verification failed. Please check:";
               if (!cityMatch && city && city.trim().length > 0) {
@@ -2666,18 +2471,20 @@ const PetitionSteps = ({
               }
 
               setAddressValidationError(errorMessage);
-              resolve({ isValid: false, error: "Address verification failed" });
+              return { isValid: false, error: "Address verification failed" };
             }
           } else {
             setAddressValidationError(
               "Invalid address. Please select from suggestions or enter a valid address."
             );
-            resolve({ isValid: false, error: "Invalid address" });
+            return { isValid: false, error: "Invalid address" };
           }
+        } catch (error) {
+          setIsValidatingAddress(false);
+          setAddressValidationError("Error validating address. Please try again.");
+          return { isValid: false, error: "Error validating address" };
         }
-      );
-    });
-  };
+      };
 
   // Validate Filing Entity address step
   const validateFilingEntityAddressStep = async () => {
@@ -2967,20 +2774,16 @@ const PetitionSteps = ({
   // Auto-detect city and county when street address and ZIP are entered
 
   const autoDetectAddressComponents = async (streetAddress, zipCode) => {
-    if (!streetAddress.trim() || !zipCode.trim() || !geocoderRef.current) {
+    if (!streetAddress.trim() || !zipCode.trim()) {
       return;
     }
 
     try {
       const fullAddress = `${streetAddress}, MA ${zipCode}`;
 
-      geocoderRef.current.geocode(
-        { address: fullAddress },
-        (results, status) => {
-          if (status === "OK" && results && results.length > 0) {
-            const result = results[0];
-
-            const addressComponents = result.address_components;
+      const geocodeResult = await googlePlacesService.geocode(fullAddress);
+      if (geocodeResult && geocodeResult.addressComponents) {
+        const addressComponents = geocodeResult.addressComponents;
 
             let detectedCity = "";
 
@@ -2992,11 +2795,11 @@ const PetitionSteps = ({
               const types = component.types;
 
               if (types.includes("locality")) {
-                detectedCity = component.long_name;
+                detectedCity = component.longName;
               } else if (types.includes("administrative_area_level_2")) {
-                detectedCounty = component.long_name;
+                detectedCounty = component.longName;
               } else if (types.includes("administrative_area_level_1")) {
-                if (component.short_name === "MA") {
+                if (component.shortName === "MA") {
                   isInMA = true;
                 }
               }
@@ -3018,12 +2821,11 @@ const PetitionSteps = ({
               }));
             }
           }
+        } catch (error) {
+          // Error handling address validation - non-critical
+          console.error("Error auto-detecting address components:", error);
         }
-      );
-    } catch {
-      // Error handling address validation - non-critical
-    }
-  };
+      };
 
   const handleInputChange = (e) => {
     const { name, value, type, checked, files } = e.target;
@@ -3766,22 +3568,12 @@ const PetitionSteps = ({
       return { isValid: false, error: "Incomplete address information" };
     }
 
-    if (!geocoderRef.current) {
-      return { isValid: false, error: "Geocoding service not available" };
-    }
-
-    return new Promise((resolve) => {
+    try {
       const address = `${borrower.mailingStreet1}, ${borrower.mailingCity}, ${borrower.mailingState} ${borrower.mailingZip}`;
 
-      geocoderRef.current.geocode({ address }, (results, status) => {
-        if (
-          status === window.google.maps.GeocoderStatus.OK &&
-          results &&
-          results.length > 0
-        ) {
-          const result = results[0];
-
-          const addressComponents = result.address_components;
+      const geocodeResult = await googlePlacesService.geocode(address);
+      if (geocodeResult && geocodeResult.addressComponents) {
+        const addressComponents = geocodeResult.addressComponents;
 
           let foundCity = false;
 
@@ -3799,7 +3591,7 @@ const PetitionSteps = ({
               types.includes("administrative_area_level_2")
             ) {
               if (
-                component.long_name
+                component.longName
                   .toLowerCase()
                   .includes(borrower.mailingCity.toLowerCase())
               ) {
@@ -3808,15 +3600,15 @@ const PetitionSteps = ({
             }
 
             if (types.includes("administrative_area_level_1")) {
-              actualState = component.short_name;
+              actualState = component.shortName;
 
-              if (component.short_name === "MA") {
+              if (component.shortName === "MA") {
                 foundState = true;
               }
             }
 
             if (types.includes("postal_code")) {
-              if (component.long_name === borrower.mailingZip) {
+              if (component.longName === borrower.mailingZip) {
                 foundZip = true;
               }
             }
@@ -3829,12 +3621,7 @@ const PetitionSteps = ({
               [`borrower_${borrowerId}_mailingAddress`]: `This address is in ${actualState}, but this system only accepts Massachusetts addresses.`,
             }));
 
-            resolve({
-              isValid: false,
-              error: "Address is not in Massachusetts",
-            });
-
-            return;
+            return { isValid: false, error: "Address is not in Massachusetts" };
           }
 
           if (!foundCity || !foundState || !foundZip) {
@@ -3847,9 +3634,7 @@ const PetitionSteps = ({
               [`borrower_${borrowerId}_mailingAddress`]: errorMessage,
             }));
 
-            resolve({ isValid: false, error: errorMessage });
-
-            return;
+            return { isValid: false, error: errorMessage };
           }
 
           setBorrowerAddressValidationErrors((prev) => {
@@ -3860,7 +3645,7 @@ const PetitionSteps = ({
             return newErrors;
           });
 
-          resolve({ isValid: true });
+          return { isValid: true };
         } else {
           const errorMessage = "Invalid address. Please enter a valid address.";
 
@@ -3870,11 +3655,17 @@ const PetitionSteps = ({
             [`borrower_${borrowerId}_mailingAddress`]: errorMessage,
           }));
 
-          resolve({ isValid: false, error: errorMessage });
+          return { isValid: false, error: errorMessage };
         }
-      });
-    });
-  };
+      } catch (error) {
+        const errorMessage = "Error validating address. Please try again.";
+        setBorrowerAddressValidationErrors((prev) => ({
+          ...prev,
+          [`borrower_${borrowerId}_mailingAddress`]: errorMessage,
+        }));
+        return { isValid: false, error: errorMessage };
+      }
+    };
 
   // Validate notice address with Google Geocoding API
 
@@ -3888,22 +3679,12 @@ const PetitionSteps = ({
       return { isValid: false, error: "Incomplete address information" };
     }
 
-    if (!geocoderRef.current) {
-      return { isValid: false, error: "Geocoding service not available" };
-    }
-
-    return new Promise((resolve) => {
+    try {
       const address = `${formData.noticeAddressStreet1}, ${formData.noticeAddressCity}, ${formData.noticeAddressState} ${formData.noticeAddressZip}`;
 
-      geocoderRef.current.geocode({ address }, (results, status) => {
-        if (
-          status === window.google.maps.GeocoderStatus.OK &&
-          results &&
-          results.length > 0
-        ) {
-          const result = results[0];
-
-          const addressComponents = result.address_components;
+      const geocodeResult = await googlePlacesService.geocode(address);
+      if (geocodeResult && geocodeResult.addressComponents) {
+        const addressComponents = geocodeResult.addressComponents;
 
           let foundCity = false;
 
@@ -3921,7 +3702,7 @@ const PetitionSteps = ({
               types.includes("administrative_area_level_2")
             ) {
               if (
-                component.long_name
+                component.longName
                   .toLowerCase()
                   .includes(formData.noticeAddressCity.toLowerCase())
               ) {
@@ -3930,15 +3711,15 @@ const PetitionSteps = ({
             }
 
             if (types.includes("administrative_area_level_1")) {
-              actualState = component.short_name;
+              actualState = component.shortName;
 
-              if (component.short_name === "MA") {
+              if (component.shortName === "MA") {
                 foundState = true;
               }
             }
 
             if (types.includes("postal_code")) {
-              if (component.long_name === formData.noticeAddressZip) {
+              if (component.longName === formData.noticeAddressZip) {
                 foundZip = true;
               }
             }
@@ -3951,12 +3732,7 @@ const PetitionSteps = ({
               noticeAddress: `This address is in ${actualState}, but this system only accepts Massachusetts addresses.`,
             }));
 
-            resolve({
-              isValid: false,
-              error: "Address is not in Massachusetts",
-            });
-
-            return;
+            return { isValid: false, error: "Address is not in Massachusetts" };
           }
 
           if (!foundCity || !foundState || !foundZip) {
@@ -3969,9 +3745,7 @@ const PetitionSteps = ({
               noticeAddress: errorMessage,
             }));
 
-            resolve({ isValid: false, error: errorMessage });
-
-            return;
+            return { isValid: false, error: errorMessage };
           }
 
           setNoticeAddressValidationErrors((prev) => {
@@ -3982,7 +3756,7 @@ const PetitionSteps = ({
             return newErrors;
           });
 
-          resolve({ isValid: true });
+          return { isValid: true };
         } else {
           const errorMessage = "Invalid address. Please enter a valid address.";
 
@@ -3992,11 +3766,17 @@ const PetitionSteps = ({
             noticeAddress: errorMessage,
           }));
 
-          resolve({ isValid: false, error: errorMessage });
+          return { isValid: false, error: errorMessage };
         }
-      });
-    });
-  };
+      } catch (error) {
+        const errorMessage = "Error validating address. Please try again.";
+        setNoticeAddressValidationErrors((prev) => ({
+          ...prev,
+          noticeAddress: errorMessage,
+        }));
+        return { isValid: false, error: errorMessage };
+      }
+    };
 
   // Validate loan assignee address with Google Geocoding API
 
@@ -4013,22 +3793,12 @@ const PetitionSteps = ({
       return { isValid: false, error: "Incomplete address information" };
     }
 
-    if (!geocoderRef.current) {
-      return { isValid: false, error: "Geocoding service not available" };
-    }
-
-    return new Promise((resolve) => {
+    try {
       const address = `${assignee.street1}, ${assignee.city}, ${assignee.addressState} ${assignee.zip}`;
 
-      geocoderRef.current.geocode({ address }, (results, status) => {
-        if (
-          status === window.google.maps.GeocoderStatus.OK &&
-          results &&
-          results.length > 0
-        ) {
-          const result = results[0];
-
-          const addressComponents = result.address_components;
+      const geocodeResult = await googlePlacesService.geocode(address);
+      if (geocodeResult && geocodeResult.addressComponents) {
+        const addressComponents = geocodeResult.addressComponents;
 
           let foundCity = false;
 
@@ -4046,7 +3816,7 @@ const PetitionSteps = ({
               types.includes("administrative_area_level_2")
             ) {
               if (
-                component.long_name
+                component.longName
                   .toLowerCase()
                   .includes(assignee.city.toLowerCase())
               ) {
@@ -4055,15 +3825,15 @@ const PetitionSteps = ({
             }
 
             if (types.includes("administrative_area_level_1")) {
-              actualState = component.short_name;
+              actualState = component.shortName;
 
-              if (component.short_name === "MA") {
+              if (component.shortName === "MA") {
                 foundState = true;
               }
             }
 
             if (types.includes("postal_code")) {
-              if (component.long_name === assignee.zip) {
+              if (component.longName === assignee.zip) {
                 foundZip = true;
               }
             }
@@ -4076,12 +3846,7 @@ const PetitionSteps = ({
               [`assignee_${assigneeIndex}_address`]: `This address is in ${actualState}, but this system only accepts Massachusetts addresses.`,
             }));
 
-            resolve({
-              isValid: false,
-              error: "Address is not in Massachusetts",
-            });
-
-            return;
+            return { isValid: false, error: "Address is not in Massachusetts" };
           }
 
           if (!foundCity || !foundState || !foundZip) {
@@ -4094,9 +3859,7 @@ const PetitionSteps = ({
               [`assignee_${assigneeIndex}_address`]: errorMessage,
             }));
 
-            resolve({ isValid: false, error: errorMessage });
-
-            return;
+            return { isValid: false, error: errorMessage };
           }
 
           setLoanAssigneeAddressValidationErrors((prev) => {
@@ -4107,7 +3870,7 @@ const PetitionSteps = ({
             return newErrors;
           });
 
-          resolve({ isValid: true });
+          return { isValid: true };
         } else {
           const errorMessage = "Invalid address. Please enter a valid address.";
 
@@ -4117,11 +3880,17 @@ const PetitionSteps = ({
             [`assignee_${assigneeIndex}_address`]: errorMessage,
           }));
 
-          resolve({ isValid: false, error: errorMessage });
+          return { isValid: false, error: errorMessage };
         }
-      });
-    });
-  };
+      } catch (error) {
+        const errorMessage = "Error validating address. Please try again.";
+        setLoanAssigneeAddressValidationErrors((prev) => ({
+          ...prev,
+          [`assignee_${assigneeIndex}_address`]: errorMessage,
+        }));
+        return { isValid: false, error: errorMessage };
+      }
+    };
 
   // Auto-save current step data (no validation, no modal close)
 
@@ -5107,8 +4876,7 @@ const PetitionSteps = ({
         return (
           <Step2PropertyDetails
           isAddressVerified={isAddressVerified}
-          loadError={loadError}
-          isLoaded={isLoaded}
+          isLoaded={true}
           autocompleteRef={autocompleteRef}
           fieldErrors={fieldErrors}
           formData={formData}
@@ -5701,14 +5469,16 @@ const PetitionSteps = ({
                     >
                       Don't save
                     </button>
-                    <button
-                      type="button"
-                      className="dashboard-btn-create"
-                      onClick={handleSaveDraftAndClose}
-                      disabled={isSaving}
-                    >
-                      {isSaving ? "Saving…" : "Save as draft"}
-                    </button>
+                    {!isTakenOverPetition && (
+                      <button
+                        type="button"
+                        className="dashboard-btn-create"
+                        onClick={handleSaveDraftAndClose}
+                        disabled={isSaving}
+                      >
+                        {isSaving ? "Saving…" : "Save as draft"}
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -5813,27 +5583,28 @@ const PetitionSteps = ({
                   </button>
 
                   <div className="d-flex gap-2">
-                    {/* Save as Draft Button */}
-
-                    <button
-                      type="button"
-                      className="dashboard-btn-refresh"
-                      onClick={saveCurrentStep}
-                      disabled={isSaving}
-                    >
-                      {isSaving ? (
-                        <>
-                          <span
-                            className="spinner-border spinner-border-sm me-2"
-                            role="status"
-                            aria-hidden="true"
-                          ></span>
-                          Saving...
-                        </>
-                      ) : (
-                        "Save as Draft"
-                      )}
-                    </button>
+                    {/* Save as Draft Button - Hidden in take-over mode */}
+                    {!isTakenOverPetition && (
+                      <button
+                        type="button"
+                        className="dashboard-btn-refresh"
+                        onClick={saveCurrentStep}
+                        disabled={isSaving}
+                      >
+                        {isSaving ? (
+                          <>
+                            <span
+                              className="spinner-border spinner-border-sm me-2"
+                              role="status"
+                              aria-hidden="true"
+                            ></span>
+                            Saving...
+                          </>
+                        ) : (
+                          "Save as Draft"
+                        )}
+                      </button>
+                    )}
 
                     {/* Next Step, Review, or Submit Button */}
 

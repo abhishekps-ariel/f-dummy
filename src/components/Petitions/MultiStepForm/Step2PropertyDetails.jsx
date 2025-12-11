@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 
 const Step1PropertyDetails = ({
   isAddressVerified,
-  loadError,
   isLoaded,
   autocompleteRef,
   fieldErrors,
@@ -38,150 +37,98 @@ const Step1PropertyDetails = ({
                   )}
                 </label>
 
-                {loadError ? (
-                  <div>
-                    <input
-                      type="text"
-                      id="propertyStreet1"
-                      name="propertyStreet1"
-                      className={`form-control ${
-                        fieldErrors.propertyStreet1 ? "is-invalid" : ""
-                      }`}
-                      value={formData.propertyStreet1 || ""}
-                      onChange={handleInputChange}
-                      placeholder={t("petitionSteps.step2.placeholderManual")}
-                      autoComplete="off"
-                    />
+                <div className="position-relative">
+                  <input
+                    ref={autocompleteRef}
+                    type="text"
+                    id="propertyStreet1"
+                    name="propertyStreet1"
+                    className={`form-control ${
+                      fieldErrors.propertyStreet1 ? "is-invalid" : ""
+                    }`}
+                    value={formData.propertyStreet1 || ""}
+                    onChange={(e) => {
+                      handleInputChange(e);
+                      handleAddressInput(e.target.value);
+                    }}
+                    onKeyDown={handleKeyDown}
+                    onBlur={() => {
+                      // Delay hiding suggestions to allow click events
+                      setTimeout(() => setShowPredictions(false), 300);
+                    }}
+                    onFocus={() => {
+                      if (predictions.length > 0) {
+                        setShowPredictions(true);
+                      }
+                    }}
+                    placeholder={t("petitionSteps.step2.placeholder")}
+                    autoComplete="off"
+                  />
 
-                    {fieldErrors.propertyStreet1 && (
-                      <div className="text-danger small mt-1">
-                        {fieldErrors.propertyStreet1}
-                      </div>
-                    )}
-
-                    <div className="text-danger small mt-1">
-                      ⚠️ {t("petitionSteps.step2.googleMapsFailed")}
-                    </div>
-                  </div>
-                ) : isLoaded ? (
-                  <div className="position-relative">
-                    <input
-                      ref={autocompleteRef}
-                      type="text"
-                      id="propertyStreet1"
-                      name="propertyStreet1"
-                      className={`form-control ${
-                        fieldErrors.propertyStreet1 ? "is-invalid" : ""
-                      }`}
-                      value={formData.propertyStreet1 || ""}
-                      onChange={(e) => {
-                        handleInputChange(e);
-
-                        handleAddressInput(e.target.value);
-                      }}
-                      onKeyDown={handleKeyDown}
-                      onBlur={() => {
-                        // Delay hiding suggestions to allow click events
-
-                        setTimeout(() => setShowPredictions(false), 300);
-                      }}
-                      onFocus={() => {
-                        if (predictions.length > 0) {
-                          setShowPredictions(true);
-                        }
-                      }}
-                      placeholder={t("petitionSteps.step2.placeholder")}
-                      autoComplete="off"
-                    />
-
-                    {/* Loading indicator */}
-
-                    {isLoadingPredictions && (
-                      <div className="position-absolute top-50 end-0 translate-middle-y me-3">
-                        <div
-                          className="spinner-border spinner-border-sm text-muted"
-                          role="status"
-                        >
-                          <span className="visually-hidden">{t("common.loading")}</span>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Address suggestions dropdown */}
-
-                    {showPredictions && predictions.length > 0 && (
+                  {/* Loading indicator */}
+                  {isLoadingPredictions && (
+                    <div className="position-absolute top-50 end-0 translate-middle-y me-3">
                       <div
-                        className="position-absolute w-100 bg-white border border-top-0 rounded-bottom shadow-sm"
-                        style={{
-                          zIndex: 1050,
-                          maxHeight: "200px",
-                          overflowY: "auto",
-                        }}
+                        className="spinner-border spinner-border-sm text-muted"
+                        role="status"
                       >
-                        {predictions.map((prediction, index) => (
-                          <div
-                            key={prediction.place_id}
-                            className={`px-3 py-2 cursor-pointer border-bottom ${
-                              index === selectedPredictionIndex
-                                ? "bg-primary text-white"
-                                : "hover-bg-light"
-                            }`}
-                            onMouseDown={() =>
-                              selectPrediction(prediction.place_id)
-                            }
-                            style={{ cursor: "pointer" }}
-                          >
-                            <div className="fw-medium">
-                              {prediction.structured_formatting.main_text}
-                            </div>
-
-                            <div className="small text-muted">
-                              {prediction.structured_formatting.secondary_text}
-                            </div>
-                          </div>
-                        ))}
+                        <span className="visually-hidden">{t("common.loading")}</span>
                       </div>
-                    )}
-
-                    {/* Field error display */}
-
-                    {fieldErrors.propertyStreet1 && (
-                      <div className="text-danger small mt-1">
-                        {fieldErrors.propertyStreet1}
-                      </div>
-                    )}
-
-                    {/* Address validation error */}
-
-                    {addressValidationError && (
-                      <div className="text-danger small mt-2">
-                        {addressValidationError}
-                      </div>
-                    )}
-
-                    {/* Address validation loading */}
-
-                    {isValidatingAddress && (
-                      <div className="text-muted small mt-2">
-                        {t("petitionSteps.step2.validatingAddress")}
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div
-                    className="form-control d-flex align-items-center justify-content-center"
-                    style={{ height: "38px" }}
-                  >
-                    <div
-                      className="spinner-border spinner-border-sm text-muted me-2"
-                      role="status"
-                    >
-                      <span className="visually-hidden">{t("common.loading")}</span>
                     </div>
+                  )}
 
-                    <span className="text-muted">{t("petitionSteps.step2.loadingGoogleMaps")}</span>
-                  </div>
-                )}
+                  {/* Address suggestions dropdown */}
+                  {showPredictions && predictions.length > 0 && (
+                    <div
+                      className="position-absolute w-100 bg-white border border-top-0 rounded-bottom shadow-sm"
+                      style={{
+                        zIndex: 1050,
+                        maxHeight: "200px",
+                        overflowY: "auto",
+                      }}
+                    >
+                      {predictions.map((prediction, index) => (
+                        <div
+                          key={prediction.place_id}
+                          className={`px-3 py-2 cursor-pointer border-bottom ${
+                            index === selectedPredictionIndex
+                              ? "bg-primary text-white"
+                              : "hover-bg-light"
+                          }`}
+                          onMouseDown={() =>
+                            selectPrediction(prediction.place_id)
+                          }
+                          style={{ cursor: "pointer" }}
+                        >
+                          <div className="fw-medium">
+                            {prediction.description}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Field error display */}
+                  {fieldErrors.propertyStreet1 && (
+                    <div className="text-danger small mt-1">
+                      {fieldErrors.propertyStreet1}
+                    </div>
+                  )}
+
+                  {/* Address validation error */}
+                  {addressValidationError && (
+                    <div className="text-danger small mt-2">
+                      {addressValidationError}
+                    </div>
+                  )}
+
+                  {/* Address validation loading */}
+                  {isValidatingAddress && (
+                    <div className="text-muted small mt-2">
+                      {t("petitionSteps.step2.validatingAddress")}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="col-12">

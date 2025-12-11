@@ -8,8 +8,7 @@ import { usePetitionCommonData } from "../../hooks/usePetitionCommonData";
 import { usePetitions } from "../../hooks/usePetitions";
 import { toast } from "react-toastify";
 import "./PetitionForm.css";
-import { useJsApiLoader } from "@react-google-maps/api";
-import Config from "../../config/index";
+import googlePlacesService from "../../services/googlePlacesService";
 import PropertyDetailsCard from "./Sections/PropertyDetailsCard";
 import LoanDetails from "./Sections/LoanDetails";
 import BorrowerDetails from "./Sections/BorrowerDetails";
@@ -82,17 +81,6 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
   const [showPetitionWizard, setShowPetitionWizard] = useState(false);
   
   const { user } = useAuth();
-
-  // Google Places/Geocoder (property address)
-  const LIBRARIES = ["places"];
-  const { isLoaded, loadError } = useJsApiLoader({
-    id: "google-map-script",
-    googleMapsApiKey: Config.GOOGLE_PLACES_API_KEY,
-    libraries: LIBRARIES,
-    preventGoogleFontsLoading: true,
-  });
-  const geocoderRef = useRef(null);
-  const autocompleteServiceRef = useRef(null);
   const [predictions, setPredictions] = useState([]);
   const [isLoadingPredictions, setIsLoadingPredictions] = useState(false);
   const propertyAddressInputRef = useRef(null);
@@ -124,184 +112,127 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
   const [isLoadingNoticePredictions, setIsLoadingNoticePredictions] =
     useState({}); // { [index]: boolean }
 
-  useEffect(() => {
-    if (!isLoaded || loadError) return;
-    try {
-      autocompleteServiceRef.current =
-        new window.google.maps.places.AutocompleteService();
-      geocoderRef.current = new window.google.maps.Geocoder();
-    } catch (error) {
-      // Google Maps API initialization failed - will retry on next load
-      console.error("Failed to initialize Google Maps services:", error);
-    }
-  }, [isLoaded, loadError]);
 
-  const handlePropertyAddressInput = (value) => {
-    if (!autocompleteServiceRef.current || !value.trim()) {
+  const handlePropertyAddressInput = async (value) => {
+    if (!value.trim()) {
       setPredictions([]);
       return;
     }
-    const request = {
-      input: value,
-      componentRestrictions: { country: ["us"] },
-      types: ["address"],
-    };
     if (window.autocompleteTimeout) clearTimeout(window.autocompleteTimeout);
-    window.autocompleteTimeout = setTimeout(() => {
+    window.autocompleteTimeout = setTimeout(async () => {
       setIsLoadingPredictions(true);
       try {
-        autocompleteServiceRef.current.getPlacePredictions(
-          request,
-          (result, status) => {
-            setIsLoadingPredictions(false);
-            if (
-              status === window.google.maps.places.PlacesServiceStatus.OK &&
-              result
-            ) {
-              setPredictions(result.slice(0, 5));
-            } else {
-              setPredictions([]);
-            }
-          }
-        );
-      } catch {
-        setIsLoadingPredictions(false);
+        const suggestions = await googlePlacesService.autocomplete(value);
+        // Convert to format expected by UI (description, place_id)
+        const formattedPredictions = suggestions.slice(0, 5).map(s => ({
+          description: s.description,
+          place_id: s.placeId,
+        }));
+        setPredictions(formattedPredictions);
+      } catch (error) {
+        console.error("Error getting autocomplete suggestions:", error);
         setPredictions([]);
+      } finally {
+        setIsLoadingPredictions(false);
       }
     }, 250);
   };
 
-  const handlePropertyAddressSelect = (prediction) => {
+  const handlePropertyAddressSelect = async (prediction) => {
     setPredictions([]);
     // Fill street immediately for snappy UX
     const street = prediction.description?.split(",")[0] || "";
     setFormData((prev) => ({ ...prev, propertyStreet1: street }));
     // Geocode to populate city/state/zip/county
-    geocodePlaceAndFill(
-      prediction.place_id,
-      ({ street1, city, state, zip }) => {
-        // Attempt county extraction via a secondary geocode of placeId (already done in geocodePlaceAndFill)
-        try {
-          if (geocoderRef.current) {
-            geocoderRef.current.geocode(
-              { placeId: prediction.place_id },
-              (results, status) => {
-                let countyName = "";
-                if (
-                  status === window.google.maps.GeocoderStatus.OK &&
-                  results &&
-                  results[0]
-                ) {
-                  const comp = results[0].address_components || [];
-                  const countyComp = comp.find((c) =>
-                    c.types.includes("administrative_area_level_2")
-                  );
-                  countyName = countyComp?.long_name || "";
-                }
-                setFormData((prev) => ({
-                  ...prev,
-                  propertyStreet1: street1 || prev.propertyStreet1,
-                  propertyCity: city || prev.propertyCity,
-                  propertyState: state || prev.propertyState,
-                  propertyZip: zip || prev.propertyZip,
-                  propertyCounty: countyName || prev.propertyCounty,
-                }));
-              }
-            );
-          } else {
-            setFormData((prev) => ({
-              ...prev,
-              propertyStreet1: street1 || prev.propertyStreet1,
-              propertyCity: city || prev.propertyCity,
-              propertyState: state || prev.propertyState,
-              propertyZip: zip || prev.propertyZip,
-            }));
-          }
-        } catch (error) {
-          // Error geocoding address - non-critical, continue with form data
-          console.error("Failed to geocode address:", error);
-        }
+    const placeId = prediction.place_id || prediction.placeId;
+    try {
+      const placeDetails = await googlePlacesService.getPlaceDetails(placeId);
+      if (placeDetails && placeDetails.addressComponents) {
+        const comp = placeDetails.addressComponents;
+        const get = (type) => comp.find((c) => c.types.includes(type));
+        const streetNumber = get("street_number")?.longName || "";
+        const route = get("route")?.longName || "";
+        const city =
+          get("locality")?.longName || get("sublocality")?.longName || "";
+        const state = get("administrative_area_level_1")?.shortName || "";
+        const zip = get("postal_code")?.longName || "";
+        const countyComp = get("administrative_area_level_2");
+        const countyName = countyComp?.longName || "";
+        const street1 = [streetNumber, route].filter(Boolean).join(" ");
+        
+        setFormData((prev) => ({
+          ...prev,
+          propertyStreet1: street1 || prev.propertyStreet1,
+          propertyCity: city || prev.propertyCity,
+          propertyState: state || prev.propertyState,
+          propertyZip: zip || prev.propertyZip,
+          propertyCounty: countyName || prev.propertyCounty,
+        }));
       }
-    );
+    } catch (error) {
+      // Error geocoding address - non-critical, continue with form data
+      console.error("Failed to geocode address:", error);
+    }
     if (propertyAddressInputRef.current) propertyAddressInputRef.current.blur();
   };
 
   // Generic helper: geocode by placeId and update fields via setter
-  const geocodePlaceAndFill = (placeId, apply) => {
-    if (!geocoderRef.current || !placeId) return;
+  const geocodePlaceAndFill = async (placeId, apply) => {
+    if (!placeId) return;
     try {
-      geocoderRef.current.geocode({ placeId }, (results, status) => {
-        if (
-          status === window.google.maps.GeocoderStatus.OK &&
-          results &&
-          results[0]
-        ) {
-          const comp = results[0].address_components || [];
-          const get = (type) => comp.find((c) => c.types.includes(type));
-          const streetNumber = get("street_number")?.long_name || "";
-          const route = get("route")?.long_name || "";
-          const city =
-            get("locality")?.long_name || get("sublocality")?.long_name || "";
-          const state = get("administrative_area_level_1")?.short_name || "";
-          const zip = get("postal_code")?.long_name || "";
-          const street1 = [streetNumber, route].filter(Boolean).join(" ");
-          apply({ street1, city, state, zip });
-        }
-      });
+      const placeDetails = await googlePlacesService.getPlaceDetails(placeId);
+      if (placeDetails && placeDetails.addressComponents) {
+        const comp = placeDetails.addressComponents;
+        const get = (type) => comp.find((c) => c.types.includes(type));
+        const streetNumber = get("street_number")?.longName || "";
+        const route = get("route")?.longName || "";
+        const city =
+          get("locality")?.longName || get("sublocality")?.longName || "";
+        const state = get("administrative_area_level_1")?.shortName || "";
+        const zip = get("postal_code")?.longName || "";
+        const street1 = [streetNumber, route].filter(Boolean).join(" ");
+        apply({ street1, city, state, zip });
+      }
     } catch (e) {
       // ignore
     }
   };
 
   // Borrower mailing address handlers
-  const handleBorrowerAddressInput = (borrowerId, value) => {
-    if (!autocompleteServiceRef.current || !value.trim()) {
+  const handleBorrowerAddressInput = async (borrowerId, value) => {
+    if (!value.trim()) {
       setBorrowerPredictions((prev) => ({ ...prev, [borrowerId]: [] }));
       return;
     }
-    const request = {
-      input: value,
-      componentRestrictions: { country: ["us"] },
-      types: ["address"],
-    };
     if (window.autocompleteTimeout) clearTimeout(window.autocompleteTimeout);
     setIsLoadingBorrowerPredictions((prev) => ({
       ...prev,
       [borrowerId]: true,
     }));
-    window.autocompleteTimeout = setTimeout(() => {
+    window.autocompleteTimeout = setTimeout(async () => {
       try {
-        autocompleteServiceRef.current.getPlacePredictions(
-          request,
-          (result, status) => {
-            setIsLoadingBorrowerPredictions((prev) => ({
-              ...prev,
-              [borrowerId]: false,
-            }));
-            if (
-              status === window.google.maps.places.PlacesServiceStatus.OK &&
-              result
-            ) {
-              setBorrowerPredictions((prev) => ({
-                ...prev,
-                [borrowerId]: result.slice(0, 5),
-              }));
-            } else {
-              setBorrowerPredictions((prev) => ({ ...prev, [borrowerId]: [] }));
-            }
-          }
-        );
-      } catch {
+        const suggestions = await googlePlacesService.autocomplete(value);
+        const formattedPredictions = suggestions.slice(0, 5).map(s => ({
+          description: s.description,
+          place_id: s.placeId,
+        }));
+        setBorrowerPredictions((prev) => ({
+          ...prev,
+          [borrowerId]: formattedPredictions,
+        }));
+      } catch (error) {
+        console.error("Error getting autocomplete suggestions:", error);
+        setBorrowerPredictions((prev) => ({ ...prev, [borrowerId]: [] }));
+      } finally {
         setIsLoadingBorrowerPredictions((prev) => ({
           ...prev,
           [borrowerId]: false,
         }));
-        setBorrowerPredictions((prev) => ({ ...prev, [borrowerId]: [] }));
       }
     }, 250);
   };
 
-  const handleBorrowerAddressSelect = (borrowerId, prediction) => {
+  const handleBorrowerAddressSelect = async (borrowerId, prediction) => {
     setBorrowerPredictions((prev) => ({ ...prev, [borrowerId]: [] }));
     const street = prediction.description?.split(",")[0] || "";
     setFormData((prev) => ({
@@ -310,73 +241,57 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
         b.id === borrowerId ? { ...b, mailingStreet1: street } : b
       ),
     }));
-    geocodePlaceAndFill(
-      prediction.place_id,
-      ({ street1, city, state, zip }) => {
-        setFormData((prev) => ({
-          ...prev,
-          borrowers: prev.borrowers.map((b) =>
-            b.id === borrowerId
-              ? {
-                  ...b,
-                  mailingStreet1: street1 || b.mailingStreet1,
-                  mailingCity: city || b.mailingCity,
-                  mailingState: state || b.mailingState,
-                  mailingZip: zip || b.mailingZip,
-                }
-              : b
-          ),
-        }));
-      }
-    );
+    const placeId = prediction.place_id || prediction.placeId;
+    await geocodePlaceAndFill(placeId, ({ street1, city, state, zip }) => {
+      setFormData((prev) => ({
+        ...prev,
+        borrowers: prev.borrowers.map((b) =>
+          b.id === borrowerId
+            ? {
+                ...b,
+                mailingStreet1: street1 || b.mailingStreet1,
+                mailingCity: city || b.mailingCity,
+                mailingState: state || b.mailingState,
+                mailingZip: zip || b.mailingZip,
+              }
+            : b
+        ),
+      }));
+    });
   };
 
   // Loan assignee address handlers
-  const handleAssigneeAddressInput = (index, value) => {
-    if (!autocompleteServiceRef.current || !value.trim()) {
+  const handleAssigneeAddressInput = async (index, value) => {
+    if (!value.trim()) {
       setAssigneePredictions((prev) => ({ ...prev, [index]: [] }));
       return;
     }
-    const request = {
-      input: value,
-      componentRestrictions: { country: ["us"] },
-      types: ["address"],
-    };
     if (window.autocompleteTimeout) clearTimeout(window.autocompleteTimeout);
     setIsLoadingAssigneePredictions((prev) => ({ ...prev, [index]: true }));
-    window.autocompleteTimeout = setTimeout(() => {
+    window.autocompleteTimeout = setTimeout(async () => {
       try {
-        autocompleteServiceRef.current.getPlacePredictions(
-          request,
-          (result, status) => {
-            setIsLoadingAssigneePredictions((prev) => ({
-              ...prev,
-              [index]: false,
-            }));
-            if (
-              status === window.google.maps.places.PlacesServiceStatus.OK &&
-              result
-            ) {
-              setAssigneePredictions((prev) => ({
-                ...prev,
-                [index]: result.slice(0, 5),
-              }));
-            } else {
-              setAssigneePredictions((prev) => ({ ...prev, [index]: [] }));
-            }
-          }
-        );
-      } catch {
+        const suggestions = await googlePlacesService.autocomplete(value);
+        const formattedPredictions = suggestions.slice(0, 5).map(s => ({
+          description: s.description,
+          place_id: s.placeId,
+        }));
+        setAssigneePredictions((prev) => ({
+          ...prev,
+          [index]: formattedPredictions,
+        }));
+      } catch (error) {
+        console.error("Error getting autocomplete suggestions:", error);
+        setAssigneePredictions((prev) => ({ ...prev, [index]: [] }));
+      } finally {
         setIsLoadingAssigneePredictions((prev) => ({
           ...prev,
           [index]: false,
         }));
-        setAssigneePredictions((prev) => ({ ...prev, [index]: [] }));
       }
     }, 250);
   };
 
-  const handleAssigneeAddressSelect = (index, prediction) => {
+  const handleAssigneeAddressSelect = async (index, prediction) => {
     setAssigneePredictions((prev) => ({ ...prev, [index]: [] }));
     const street = prediction.description?.split(",")[0] || "";
     setFormData((prev) => ({
@@ -385,88 +300,70 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
         i === index ? { ...a, street1: street } : a
       ),
     }));
-    geocodePlaceAndFill(
-      prediction.place_id,
-      ({ street1, city, state, zip }) => {
-        setFormData((prev) => ({
-          ...prev,
-          loanAssignees: prev.loanAssignees.map((a, i) =>
-            i === index
-              ? {
-                  ...a,
-                  street1: street1 || a.street1,
-                  city: city || a.city,
-                  addressState: state || a.addressState,
-                  zip: zip || a.zip,
-                }
-              : a
-          ),
-        }));
-      }
-    );
+    const placeId = prediction.place_id || prediction.placeId;
+    await geocodePlaceAndFill(placeId, ({ street1, city, state, zip }) => {
+      setFormData((prev) => ({
+        ...prev,
+        loanAssignees: prev.loanAssignees.map((a, i) =>
+          i === index
+            ? {
+                ...a,
+                street1: street1 || a.street1,
+                city: city || a.city,
+                addressState: state || a.addressState,
+                zip: zip || a.zip,
+              }
+            : a
+        ),
+      }));
+    });
   };
 
   // Notice address handlers
-  const handleNoticeAddressInput = (index, value) => {
-    if (!autocompleteServiceRef.current || !value.trim()) {
+  const handleNoticeAddressInput = async (index, value) => {
+    if (!value.trim()) {
       setNoticePredictions((prev) => ({ ...prev, [index]: [] }));
       return;
     }
-    const request = {
-      input: value,
-      componentRestrictions: { country: ["us"] },
-      types: ["address"],
-    };
     if (window.autocompleteTimeout) clearTimeout(window.autocompleteTimeout);
     setIsLoadingNoticePredictions((prev) => ({ ...prev, [index]: true }));
-    window.autocompleteTimeout = setTimeout(() => {
+    window.autocompleteTimeout = setTimeout(async () => {
       try {
-        autocompleteServiceRef.current.getPlacePredictions(
-          request,
-          (result, status) => {
-            setIsLoadingNoticePredictions((prev) => ({
-              ...prev,
-              [index]: false,
-            }));
-            if (
-              status === window.google.maps.places.PlacesServiceStatus.OK &&
-              result
-            ) {
-              setNoticePredictions((prev) => ({
-                ...prev,
-                [index]: result.slice(0, 5),
-              }));
-            } else {
-              setNoticePredictions((prev) => ({ ...prev, [index]: [] }));
-            }
-          }
-        );
-      } catch {
+        const suggestions = await googlePlacesService.autocomplete(value);
+        const formattedPredictions = suggestions.slice(0, 5).map(s => ({
+          description: s.description,
+          place_id: s.placeId,
+        }));
+        setNoticePredictions((prev) => ({
+          ...prev,
+          [index]: formattedPredictions,
+        }));
+      } catch (error) {
+        console.error("Error getting autocomplete suggestions:", error);
+        setNoticePredictions((prev) => ({ ...prev, [index]: [] }));
+      } finally {
         setIsLoadingNoticePredictions((prev) => ({
           ...prev,
           [index]: false,
         }));
-        setNoticePredictions((prev) => ({ ...prev, [index]: [] }));
       }
     }, 250);
   };
 
-  const handleNoticeAddressSelect = (prediction, index) => {
+  const handleNoticeAddressSelect = async (prediction, index) => {
     if (index === null || index === undefined) return;
     
     setNoticePredictions((prev) => ({ ...prev, [index]: [] }));
     const street = prediction.description?.split(",")[0] || "";
     
     // Update specific rightToCure entry
-    geocodePlaceAndFill(
-      prediction.place_id,
-      ({ street1, city, state, zip }) => {
-        updateRightToCure(index, "noticeAddressStreet1", street1 || street);
-        if (city) updateRightToCure(index, "noticeAddressCity", city);
-        if (state) updateRightToCure(index, "noticeAddressState", state);
-        if (zip) updateRightToCure(index, "noticeAddressZip", zip);
-      }
-    );
+    const placeId = prediction.place_id || prediction.placeId;
+    await geocodePlaceAndFill(placeId, ({ street1, city, state, zip }) => {
+      updateRightToCure(index, "noticeAddressStreet1", street1 || street);
+      if (city) updateRightToCure(index, "noticeAddressCity", city);
+      if (state) updateRightToCure(index, "noticeAddressState", state);
+      if (zip) updateRightToCure(index, "noticeAddressZip", zip);
+    });
   };
 
   // Transform petition.details to formData structure matching PetitionSteps
@@ -1993,7 +1890,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
     });
 
     // Trigger Google predictions for property address while editing
-    if (isEditing && isLoaded && name === "propertyStreet1") {
+    if (isEditing && name === "propertyStreet1") {
       handlePropertyAddressInput(processedValue || "");
     }
 
@@ -3563,7 +3460,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
                 <PropertyDetailsCard
                   SectionHeader={(props) => <SectionHeader {...props} sectionId="property" />}
                   isEditing={isSectionEditing("property")}
-                  isLoaded={isLoaded}
+                  isLoaded={true}
                   propertyAddressInputRef={propertyAddressInputRef}
                   predictions={predictions}
                   fieldErrors={fieldErrors}
@@ -3602,7 +3499,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
                   handleBorrowerAddressInput={handleBorrowerAddressInput}
                   handleBorrowerAddressSelect={handleBorrowerAddressSelect}
                   borrowerPredictions={borrowerPredictions}
-                  isLoaded={isLoaded}
+                  isLoaded={true}
                   addBorrower={addBorrower}
                 />
               </div>
@@ -3628,7 +3525,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
                   setFormData={setFormData}
                   handleInputChange={handleInputChange}
                   handleNoticeAddressInput={handleNoticeAddressInput}
-                  isLoaded={isLoaded}
+                  isLoaded={true}
                   noticePredictions={noticePredictions}
                   handleNoticeAddressSelect={handleNoticeAddressSelect}
                   addRightToCure={addRightToCure}
@@ -3664,7 +3561,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
                   getAssigneeTypes={getAssigneeTypes}
                   getAssigneeRoles={getAssigneeRoles}
                   commonDataLoading={commonDataLoading}
-                  isLoaded={isLoaded}
+                  isLoaded={true}
                   assigneePredictions={assigneePredictions}
                   handleAssigneeAddressInput={handleAssigneeAddressInput}
                   handleAssigneeAddressSelect={handleAssigneeAddressSelect}

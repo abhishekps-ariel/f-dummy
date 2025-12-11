@@ -312,12 +312,14 @@ const SingleRightToCureForm = ({
 
                             <div>
                               <div className="fw-medium">
-                                {prediction.structured_formatting.main_text}
+                                {prediction.description?.split(",")[0] || prediction.description}
                               </div>
 
-                              <div className="text-muted small">
-                                {prediction.structured_formatting.secondary_text}
-                              </div>
+                              {prediction.description?.includes(",") && (
+                                <div className="text-muted small">
+                                  {prediction.description.split(",").slice(1).join(",").trim()}
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>

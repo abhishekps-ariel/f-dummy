@@ -93,5 +93,8 @@ export const FORM35B_ENDPOINTS = {
 
 export const GOOGLE_ENDPOINTS = {
   TRANSLATE: "/api/Google/translate",
+  AUTOCOMPLETE: "/api/Google/autocomplete",
+  PLACE_DETAILS: "/api/Google/place-details",
+  GEOCODE: "/api/Google/geocode",
 };
 
