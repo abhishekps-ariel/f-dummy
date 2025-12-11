@@ -95,13 +95,32 @@
         width: 50px !important;
     }
     
-    /* MFA option cards responsive */
+    /* MFA option cards responsive - MOBILE: Side by side */
+    .mfa-card-area .col-6 {
+        flex: 0 0 50% !important;
+        max-width: 50% !important;
+        padding: 0 8px !important;
+    }
+    
     .mfa-option-card {
-        padding: 1.5rem !important;
+        padding: 1rem 0.5rem !important;
+        min-height: auto !important;
+        height: auto !important;
+    }
+    
+    /* Hide description text on mobile */
+    .mfa-description-text {
+        display: none !important;
     }
     
     .mfa-option-card i {
-        font-size: 2.5rem !important;
+        font-size: 2rem !important;
+        margin-bottom: 0.5rem !important;
+    }
+    
+    .mfa-option-card h5 {
+        font-size: 0.9rem !important;
+        margin-bottom: 0 !important;
     }
     
     /* Password guidelines responsive */
@@ -123,17 +142,6 @@
     
     /* ===== MOBILE-SPECIFIC MFA CARD HEIGHT FIX ===== */
     
-    /* Target the exact Bootstrap classes causing issues - MOBILE ONLY */
-    .col-md-8.col-lg-6 {
-        height: auto !important;
-        min-height: auto !important;
-        max-height: none !important;
-        flex: 0 0 100% !important;
-        max-width: 100% !important;
-        padding: 0 15px !important;
-        margin: 0 !important;
-    }
-    
     /* Fix MFA card area spacing issues - MOBILE ONLY */
     .mfa-card-area {
         margin: 0 !important;
@@ -145,74 +153,69 @@
         margin: 0 !important;
         height: auto !important;
         min-height: auto !important;
-        --bs-gutter-y: 0 !important;
-        --bs-gutter-x: 0 !important;
+        --bs-gutter-y: 0.5rem !important;
+        --bs-gutter-x: 0.5rem !important;
     }
     
-    .mfa-card-area .col-md-8,
-    .mfa-card-area .col-lg-6 {
-        flex: 0 0 100% !important;
-        max-width: 100% !important;
-        padding: 0 15px !important;
+    /* MOBILE: Cards side by side with proper spacing */
+    .mfa-card-area .col-6 {
+        flex: 0 0 50% !important;
+        max-width: 50% !important;
+        padding: 0 8px !important;
         height: auto !important;
         min-height: auto !important;
         margin: 0 !important;
     }
     
-    /* MOBILE-SPECIFIC MFA card height control */
+    /* MOBILE-SPECIFIC MFA card styling - side by side layout */
     .mfa-option-card {
         margin-bottom: 0 !important;
-        padding: 0.75rem !important;
+        padding: 1rem 0.5rem !important;
         min-height: auto !important;
         height: auto !important;
-        max-height: 120px !important;
-        overflow: hidden !important;
+        max-height: none !important;
+        overflow: visible !important;
         display: flex !important;
         flex-direction: column !important;
         align-items: center !important;
         justify-content: center !important;
     }
     
+    /* Hide description text on mobile */
+    .mfa-description-text {
+        display: none !important;
+    }
+    
     /* Override Bootstrap margin classes in MFA card - MOBILE ONLY */
-    .mfa-option-card .mb-3,
-    .mfa-option-card .mb-2,
-    .mfa-option-card .mb-4,
-    .mfa-option-card .mb-5 {
-        margin-bottom: 0.25rem !important;
+    .mfa-option-card .mb-3 {
+        margin-bottom: 0.5rem !important;
+    }
+    
+    .mfa-option-card .mb-2 {
+        margin-bottom: 0 !important;
     }
     
     .mfa-option-card h5 {
-        font-size: 1rem !important;
-        margin-bottom: 0.125rem !important;
-    }
-    
-    .mfa-option-card p {
-        font-size: 0.8rem !important;
-        line-height: 1.2 !important;
+        font-size: 0.9rem !important;
         margin-bottom: 0 !important;
     }
     
     /* Override inline font-size for icon - MOBILE ONLY */
     .mfa-option-card i[style*="fontSize"],
     .mfa-option-card i {
-        font-size: 1.75rem !important;
-        margin-bottom: 0.25rem !important;
+        font-size: 2rem !important;
+        margin-bottom: 0.5rem !important;
     }
     
     /* Override inline padding - MOBILE ONLY */
     .mfa-option-card[style*="padding"],
     .mfa-option-card.p-4 {
-        padding: 0.75rem !important;
-    }
-    
-    /* Force compact spacing - MOBILE ONLY */
-    .mfa-option-card * {
-        margin-bottom: 0.125rem !important;
+        padding: 1rem 0.5rem !important;
     }
     
     /* Reduce spacing between card and button - MOBILE ONLY */
     .mfa-card-area {
-        margin-bottom: 0.25rem !important;
+        margin-bottom: 1rem !important;
     }
     
     /* Two-Factor Authentication OTP Input Boxes - MOBILE */
@@ -261,6 +264,11 @@
 
 /* Desktop styles - ensure MFA card looks good on larger screens */
 @media (min-width: 768px) {
+    /* Show description text on desktop */
+    .mfa-description-text {
+        display: block !important;
+    }
+    
     /* Reset mobile constraints for desktop */
     .mfa-option-card {
         max-height: none !important;
@@ -297,6 +305,11 @@
         flex: 0 0 auto !important;
         max-width: 66.666667% !important;
         padding: 0 15px !important;
+    }
+    
+    .mfa-card-area .col-6 {
+        flex: 0 0 auto !important;
+        max-width: none !important;
     }
     
     .mfa-card-area .row {

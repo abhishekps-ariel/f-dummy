@@ -259,7 +259,7 @@ function Login() {
 
                       <div className="mfa-card-area row g-3 justify-content-center">
                         {mfaTypes.map((mfaType) => (
-                          <div key={mfaType.name} className="col-md-8 col-lg-6">
+                          <div key={mfaType.name} className="col-6 col-md-8 col-lg-6">
                             <div
                               className={`mfa-option-card p-4 text-center ${
                                 selectedMfaMethod === mfaType.name ? "selected" : ""
@@ -281,7 +281,7 @@ function Login() {
                                 )}
                               </div>
                               <h5 className="fw-bold mb-2">{mfaType.name}</h5>
-                              <p className="font-sm text-muted mb-0">
+                              <p className="font-sm text-muted mb-0 mfa-description-text">
                                 {mfaType.name === "SMS"
                                   ? t("auth.receiveCodeSMS")
                                   : t("auth.receiveCodeEmail")}

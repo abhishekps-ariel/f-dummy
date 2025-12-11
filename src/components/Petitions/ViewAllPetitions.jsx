@@ -771,7 +771,7 @@ const ViewAllPetitions = ({ onBack }) => {
                     <thead className="table-light">
                       <tr>
                         <th
-                          style={{ width: "20%", minWidth: "160px" }}
+                          style={{ width: "180px", minWidth: "180px", maxWidth: "180px" }}
                           className="sortable-header"
                           onClick={() => handleSort("id")}
                         >
@@ -784,11 +784,11 @@ const ViewAllPetitions = ({ onBack }) => {
                             ></i>
                           )}
                         </th>
-                        <th style={{ width: "25%", minWidth: "200px" }}>
+                        <th style={{ width: "250px", minWidth: "250px", maxWidth: "250px" }}>
                           {t("viewAllPetitions.propertyAddress")}
                         </th>
                         <th
-                          style={{ width: "16%", minWidth: "110px" }}
+                          style={{ width: "150px", minWidth: "150px", maxWidth: "150px" }}
                           className="sortable-header"
                           onClick={() => handleSort("borrower")}
                         >
@@ -802,7 +802,7 @@ const ViewAllPetitions = ({ onBack }) => {
                           )}
                         </th>
                         <th
-                          style={{ width: "15%", minWidth: "180px" }}
+                          style={{ width: "190px", minWidth: "190px", maxWidth: "190px" }}
                           className="sortable-header"
                           onClick={() => handleSort("status")}
                         >
@@ -816,7 +816,7 @@ const ViewAllPetitions = ({ onBack }) => {
                           )}
                         </th>
                         <th
-                          style={{ width: "13%", minWidth: "110px" }}
+                          style={{ width: "120px", minWidth: "120px", maxWidth: "120px" }}
                           className="sortable-header"
                           onClick={() => handleSort("filingDate")}
                         >
@@ -830,7 +830,7 @@ const ViewAllPetitions = ({ onBack }) => {
                           )}
                         </th>
                         <th
-                          style={{ width: "13%", minWidth: "120px" }}
+                          style={{ width: "150px", minWidth: "150px", maxWidth: "150px" }}
                           className="sortable-header"
                           onClick={() => handleSort("lastUpdated")}
                         >
@@ -843,7 +843,7 @@ const ViewAllPetitions = ({ onBack }) => {
                             ></i>
                           )}
                         </th>
-                        <th style={{ width: "40px" }}></th>
+                        <th style={{ width: "50px", minWidth: "50px", maxWidth: "50px" }}></th>
                       </tr>
                     </thead>
                     <tbody>
