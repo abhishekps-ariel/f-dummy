@@ -133,7 +133,7 @@ function Login() {
         } else if (errorMessage.includes("invalid email or password")) {
           toast.error(t("auth.incorrectPassword"));
         } else {
-          toast.error(error.response.data.message);
+          toast.error(error.response.data.message || t("errors.genericError"));
         }
       } else {
         toast.error(t("auth.loginFailedTryAgain"));
@@ -193,7 +193,7 @@ function Login() {
         } else if (errorMessage.includes("invalid email or password")) {
           toast.error(t("auth.incorrectPassword"));
         } else {
-          toast.error(error.response.data.message);
+          toast.error(error.response.data.message || t("errors.genericError"));
         }
       } else {
         toast.error(t("auth.failedSendOTPTryAgain"));

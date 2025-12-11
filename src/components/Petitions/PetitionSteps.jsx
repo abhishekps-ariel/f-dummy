@@ -407,7 +407,7 @@ const PetitionSteps = ({
           setFilingEntityTypes(typesResponse.data);
         }
       } catch (error) {
-        toast.error("Failed to load user profile");
+        toast.error(t("errors.failedLoadUserProfile"));
       } finally {
         setProfileLoading(false);
       }
@@ -741,7 +741,7 @@ const PetitionSteps = ({
           setOrganizationData(org);
         }
       } catch (error) {
-        toast.error("Failed to load organization details");
+        toast.error(t("errors.failedLoadOrganizationDetails"));
       } finally {
         setOrganizationLoading(false);
       }
@@ -2176,10 +2176,10 @@ const PetitionSteps = ({
               setIsAddressVerified(false);
 
               setAddressValidationError(
-                `This address is in ${actualState}, but this system only accepts Massachusetts addresses. Please select a Massachusetts address.`
+                t("errors.addressNotInMassachusetts", { state: actualState })
               );
 
-              return { isValid: false, error: "Address is not in Massachusetts" };
+              return { isValid: false, error: t("errors.addressNotInMassachusettsShort") };
             }
 
             // More strict validation - check if all components match
@@ -2297,10 +2297,10 @@ const PetitionSteps = ({
             setIsAddressVerified(false);
 
             setAddressValidationError(
-              "Invalid address. Please select from suggestions or enter a valid address."
+              t("errors.invalidAddressSelectFromSuggestions")
             );
 
-            return { isValid: false, error: "Invalid address" };
+            return { isValid: false, error: t("errors.invalidAddress") };
           }
         } catch (error) {
           setIsValidatingAddress(false);
@@ -2410,7 +2410,7 @@ const PetitionSteps = ({
               setAddressValidationError(
                 `This address is in ${actualState}, but this system only accepts Massachusetts addresses. Please select a Massachusetts address.`
               );
-              return { isValid: false, error: "Address is not in Massachusetts" };
+              return { isValid: false, error: t("errors.addressNotInMassachusettsShort") };
             }
 
             // More strict validation - check if all components match
@@ -3944,7 +3944,7 @@ const PetitionSteps = ({
       if (!isOrgAdmin) {
         const finalOrganizationId = selectedOrganizationId || formData.organizationId || organizationId;
         if (!finalOrganizationId) {
-          toast.error("Please select an organization before saving.");
+          toast.error(t("errors.pleaseSelectOrganizationBeforeSaving"));
         setIsSaving(false);
         return;
         }
@@ -4077,7 +4077,7 @@ const PetitionSteps = ({
           organizationId: "Please select an organization to continue",
         }));
         markStepWithError(1);
-        toast.error("Please select an organization to continue");
+        toast.error(t("errors.pleaseSelectOrganizationToContinue"));
         return;
       }
     }
@@ -5059,7 +5059,7 @@ const PetitionSteps = ({
     }
     
     if (!user) {
-      toast.error("User information is required to take over a petition.");
+      toast.error(t("errors.userInfoRequiredForTakeover"));
       return;
     }
       // Pre-fill signature section with current user's details (person taking over)

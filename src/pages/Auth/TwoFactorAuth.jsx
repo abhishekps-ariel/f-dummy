@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { verifyOtp, sendOtp } from "../../services/authService";
 import { storeAuthData } from "../../utils/storage";
@@ -9,6 +10,7 @@ import loginImg from "../../assets/logo-sample.png";
 import "../../styles/custom.css";
 
 function TwoFactorAuth() {
+  const { t } = useTranslation();
   const [codes, setCodes] = useState(["", "", "", "", "", ""]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
@@ -28,14 +30,14 @@ function TwoFactorAuth() {
   useEffect(() => {
     // Redirect to login if no email in location state
     if (!email) {
-      toast.error("Access denied. Please login first.");
+      toast.error(t("errors.accessDeniedPleaseLogin"));
       navigate(ROUTES.LOGIN, { replace: true });
       return;
     }
 
     // Additional check: ensure we have required data for 2FA
     if (!location.state?.password) {
-      toast.error("Session expired. Please login again.");
+      toast.error(t("errors.sessionExpiredPleaseLogin"));
       navigate(ROUTES.LOGIN, { replace: true });
       return;
     }
@@ -102,7 +104,7 @@ function TwoFactorAuth() {
 
     const fullCode = codes.join("");
     if (fullCode.length !== 6) {
-      toast.error("Please enter the complete 6-digit code");
+      toast.error(t("errors.pleaseEnterCompleteCode"));
       return;
     }
 
@@ -124,12 +126,12 @@ function TwoFactorAuth() {
         // Small delay to ensure state updates are propagated
         await new Promise(resolve => setTimeout(resolve, 100));
         
-        toast.success("Login successful!");
+        toast.success(t("errors.loginSuccessful"));
         
         navigate(ROUTES.DASHBOARD);
       } else {
         toast.error(
-          response.msg || "Invalid authentication code. Please try again."
+          response.msg || t("errors.invalidAuthCode")
         );
       }
     } catch (err) {
@@ -149,7 +151,7 @@ function TwoFactorAuth() {
       const password = location.state?.password;
 
       if (!password || !email) {
-        toast.error("Session expired. Please login again.");
+        toast.error(t("errors.sessionExpiredPleaseLogin"));
         navigate(ROUTES.LOGIN, { replace: true });
         return;
       }
@@ -157,15 +159,15 @@ function TwoFactorAuth() {
       const response = await sendOtp(email, password, mfaType);
 
       if (response.isSuccess) {
-        toast.success(response.msg || "New code sent successfully!");
+        toast.success(response.msg || t("errors.newCodeSentSuccessfully"));
         setResendTimer(60); // Restart 60-second timer
       } else {
         toast.error(
-          response.msg || "Failed to send new code. Please try again."
+          response.msg || t("errors.failedSendNewCode")
         );
       }
     } catch {
-      toast.error("Failed to send new code. Please try again.");
+      toast.error(t("errors.failedSendNewCode"));
     } finally {
       setIsResending(false);
     }

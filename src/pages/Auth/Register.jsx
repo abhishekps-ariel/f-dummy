@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { register } from "../../services/authService";
 import {
@@ -18,6 +19,7 @@ import { fetchInviteData } from "../../helpers/auth/inviteFlow";
 import { searchOrganizationsByQuery } from "../../helpers/auth/organizationSearch";
 
 function Register() {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
@@ -156,7 +158,7 @@ function Register() {
 
     // Validate role selection (only for non-invite flows)
     if (!isInviteFlow && !selectedRole) {
-      toast.error("Please select a registration type (Filer or Organisation Admin)");
+      toast.error(t("errors.pleaseSelectRegistrationType"));
       return false;
     }
 
@@ -349,14 +351,14 @@ function Register() {
           navigate(ROUTES.VERIFICATION_EMAIL_SENT);
         }
       } else {
-        toast.error(response.msg || "Registration failed!");
+        toast.error(response.msg || t("errors.registrationFailed"));
       }
     } catch (err) {
       // Handle specific error messages from API response
       if (err?.response?.data?.message) {
         toast.error(err.response.data.message);
       } else {
-        toast.error(err?.message || "Registration failed!");
+        toast.error(err?.message || t("errors.registrationFailed"));
       }
     } finally {
       setIsSubmitting(false);

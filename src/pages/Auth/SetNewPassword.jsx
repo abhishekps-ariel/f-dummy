@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useSearchParams, useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { checkResetToken, resetPassword } from "../../services/authService";
 import { VALIDATION } from "../../constants/appConstants";
@@ -8,6 +9,7 @@ import loginImg from "../../assets/logo-sample.png";
 import "../../styles/custom.css";
 
 function SetNewPassword() {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const { token: pathToken } = useParams();
 
@@ -51,11 +53,11 @@ function SetNewPassword() {
           setUserId(userIdParam);
           setIsTokenValid(true);
         } else {
-          toast.error(response.msg || "Invalid or expired reset link");
+          toast.error(response.msg || t("errors.invalidExpiredResetLink"));
           setIsTokenValid(false);
         }
       } catch (err) {
-        toast.error(err?.message || "Invalid or expired reset link");
+        toast.error(err?.message || t("errors.invalidExpiredResetLink"));
         setIsTokenValid(false);
       } finally {
         setIsCheckingToken(false);
@@ -134,7 +136,7 @@ function SetNewPassword() {
     e.preventDefault();
 
     if (!validateForm()) {
-      toast.error("Please fix the errors below");
+      toast.error(t("errors.pleaseFixErrorsBelow"));
       return;
     }
 
@@ -146,15 +148,15 @@ function SetNewPassword() {
       const response = await resetPassword(userId, formData.newPassword, token);
 
       if (response.isSuccess) {
-        toast.success(response.msg || "Password reset successfully!");
+        toast.success(response.msg || t("errors.passwordResetSuccessfully"));
         setIsPasswordChanged(true);
       } else {
         toast.error(
-          response.msg || "Failed to reset password. Please try again."
+          response.msg || t("errors.failedResetPassword")
         );
       }
     } catch (err) {
-      toast.error(err?.message || "Failed to reset password. Please try again.");
+      toast.error(err?.message || t("errors.failedResetPassword"));
     } finally {
       setIsSubmitting(false);
     }

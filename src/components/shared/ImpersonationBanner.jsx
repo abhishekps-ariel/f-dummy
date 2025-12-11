@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
 import { performExitImpersonation } from '../../services/authService';
 import { getImpersonationState, setImpersonationState } from '../../utils/storage';
@@ -6,6 +7,7 @@ import { ROUTES } from '../../constants/routerConstants';
 import './ImpersonationBanner.css';
 
 function ImpersonationBanner() {
+  const { t } = useTranslation();
   const [{ isImpersonating, impersonatedUserName }, setState] = useState(getImpersonationState());
 
   useEffect(() => {
@@ -18,13 +20,13 @@ function ImpersonationBanner() {
     try {
       const result = await performExitImpersonation();
       if (result.isSuccess) {
-        toast.success('Exited impersonation');
+        toast.success(t('errors.exitedImpersonation'));
         window.location.replace(ROUTES.LOGIN);
       } else {
-        toast.error(result.msg || 'Failed to exit impersonation');
+        toast.error(result.msg || t('errors.failedExitImpersonation'));
       }
     } catch (err) {
-      toast.error(err?.message || 'Failed to exit impersonation');
+      toast.error(err?.message || t('errors.failedExitImpersonation'));
     }
   }, []);
 

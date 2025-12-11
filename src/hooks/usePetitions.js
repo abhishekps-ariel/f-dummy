@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import petitionApiService from '../services/petitionApiService';
 import { getOrganizationById } from '../services/organizationService';
@@ -19,6 +20,7 @@ const isOrgAdminUser = (userData) => {
 };
 
 export const usePetitions = () => {
+  const { t } = useTranslation();
   const {
     organization,
     user,
@@ -77,8 +79,8 @@ export const usePetitions = () => {
         const formattedPetitions = petitionApiService.transformApiResponseToDisplayFormat(response);
         setPetitions(formattedPetitions);
       } else {
-        setError(response.message || 'Failed to fetch petitions');
-        toast.error(response.message || 'Failed to fetch petitions');
+        setError(response.message || t('errors.failedFetchPetitions'));
+        toast.error(response.message || t('errors.failedFetchPetitions'));
       }
     } catch (err) {
       const errorMessage = err?.response?.data?.message || err?.message || 'Failed to fetch petitions';
@@ -151,13 +153,13 @@ export const usePetitions = () => {
         // Check if this is a duplicate with take-over option
         if (response.isDuplicate && response.duplicateInfo?.canTakeOver) {
           // Return the duplicate info so the component can show the modal
-          const duplicateError = new Error(response.message || 'A petition with the same property already exists.');
+          const duplicateError = new Error(response.message || t('errors.petitionSamePropertyAlreadyExists'));
           duplicateError.isDuplicate = true;
           duplicateError.duplicateInfo = response.duplicateInfo;
           throw duplicateError;
         }
         
-        const errorMessage = response.message || 'Failed to submit petition';
+        const errorMessage = response.message || t('errors.failedSubmitPetition');
         setError(errorMessage);
         toast.error(errorMessage);
         errorAlreadyShown = true; // Mark that we've already shown the toast
@@ -178,7 +180,7 @@ export const usePetitions = () => {
         throw duplicateError;
       }
       
-      const errorMessage = err.response?.data?.message || err.message || 'Failed to submit petition';
+      const errorMessage = err.response?.data?.message || err.message || t('errors.failedSubmitPetition');
       setError(errorMessage);
       
       // Only show toast if we haven't already shown it in the else block above

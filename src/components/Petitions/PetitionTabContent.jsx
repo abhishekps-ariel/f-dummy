@@ -806,7 +806,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
   // Handle saving individual sections using their specific APIs
   const handleSectionSave = async (sectionId) => {
     if (!petition?.id) {
-      throw new Error("Petition ID is required");
+      throw new Error(t("errors.petitionIdRequired"));
     }
 
     switch (sectionId) {
@@ -815,7 +815,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
         if (propertyValidation.hasErrors) {
           setFieldErrors(prev => ({ ...prev, ...propertyValidation.errors }));
           const firstError = Object.values(propertyValidation.errors)[0];
-          throw new Error(firstError || "Please correct property details errors");
+          throw new Error(firstError || t("errors.pleaseCorrectPropertyDetailsErrors"));
         }
 
         // Get property ID from petition details
@@ -839,7 +839,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
           
           // Check if response indicates a duplicate petition (API may return success: false with isDuplicate)
           if (response && !response.success && response.isDuplicate) {
-            const errorMessage = response.message || "A petition with the same property address already exists.";
+            const errorMessage = response.message || t("errors.petitionSamePropertyExists");
             // Set field error for property address
             setFieldErrors(prev => ({ 
               ...prev, 
@@ -856,7 +856,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
           
           // Check if response is successful
           if (response && !response.success) {
-            const errorMessage = response.message || "Failed to update property details.";
+            const errorMessage = response.message || t("errors.failedUpdatePropertyDetails");
             setFieldErrors(prev => ({ 
               ...prev, 
               propertyStreet1: errorMessage 
@@ -907,7 +907,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
               duplicateError.toastShown = true;
               throw duplicateError;
             } else {
-              const errorMessage = errorData.message || err.message || "Failed to update property details.";
+              const errorMessage = errorData.message || err.message || t("errors.failedUpdatePropertyDetails");
               setFieldErrors(prev => ({ 
                 ...prev, 
                 propertyStreet1: errorMessage 
@@ -921,7 +921,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
             throw err;
           } else {
             // Unknown error
-            const errorMessage = "Failed to update property details. Please try again.";
+            const errorMessage = t("errors.failedUpdatePropertyDetailsTryAgain");
             setFieldErrors(prev => ({ 
               ...prev, 
               propertyStreet1: errorMessage 
@@ -938,7 +938,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
         if (loanValidation.hasErrors) {
           setFieldErrors(prev => ({ ...prev, ...loanValidation.errors }));
           const firstError = Object.values(loanValidation.errors)[0];
-          throw new Error(firstError || "Please correct loan details errors");
+          throw new Error(firstError || t("errors.pleaseCorrectLoanDetailsErrors"));
         }
 
         // Get loan ID from petition details
@@ -1007,7 +1007,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
         if (filingEntityValidation.hasErrors) {
           setFieldErrors(prev => ({ ...prev, ...filingEntityValidation.errors }));
           const firstError = Object.values(filingEntityValidation.errors)[0];
-          throw new Error(firstError || "Please correct filing entity errors");
+          throw new Error(firstError || t("errors.pleaseCorrectFilingEntityErrors"));
         }
 
         // Get filing entity ID from petition details
@@ -1066,14 +1066,14 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
         if (borrowerValidation.hasErrors) {
           setFieldErrors(prev => ({ ...prev, ...borrowerValidation.errors }));
           const firstError = Object.values(borrowerValidation.errors)[0];
-          throw new Error(firstError || "Please correct borrower details errors");
+          throw new Error(firstError || t("errors.pleaseCorrectBorrowerDetailsErrors"));
         }
 
         // Additional check for primary borrower (helper doesn't check this)
         const primaryBorrower = formData.borrowers?.find(b => b.borrowerIsPrimary === true);
         if (!primaryBorrower) {
-          setFieldErrors(prev => ({ ...prev, borrowers: "Primary borrower is required" }));
-          throw new Error("Primary borrower is required");
+          setFieldErrors(prev => ({ ...prev, borrowers: t("errors.primaryBorrowerRequired") }));
+          throw new Error(t("errors.primaryBorrowerRequired"));
         }
 
         // Get borrower IDs from petition details (map by matching order or id)
@@ -1148,7 +1148,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
         if (form35BValidation.hasErrors) {
           setFieldErrors(prev => ({ ...prev, ...form35BValidation.errors }));
           const firstError = Object.values(form35BValidation.errors)[0];
-          throw new Error(firstError || "Please correct Form 35B compliance errors");
+          throw new Error(firstError || t("errors.pleaseCorrectForm35BErrors"));
         }
 
         // Get affidavit ID from petition details
@@ -1198,7 +1198,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
         if (rightToCureValidation.hasErrors) {
           setFieldErrors(prev => ({ ...prev, ...rightToCureValidation.errors }));
           const firstError = Object.values(rightToCureValidation.errors)[0];
-          throw new Error(firstError || "Please correct right-to-cure details errors");
+          throw new Error(firstError || t("errors.pleaseCorrectRightToCureErrors"));
         }
 
         // Get existing right to cures from petition details
@@ -1289,7 +1289,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
         if (loanAssigneesValidation.hasErrors) {
           setFieldErrors(prev => ({ ...prev, ...loanAssigneesValidation.errors }));
           const firstError = Object.values(loanAssigneesValidation.errors)[0];
-          throw new Error(firstError || "Please correct loan assignees errors");
+          throw new Error(firstError || t("errors.pleaseCorrectLoanAssigneesErrors"));
         }
 
         // Filter out completely empty assignees before sending
@@ -1369,36 +1369,36 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
 
       case "signatures": {
         if (!formData.signatures || !Array.isArray(formData.signatures) || formData.signatures.length === 0) {
-          setFieldErrors(prev => ({ ...prev, signatures: "At least one signature is required" }));
-          throw new Error("At least one signature is required");
+          setFieldErrors(prev => ({ ...prev, signatures: t("errors.atLeastOneSignatureRequired") }));
+          throw new Error(t("errors.atLeastOneSignatureRequired"));
         }
 
         // Validate that at least one signature has e-consent checked
         const hasEconsent = formData.signatures.some((sig) => sig.esignConsent === true);
         if (!hasEconsent) {
           setFieldErrors(prev => ({ ...prev, esignConsent: "E-sign consent is required for at least one signature" }));
-          throw new Error("E-sign consent is required for at least one signature");
+          throw new Error(t("errors.esignConsentRequired"));
         }
 
         // Validate each signature entry
         formData.signatures.forEach((signature, index) => {
           if (!signature.signerFullName || signature.signerFullName.trim() === "") {
-            setFieldErrors(prev => ({ ...prev, [`signatures.${index}.signerFullName`]: "Required" }));
-            throw new Error(`Signature ${index + 1}: Signer full name is required`);
+            setFieldErrors(prev => ({ ...prev, [`signatures.${index}.signerFullName`]: t("errors.required") }));
+            throw new Error(t("errors.signerFullNameRequired", { index: index + 1 }));
           }
           if (!signature.signerTitle || signature.signerTitle.trim() === "") {
-            setFieldErrors(prev => ({ ...prev, [`signatures.${index}.signerTitle`]: "Required" }));
-            throw new Error(`Signature ${index + 1}: Signer title is required`);
+            setFieldErrors(prev => ({ ...prev, [`signatures.${index}.signerTitle`]: t("errors.required") }));
+            throw new Error(t("errors.signerTitleRequired", { index: index + 1 }));
           }
           if (!signature.signerEmail || signature.signerEmail.trim() === "") {
-            setFieldErrors(prev => ({ ...prev, [`signatures.${index}.signerEmail`]: "Required" }));
-            throw new Error(`Signature ${index + 1}: Signer email is required`);
+            setFieldErrors(prev => ({ ...prev, [`signatures.${index}.signerEmail`]: t("errors.required") }));
+            throw new Error(t("errors.signerEmailRequired", { index: index + 1 }));
           } else {
             // Validate email format
             const emailRegex = /.+@.+\..+/;
             if (!emailRegex.test(signature.signerEmail.trim())) {
-              setFieldErrors(prev => ({ ...prev, [`signatures.${index}.signerEmail`]: "Invalid email format" }));
-              throw new Error(`Signature ${index + 1}: Invalid email format`);
+              setFieldErrors(prev => ({ ...prev, [`signatures.${index}.signerEmail`]: t("errors.invalidEmailFormat") }));
+              throw new Error(t("errors.signerEmailRequired", { index: index + 1 }) + ": " + t("errors.invalidEmailFormat"));
             }
           }
         });
@@ -1476,27 +1476,27 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
 
       case "judgment": {
         if (!formData.judgment) {
-          setFieldErrors(prev => ({ ...prev, judgment: "Judgment data is required" }));
-          throw new Error("Judgment data is required");
+          setFieldErrors(prev => ({ ...prev, judgment: t("errors.judgmentDataRequired") }));
+          throw new Error(t("errors.judgmentDataRequired"));
         }
 
         const judgment = formData.judgment;
         if (!judgment.judgmentDate || (typeof judgment.judgmentDate === 'string' && !judgment.judgmentDate.trim())) {
-          setFieldErrors(prev => ({ ...prev, judgmentDate: "Judgment date is required" }));
-          throw new Error("Judgment date is required");
+          setFieldErrors(prev => ({ ...prev, judgmentDate: t("errors.judgmentDateRequired") }));
+          throw new Error(t("errors.judgmentDateRequired"));
         }
         
         if (judgment.judgmentType === "" || judgment.judgmentType === null || judgment.judgmentType === undefined) {
-          setFieldErrors(prev => ({ ...prev, judgmentType: "Judgment type is required" }));
-          throw new Error("Judgment type is required");
+          setFieldErrors(prev => ({ ...prev, judgmentType: t("errors.judgmentTypeRequired") }));
+          throw new Error(t("errors.judgmentTypeRequired"));
         }
         if (!judgment.courtInformation || (typeof judgment.courtInformation === 'string' && !judgment.courtInformation.trim())) {
-          setFieldErrors(prev => ({ ...prev, courtInformation: "Court information is required" }));
-          throw new Error("Court information is required");
+          setFieldErrors(prev => ({ ...prev, courtInformation: t("errors.courtInformationRequired") }));
+          throw new Error(t("errors.courtInformationRequired"));
         }
         if (!judgment.docketNumbers || (typeof judgment.docketNumbers === 'string' && !judgment.docketNumbers.trim())) {
-          setFieldErrors(prev => ({ ...prev, docketNumbers: "Docket number is required" }));
-          throw new Error("Docket number is required");
+          setFieldErrors(prev => ({ ...prev, docketNumbers: t("errors.docketNumberRequired") }));
+          throw new Error(t("errors.docketNumberRequired"));
         }
 
         // Get judgment ID from petition details
@@ -1550,18 +1550,18 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
 
       case "foreclosure": {
         if (!formData.foreclosureSale) {
-          setFieldErrors(prev => ({ ...prev, foreclosureSale: "Foreclosure sale data is required" }));
-          throw new Error("Foreclosure sale data is required");
+          setFieldErrors(prev => ({ ...prev, foreclosureSale: t("errors.foreclosureSaleDataRequired") }));
+          throw new Error(t("errors.foreclosureSaleDataRequired"));
         }
 
         const foreclosureSale = formData.foreclosureSale;
         if (!foreclosureSale.saleDate || !foreclosureSale.saleDate.trim()) {
-          setFieldErrors(prev => ({ ...prev, saleDate: "Sale date is required" }));
-          throw new Error("Sale date is required");
+          setFieldErrors(prev => ({ ...prev, saleDate: t("errors.saleDateRequired") }));
+          throw new Error(t("errors.saleDateRequired"));
         }
         if (!foreclosureSale.soldToId || !foreclosureSale.soldToId.trim()) {
-          setFieldErrors(prev => ({ ...prev, soldToId: "Sold to is required" }));
-          throw new Error("Sold to is required");
+          setFieldErrors(prev => ({ ...prev, soldToId: t("errors.soldToRequired") }));
+          throw new Error(t("errors.soldToRequired"));
         }
 
         // Check if soldToId is Mortgagee/Investor and validate required fields
@@ -1576,34 +1576,34 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
 
         if (isMortgageeInvestor) {
           if (!foreclosureSale.vestingEntityName || !foreclosureSale.vestingEntityName.trim()) {
-            setFieldErrors(prev => ({ ...prev, vestingEntityName: "Vesting entity name is required" }));
-            throw new Error("Vesting entity name is required");
+            setFieldErrors(prev => ({ ...prev, vestingEntityName: t("errors.vestingEntityNameRequired") }));
+            throw new Error(t("errors.vestingEntityNameRequired"));
           }
           if (!foreclosureSale.reoContactFirstName || !foreclosureSale.reoContactFirstName.trim()) {
-            setFieldErrors(prev => ({ ...prev, reoContactFirstName: "REO contact first name is required" }));
-            throw new Error("REO contact first name is required");
+            setFieldErrors(prev => ({ ...prev, reoContactFirstName: t("errors.reoContactFirstNameRequired") }));
+            throw new Error(t("errors.reoContactFirstNameRequired"));
           }
           if (!foreclosureSale.reoContactLastName || !foreclosureSale.reoContactLastName.trim()) {
-            setFieldErrors(prev => ({ ...prev, reoContactLastName: "REO contact last name is required" }));
-            throw new Error("REO contact last name is required");
+            setFieldErrors(prev => ({ ...prev, reoContactLastName: t("errors.reoContactLastNameRequired") }));
+            throw new Error(t("errors.reoContactLastNameRequired"));
           }
           if (!foreclosureSale.reoBusinessPhone || !foreclosureSale.reoBusinessPhone.trim()) {
-            setFieldErrors(prev => ({ ...prev, reoBusinessPhone: "REO business phone is required" }));
-            throw new Error("REO business phone is required");
+            setFieldErrors(prev => ({ ...prev, reoBusinessPhone: t("errors.reoBusinessPhoneRequired") }));
+            throw new Error(t("errors.reoBusinessPhoneRequired"));
           }
         }
 
         // Validate requested alternative to foreclosure (required)
         if (foreclosureSale.requestedAlternativeToForeclosure === null || foreclosureSale.requestedAlternativeToForeclosure === undefined) {
-          setFieldErrors(prev => ({ ...prev, "foreclosureSale.requestedAlternativeToForeclosure": "Please select if the borrower requested an alternative to foreclosure" }));
-          throw new Error("Please select if the borrower requested an alternative to foreclosure");
+          setFieldErrors(prev => ({ ...prev, "foreclosureSale.requestedAlternativeToForeclosure": t("errors.pleaseSelectBorrowerRequestedAlternative") }));
+          throw new Error(t("errors.pleaseSelectBorrowerRequestedAlternative"));
         }
 
         // Validate foreclosure alternative option (required if alternative was requested)
         if (foreclosureSale.requestedAlternativeToForeclosure === true) {
           if (!foreclosureSale.foreclosureAlternativeOption || foreclosureSale.foreclosureAlternativeOption === "") {
-            setFieldErrors(prev => ({ ...prev, "foreclosureSale.foreclosureAlternativeOption": "Alternative option is required" }));
-            throw new Error("Alternative option is required");
+            setFieldErrors(prev => ({ ...prev, "foreclosureSale.foreclosureAlternativeOption": t("errors.alternativeOptionRequired") }));
+            throw new Error(t("errors.alternativeOptionRequired"));
           }
         }
 
@@ -2441,7 +2441,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
     try {
       const judgment = updatedFormData?.judgment;
       if (!judgment) {
-        throw new Error("Judgment data is required");
+        throw new Error(t("errors.judgmentDataRequired"));
       }
 
       // Get judgment ID from petition details (null if new)
@@ -2469,7 +2469,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
         await petitionApiService.updateStatus(petition.id, "3"); // Status value 3 (JudgmentSubmitted)
       }
       
-      toast.success("Judgment saved successfully.");
+      toast.success(t("errors.judgmentSavedSuccessfully"));
       
       // Refresh the tab data to get updated petition
       if (activeTabId && refreshTab) {
@@ -2483,7 +2483,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
         }, 200);
       }
     } catch (err) {
-      const errorMessage = err?.response?.data?.message || err?.message || "Failed to save judgment. Please try again.";
+      const errorMessage = err?.response?.data?.message || err?.message || t("errors.failedSaveJudgment");
       toast.error(errorMessage);
       throw err;
     }
@@ -2525,7 +2525,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
     try {
       const foreclosureSale = updatedFormData?.foreclosureSale;
       if (!foreclosureSale) {
-        throw new Error("Foreclosure sale data is required");
+        throw new Error(t("errors.foreclosureSaleDataRequired"));
       }
 
       // Get foreclosure ID from petition details (null if new)
@@ -2559,7 +2559,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
         await petitionApiService.updateStatus(petition.id, "2"); // Status value 2 (ForeclosureSaleInitiated)
       }
       
-      toast.success("Foreclosure saved successfully.");
+      toast.success(t("errors.foreclosureSavedSuccessfully"));
       
       // Refresh the tab data to get updated petition
       if (activeTabId && refreshTab) {
@@ -2573,7 +2573,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
         }, 200);
       }
     } catch (err) {
-      const errorMessage = err?.response?.data?.message || err?.message || "Failed to save foreclosure. Please try again.";
+      const errorMessage = err?.response?.data?.message || err?.message || t("errors.failedSaveForeclosure");
       toast.error(errorMessage);
       throw err;
     }
@@ -2618,7 +2618,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
                       } catch (err) {
                         // Check if it's a duplicate error - show the specific message
                         if (err?.isDuplicate || (err?.message && (err.message.toLowerCase().includes("duplicate") || err.message.toLowerCase().includes("same property")))) {
-                          toast.error(err.message || "A petition with the same property address already exists.");
+                          toast.error(err.message || t("errors.petitionSamePropertyExists"));
                         } else {
                           // Show generic error for other errors
                           toast.error(t("petitionTabContent.saveError") || "Error saving section");
