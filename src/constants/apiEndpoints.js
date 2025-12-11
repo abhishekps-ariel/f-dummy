@@ -91,3 +91,7 @@ export const FORM35B_ENDPOINTS = {
   ADD_UPDATE: "/api/Report35B/add-update",
 };
 
+export const GOOGLE_ENDPOINTS = {
+  TRANSLATE: "/api/Google/translate",
+};
+
