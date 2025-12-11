@@ -300,11 +300,11 @@ const Notifications = () => {
 
         {/* Main Notifications Content */}
         <div className="dashboard-content-section">
-          <div className="card shadow-custom" style={{ border: 'none', borderRadius: '8px' }}>
-            <div className="card-body" style={{ padding: '2rem' }}>
+          <div className="shadow-custom bg-white org-search-box">
+            <div className="p-4">
               <div className="mb-4">
-                <h2 className="h4 mb-2 fw-bold theme-color">{t("notifications.title")}</h2>
-                <p className="text-muted mb-0" style={{ fontSize: '0.9rem' }}>{t("notifications.subtitle")}</p>
+                <h2 className="h4 mb-3 fw-bold theme-color">{t("notifications.title")}</h2>
+                <p className="text-muted mb-4">{t("notifications.subtitle")}</p>
               </div>
 
               {/* Search and Filter Controls */}

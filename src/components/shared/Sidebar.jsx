@@ -76,16 +76,16 @@ const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
       route: ROUTES.FORM35,
     },
     {
-      key: "notifications",
-      label: t("sidebar.notifications"),
-      icon: "fa-bell",
-      route: ROUTES.NOTIFICATIONS,
-    },
-    {
       key: "messages",
       label: t("sidebar.messages"),
       icon: "fa-envelope",
       route: ROUTES.MESSAGES,
+    },
+    {
+      key: "notifications",
+      label: t("sidebar.notifications"),
+      icon: "fa-bell",
+      route: ROUTES.NOTIFICATIONS,
     },
     {
       key: "faq",
