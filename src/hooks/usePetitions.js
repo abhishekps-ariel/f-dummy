@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import petitionApiService from '../services/petitionApiService';
 import { getOrganizationById } from '../services/organizationService';
 import { toast } from 'react-toastify';
-import { getActiveOrganizationId, getUserRole } from '../utils/storage';
+import { getActiveOrganizationId, getUserRole, getImpersonationState } from '../utils/storage';
 
 // Helper function to check if user is org admin
 const isOrgAdminUser = (userData) => {
@@ -36,8 +36,13 @@ export const usePetitions = () => {
     totalClosedCount: 0
   });
 
+  // Check if impersonating - when impersonating, always use userId (treat as filer)
+  const impersonationState = getImpersonationState();
+  const isImpersonating = impersonationState.isImpersonating;
+  
   // Determine if user is org admin or filer
-  const isOrgAdmin = isOrgAdminUser(user);
+  // When impersonating, always treat as filer (use userId) regardless of role
+  const isOrgAdmin = isImpersonating ? false : isOrgAdminUser(user);
   
   // Get organization ID from user object or active organization context (for org admins)
   // Priority: activeOrganizationId > user.organizationId > organization.id
@@ -46,6 +51,7 @@ export const usePetitions = () => {
     storedActiveOrganizationId || user?.organizationId || organization?.id || null;
   
   // For filers, use userId; for org admins, use organizationId
+  // When impersonating, always use userId (the impersonated user's ID)
   const userId = user?.id || null;
 
 

@@ -14,7 +14,7 @@ import "../shared/CustomDropdown.css";
 import "./TabbedWorkspace.css";
 import { useAuth } from "../../context/AuthContext";
 import { ROUTES } from "../../constants/routerConstants";
-import { getActiveOrganizationId, getUserRole } from "../../utils/storage";
+import { getActiveOrganizationId, getUserRole, getImpersonationState } from "../../utils/storage";
 import { getStatusValue, getStatusBadgeClass, getSortColumn } from "../../helpers/petitions/petitionStatusUtils";
 import { getFromDate, getToDate, formatDateForInput } from "../../utils/dateUtils";
 import { exportPetitions } from "../../helpers/petitions/pdfExport";
@@ -111,8 +111,13 @@ const ViewAllPetitions = ({ onBack }) => {
     return userRole === 'Organization Admin';
   };
 
+  // Check if impersonating - when impersonating, always use userId (treat as filer)
+  const impersonationState = getImpersonationState();
+  const isImpersonating = impersonationState.isImpersonating;
+  
   // Determine if user is org admin or filer
-  const isOrgAdmin = isOrgAdminUser(user);
+  // When impersonating, always treat as filer (use userId) regardless of role
+  const isOrgAdmin = isImpersonating ? false : isOrgAdminUser(user);
 
   // Get organization ID from user object (stored in browser storage) or organization context (for org admins)
   // Priority: storedActiveOrganizationId > user.organizationId > organization.id
@@ -125,6 +130,7 @@ const ViewAllPetitions = ({ onBack }) => {
     null;
   
   // For filers, use userId; for org admins, use organizationId
+  // When impersonating, always use userId (the impersonated user's ID)
   const userId = user?.id || null;
 
   // Helper functions are now imported from helpers/petitions/petitionStatusUtils and utils/dateUtils
