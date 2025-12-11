@@ -45,6 +45,11 @@ export const COMMON_ENDPOINTS = {
   GET_MFA_TYPES_ENUM: "/Common/mfa-types-enum",
   GET_35B_REPORTING_PERIOD: "/Common/get-35b-reporting-period",
   GET_35B_ENTITY_TYPE: "/Common/get-35b-entitytype",
+  GET_EMAIL_TYPES_ENUM: "/Common/email-types-enum",
+};
+
+export const NOTIFICATION_ENDPOINTS = {
+  GET_PAGED_LIST: "/api/EmaiLHistory/paged-list",
 };
 
 export const FAQ_ENDPOINTS = {

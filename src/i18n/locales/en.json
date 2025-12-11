@@ -1062,7 +1062,18 @@
     "organizationName": "Organization Name",
     "viewPetition": "View Petition",
     "viewAll": "View All Notifications",
-    "noNotifications": "No notifications available"
+    "noNotifications": "No notifications available",
+    "searchPlaceholder": "Search notifications...",
+    "allTypes": "All Types",
+    "loading": "Loading...",
+    "showingResults": "Showing {{start}} to {{end}} of {{total}} results",
+    "previous": "Previous",
+    "next": "Next",
+    "failedFetchEmailTypes": "Failed to load email types",
+    "failedFetchNotifications": "Failed to fetch notifications",
+    "sent": "Sent",
+    "failed": "Failed",
+    "ccEmails": "CC Emails"
   }
 }
 

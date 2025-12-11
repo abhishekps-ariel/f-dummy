@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import ImpersonationBanner from "./ImpersonationBanner";
 import AccessibilityControls from "./AccessibilityControls";
 import LanguageSwitcher from "./LanguageSwitcher";
-import NotificationDropdown from "./NotificationDropdown";
+// import NotificationDropdown from "./NotificationDropdown";
 import { getUserRole } from "../../utils/storage";
 
 const Header = ({ user, pageTitle, showMobileMenu = true, onLogout }) => {
@@ -37,7 +37,7 @@ const Header = ({ user, pageTitle, showMobileMenu = true, onLogout }) => {
         </div>
 
         {/* Notifications Dropdown */}
-        <NotificationDropdown />
+        {/* <NotificationDropdown /> */}
 
         {/* Language Dropdown - Show on all screens */}
         <LanguageSwitcher variant="dropdown" className="text-secondary" />
