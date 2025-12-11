@@ -83,9 +83,8 @@ body {
 
 .petition-table-container table {
   margin-bottom: 0;
-  min-width: 1090px; /* Sum of all column widths: 180+250+150+190+120+150+50 = 1090px */
-  width: 100%;
-  table-layout: fixed; /* Fixed layout for consistent column widths - prevents columns from merging */
+  min-width: 800px; /* Reduced minimum width to prevent horizontal scrolling */
+  table-layout: fixed; /* Fixed layout for consistent column widths */
 }
 
 .petition-table-container th,
@@ -94,9 +93,6 @@ body {
   vertical-align: middle;
   word-wrap: break-word;
   overflow-wrap: break-word;
-  box-sizing: border-box; /* Include padding in width calculation */
-  overflow: hidden; /* Prevent content from overflowing */
-  text-overflow: ellipsis; /* Show ellipsis if text is too long */
 }
 
 .petition-table-container th {
@@ -116,77 +112,11 @@ body {
   font-size: 0.875rem;
 }
 
-/* Fixed column widths - prevents columns from merging on any screen size */
-/* Petition Number column */
-.petition-table-container th:nth-child(1),
-.petition-table-container td:nth-child(1) {
-  width: 180px !important;
-  min-width: 180px !important;
-  max-width: 180px !important;
-  box-sizing: border-box !important;
-}
-
 /* Property Address column - allow text wrapping */
-.petition-table-container th:nth-child(2),
 .petition-table-container td:nth-child(2) {
-  width: 250px !important;
-  min-width: 250px !important;
-  max-width: 250px !important;
-  box-sizing: border-box !important;
   word-break: break-word;
   white-space: normal;
   line-height: 1.4;
-  overflow: visible; /* Allow wrapping for address */
-  text-overflow: clip; /* Don't ellipsis addresses */
-}
-
-/* Borrower column */
-.petition-table-container th:nth-child(3),
-.petition-table-container td:nth-child(3) {
-  width: 150px !important;
-  min-width: 150px !important;
-  max-width: 150px !important;
-  box-sizing: border-box !important;
-}
-
-/* Status column - prevent merging with dates - CRITICAL: fixed width */
-.petition-table-container th:nth-child(4),
-.petition-table-container td:nth-child(4) {
-  width: 190px !important;
-  min-width: 190px !important;
-  max-width: 190px !important;
-  white-space: normal; /* Allow status badge to wrap if needed */
-  overflow: visible;
-  box-sizing: border-box !important;
-}
-
-/* Filing Date column - prevent merging - CRITICAL: fixed width */
-.petition-table-container th:nth-child(5),
-.petition-table-container td:nth-child(5) {
-  width: 120px !important;
-  min-width: 120px !important;
-  max-width: 120px !important;
-  white-space: nowrap; /* Keep dates on one line */
-  box-sizing: border-box !important;
-}
-
-/* Last Updated column - prevent merging - CRITICAL: fixed width */
-.petition-table-container th:nth-child(6),
-.petition-table-container td:nth-child(6) {
-  width: 150px !important;
-  min-width: 150px !important;
-  max-width: 150px !important;
-  white-space: nowrap; /* Keep dates on one line */
-  box-sizing: border-box !important;
-}
-
-/* Action column */
-.petition-table-container th:nth-child(7),
-.petition-table-container td:nth-child(7) {
-  width: 50px !important;
-  min-width: 50px !important;
-  max-width: 50px !important;
-  box-sizing: border-box !important;
 }
 
 /* Status badges in tables - show full text */
@@ -215,60 +145,9 @@ body {
   }
   
   .petition-table-container table {
-    min-width: 1090px; /* Maintain same minimum width as desktop to prevent column merging */
+    min-width: 700px; /* Reduced minimum width for better mobile experience */
     font-size: 0.8rem;
-    table-layout: fixed; /* Keep fixed layout on mobile too */
-    width: 100%;
-  }
-  
-  /* Enforce fixed widths on mobile to prevent merging */
-  .petition-table-container th:nth-child(1),
-  .petition-table-container td:nth-child(1) {
-    width: 180px !important;
-    min-width: 180px !important;
-    max-width: 180px !important;
-  }
-  
-  .petition-table-container th:nth-child(2),
-  .petition-table-container td:nth-child(2) {
-    width: 250px !important;
-    min-width: 250px !important;
-    max-width: 250px !important;
-  }
-  
-  .petition-table-container th:nth-child(3),
-  .petition-table-container td:nth-child(3) {
-    width: 150px !important;
-    min-width: 150px !important;
-    max-width: 150px !important;
-  }
-  
-  .petition-table-container th:nth-child(4),
-  .petition-table-container td:nth-child(4) {
-    width: 190px !important;
-    min-width: 190px !important;
-    max-width: 190px !important;
-  }
-  
-  .petition-table-container th:nth-child(5),
-  .petition-table-container td:nth-child(5) {
-    width: 120px !important;
-    min-width: 120px !important;
-    max-width: 120px !important;
-  }
-  
-  .petition-table-container th:nth-child(6),
-  .petition-table-container td:nth-child(6) {
-    width: 150px !important;
-    min-width: 150px !important;
-    max-width: 150px !important;
-  }
-  
-  .petition-table-container th:nth-child(7),
-  .petition-table-container td:nth-child(7) {
-    width: 50px !important;
-    min-width: 50px !important;
-    max-width: 50px !important;
+    table-layout: fixed;
   }
   
   .petition-table-container th,

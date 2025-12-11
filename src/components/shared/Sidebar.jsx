@@ -72,7 +72,7 @@ const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
     {
       key: "form35",
       label: t("sidebar.form35"),
-      icon: "fa-file-alt",
+      icon: "fa-clipboard-list",
       route: ROUTES.FORM35,
     },
     {
