@@ -269,17 +269,6 @@ const BorrowerDetails = ({
                                 );
                               }}
                             />
-                            {/* Loading indicator */}
-                            {isLoadingBorrowerPredictions && isLoadingBorrowerPredictions[borrower.id] && (
-                              <div className="position-absolute top-50 end-0 translate-middle-y me-3">
-                                <div
-                                  className="spinner-border spinner-border-sm text-muted"
-                                  role="status"
-                                >
-                                  <span className="visually-hidden">Loading...</span>
-                                </div>
-                              </div>
-                            )}
                             {/* Address suggestions dropdown */}
                             {isEditing &&
                               isLoaded &&

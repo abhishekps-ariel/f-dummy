@@ -53,17 +53,6 @@ const PropertyDetailsCard = ({
                       }}
                       autoComplete="off"
                     />
-                    {/* Loading indicator */}
-                    {isLoadingPredictions && (
-                      <div className="position-absolute top-50 end-0 translate-middle-y me-3">
-                        <div
-                          className="spinner-border spinner-border-sm text-muted"
-                          role="status"
-                        >
-                          <span className="visually-hidden">{t("common.loading")}</span>
-                        </div>
-                      </div>
-                    )}
                     {/* Address suggestions dropdown */}
                     {isEditing && isLoaded && showPredictions && predictions.length > 0 && (
                       <div
