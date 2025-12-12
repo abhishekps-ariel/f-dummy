@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { forgotPassword } from "../../services/authService";
@@ -6,6 +7,7 @@ import loginImg from "../../assets/logo-sample.png";
 import "../../styles/custom.css";
 
 function PasswordEmailSent() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [isResending, setIsResending] = useState(false);
 
@@ -18,7 +20,7 @@ function PasswordEmailSent() {
 
   const handleResendEmail = async () => {
     if (!email) {
-      toast.error("Email not found. Please try again.");
+      toast.error(t("passwordEmailSent.emailNotFound"));
       return;
     }
     if (isResending) return;
@@ -30,15 +32,15 @@ function PasswordEmailSent() {
 
       if (response.isSuccess) {
         toast.success(
-          response.msg || "Reset email sent again! Please check your inbox."
+          response.msg || t("passwordEmailSent.resetEmailSentAgain")
         );
       } else {
         toast.error(
-          response.msg || "Failed to resend email. Please try again."
+          response.msg || t("passwordEmailSent.failedResendEmail")
         );
       }
     } catch (err) {
-      toast.error(err?.message || "Failed to resend email. Please try again.");
+      toast.error(err?.message || t("passwordEmailSent.failedResendEmail"));
     } finally {
       setIsResending(false);
     }
@@ -60,11 +62,9 @@ function PasswordEmailSent() {
                       <img src={loginImg} alt="logo" className="w-100" />
                     </Link>
                   </div>
-                  <h2 className="font-xl-med fw-bold">Check your email!</h2>
+                  <h2 className="font-xl-med fw-bold">{t("passwordEmailSent.title")}</h2>
                   <p className="font-base">
-                    Thanks! An email has been sent with a link to reset your
-                    password. Please check your inbox and follow the
-                    instructions to continue.
+                    {t("passwordEmailSent.description")}
                   </p>
                 </div>
 
@@ -72,7 +72,7 @@ function PasswordEmailSent() {
                   to="/login"
                   className="btn custom-btn theme-btn text-center w-100"
                 >
-                  Back to Login
+                  {t("passwordEmailSent.backToLogin")}
                 </Link>
 
                 <div className="text-center mt-4">
@@ -89,12 +89,11 @@ function PasswordEmailSent() {
                           role="status"
                           aria-hidden="true"
                         ></span>
-                        Resending...
+                        {t("passwordEmailSent.resending")}
                       </>
                     ) : (
                       <>
-                        <i className="fa-solid fa-chevron-left me-1"></i> Resend
-                        Email
+                        <i className="fa-solid fa-chevron-left me-1"></i> {t("passwordEmailSent.resendEmail")}
                       </>
                     )}
                   </button>

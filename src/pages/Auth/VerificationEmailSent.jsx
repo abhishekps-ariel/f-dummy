@@ -1,9 +1,11 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import loginImg from "../../assets/logo-sample.png";
 import "../../styles/custom.css";
 
 function VerificationEmailSent() {
+  const { t } = useTranslation();
   return (
     <div className="login">
       <div className="container container-md-auto">
@@ -28,16 +30,13 @@ function VerificationEmailSent() {
                         style={{ fontSize: "4rem" }}
                       ></i>
                     </div>
-                    <h2 className="font-xl-med fw-bold">Check your email!</h2>
+                    <h2 className="font-xl-med fw-bold">{t("verificationEmailSent.title")}</h2>
                     <p className="font-base text-muted">
-                      We've sent a verification link to your email address.
-                      Please check your inbox and click the link to verify your
-                      account.
+                      {t("verificationEmailSent.description")}
                     </p>
                     <p className="font-sm text-muted mt-3">
                       <i className="fa-solid fa-info-circle me-1"></i>
-                      Don't forget to check your spam folder if you don't see
-                      the email.
+                      {t("verificationEmailSent.checkSpam")}
                     </p>
                   </div>
                 </div>
@@ -46,13 +45,12 @@ function VerificationEmailSent() {
                   to="/login"
                   className="btn custom-btn theme-btn text-center w-100"
                 >
-                  Back to Login
+                  {t("verificationEmailSent.backToLogin")}
                 </Link>
 
                 <div className="text-center mt-4">
                   <p className="font-sm text-muted mb-0">
-                    Didn't receive the email? Check your spam folder or contact
-                    support.
+                    {t("verificationEmailSent.didntReceiveEmail")}
                   </p>
                 </div>
               </form>

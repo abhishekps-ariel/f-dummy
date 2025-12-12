@@ -1,9 +1,11 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import loginImg from "../../assets/logo-sample.png";
 import "../../styles/custom.css";
 
 function PasswordChanged() {
+  const { t } = useTranslation();
   return (
     <div className="login">
       <div className="container container-md-auto">
@@ -20,9 +22,9 @@ function PasswordChanged() {
                       <img src={loginImg} alt="logo" className="w-100" />
                     </Link>
                   </div>
-                  <h2 className="font-xl-med fw-bold">Password Changed</h2>
+                  <h2 className="font-xl-med fw-bold">{t("passwordChanged.title")}</h2>
                   <p className="font-base">
-                    You've successfully completed your password reset.
+                    {t("passwordChanged.description")}
                   </p>
                 </div>
 
@@ -30,7 +32,7 @@ function PasswordChanged() {
                   to="/login"
                   className="btn custom-btn theme-btn text-center w-100"
                 >
-                  Login now
+                  {t("passwordChanged.loginNow")}
                 </Link>
               </form>
             </div>

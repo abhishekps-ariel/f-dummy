@@ -164,7 +164,7 @@ function Register() {
 
     // Validate organization selection for Organisation Admin
     if (!isInviteFlow && selectedRole === "orgAdmin" && !selectedOrganization) {
-      setErrors((prev) => ({ ...prev, organization: "Please select an organization" }));
+      setErrors((prev) => ({ ...prev, organization: t("register.selectOrganizationError") }));
       return false;
     } else if (selectedOrganization) {
       setErrors((prev) => {
@@ -175,54 +175,51 @@ function Register() {
     }
 
     if (!formData.firstName.trim()) {
-      newErrors.firstName = "First name is required";
+      newErrors.firstName = t("register.firstNameRequired");
     } else if (formData.firstName.trim().length < 2) {
-      newErrors.firstName = "First name must be at least 2 characters";
+      newErrors.firstName = t("register.firstNameMinLength");
     }
 
     if (!formData.lastName.trim()) {
-      newErrors.lastName = "Last name is required";
+      newErrors.lastName = t("register.lastNameRequired");
     } else if (formData.lastName.trim().length < 2) {
-      newErrors.lastName = "Last name must be at least 2 characters";
+      newErrors.lastName = t("register.lastNameMinLength");
     }
 
     if (!formData.phoneNumber) {
-      newErrors.phoneNumber = "Phone number is required";
+      newErrors.phoneNumber = t("register.phoneNumberRequired");
     } else if (formData.phoneNumber.length < 10) {
-      newErrors.phoneNumber = "Please enter a valid phone number";
+      newErrors.phoneNumber = t("register.phoneNumberInvalid");
     }
 
     if (!formData.email.trim()) {
-      newErrors.email = "Email is required";
+      newErrors.email = t("register.emailRequired");
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = "Please enter a valid email address";
+      newErrors.email = t("register.emailInvalid");
     } else if (formData.email.toLowerCase().endsWith("@gmail.com")) {
-      newErrors.email = "Gmail addresses are not accepted. Please use a different email domain.";
+      newErrors.email = t("register.gmailNotAccepted");
     }
 
     if (!formData.password.trim()) {
-      newErrors.password = "Password is required";
+      newErrors.password = t("register.passwordRequired");
     } else {
       if (formData.password.length < VALIDATION.MIN_PASSWORD_LENGTH) {
-        newErrors.password = "Password must be at least 8 characters long";
+        newErrors.password = t("register.passwordMinLength");
       } else if (!/[A-Z]/.test(formData.password)) {
-        newErrors.password =
-          "Password must contain at least one uppercase letter";
+        newErrors.password = t("register.passwordUppercase");
       } else if (!/[a-z]/.test(formData.password)) {
-        newErrors.password =
-          "Password must contain at least one lowercase letter";
+        newErrors.password = t("register.passwordLowercase");
       } else if (!/\d/.test(formData.password)) {
-        newErrors.password = "Password must contain at least one number";
+        newErrors.password = t("register.passwordNumber");
       } else if (!/[@#$%^&*]/.test(formData.password)) {
-        newErrors.password =
-          "Password must contain at least one special character (@#$%^&*)";
+        newErrors.password = t("register.passwordSpecialChar");
       }
     }
 
     if (!formData.confirmPassword.trim()) {
-      newErrors.confirmPassword = "Please confirm your password";
+      newErrors.confirmPassword = t("register.confirmPasswordRequired");
     } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match";
+      newErrors.confirmPassword = t("register.passwordsDoNotMatch");
     }
 
     setErrors(newErrors);
@@ -240,9 +237,9 @@ function Register() {
     // Real-time email validation to block @gmail.com
     if (name === "email" && value.trim()) {
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-        setErrors({ ...errors, email: "Please enter a valid email address" });
+        setErrors({ ...errors, email: t("register.emailInvalid") });
       } else if (value.toLowerCase().endsWith("@gmail.com")) {
-        setErrors({ ...errors, email: "Gmail addresses are not accepted. Please use a different email domain." });
+        setErrors({ ...errors, email: t("register.gmailNotAccepted") });
       }
     }
 
@@ -332,17 +329,17 @@ function Register() {
                 response.data.userId
               );
               toast.success(
-                "Account created and organization access granted! Please login to continue."
+                t("register.accountCreatedOrgAccess", { defaultValue: "Account created and organization access granted! Please login to continue." })
               );
             } catch (bindError) {
               toast.success(
-                "Account created successfully! Please login to continue."
+                t("register.accountCreatedSuccess", { defaultValue: "Account created successfully! Please login to continue." })
               );
               // Still navigate to login even if binding fails
             }
           } else {
             toast.success(
-              "Account created successfully! Please login to continue."
+              t("register.accountCreatedSuccess", { defaultValue: "Account created successfully! Please login to continue." })
             );
           }
           navigate(ROUTES.LOGIN);
@@ -385,11 +382,11 @@ function Register() {
                     className="spinner-border text-primary mb-3"
                     role="status"
                   >
-                    <span className="visually-hidden">Loading...</span>
+                    <span className="visually-hidden">{t("common.loading")}</span>
                   </div>
-                  <h5>Loading invite details...</h5>
+                  <h5>{t("common.loading")} {t("register.inviteDetails", { defaultValue: "invite details" })}</h5>
                   <p className="text-muted">
-                    Please wait while we verify your invite link.
+                    {t("register.pleaseWaitVerifyInvite", { defaultValue: "Please wait while we verify your invite link." })}
                   </p>
                 </div>
               </div>
@@ -414,10 +411,10 @@ function Register() {
                 <div className="text-center">
                   <div className="alert alert-danger" role="alert">
                     <i className="fa-solid fa-exclamation-triangle mb-2"></i>
-                    <h5>Invalid Invite Link</h5>
+                    <h5>{t("register.invalidExpiredInvite")}</h5>
                     <p>{inviteError}</p>
                     <Link to={ROUTES.REGISTER} className="btn btn-primary">
-                      Try Regular Registration
+                      {t("register.tryRegularRegistration", { defaultValue: "Try Regular Registration" })}
                     </Link>
                   </div>
                 </div>
@@ -446,26 +443,25 @@ function Register() {
                     </Link>
                   </div>
                   <h2 className="font-xl-med fw-bold">
-                    {isInviteFlow ? "Complete Your Registration" : "Register"}
+                    {isInviteFlow ? t("register.completeRegistration", { defaultValue: "Complete Your Registration" }) : t("register.title")}
                   </h2>
                   {isInviteFlow ? (
                     <div className="alert alert-info mb-3" role="alert">
                       <i className="fa-solid fa-info-circle me-2"></i>
-                      You've been invited to join an organization. Complete your
-                      registration below.
+                      {t("register.invitedToJoinOrg", { defaultValue: "You've been invited to join an organization. Complete your registration below." })}
                     </div>
                   ) : (
                     <p className="font-base">
-                      Have an account?{" "}
+                      {t("register.alreadyHaveAccount")}{" "}
                       <Link to="/login" className="text-dark-black fw-semibold">
-                        Login{" "}
+                        {t("register.login")}{" "}
                       </Link>
                     </p>
                   )}
                   {!isInviteFlow && (
                     <div className="role-selection-container mb-4">
                       <label className="label-text mb-3 d-block text-center">
-                        Select Registration Type
+                        {t("register.selectRegistrationType")}
                       </label>
                       <div className="d-flex gap-3 justify-content-center">
                         <button
@@ -500,7 +496,7 @@ function Register() {
                           }}
                         >
                           <i className="fa-solid fa-user me-2"></i>
-                          Filer
+                          {t("register.filer")}
                         </button>
                         <button
                           type="button"
@@ -530,7 +526,7 @@ function Register() {
                           }}
                         >
                           <i className="fa-solid fa-building me-2"></i>
-                          Organisation Admin
+                          {t("register.organisationAdmin")}
                         </button>
                       </div>
                     </div>
@@ -540,7 +536,7 @@ function Register() {
                 {/* Organization Search - Only for Organisation Admin */}
                 {selectedRole === "orgAdmin" && !isInviteFlow && (
                   <div className="form-group mb-4">
-                    <label className="label-text mb-2">Organization</label>
+                    <label className="label-text mb-2">{t("register.selectOrganization")}</label>
                     <div className="search-form-wrapper" ref={orgSearchRef}>
                       {selectedOrganization ? (
                         <div className="selected-org-container">
@@ -579,7 +575,7 @@ function Register() {
                               type="button"
                               className="selected-org-remove"
                               onClick={handleRemoveOrganization}
-                              title="Remove selection"
+                              title={t("register.removeSelection", { defaultValue: "Remove selection" })}
                             >
                               <i className="fa-solid fa-times"></i>
                             </button>
@@ -592,8 +588,8 @@ function Register() {
                               errors.organization ? "is-invalid" : ""
                             }`}
                             type="search"
-                            placeholder="Search by organization name or EIN"
-                            aria-label="Search"
+                            placeholder={t("register.searchOrganization")}
+                            aria-label={t("common.search")}
                             value={organizationSearchQuery}
                             onChange={handleSearchInputChange}
                             onFocus={handleSearchFocus}
@@ -610,10 +606,10 @@ function Register() {
                                     role="status"
                                   >
                                     <span className="visually-hidden">
-                                      Loading...
+                                      {t("common.loading")}
                                     </span>
                                   </div>
-                                  <span>Loading organizations...</span>
+                                  <span>{t("register.loadingOrganizations")}</span>
                                 </div>
                               ) : organizations.length > 0 ? (
                                 <div className="org-search-results">
@@ -627,7 +623,7 @@ function Register() {
                                       <div className="org-item-details">
                                         <span className="org-item-type">
                                           <i className="fa-solid fa-building me-1"></i>
-                                          {org.type || "N/A"}
+                                          {org.type || t("common.nA")}
                                         </span>
                                         {(org.addressStreet1 ||
                                           org.addressCity ||
@@ -673,7 +669,7 @@ function Register() {
                               ) : (
                                 <div className="org-search-no-results">
                                   <i className="fa-solid fa-search me-2"></i>
-                                  No organizations found.
+                                  {t("register.noOrganizationsFound")}
                                 </div>
                               )}
                             </div>
@@ -687,13 +683,13 @@ function Register() {
                       </div>
                     )}
                     <small className="text-muted d-block mt-2">
-                      Search and select the organization you want to register as admin for.
+                      {t("register.searchSelectOrgDesc", { defaultValue: "Search and select the organization you want to register as admin for." })}
                     </small>
                   </div>
                 )}
 
                 <div className="form-group">
-                  <label className="label-text">First Name</label>
+                  <label className="label-text">{t("register.firstName")}</label>
                   <div className="input-group">
                     <div className="user-icon">
                       <i className="fa-solid fa-user"></i>
@@ -704,7 +700,7 @@ function Register() {
                       className={`form-control ${
                         errors.firstName ? "is-invalid" : ""
                       }`}
-                      placeholder="First Name"
+                      placeholder={t("register.firstName")}
                       value={formData.firstName}
                       onChange={handleChange}
                       required
@@ -718,7 +714,7 @@ function Register() {
                 </div>
 
                 <div className="form-group">
-                  <label className="label-text">Last Name</label>
+                  <label className="label-text">{t("register.lastName")}</label>
                   <div className="input-group">
                     <div className="user-icon">
                       <i className="fa-solid fa-user"></i>
@@ -729,7 +725,7 @@ function Register() {
                       className={`form-control ${
                         errors.lastName ? "is-invalid" : ""
                       }`}
-                      placeholder="Last Name"
+                      placeholder={t("register.lastName")}
                       value={formData.lastName}
                       onChange={handleChange}
                       required
@@ -743,7 +739,7 @@ function Register() {
                 </div>
 
                 <div className="form-group">
-                  <label className="label-text">Phone Number</label>
+                  <label className="label-text">{t("register.phoneNumber")}</label>
                   <PhoneInput
                     country={"us"}
                     value={formData.phoneNumber}
@@ -791,7 +787,7 @@ function Register() {
                 </div>
 
                 <div className="form-group">
-                  <label className="label-text">Email</label>
+                  <label className="label-text">{t("register.email")}</label>
                   <div className="input-group">
                     <div className="user-icon">
                       <i className="fa-solid fa-envelope"></i>
@@ -817,13 +813,13 @@ function Register() {
                   )}
                   {isInviteFlow && (
                     <small className="text-muted">
-                      Email is pre-filled from your invite link
+                      {t("register.emailPrefilledFromInvite", { defaultValue: "Email is pre-filled from your invite link" })}
                     </small>
                   )}
                 </div>
 
                 <div className="form-group">
-                  <label className="label-text">Create Password</label>
+                  <label className="label-text">{t("register.createPassword", { defaultValue: "Create Password" })}</label>
                   <div className="input-group position-relative">
                     <div className="user-icon">
                       <i className="fa-solid fa-lock"></i>
@@ -834,7 +830,7 @@ function Register() {
                       className={`form-control ${
                         errors.password ? "is-invalid" : ""
                       }`}
-                      placeholder="Password"
+                      placeholder={t("register.password")}
                       value={formData.password}
                       onChange={handleChange}
                       onFocus={() => setShowPasswordGuidelines(true)}
@@ -845,7 +841,7 @@ function Register() {
                       className="password-eye"
                       onClick={togglePasswordVisibility}
                       style={{ cursor: "pointer" }}
-                      title={showPassword ? "Hide password" : "Show password"}
+                      title={showPassword ? t("register.hidePassword") : t("register.showPassword")}
                     >
                       <i
                         className={`fa-solid ${
@@ -867,7 +863,7 @@ function Register() {
                 </div>
 
                 <div className="form-group">
-                  <label className="label-text">Confirm Password</label>
+                  <label className="label-text">{t("register.confirmPassword")}</label>
                   <div className="input-group position-relative">
                     <div className="user-icon">
                       <i className="fa-solid fa-lock"></i>
@@ -878,7 +874,7 @@ function Register() {
                       className={`form-control ${
                         errors.confirmPassword ? "is-invalid" : ""
                       }`}
-                      placeholder="Confirm Password"
+                      placeholder={t("register.confirmPassword")}
                       value={formData.confirmPassword}
                       onChange={handleChange}
                       required
@@ -887,7 +883,7 @@ function Register() {
                       className="password-eye"
                       onClick={togglePasswordVisibility}
                       style={{ cursor: "pointer" }}
-                      title={showPassword ? "Hide password" : "Show password"}
+                      title={showPassword ? t("register.hidePassword") : t("register.showPassword")}
                     >
                       <i
                         className={`fa-solid ${
@@ -918,13 +914,13 @@ function Register() {
                         aria-hidden="true"
                       ></span>
                       {isInviteFlow
-                        ? "Completing Registration..."
-                        : "Creating Account..."}
+                        ? t("register.completingRegistration", { defaultValue: "Completing Registration..." })
+                        : t("register.creatingAccount", { defaultValue: "Creating Account..." })}
                     </>
                   ) : isInviteFlow ? (
-                    "Complete Registration"
+                    t("register.completeRegistration", { defaultValue: "Complete Registration" })
                   ) : (
-                    "Create Account"
+                    t("register.createAccount", { defaultValue: "Create Account" })
                   )}
                 </button>
               </form>

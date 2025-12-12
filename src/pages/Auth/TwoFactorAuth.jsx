@@ -131,11 +131,11 @@ function TwoFactorAuth() {
         navigate(ROUTES.DASHBOARD);
       } else {
         toast.error(
-          response.msg || t("errors.invalidAuthCode")
+          response.msg || t("twoFactorAuth.invalidAuthCode")
         );
       }
     } catch (err) {
-      toast.error(err?.message || "Invalid authentication code. Please try again.");
+      toast.error(err?.message || t("twoFactorAuth.invalidAuthCode"));
     } finally {
       setIsSubmitting(false);
     }
@@ -190,13 +190,14 @@ function TwoFactorAuth() {
                     </Link>
                   </div>
                   <h2 className="font-xl-med fw-bold">
-                    Two Factor Authentication
+                    {t("twoFactorAuth.title")}
                   </h2>
                   <p className="font-base">
-                    Enter the six-digit code sent to{" "}
-                    {mfaType === "Email" 
-                      ? (emailMasked || "your email")
-                      : (phoneNumberMasked || "your device")}
+                    {t("twoFactorAuth.description", { 
+                      target: mfaType === "Email" 
+                        ? (emailMasked || t("twoFactorAuth.yourEmail"))
+                        : (phoneNumberMasked || t("twoFactorAuth.yourDevice"))
+                    })}
                   </p>
                 </div>
 
@@ -229,18 +230,18 @@ function TwoFactorAuth() {
                         role="status"
                         aria-hidden="true"
                       ></span>
-                      Verifying...
+                      {t("twoFactorAuth.verifying")}
                     </>
                   ) : (
-                    "Verify"
+                    t("twoFactorAuth.verify")
                   )}
                 </button>
 
                 <div className="text-center mt-4">
-                  <p className="font-base mb-2">Didn't receive the code?</p>
+                  <p className="font-base mb-2">{t("twoFactorAuth.didntReceiveCode")}</p>
                   {resendTimer > 0 ? (
                     <p className="font-sm text-muted">
-                      Resend code in {resendTimer}s
+                    {t("twoFactorAuth.resendCodeIn", { seconds: resendTimer })}
                     </p>
                   ) : (
                     <button
@@ -249,7 +250,7 @@ function TwoFactorAuth() {
                       className="btn btn-link font-base fw-medium p-0"
                       disabled={isResending}
                     >
-                      {isResending ? "Sending..." : "Resend Code"}
+                      {isResending ? t("twoFactorAuth.sending") : t("twoFactorAuth.resendCode")}
                     </button>
                   )}
                 </div>

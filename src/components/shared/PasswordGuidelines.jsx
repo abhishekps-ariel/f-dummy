@@ -1,7 +1,9 @@
 import React, { memo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { VALIDATION } from '../../constants/appConstants';
 
 const PasswordGuidelines = memo(({ showGuidelines, passwordGuidelines }) => {
+  const { t } = useTranslation();
   if (!showGuidelines) return null;
 
   return (
@@ -26,7 +28,7 @@ const PasswordGuidelines = memo(({ showGuidelines, passwordGuidelines }) => {
         color: '#28a745',
         fontSize: '14px'
       }}>
-        Password Guidelines
+        {t("passwordGuidelines.title")}
       </div>
       <div style={{ fontSize: '13px', lineHeight: '1.6' }}>
         <div style={{ marginBottom: '6px' }}>
@@ -37,7 +39,7 @@ const PasswordGuidelines = memo(({ showGuidelines, passwordGuidelines }) => {
           }}>
             {passwordGuidelines.minLength ? '✓' : '✗'}
           </span>
-          At least {VALIDATION.MIN_PASSWORD_LENGTH} Characters
+          {t("passwordGuidelines.minLength", { count: VALIDATION.MIN_PASSWORD_LENGTH })}
         </div>
         <div style={{ marginBottom: '6px' }}>
           <span style={{ 
@@ -47,7 +49,7 @@ const PasswordGuidelines = memo(({ showGuidelines, passwordGuidelines }) => {
           }}>
             {passwordGuidelines.hasUppercase ? '✓' : '✗'}
           </span>
-          One uppercase letter
+          {t("passwordGuidelines.uppercase")}
         </div>
         <div style={{ marginBottom: '6px' }}>
           <span style={{ 
@@ -57,7 +59,7 @@ const PasswordGuidelines = memo(({ showGuidelines, passwordGuidelines }) => {
           }}>
             {passwordGuidelines.hasLowercase ? '✓' : '✗'}
           </span>
-          One lowercase letter
+          {t("passwordGuidelines.lowercase")}
         </div>
         <div style={{ marginBottom: '6px' }}>
           <span style={{ 
@@ -67,7 +69,7 @@ const PasswordGuidelines = memo(({ showGuidelines, passwordGuidelines }) => {
           }}>
             {passwordGuidelines.hasNumber ? '✓' : '✗'}
           </span>
-          One Numeric value
+          {t("passwordGuidelines.number")}
         </div>
         <div>
           <span style={{ 
@@ -77,7 +79,7 @@ const PasswordGuidelines = memo(({ showGuidelines, passwordGuidelines }) => {
           }}>
             {passwordGuidelines.hasSpecialChar ? '✓' : '✗'}
           </span>
-          One Special Character (@#$%^&*)
+          {t("passwordGuidelines.specialChar")}
         </div>
       </div>
     </div>

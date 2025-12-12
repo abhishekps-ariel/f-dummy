@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useSearchParams, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { verifyEmail, resendVerification } from "../../services/authService";
@@ -6,6 +7,7 @@ import loginImg from "../../assets/logo-sample.png";
 import "../../styles/custom.css";
 
 function VerificationPage() {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const { token: pathToken } = useParams();
 
@@ -25,7 +27,7 @@ function VerificationPage() {
       if (!token) {
         setIsLoading(false);
         setIsVerified(false);
-        setVerificationMessage("Invalid verification link. Token not found.");
+        setVerificationMessage(t("verification.invalidLink"));
         return;
       }
 
@@ -50,7 +52,7 @@ function VerificationPage() {
         if (response.isSuccess) {
           setIsVerified(true);
           setVerificationMessage(
-            response.msg || "Your account has been verified successfully."
+            response.msg || t("verification.verificationSuccess")
           );
 
           sessionStorage.setItem(
@@ -58,7 +60,7 @@ function VerificationPage() {
             JSON.stringify({
               isVerified: true,
               message:
-                response.msg || "Your account has been verified successfully.",
+                response.msg || t("verification.verificationSuccess"),
             })
           );
         } else {
@@ -72,17 +74,14 @@ function VerificationPage() {
           let showAsVerified = false;
 
           if (isExpired) {
-            userMessage =
-              "Your verification link has expired. Please request a new one to complete verification.";
+            userMessage = t("verification.linkExpiredDesc");
           } else if (
             backendMessage.includes("Invalid or unknown verification token")
           ) {
-            userMessage =
-              "Your account has already been verified. You can now log in!";
+            userMessage = t("verification.alreadyVerified");
             showAsVerified = true;
           } else {
-            userMessage =
-              "Unable to verify your account. Please try again or contact support.";
+            userMessage = t("verification.verificationFailed");
           }
 
           setIsVerified(showAsVerified);
@@ -100,10 +99,8 @@ function VerificationPage() {
         }
       } catch {
         setIsVerified(false);
-        setVerificationMessage(
-          "An error occurred during verification. Please try again."
-        );
-        toast.error("Verification failed. Please try again.");
+        setVerificationMessage(t("verification.errorOccurred"));
+        toast.error(t("verification.verificationFailed"));
       } finally {
         setIsLoading(false);
       }
@@ -114,13 +111,13 @@ function VerificationPage() {
 
   const handleResendLink = async () => {
     if (!userEmail.trim()) {
-      toast.error("Please enter your email address");
+      toast.error(t("verification.pleaseEnterEmail"));
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(userEmail)) {
-      toast.error("Please enter a valid email address");
+      toast.error(t("verification.pleaseEnterValidEmail"));
       return;
     }
 
@@ -129,15 +126,15 @@ function VerificationPage() {
       const response = await resendVerification(userEmail);
 
       if (response.isSuccess) {
-        toast.success(response.msg || "Verification link sent to your email!");
+        toast.success(response.msg || t("verification.verificationLinkSent"));
         setUserEmail("");
       } else {
         toast.error(
-          response.msg || "Failed to send verification link. Please try again."
+          response.msg || t("verification.failedSendLink")
         );
       }
     } catch {
-      toast.error("Failed to send verification link. Please try again.");
+      toast.error(t("verification.failedSendLink"));
     } finally {
       setIsResending(false);
     }
@@ -168,14 +165,14 @@ function VerificationPage() {
                           role="status"
                           style={{ width: "4rem", height: "4rem" }}
                         >
-                          <span className="visually-hidden">Loading...</span>
+                          <span className="visually-hidden">{t("common.loading")}</span>
                         </div>
                       </div>
                       <h2 className="font-xl-med fw-bold">
-                        Verifying Email...
+                        {t("verification.verifyingEmail")}
                       </h2>
                       <p className="font-base text-muted">
-                        Please wait while we verify your email address.
+                        {t("verification.verifyingEmailDesc")}
                       </p>
                     </div>
                   ) : isVerified ? (
@@ -188,7 +185,7 @@ function VerificationPage() {
                           ></i>
                         </div>
                         <h2 className="font-xl-med fw-bold text-success">
-                          Account Verified!
+                          {t("verification.accountVerified")}
                         </h2>
                         <p className="font-base text-muted">
                           {verificationMessage}
@@ -200,7 +197,7 @@ function VerificationPage() {
                         className="btn custom-btn theme-btn text-center w-100"
                       >
                         <i className="fa-solid fa-sign-in-alt me-2"></i>
-                        Login to Your Account
+                        {t("verification.loginToAccount")}
                       </Link>
                     </>
                   ) : (
@@ -218,8 +215,8 @@ function VerificationPage() {
                         </div>
                         <h2 className="font-xl-med fw-bold text-warning">
                           {showResendForm
-                            ? "Link Expired"
-                            : "Verification Error"}
+                            ? t("verification.linkExpired")
+                            : t("verification.verificationError")}
                         </h2>
                         <p className="font-base text-muted">
                           {verificationMessage}
@@ -231,7 +228,7 @@ function VerificationPage() {
                           <>
                             <div className="form-group text-start">
                               <label className="label-text">
-                                Enter your email address
+                                {t("verification.enterEmailAddress")}
                               </label>
                               <div className="input-group">
                                 <div className="user-icon">
@@ -260,12 +257,12 @@ function VerificationPage() {
                                     role="status"
                                     aria-hidden="true"
                                   ></span>
-                                  Sending...
+                                  {t("verification.sending")}
                                 </>
                               ) : (
                                 <>
                                   <i className="fa-solid fa-paper-plane me-2"></i>
-                                  Resend Verification Link
+                                  {t("verification.resendVerificationLink")}
                                 </>
                               )}
                             </button>
@@ -274,7 +271,7 @@ function VerificationPage() {
                               to="/login"
                               className="btn btn-link text-dark-black fw-medium"
                             >
-                              Back to Login
+                              {t("verification.backToLogin")}
                             </Link>
                           </>
                         ) : (
@@ -284,7 +281,7 @@ function VerificationPage() {
                             className="btn custom-btn theme-btn text-center w-100"
                           >
                             <i className="fa-solid fa-sign-in-alt me-2"></i>
-                            Go to Login
+                            {t("verification.goToLogin")}
                           </Link>
                         )}
                       </div>

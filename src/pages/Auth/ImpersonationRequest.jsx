@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { ROUTES } from "../../constants/routerConstants";
@@ -9,6 +10,7 @@ import {
 } from "../../services/authService";
 
 function ImpersonationRequest() {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -26,8 +28,8 @@ function ImpersonationRequest() {
 
       if (!userId) {
         setLoading(false);
-        setMessage("Missing required parameter: userId");
-        toast.error("Invalid link: userId is required");
+        setMessage(t("impersonation.missingParameter"));
+        toast.error(t("impersonation.invalidLink"));
         return;
       }
 
@@ -43,19 +45,19 @@ function ImpersonationRequest() {
           const { token, refreshToken, user } = response.data;
           storeAuthData({ token, refreshToken, user });
           setImpersonationState(true, user?.fullName || user?.email || "User");
-          setMessage("Impersonation successful. Redirecting...");
-          toast.success("Impersonation successful");
+          setMessage(t("impersonation.impersonationSuccessful"));
+          toast.success(t("impersonation.impersonationSuccessfulToast"));
           // Hard reload to avoid any stale pre-auth redirects on first load
           window.location.replace(ROUTES.DASHBOARD);
         } else {
           const backendMessage =
-            response.msg || "Failed to start impersonation";
+            response.msg || t("impersonation.failedStartImpersonation");
           setMessage(backendMessage);
           toast.error(backendMessage);
         }
       } catch (err) {
         const errMsg =
-          err?.response?.data?.message || err?.message || "Impersonation failed";
+          err?.response?.data?.message || err?.message || t("impersonation.impersonationFailed");
         setMessage(errMsg);
         toast.error(errMsg);
       } finally {
@@ -73,12 +75,12 @@ function ImpersonationRequest() {
           <div className="col-lg-7 col-md-8 mx-auto">
             <div className="login-inner d-flex flex-column align-items-center justify-content-center py-5">
               <h2 className="font-xl-med fw-bold mb-3">
-                Processing impersonation...
+                {t("impersonation.processing")}
               </h2>
               {loading ? (
-                <p className="text-muted">Please wait</p>
+                <p className="text-muted">{t("impersonation.pleaseWait")}</p>
               ) : (
-                <p className="text-muted">{message || "Done"}</p>
+                <p className="text-muted">{message || t("impersonation.done")}</p>
               )}
             </div>
           </div>

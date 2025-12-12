@@ -85,29 +85,26 @@ function SetNewPassword() {
 
     // New Password validation
     if (!formData.newPassword.trim()) {
-      newErrors.newPassword = "New password is required";
+      newErrors.newPassword = t("setNewPassword.newPasswordRequired");
     } else {
       if (formData.newPassword.length < VALIDATION.MIN_PASSWORD_LENGTH) {
-        newErrors.newPassword = "Password must be at least 8 characters long";
+        newErrors.newPassword = t("setNewPassword.newPasswordMinLength");
       } else if (!/[A-Z]/.test(formData.newPassword)) {
-        newErrors.newPassword =
-          "Password must contain at least one uppercase letter";
+        newErrors.newPassword = t("setNewPassword.newPasswordUppercase");
       } else if (!/[a-z]/.test(formData.newPassword)) {
-        newErrors.newPassword =
-          "Password must contain at least one lowercase letter";
+        newErrors.newPassword = t("setNewPassword.newPasswordLowercase");
       } else if (!/\d/.test(formData.newPassword)) {
-        newErrors.newPassword = "Password must contain at least one number";
+        newErrors.newPassword = t("setNewPassword.newPasswordNumber");
       } else if (!/[@#$%^&*]/.test(formData.newPassword)) {
-        newErrors.newPassword =
-          "Password must contain at least one special character (@#$%^&*)";
+        newErrors.newPassword = t("setNewPassword.newPasswordSpecialChar");
       }
     }
 
     // Confirm Password validation
     if (!formData.confirmPassword.trim()) {
-      newErrors.confirmPassword = "Please confirm your password";
+      newErrors.confirmPassword = t("setNewPassword.confirmPasswordRequired");
     } else if (formData.newPassword !== formData.confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match";
+      newErrors.confirmPassword = t("setNewPassword.passwordsDoNotMatch");
     }
 
     setErrors(newErrors);
@@ -186,7 +183,7 @@ function SetNewPassword() {
                     <span className="visually-hidden">Loading...</span>
                   </div>
                   <p className="font-base text-muted">
-                    Validating reset link...
+                    {t("setNewPassword.validatingResetLink")}
                   </p>
                 </div>
               </div>
@@ -223,11 +220,10 @@ function SetNewPassword() {
                         ></i>
                       </div>
                       <h2 className="font-xl-med fw-bold text-warning">
-                        Invalid or Expired Link
+                        {t("setNewPassword.invalidExpiredLink")}
                       </h2>
                       <p className="font-base text-muted">
-                        The password reset link has expired or is invalid.
-                        Please request a new password reset.
+                        {t("setNewPassword.invalidExpiredLinkDesc")}
                       </p>
                     </div>
 
@@ -236,7 +232,7 @@ function SetNewPassword() {
                       className="btn custom-btn theme-btn text-center w-100"
                     >
                       <i className="fa-solid fa-envelope me-2"></i>
-                      Request Password Reset
+                      {t("setNewPassword.requestPasswordReset")}
                     </Link>
                   </div>
                 </form>
@@ -267,9 +263,9 @@ function SetNewPassword() {
 
                   {!isPasswordChanged ? (
                     <>
-                      <h2 className="font-xl-med fw-bold">Set New Password</h2>
+                      <h2 className="font-xl-med fw-bold">{t("setNewPassword.title")}</h2>
                       <p className="font-base">
-                        Please enter your new password
+                        {t("setNewPassword.description")}
                       </p>
                     </>
                   ) : (
@@ -282,11 +278,10 @@ function SetNewPassword() {
                           ></i>
                         </div>
                         <h2 className="font-xl-med fw-bold text-success">
-                          Password Changed!
+                          {t("setNewPassword.passwordChanged")}
                         </h2>
                         <p className="font-base text-muted">
-                          Your password has been successfully reset. You can now
-                          log in with your new password.
+                          {t("setNewPassword.passwordChangedDesc")}
                         </p>
                       </div>
                     </>
@@ -296,7 +291,7 @@ function SetNewPassword() {
                 {!isPasswordChanged ? (
                   <>
                     <div className="form-group">
-                      <label className="label-text">New Password</label>
+                      <label className="label-text">{t("setNewPassword.newPassword")}</label>
                       <div className="input-group position-relative">
                         <div className="user-icon">
                           <i className="fa-solid fa-lock"></i>
@@ -307,7 +302,7 @@ function SetNewPassword() {
                           className={`form-control ${
                             errors.newPassword ? "is-invalid" : ""
                           }`}
-                          placeholder="Enter new password"
+                          placeholder={t("setNewPassword.placeholderNewPassword")}
                           value={formData.newPassword}
                           onChange={handleChange}
                           onFocus={() => setShowPasswordGuidelines(true)}
@@ -319,7 +314,7 @@ function SetNewPassword() {
                           onClick={togglePasswordVisibility}
                           style={{ cursor: "pointer" }}
                           title={
-                            showPasswords ? "Hide passwords" : "Show passwords"
+                            showPasswords ? t("setNewPassword.hidePasswords") : t("setNewPassword.showPasswords")
                           }
                         >
                           <i
@@ -344,7 +339,7 @@ function SetNewPassword() {
                     </div>
 
                     <div className="form-group">
-                      <label className="label-text">Confirm New Password</label>
+                      <label className="label-text">{t("setNewPassword.confirmNewPassword")}</label>
                       <div className="input-group position-relative">
                         <div className="user-icon">
                           <i className="fa-solid fa-lock"></i>
@@ -355,7 +350,7 @@ function SetNewPassword() {
                           className={`form-control ${
                             errors.confirmPassword ? "is-invalid" : ""
                           }`}
-                          placeholder="Confirm new password"
+                          placeholder={t("setNewPassword.placeholderConfirmPassword")}
                           value={formData.confirmPassword}
                           onChange={handleChange}
                           required
@@ -365,7 +360,7 @@ function SetNewPassword() {
                           onClick={togglePasswordVisibility}
                           style={{ cursor: "pointer" }}
                           title={
-                            showPasswords ? "Hide passwords" : "Show passwords"
+                            showPasswords ? t("setNewPassword.hidePasswords") : t("setNewPassword.showPasswords")
                           }
                         >
                           <i
@@ -396,10 +391,10 @@ function SetNewPassword() {
                             role="status"
                             aria-hidden="true"
                           ></span>
-                          Updating Password...
+                          {t("setNewPassword.updatingPassword")}
                         </>
                       ) : (
-                        "Reset Password"
+                        t("setNewPassword.resetPassword")
                       )}
                     </button>
 
@@ -408,8 +403,7 @@ function SetNewPassword() {
                         to="/login"
                         className="font-base fw-medium text-decoration-none"
                       >
-                        <i className="fa-solid fa-chevron-left me-1"></i> Back
-                        to Login
+                        <i className="fa-solid fa-chevron-left me-1"></i> {t("setNewPassword.backToLogin")}
                       </Link>
                     </div>
                   </>
@@ -419,7 +413,7 @@ function SetNewPassword() {
                     className="btn custom-btn theme-btn text-center w-100"
                   >
                     <i className="fa-solid fa-sign-in-alt me-2"></i>
-                    Go to Login
+                    {t("setNewPassword.goToLogin")}
                   </Link>
                 )}
               </form>
