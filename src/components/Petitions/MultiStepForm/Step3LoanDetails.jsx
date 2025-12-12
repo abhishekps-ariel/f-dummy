@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import CustomDropdown from "../../shared/CustomDropdown";
 import { formatCurrencyDisplay } from "../../../utils/currencyUtils"; 
 
@@ -12,12 +13,13 @@ const Step3LoanDetails = ({
   getLienPositions,
   getLenderTypes,
 }) => {
+  const { t } = useTranslation();
   return (
           <div>
-            <h2 className="theme-color font-med mb-1">3. Loan Details</h2>
+            <h2 className="theme-color font-med mb-1">{t("petitionSteps.step3.title")}</h2>
 
             <p className="text-muted small mb-3">
-              Provide the key financial information for the loan.
+              {t("petitionSteps.step3.description")}
             </p>
 
             {commonDataError && (
@@ -31,7 +33,7 @@ const Step3LoanDetails = ({
             <div className="row g-3">
               <div className="col-md-6">
                 <label className="form-label">
-                  Is MIN Applicable? *
+                  {t("petitionSteps.step3.isMinApplicable")} *
                 </label>
                 <div className="d-flex gap-3">
                   <div className="form-check">
@@ -45,7 +47,7 @@ const Step3LoanDetails = ({
                       onChange={handleInputChange}
                     />
                     <label className="form-check-label" htmlFor="isMinApplicableYes" style={{ fontSize: '13px', fontWeight: '500', color: '#333' }}>
-                      Yes
+                      {t("petitionSteps.step3.yes")}
                     </label>
                   </div>
                   <div className="form-check">
@@ -59,7 +61,7 @@ const Step3LoanDetails = ({
                       onChange={handleInputChange}
                     />
                     <label className="form-check-label" htmlFor="isMinApplicableNo" style={{ fontSize: '13px', fontWeight: '500', color: '#333' }}>
-                      No
+                      {t("petitionSteps.step3.no")}
                     </label>
                   </div>
                 </div>
@@ -73,7 +75,7 @@ const Step3LoanDetails = ({
               {formData.isMinApplicable === "yes" && (
                 <div className="col-md-6">
                   <label htmlFor="minNumber" className="form-label">
-                    MIN Number *
+                    {t("petitionSteps.step3.minNumber")} *
                   </label>
 
                   <input
@@ -87,7 +89,7 @@ const Step3LoanDetails = ({
                     onChange={handleInputChange}
                     inputMode="numeric"
                     pattern="[0-9]*"
-                    placeholder="Enter MIN number"
+                    placeholder={t("petitionSteps.step3.placeholderMinNumber")}
                   />
 
                   {fieldErrors.minNumber && (
@@ -100,7 +102,7 @@ const Step3LoanDetails = ({
 
               <div className="col-md-6">
                 <label htmlFor="loanNumber" className="form-label">
-                  Loan Number *
+                  {t("petitionSteps.step3.loanNumber")} *
                 </label>
 
                 <input
@@ -114,7 +116,7 @@ const Step3LoanDetails = ({
                   onChange={handleInputChange}
                   inputMode="numeric"
                   pattern="[0-9]*"
-                  placeholder="Enter loan number"
+                  placeholder={t("petitionSteps.step3.placeholderLoanNumber")}
                 />
 
                 {fieldErrors.loanNumber && (
@@ -126,7 +128,7 @@ const Step3LoanDetails = ({
 
               <div className="col-md-6">
                 <label htmlFor="petitionLoanTypeId" className="form-label">
-                  Loan Type *
+                  {t("petitionSteps.step3.loanType")} *
                 </label>
 
                 <CustomDropdown
@@ -134,11 +136,11 @@ const Step3LoanDetails = ({
                   name="petitionLoanTypeId"
                   value={formData.petitionLoanTypeId || ""}
                   onChange={handleInputChange}
-                  placeholder="Select Loan Type"
+                  placeholder={t("petitionSteps.step3.selectLoanType")}
                   disabled={commonDataLoading}
                   error={!!fieldErrors.petitionLoanTypeId}
                   options={[
-                    { value: "", label: "Select Loan Type" },
+                    { value: "", label: t("petitionSteps.step3.selectLoanType") },
                     ...getLoanTypes().map((loanType) => ({
                       value: loanType.id,
                       label: loanType.name,
@@ -155,14 +157,14 @@ const Step3LoanDetails = ({
                 {commonDataLoading && (
                   <div className="form-text">
                     <i className="fas fa-spinner fa-spin me-1"></i>
-                    Loading loan types...
+                    {t("petitionSteps.step3.loadingLoanTypes")}
                   </div>
                 )}
               </div>
 
               <div className="col-md-6">
                 <label htmlFor="lienPosition" className="form-label">
-                  Lien Position *
+                  {t("petitionSteps.step3.lienPosition")} *
                 </label>
 
                 <CustomDropdown
@@ -170,11 +172,11 @@ const Step3LoanDetails = ({
                   name="lienPosition"
                   value={formData.lienPosition ?? ""}
                   onChange={handleInputChange}
-                  placeholder="Select Position"
+                  placeholder={t("petitionSteps.step3.selectPosition")}
                   disabled={commonDataLoading}
                   error={!!fieldErrors.lienPosition}
                   options={[
-                    { value: "", label: "Select Position" },
+                    { value: "", label: t("petitionSteps.step3.selectPosition") },
                     ...getLienPositions().map((position) => ({
                       value: position.value,
                       label: position.name,
@@ -191,14 +193,14 @@ const Step3LoanDetails = ({
                 {commonDataLoading && (
                   <div className="form-text">
                     <i className="fas fa-spinner fa-spin me-1"></i>
-                    Loading lien positions...
+                    {t("petitionSteps.step3.loadingLienPositions")}
                   </div>
                 )}
               </div>
 
               <div className="col-md-6">
                 <label htmlFor="originationDate" className="form-label">
-                  Origination Date *
+                  {t("petitionSteps.step3.originationDate")} *
                 </label>
 
                 <input
@@ -221,7 +223,7 @@ const Step3LoanDetails = ({
 
               <div className="col-md-6">
                 <label htmlFor="originalPrincipalAmount" className="form-label">
-                  Original Principal Amount ($) *
+                  {t("petitionSteps.step3.originalPrincipalAmount")} *
                 </label>
 
                 <input
@@ -244,7 +246,7 @@ const Step3LoanDetails = ({
 
               <div className="col-md-6">
                 <label htmlFor="currentPrincipalBalance" className="form-label">
-                  Current Principal Balance ($) *
+                  {t("petitionSteps.step3.currentPrincipalBalance")} *
                 </label>
 
                 <input
@@ -267,7 +269,7 @@ const Step3LoanDetails = ({
 
               <div className="col-md-6">
                 <label htmlFor="interestRatePercent" className="form-label">
-                  Interest Rate (%) *
+                  {t("petitionSteps.step3.interestRatePercent")} *
                 </label>
 
                 <input
@@ -291,7 +293,7 @@ const Step3LoanDetails = ({
 
               <div className="col-md-6">
                 <label htmlFor="monthlyPaymentAmount" className="form-label">
-                  Monthly Payment Amount ($) *
+                  {t("petitionSteps.step3.monthlyPaymentAmount")} *
                 </label>
 
                 <input
@@ -314,7 +316,7 @@ const Step3LoanDetails = ({
 
               <div className="col-md-6">
                 <label htmlFor="delinquencyDaysAtFiling" className="form-label">
-                  Delinquency Days at Filing *
+                  {t("petitionSteps.step3.delinquencyDaysAtFiling")} *
                 </label>
 
                 <input
@@ -346,7 +348,7 @@ const Step3LoanDetails = ({
 
               <div className="col-md-6">
                 <label htmlFor="mortgageBrokerLicenseNumber" className="form-label">
-                  Mortgage Broker License Number
+                  {t("petitionSteps.step3.mortgageBrokerLicenseNumber")}
                 </label>
 
                 <input
@@ -369,7 +371,7 @@ const Step3LoanDetails = ({
 
               <div className="col-md-6">
                 <label htmlFor="mortgageLoanOriginatorLicenseNumber" className="form-label">
-                  Mortgage Loan Originator License Number
+                  {t("petitionSteps.step3.mortgageLoanOriginatorLicenseNumber")}
                 </label>
 
                 <input
@@ -392,7 +394,7 @@ const Step3LoanDetails = ({
 
               <div className="col-md-6">
                 <label htmlFor="lenderId" className="form-label">
-                  Lender Type
+                  {t("petitionSteps.step3.lenderType")}
                 </label>
 
                 <CustomDropdown
@@ -400,11 +402,11 @@ const Step3LoanDetails = ({
                   name="lenderId"
                   value={formData.lenderId || ""}
                   onChange={handleInputChange}
-                  placeholder="Select Lender Type"
+                  placeholder={t("petitionSteps.step3.selectLenderType")}
                   disabled={commonDataLoading}
                   error={!!fieldErrors.lenderId}
                   options={[
-                    { value: "", label: "Select Lender Type" },
+                    { value: "", label: t("petitionSteps.step3.selectLenderType") },
                     ...getLenderTypes().map((lenderType) => ({
                       value: lenderType.id,
                       label: lenderType.name,
@@ -421,7 +423,7 @@ const Step3LoanDetails = ({
                 {commonDataLoading && (
                   <div className="form-text">
                     <i className="fas fa-spinner fa-spin me-1"></i>
-                    Loading lender types...
+                    {t("petitionSteps.step3.loadingLenderTypes")}
                   </div>
                 )}
               </div>
@@ -444,7 +446,7 @@ const Step3LoanDetails = ({
                         htmlFor="variableRate"
                         style={{ fontSize: '13px', fontWeight: '500', color: '#333' }}
                       >
-                        Variable Rate
+                        {t("petitionSteps.step3.variableRate")}
                       </label>
                     </div>
                   </div>
@@ -465,7 +467,7 @@ const Step3LoanDetails = ({
                         htmlFor="interestOnly"
                         style={{ fontSize: '13px', fontWeight: '500', color: '#333' }}
                       >
-                        Interest Only
+                        {t("petitionSteps.step3.interestOnly")}
                       </label>
                     </div>
                   </div>
@@ -486,7 +488,7 @@ const Step3LoanDetails = ({
                         htmlFor="negativeAmortization"
                         style={{ fontSize: '13px', fontWeight: '500', color: '#333' }}
                       >
-                        Negative Amortization
+                        {t("petitionSteps.step3.negativeAmortization")}
                       </label>
                     </div>
                   </div>
@@ -496,7 +498,7 @@ const Step3LoanDetails = ({
               {/* Loan Modification Fields - Moved to Bottom */}
               <div className="col-md-6">
                 <label className="form-label">
-                  Did the borrower request a loan modification? *
+                  {t("petitionSteps.step3.borrowerRequestedLoanModification")} *
                 </label>
                 {fieldErrors.borrowerRequestedLoanModification && (
                   <div className="text-danger small mt-1">
@@ -522,7 +524,7 @@ const Step3LoanDetails = ({
                       }
                     />
                     <label className="form-check-label" htmlFor="borrowerRequestedLoanModificationYes" style={{ fontSize: '13px', fontWeight: '500', color: '#333' }}>
-                      Yes
+                      {t("petitionSteps.step3.yes")}
                     </label>
                   </div>
                   <div className="form-check">
@@ -543,7 +545,7 @@ const Step3LoanDetails = ({
                       }
                     />
                     <label className="form-check-label" htmlFor="borrowerRequestedLoanModificationNo" style={{ fontSize: '13px', fontWeight: '500', color: '#333' }}>
-                      No
+                      {t("petitionSteps.step3.no")}
                     </label>
                   </div>
                 </div>
@@ -552,7 +554,7 @@ const Step3LoanDetails = ({
               {formData.borrowerRequestedLoanModification === true && (
                 <div className="col-md-6">
                   <label className="form-label">
-                    Loan modification request finalized? *
+                    {t("petitionSteps.step3.loanModificationRequestFinalized")} *
                   </label>
                   {fieldErrors.loanModificationRequestFinalized && (
                     <div className="text-danger small mt-1">
@@ -578,7 +580,7 @@ const Step3LoanDetails = ({
                         }
                       />
                       <label className="form-check-label" htmlFor="loanModificationRequestFinalizedYes" style={{ fontSize: '13px', fontWeight: '500', color: '#333' }}>
-                        Yes
+                        {t("petitionSteps.step3.yes")}
                       </label>
                     </div>
                     <div className="form-check">
@@ -599,7 +601,7 @@ const Step3LoanDetails = ({
                         }
                       />
                       <label className="form-check-label" htmlFor="loanModificationRequestFinalizedNo" style={{ fontSize: '13px', fontWeight: '500', color: '#333' }}>
-                        No
+                        {t("petitionSteps.step3.no")}
                       </label>
                     </div>
                   </div>

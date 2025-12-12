@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 const Step10ReviewSubmit = ({
   formData,
@@ -10,15 +11,15 @@ const Step10ReviewSubmit = ({
   getAssigneeRoles,
   userProfile,
 }) => {
+  const { t } = useTranslation();
     return (
           <div>
             <h2 className="theme-color font-med mb-1">
-              10. Review & Submit Petition
+              {t("petitionSteps.step10.title")}
             </h2>
 
             <p className="text-muted small mb-3">
-              Please review all entered petition details before final
-              submission.
+              {t("petitionSteps.step10.description")}
             </p>
 
             {/* Read-only Summary */}
@@ -29,7 +30,7 @@ const Step10ReviewSubmit = ({
               <div className="review-section mb-4">
                 <div className="d-flex justify-content-between align-items-center mb-2">
                   <h5 className="review-section-title mb-0">
-                    Property Information
+                    {t("petitionSteps.step10.propertyInformation")}
                   </h5>
 
                   <button
@@ -38,14 +39,14 @@ const Step10ReviewSubmit = ({
                     onClick={() => handleEditSection(9)}
                     style={{ padding: "6px 12px", fontSize: "13px" }}
                   >
-                    <i className="fas fa-edit me-1"></i>Edit
+                    <i className="fas fa-edit me-1"></i>{t("petitionSteps.step10.edit")}
                   </button>
                 </div>
 
                 <div className="review-content">
                   <div className="row g-3">
                     <div className="col-md-6">
-                      <strong>Street Address:</strong>{" "}
+                      <strong>{t("petitionSteps.step10.streetAddress")}</strong>{" "}
                       {formData.propertyStreet1}
                       {formData.propertyStreet2 && (
                         <>
@@ -58,19 +59,19 @@ const Step10ReviewSubmit = ({
                     </div>
 
                     <div className="col-md-3">
-                      <strong>City:</strong> {formData.propertyCity}
+                      <strong>{t("petitionSteps.step10.city")}</strong> {formData.propertyCity}
                     </div>
 
                     <div className="col-md-3">
-                      <strong>State:</strong> {formData.propertyState}
+                      <strong>{t("petitionSteps.step10.state")}</strong> {formData.propertyState}
                     </div>
 
                     <div className="col-md-3">
-                      <strong>ZIP Code:</strong> {formData.propertyZip}
+                      <strong>{t("petitionSteps.step10.zipCode")}</strong> {formData.propertyZip}
                     </div>
 
                     <div className="col-md-3">
-                      <strong>County:</strong> {formData.propertyCounty}
+                      <strong>{t("petitionSteps.step10.county")}</strong> {formData.propertyCounty}
                     </div>
                   </div>
                 </div>
@@ -81,7 +82,7 @@ const Step10ReviewSubmit = ({
               <div className="review-section mb-4">
                 <div className="d-flex justify-content-between align-items-center mb-2">
                   <h5 className="review-section-title mb-0">
-                    Loan Information
+                    {t("petitionSteps.step10.loanInformation")}
                   </h5>
 
                   <button
@@ -90,42 +91,42 @@ const Step10ReviewSubmit = ({
                     onClick={() => handleEditSection(9)}
                     style={{ padding: "6px 12px", fontSize: "13px" }}
                   >
-                    <i className="fas fa-edit me-1"></i>Edit
+                    <i className="fas fa-edit me-1"></i>{t("petitionSteps.step10.edit")}
                   </button>
                 </div>
 
                 <div className="review-content">
                   <div className="row g-3">
                     <div className="col-md-6">
-                      <strong>Loan Type:</strong>{" "}
+                      <strong>{t("petitionSteps.step10.loanType")}</strong>{" "}
                       {getLoanTypes().find(
                         (type) => type.id === formData.petitionLoanTypeId
                       )?.name ||
                         formData.petitionLoanTypeName ||
-                        "N/A"}
+                        t("petitionSteps.step10.na")}
                     </div>
 
                     <div className="col-md-6">
-                      <strong>Original Loan Amount:</strong> $
+                      <strong>{t("petitionSteps.step10.originalLoanAmount")}</strong> $
                       {formData.originalPrincipalAmount}
                     </div>
 
                     <div className="col-md-6">
-                      <strong>Current Balance:</strong> $
+                      <strong>{t("petitionSteps.step10.currentBalance")}</strong> $
                       {formData.currentPrincipalBalance}
                     </div>
 
                     <div className="col-md-6">
-                      <strong>Interest Rate:</strong>{" "}
+                      <strong>{t("petitionSteps.step10.interestRate")}</strong>{" "}
                       {formData.interestRatePercent}%
                     </div>
 
                     <div className="col-md-6">
-                      <strong>Loan Number:</strong> {formData.loanNumber}
+                      <strong>{t("petitionSteps.step3.loanNumber")}:</strong> {formData.loanNumber}
                     </div>
 
                     <div className="col-md-6">
-                      <strong>Lien Position:</strong>{" "}
+                      <strong>{t("petitionSteps.step10.lienPosition")}</strong>{" "}
                       {getLienPositions().find(
                         (position) => position.value === formData.lienPosition
                       )?.name || formData.lienPosition}
@@ -139,7 +140,7 @@ const Step10ReviewSubmit = ({
               <div className="review-section mb-4">
                 <div className="d-flex justify-content-between align-items-center mb-2">
                   <h5 className="review-section-title mb-0">
-                    Borrower Information
+                    {t("petitionSteps.step10.borrowerInformation")}
                   </h5>
 
                   <button
@@ -148,7 +149,7 @@ const Step10ReviewSubmit = ({
                     onClick={() => handleEditSection(9)}
                     style={{ padding: "6px 12px", fontSize: "13px" }}
                   >
-                    <i className="fas fa-edit me-1"></i>Edit
+                    <i className="fas fa-edit me-1"></i>{t("petitionSteps.step10.edit")}
                   </button>
                 </div>
 
@@ -157,31 +158,31 @@ const Step10ReviewSubmit = ({
                     formData.borrowers.map((borrower, index) => (
                       <div key={borrower.id} className="row g-3 mb-3">
                         <div className="col-12">
-                          <strong>Borrower {index + 1}:</strong>
+                          <strong>{t("petitionSteps.step4.borrower")} {index + 1}:</strong>
                         </div>
 
                         <div className="col-md-6">
-                          <strong>Name:</strong> {borrower.firstName}{" "}
+                          <strong>{t("petitionSteps.step10.name")}</strong> {borrower.firstName}{" "}
                           {borrower.middleName} {borrower.lastName}{" "}
                           {borrower.suffix}
                         </div>
 
                         <div className="col-md-6">
-                          <strong>Phone:</strong> {borrower.phone}
+                          <strong>{t("petitionSteps.step10.phone")}</strong> {borrower.phone}
                         </div>
 
                         <div className="col-md-6">
-                          <strong>Email:</strong> {borrower.email}
+                          <strong>{t("petitionSteps.step10.email")}</strong> {borrower.email}
                         </div>
 
                         <div className="col-md-6">
-                          <strong>Primary:</strong>{" "}
-                          {borrower.borrowerIsPrimary ? "Yes" : "No"}
+                          <strong>{t("petitionSteps.step10.primary")}</strong>{" "}
+                          {borrower.borrowerIsPrimary ? t("petitionSteps.step3.yes") : t("petitionSteps.step3.no")}
                         </div>
 
                         {borrower.mailingStreet1 && (
                           <div className="col-12">
-                            <strong>Mailing Address:</strong>{" "}
+                            <strong>{t("petitionSteps.step10.mailingAddress")}</strong>{" "}
                             {borrower.mailingStreet1}, {borrower.mailingCity},{" "}
                             {borrower.mailingState} {borrower.mailingZip}
                           </div>
@@ -190,7 +191,7 @@ const Step10ReviewSubmit = ({
                     ))
                   ) : (
                     <div className="text-muted">
-                      No borrower information available
+                      {t("petitionSteps.step10.noBorrowerInformation")}
                     </div>
                   )}
                 </div>
@@ -201,7 +202,7 @@ const Step10ReviewSubmit = ({
               <div className="review-section mb-4">
                 <div className="d-flex justify-content-between align-items-center mb-2">
                   <h5 className="review-section-title mb-0">
-                    Filing Entity Information
+                    {t("petitionSteps.step10.filingEntityInformation")}
                   </h5>
 
                   <button
@@ -210,26 +211,26 @@ const Step10ReviewSubmit = ({
                     onClick={() => handleEditSection(9)}
                     style={{ padding: "6px 12px", fontSize: "13px" }}
                   >
-                    <i className="fas fa-edit me-1"></i>Edit
+                    <i className="fas fa-edit me-1"></i>{t("petitionSteps.step10.edit")}
                   </button>
                 </div>
 
                 <div className="review-content">
                   <div className="row g-3">
                     <div className="col-md-6">
-                      <strong>Entity Name:</strong>{" "}
+                      <strong>{t("petitionSteps.step10.entityName")}</strong>{" "}
                       {formData.filingEntityLegalName}
                     </div>
 
                     <div className="col-md-6">
-                      <strong>Entity Type:</strong>{" "}
+                      <strong>{t("petitionSteps.step10.entityType")}</strong>{" "}
                       {filingEntityTypes.find(
                         (type) => type.id === formData.filingEntityTypeId
-                      )?.name || "N/A"}
+                      )?.name || t("petitionSteps.step10.na")}
                     </div>
 
                     <div className="col-md-6">
-                      <strong>Address:</strong> {formData.filingEntityStreet1}
+                      <strong>{t("petitionSteps.step10.address")}</strong> {formData.filingEntityStreet1}
                       {formData.filingEntityStreet2 && (
                         <>
                           <br />
@@ -244,30 +245,30 @@ const Step10ReviewSubmit = ({
                     </div>
 
                     <div className="col-md-6">
-                      <strong>Contact Name:</strong>{" "}
+                      <strong>{t("petitionSteps.step10.contactName")}</strong>{" "}
                       {formData.filingContactName}
                     </div>
 
                     <div className="col-md-6">
-                      <strong>Contact Email:</strong>{" "}
+                      <strong>{t("petitionSteps.step10.contactEmail")}</strong>{" "}
                       {formData.filingContactEmail}
                     </div>
 
                     <div className="col-md-6">
-                      <strong>Contact Phone:</strong>{" "}
+                      <strong>{t("petitionSteps.step10.contactPhone")}</strong>{" "}
                       {formData.filingContactPhone}
                     </div>
 
                     {formData.nmlsLicenseNumber && (
                       <div className="col-md-6">
-                        <strong>NMLS License:</strong>{" "}
+                        <strong>{t("petitionSteps.step10.nmlsLicense")}</strong>{" "}
                         {formData.nmlsLicenseNumber}
                       </div>
                     )}
 
                     {formData.stateLicenseNumber && (
                       <div className="col-md-6">
-                        <strong>State License:</strong>{" "}
+                        <strong>{t("petitionSteps.step10.stateLicense")}</strong>{" "}
                         {formData.stateLicenseNumber} (
                         {formData.stateLicenseState})
                       </div>
@@ -281,7 +282,7 @@ const Step10ReviewSubmit = ({
               <div className="review-section mb-4">
                 <div className="d-flex justify-content-between align-items-center mb-2">
                   <h5 className="review-section-title mb-0">
-                    Right-to-Cure (35A) Proofs
+                    {t("petitionSteps.step10.rightToCureProofs")}
                   </h5>
 
                   <button
@@ -290,40 +291,40 @@ const Step10ReviewSubmit = ({
                     onClick={() => handleEditSection(9)}
                     style={{ padding: "6px 12px", fontSize: "13px" }}
                   >
-                    <i className="fas fa-edit me-1"></i>Edit
+                    <i className="fas fa-edit me-1"></i>{t("petitionSteps.step10.edit")}
                   </button>
                 </div>
 
                 <div className="review-content">
                   <div className="row g-3">
                     <div className="col-12">
-                      <strong>35A Notice Sent:</strong>{" "}
-                      {formData.noticeSent ? "Yes" : "No"}
+                      <strong>{t("petitionSteps.step10.noticeSent")}</strong>{" "}
+                      {formData.noticeSent ? t("petitionSteps.step3.yes") : t("petitionSteps.step3.no")}
                     </div>
 
                     {formData.noticeSent && (
                       <>
                         <div className="col-md-6">
-                          <strong>Notice Date:</strong> {formData.noticeDate}
+                          <strong>{t("petitionSteps.step6.noticeDate")}</strong> {formData.noticeDate}
                         </div>
 
                         <div className="col-md-6">
-                          <strong>Amount in Default:</strong> $
+                          <strong>{t("petitionSteps.step10.amountInDefault")}</strong> $
                           {formData.amountInDefault}
                         </div>
 
                         <div className="col-md-6">
-                          <strong>Days Delinquent:</strong>{" "}
+                          <strong>{t("petitionSteps.step10.daysDelinquent")}</strong>{" "}
                           {formData.daysDelinquentAtNotice}
                         </div>
 
                         <div className="col-md-6">
-                          <strong>Cure Expiration:</strong>{" "}
+                          <strong>{t("petitionSteps.step10.cureExpiration")}</strong>{" "}
                           {formData.cureExpirationDate}
                         </div>
 
                         <div className="col-12">
-                          <strong>Notice Address:</strong>{" "}
+                          <strong>{t("petitionSteps.step10.noticeAddress")}</strong>{" "}
                           {formData.noticeAddressStreet1},{" "}
                           {formData.noticeAddressCity},{" "}
                           {formData.noticeAddressState}{" "}
@@ -340,7 +341,7 @@ const Step10ReviewSubmit = ({
               <div className="review-section mb-4">
                 <div className="d-flex justify-content-between align-items-center mb-2">
                   <h5 className="review-section-title mb-0">
-                    Form 35B Information
+                    {t("petitionSteps.step10.form35BInformation")}
                   </h5>
 
                   <button
@@ -349,15 +350,15 @@ const Step10ReviewSubmit = ({
                     onClick={() => handleEditSection(9)}
                     style={{ padding: "6px 12px", fontSize: "13px" }}
                   >
-                    <i className="fas fa-edit me-1"></i>Edit
+                    <i className="fas fa-edit me-1"></i>{t("petitionSteps.step10.edit")}
                   </button>
                 </div>
 
                 <div className="review-content">
                   <div className="row g-3">
                     <div className="col-12">
-                      <strong>35B Filed:</strong>{" "}
-                      {formData.certainMortgageLoan ? "Yes" : "No"}
+                      <strong>{t("petitionSteps.step10.filed")}</strong>{" "}
+                      {formData.certainMortgageLoan ? t("petitionSteps.step3.yes") : t("petitionSteps.step3.no")}
                     </div>
                   </div>
                 </div>
@@ -367,7 +368,7 @@ const Step10ReviewSubmit = ({
 
               <div className="review-section mb-4">
                 <div className="d-flex justify-content-between align-items-center mb-2">
-                  <h5 className="review-section-title mb-0">Loan Assignees</h5>
+                  <h5 className="review-section-title mb-0">{t("petitionSteps.step10.loanAssignees")}</h5>
 
                   <button
                     type="button"
@@ -375,7 +376,7 @@ const Step10ReviewSubmit = ({
                     onClick={() => handleEditSection(9)}
                     style={{ padding: "6px 12px", fontSize: "13px" }}
                   >
-                    <i className="fas fa-edit me-1"></i>Edit
+                    <i className="fas fa-edit me-1"></i>{t("petitionSteps.step10.edit")}
                   </button>
                 </div>
 
@@ -385,29 +386,29 @@ const Step10ReviewSubmit = ({
                     formData.loanAssignees.map((assignee, index) => (
                       <div key={index} className="row g-3 mb-3">
                         <div className="col-12">
-                          <strong>Assignee {index + 1}:</strong>
+                          <strong>{t("petitionSteps.step8.assignee")} {index + 1}:</strong>
                         </div>
 
                         <div className="col-md-6">
-                          <strong>Name:</strong> {assignee.assigneeName}
+                          <strong>{t("petitionSteps.step10.name")}</strong> {assignee.assigneeName}
                         </div>
 
                         <div className="col-md-6">
-                          <strong>Type:</strong>{" "}
+                          <strong>{t("petitionSteps.step10.type")}</strong>{" "}
                           {getAssigneeTypes().find(
                             (type) => type.id === assignee.assigneeTypeId
                           )?.name || assignee.assigneeTypeId}
                         </div>
 
                         <div className="col-md-6">
-                          <strong>Role:</strong>{" "}
+                          <strong>{t("petitionSteps.step10.role")}</strong>{" "}
                           {getAssigneeRoles().find(
                             (role) => role.id === assignee.assigneeRoleId
                           )?.name || assignee.assigneeRoleId}
                         </div>
 
                         <div className="col-12">
-                          <strong>Address:</strong> {assignee.street1}
+                          <strong>{t("petitionSteps.step10.address")}</strong> {assignee.street1}
                           {assignee.street2 && (
                             <>
                               <br />
@@ -423,14 +424,14 @@ const Step10ReviewSubmit = ({
 
                         {assignee.licenseNumber && (
                           <div className="col-md-6">
-                            <strong>License Number:</strong>{" "}
+                            <strong>{t("petitionSteps.step8.licenseNumber")}</strong>{" "}
                             {assignee.licenseNumber}
                           </div>
                         )}
 
                         {assignee.licenseState && (
                           <div className="col-md-6">
-                            <strong>License State:</strong>{" "}
+                            <strong>{t("petitionSteps.step8.licenseState")}</strong>{" "}
                             {assignee.licenseState}
                           </div>
                         )}
@@ -438,7 +439,7 @@ const Step10ReviewSubmit = ({
                     ))
                   ) : (
                     <div className="text-muted">
-                      No assignee information available
+                      {t("petitionSteps.step10.noAssigneeInformation")}
                     </div>
                   )}
                 </div>
@@ -449,7 +450,7 @@ const Step10ReviewSubmit = ({
               <div className="review-section mb-4">
                 <div className="d-flex justify-content-between align-items-center mb-2">
                   <h5 className="review-section-title mb-0">
-                    Attestation Data
+                    {t("petitionSteps.step10.attestationData")}
                   </h5>
 
                   <button
@@ -458,7 +459,7 @@ const Step10ReviewSubmit = ({
                     onClick={() => handleEditSection(9)}
                     style={{ padding: "6px 12px", fontSize: "13px" }}
                   >
-                    <i className="fas fa-edit me-1"></i>Edit
+                    <i className="fas fa-edit me-1"></i>{t("petitionSteps.step10.edit")}
                   </button>
                 </div>
 
@@ -468,7 +469,7 @@ const Step10ReviewSubmit = ({
                   {(userProfile?.signatureImageName || userProfile?.signatureUrl || userProfile?.signatureBase64) && (
                     <div className="row g-3 mt-3">
                       <div className="col-12">
-                        <strong>Signature Preview:</strong>
+                        <strong>{t("petitionSteps.step10.signaturePreview")}</strong>
 
                         <div
                           className="signature-preview-container p-3 border rounded bg-light mt-2"
@@ -504,23 +505,23 @@ const Step10ReviewSubmit = ({
 
                   <div className="row g-3 mt-3">
                     <div className="col-md-6">
-                      <strong>Signer Name:</strong> {formData.signerFirstName}{" "}
+                      <strong>{t("petitionSteps.step10.signerName")}</strong> {formData.signerFirstName}{" "}
                       {formData.signerMiddleInitial} {formData.signerLastName}
                     </div>
 
                     <div className="col-md-6">
-                      <strong>Signer Title:</strong> {formData.signerTitle}
+                      <strong>{t("petitionSteps.step10.signerTitle")}</strong> {formData.signerTitle}
                     </div>
 
                     <div className="col-md-6">
-                      <strong>Signer Email:</strong> {formData.signerEmail}
+                      <strong>{t("petitionSteps.step10.signerEmail")}</strong> {formData.signerEmail}
                     </div>
 
                     <div className="col-md-6">
-                      <strong>Certification:</strong>{" "}
+                      <strong>{t("petitionSteps.step10.certification")}</strong>{" "}
                       {formData.certification_check
-                        ? "Certified"
-                        : "Not Certified"}
+                        ? t("petitionSteps.step10.certified")
+                        : t("petitionSteps.step10.notCertified")}
                     </div>
                   </div>
                 </div>

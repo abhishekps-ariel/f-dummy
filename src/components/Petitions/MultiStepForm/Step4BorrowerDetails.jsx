@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 const Step4BorrowerDetails = ({
   formData,
@@ -19,13 +20,13 @@ const Step4BorrowerDetails = ({
   setSelectedBorrowerPredictionIndex,
   borrowerAddressesVerified,
 }) => {
+  const { t } = useTranslation();
           return (
           <div>
-            <h2 className="theme-color font-med mb-1">4. Borrower Details</h2>
+            <h2 className="theme-color font-med mb-1">{t("petitionSteps.step4.title")}</h2>
 
             <p className="text-muted small mb-3">
-              Enter the full name for each borrower on the loan. At least one
-              borrower is required.
+              {t("petitionSteps.step4.description")}
             </p>
 
             {formData.borrowers.map((borrower, index) => (
@@ -35,7 +36,7 @@ const Step4BorrowerDetails = ({
               >
                 <div className="d-flex justify-content-between align-items-center mb-3">
                   <h5 className="fw-semibold text-dark mb-0 font-base">
-                    Borrower {index + 1}
+                    {t("petitionSteps.step4.borrower")} {index + 1}
                   </h5>
 
                   {formData.borrowers.length > 1 && (
@@ -62,7 +63,7 @@ const Step4BorrowerDetails = ({
                         justifyContent: "center",
                       }}
                       onClick={() => removeBorrower(borrower.id)}
-                      title="Remove this borrower"
+                      title={t("petitionSteps.step4.removeBorrower")}
                     >
                       <i
                         className="fas fa-times"
@@ -74,7 +75,7 @@ const Step4BorrowerDetails = ({
 
                 <div className="row g-3">
                   <div className="col-md-3">
-                    <label className="form-label">First Name *</label>
+                    <label className="form-label">{t("petitionSteps.step4.firstName")} *</label>
 
                     <input
                       type="text"
@@ -105,7 +106,7 @@ const Step4BorrowerDetails = ({
                           });
                         }
                       }}
-                      placeholder="Enter first name"
+                      placeholder={t("petitionSteps.step4.placeholderFirstName")}
                     />
 
                     {fieldErrors[`borrower_${borrower.id}_firstName`] && (
@@ -116,7 +117,7 @@ const Step4BorrowerDetails = ({
                   </div>
 
                   <div className="col-md-2">
-                    <label className="form-label">Middle Name</label>
+                    <label className="form-label">{t("petitionSteps.step4.middleName")}</label>
 
                     <input
                       type="text"
@@ -147,7 +148,7 @@ const Step4BorrowerDetails = ({
                           });
                         }
                       }}
-                      placeholder="Middle"
+                      placeholder={t("petitionSteps.step4.placeholderMiddleName")}
                     />
 
                     {fieldErrors[`borrower_${borrower.id}_middleName`] && (
@@ -158,7 +159,7 @@ const Step4BorrowerDetails = ({
                   </div>
 
                   <div className="col-md-3">
-                    <label className="form-label">Last Name *</label>
+                    <label className="form-label">{t("petitionSteps.step4.lastName")} *</label>
 
                     <input
                       type="text"
@@ -185,7 +186,7 @@ const Step4BorrowerDetails = ({
                           });
                         }
                       }}
-                      placeholder="Enter last name"
+                      placeholder={t("petitionSteps.step4.placeholderLastName")}
                     />
 
                     {fieldErrors[`borrower_${borrower.id}_lastName`] && (
@@ -196,7 +197,7 @@ const Step4BorrowerDetails = ({
                   </div>
 
                   <div className="col-md-2">
-                    <label className="form-label">Suffix</label>
+                    <label className="form-label">{t("petitionSteps.step4.suffix")}</label>
 
                     <input
                       type="text"
@@ -221,7 +222,7 @@ const Step4BorrowerDetails = ({
                           });
                         }
                       }}
-                      placeholder="Jr, Sr, III"
+                      placeholder={t("petitionSteps.step4.placeholderSuffix")}
                     />
 
                     {fieldErrors[`borrower_${borrower.id}_suffix`] && (
@@ -232,7 +233,7 @@ const Step4BorrowerDetails = ({
                   </div>
 
                   <div className="col-md-2">
-                    <label className="form-label">Primary Borrower</label>
+                    <label className="form-label">{t("petitionSteps.step4.primaryBorrower")}</label>
 
                     <div className="form-check">
                       <input
@@ -263,7 +264,7 @@ const Step4BorrowerDetails = ({
                         }}
                       />
 
-                      <label className="form-check-label">Primary</label>
+                      <label className="form-check-label">{t("petitionSteps.step4.primary")}</label>
                     </div>
                   </div>
                 </div>
@@ -271,9 +272,9 @@ const Step4BorrowerDetails = ({
                 <div className="row g-3 mt-2">
                   <div className="col-md-6">
                     <label className="form-label">
-                      Mailing Address
+                      {t("petitionSteps.step4.mailingAddress")}
                       {borrowerAddressesVerified?.[borrower.id] && borrower.mailingStreet1?.trim() && (
-                        <span className="text-success ms-2">✓ Verified</span>
+                        <span className="text-success ms-2">✓ {t("petitionSteps.step4.verified")}</span>
                       )}
                     </label>
 
@@ -321,7 +322,7 @@ const Step4BorrowerDetails = ({
                             }));
                           }
                         }}
-                        placeholder="Street address"
+                        placeholder={t("petitionSteps.step4.placeholderMailingAddress")}
                         autoComplete="off"
                       />
 
@@ -332,7 +333,7 @@ const Step4BorrowerDetails = ({
                             className="spinner-border spinner-border-sm text-muted"
                             role="status"
                           >
-                            <span className="visually-hidden">Loading...</span>
+                            <span className="visually-hidden">{t("common.loading")}</span>
                           </div>
                         </div>
                       )}
@@ -392,7 +393,7 @@ const Step4BorrowerDetails = ({
                   </div>
 
                   <div className="col-md-3">
-                    <label className="form-label">City</label>
+                    <label className="form-label">{t("petitionSteps.step4.city")}</label>
 
                     <input
                       type="text"
@@ -405,12 +406,12 @@ const Step4BorrowerDetails = ({
                           e.target.value
                         )
                       }
-                      placeholder="City"
+                      placeholder={t("petitionSteps.step4.placeholderCity")}
                     />
                   </div>
 
                   <div className="col-md-1">
-                    <label className="form-label">State</label>
+                    <label className="form-label">{t("petitionSteps.step4.state")}</label>
 
                     <input
                       type="text"
@@ -423,12 +424,12 @@ const Step4BorrowerDetails = ({
                           e.target.value
                         )
                       }
-                      placeholder="MA"
+                      placeholder={t("petitionSteps.step4.placeholderState")}
                     />
                   </div>
 
                   <div className="col-md-2">
-                    <label className="form-label">ZIP</label>
+                    <label className="form-label">{t("petitionSteps.step4.zip")}</label>
 
                     <input
                       type="text"
@@ -441,14 +442,14 @@ const Step4BorrowerDetails = ({
                           e.target.value
                         )
                       }
-                      placeholder="02101"
+                      placeholder={t("petitionSteps.step4.placeholderZip")}
                     />
                   </div>
                 </div>
 
                 <div className="row g-3 mt-2">
                   <div className="col-md-6">
-                    <label className="form-label">Phone Number</label>
+                    <label className="form-label">{t("petitionSteps.step4.phoneNumber")}</label>
 
                     <input
                       type="tel"
@@ -457,12 +458,12 @@ const Step4BorrowerDetails = ({
                       onChange={(e) =>
                         updateBorrower(borrower.id, "phone", e.target.value)
                       }
-                      placeholder="(555) 123-4567"
+                      placeholder={t("petitionSteps.step4.placeholderPhone")}
                     />
                   </div>
 
                   <div className="col-md-6">
-                    <label className="form-label">Email Address</label>
+                    <label className="form-label">{t("petitionSteps.step4.emailAddress")}</label>
 
                     <input
                       type="email"
@@ -471,7 +472,7 @@ const Step4BorrowerDetails = ({
                       onChange={(e) =>
                         updateBorrower(borrower.id, "email", e.target.value)
                       }
-                      placeholder="borrower@example.com"
+                      placeholder={t("petitionSteps.step4.placeholderEmail")}
                     />
                   </div>
                 </div>
@@ -485,7 +486,7 @@ const Step4BorrowerDetails = ({
                 onClick={addBorrower}
               >
                 <i className="fas fa-plus me-2"></i>
-                Add Another Borrower
+                {t("petitionSteps.step4.addAnotherBorrower")}
               </button>
             </div>
           </div>

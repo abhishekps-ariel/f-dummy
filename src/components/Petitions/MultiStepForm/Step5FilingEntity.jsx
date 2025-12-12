@@ -68,7 +68,7 @@ const Step5FilingEntity = ({
 
               <div className="col-12">
                 <label htmlFor="filingEntityRole" className="form-label">
-                  Filing Entity Role
+                  {t("petitionSteps.step5.filingEntityRole")}
                 </label>
 
                 {profileLoading ? (

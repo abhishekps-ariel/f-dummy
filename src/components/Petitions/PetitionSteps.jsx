@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 
 import { toast } from "react-toastify";
 
@@ -73,6 +74,7 @@ const PetitionSteps = ({
   organization,
   onPetitionSubmitted,
 }) => {
+  const { t } = useTranslation();
   const {
     currentStep: wizardCurrentStep,
     goToStep: wizardGoToStep,
@@ -5443,23 +5445,23 @@ const PetitionSteps = ({
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">Unsaved changes</h5>
+                <h5 className="modal-title">{t("petitionWizard.closeConfirmationTitle")}</h5>
                 <button
                   type="button"
                   className="btn-close"
                   onClick={() => setShowCloseConfirmDialog(false)}
-                  aria-label="Close"
+                  aria-label={t("petitionWizard.close")}
                 ></button>
               </div>
               <div className="modal-body">
-                <p className="mb-4">Your petition changes are not saved.</p>
+                <p className="mb-4">{t("petitionWizard.closeConfirmationMessage")}</p>
                 <div className="d-flex justify-content-between gap-2">
                   <button
                     type="button"
                     className="dashboard-btn-refresh"
                     onClick={() => setShowCloseConfirmDialog(false)}
                   >
-                    Cancel
+                    {t("petitionWizard.cancel")}
                   </button>
                   <div className="d-flex gap-2">
                     <button
@@ -5467,7 +5469,7 @@ const PetitionSteps = ({
                       className="dashboard-btn-refresh"
                       onClick={handleDiscardAndClose}
                     >
-                      Don't save
+                      {t("petitionWizard.discardChanges")}
                     </button>
                     {!isTakenOverPetition && (
                       <button
@@ -5476,7 +5478,7 @@ const PetitionSteps = ({
                         onClick={handleSaveDraftAndClose}
                         disabled={isSaving}
                       >
-                        {isSaving ? "Saving…" : "Save as draft"}
+                        {isSaving ? t("petitionWizard.saving") : t("petitionWizard.saveAsDraft")}
                       </button>
                     )}
                   </div>
@@ -5498,12 +5500,12 @@ const PetitionSteps = ({
             <div className="modal-header text-white theme-bg petition-steps-header d-flex justify-content-between align-items-center">
               <div className="d-flex flex-column">
                 <div className="d-flex align-items-center gap-2">
-                  <h5 className="modal-title mb-0">Foreclosure Petition Filing</h5>
+                  <h5 className="modal-title mb-0">{t("petitionWizard.title")}</h5>
                 </div>
                 {isTakenOverPetition && (
                   <div className="mt-1" style={{ fontSize: "0.8rem", opacity: "0.9", display: "flex", alignItems: "center", gap: "6px" }}>
                     <i className="fas fa-exchange-alt" style={{ fontSize: "0.75rem" }}></i>
-                    <span>Petition taken over{takenOverPetitionNumber ? `: ${takenOverPetitionNumber}` : ''}</span>
+                    <span>{t("petitionWizard.petitionTakenOver")}{takenOverPetitionNumber ? `: ${takenOverPetitionNumber}` : ''}</span>
                   </div>
                 )}
               </div>
@@ -5538,14 +5540,13 @@ const PetitionSteps = ({
 
                   <header className="border-bottom mb-3">
                     <p className="font-base text-muted">
-                      Complete the 9 steps below to submit your foreclosure
-                      petition details.
+                      {t("petitionWizard.description")}
                     </p>
                   </header>
 
                   <div className="position-relative">
                     <p className="font-base fw-bold">
-                      Step {currentStep} of {totalSteps}
+                      {t("petitionWizard.stepOf")} {currentStep} {t("petitionWizard.of")} {totalSteps}
                     </p>
 
                     <form onSubmit={handleSubmit}>{renderStep()}</form>
@@ -5579,7 +5580,7 @@ const PetitionSteps = ({
                         d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"
                       />
                     </svg>
-                    Previous Step
+                    {t("petitionWizard.previousStep")}
                   </button>
 
                   <div className="d-flex gap-2">
@@ -5598,10 +5599,10 @@ const PetitionSteps = ({
                               role="status"
                               aria-hidden="true"
                             ></span>
-                            Saving...
+                            {t("petitionWizard.saving")}
                           </>
                         ) : (
-                          "Save as Draft"
+                          t("petitionWizard.saveAsDraft")
                         )}
                       </button>
                     )}
@@ -5614,7 +5615,7 @@ const PetitionSteps = ({
                         className="dashboard-btn-create"
                         onClick={() => nextStep(1)}
                       >
-                        Next Step
+                        {t("petitionWizard.nextStep")}
                       </button>
                     ) : currentStep === 9 ? (
                       <button
@@ -5622,7 +5623,7 @@ const PetitionSteps = ({
                         className="dashboard-btn-create"
                         onClick={() => nextStep(1)}
                       >
-                        Review Petition
+                        {t("petitionWizard.reviewPetition")}
                       </button>
                     ) : (
                       <button
@@ -5643,10 +5644,10 @@ const PetitionSteps = ({
                               role="status"
                               aria-hidden="true"
                             ></span>
-                            Submitting...
+                            {t("petitionWizard.submitting")}
                           </>
                         ) : (
-                          "Submit Petition"
+                          t("petitionWizard.submitPetition")
                         )}
                       </button>
                     )}

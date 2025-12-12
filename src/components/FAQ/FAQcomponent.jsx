@@ -201,7 +201,7 @@ const FAQcomponent = () => {
         ) : questions.length === 0 ? (
           <div className="text-center py-5">
             <i className="fa-solid fa-question-circle fa-3x text-muted mb-3"></i>
-            <p className="text-muted">No QNA found for this category</p>
+            <p className="text-muted">{t("faq.noQNAFound") || "No QNA found for this category"}</p>
           </div>
         ) : (
           translatedQuestions.map((questionItem, index) => (

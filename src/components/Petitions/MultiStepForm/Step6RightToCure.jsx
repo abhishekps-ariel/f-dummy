@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { formatCurrencyDisplay } from "../../../utils/currencyUtils";
 
 // Component to render a single Right-to-Cure form
@@ -20,6 +21,7 @@ const SingleRightToCureForm = ({
   onRemove,
   canRemove = false,
 }) => {
+  const { t } = useTranslation();
   const noticeSent = rtc.noticeSent;
   const noticeDate = rtc.noticeDate || "";
   const amountInDefault = rtc.amountInDefault || 0;
@@ -47,14 +49,14 @@ const SingleRightToCureForm = ({
       {isMultipleMode && (
         <div className="d-flex justify-content-between align-items-center mb-3">
           <h5 className="fw-semibold text-dark mb-0">
-            Right-to-Cure {index + 1}
+            {t("petitionSteps.step6.rightToCure")} {index + 1}
           </h5>
           {canRemove && (
             <button
               type="button"
               className="btn btn-outline-danger btn-sm"
               onClick={() => onRemove(index)}
-              title="Remove this right-to-cure"
+              title={t("petitionSteps.step6.removeRightToCure")}
             >
               <i className="fas fa-trash"></i>
             </button>
@@ -65,7 +67,7 @@ const SingleRightToCureForm = ({
       <div className="row g-3">
         <div className="col-12">
           <label className="form-label fw-bold">
-            Was the Right-to-Cure notice sent? *
+            {t("petitionSteps.step6.noticeSent")} *
           </label>
 
           <div className="d-flex gap-4">
@@ -85,7 +87,7 @@ const SingleRightToCureForm = ({
                 htmlFor={isMultipleMode ? `noticeSentYes_${index}` : "noticeSentYes"}
                 style={{ fontSize: '13px', fontWeight: '500', color: '#333' }}
               >
-                Yes
+                {t("petitionSteps.step3.yes")}
               </label>
             </div>
 
@@ -105,7 +107,7 @@ const SingleRightToCureForm = ({
                 htmlFor={isMultipleMode ? `noticeSentNo_${index}` : "noticeSentNo"}
                 style={{ fontSize: '13px', fontWeight: '500', color: '#333' }}
               >
-                No
+                {t("petitionSteps.step3.no")}
               </label>
             </div>
           </div>
@@ -121,7 +123,7 @@ const SingleRightToCureForm = ({
           <>
             <div className="col-md-6">
               <label htmlFor={isMultipleMode ? `noticeDate_${index}` : "noticeDate"} className="form-label">
-                Notice Date *
+                {t("petitionSteps.step6.noticeDate")} *
               </label>
 
               <input
@@ -147,7 +149,7 @@ const SingleRightToCureForm = ({
                 htmlFor={isMultipleMode ? `daysDelinquentAtNotice_${index}` : "daysDelinquentAtNotice"}
                 className="form-label"
               >
-                Days Delinquent on Notice Date *
+                {t("petitionSteps.step6.daysDelinquentAtNotice")} *
               </label>
 
               <input
@@ -181,7 +183,7 @@ const SingleRightToCureForm = ({
 
             <div className="col-md-6">
               <label htmlFor={isMultipleMode ? `amountInDefault_${index}` : "amountInDefault"} className="form-label">
-                Amount in Default ($) *
+                {t("petitionSteps.step6.amountInDefault")} *
               </label>
 
               <input
@@ -207,7 +209,7 @@ const SingleRightToCureForm = ({
 
             <div className="col-md-6">
               <label htmlFor={isMultipleMode ? `cureExpirationDate_${index}` : "cureExpirationDate"} className="form-label">
-                Cure Expiration Date *
+                {t("petitionSteps.step6.cureExpirationDate")} *
               </label>
 
               <input
@@ -233,7 +235,7 @@ const SingleRightToCureForm = ({
                 htmlFor={isMultipleMode ? `noticeAddressStreet1_${index}` : "noticeAddressStreet1"}
                 className="form-label"
               >
-                Notice Mailing Address *
+                {t("petitionSteps.step6.noticeMailingAddress")} *
               </label>
 
               <div className="position-relative">
@@ -267,7 +269,7 @@ const SingleRightToCureForm = ({
                       setShowNoticePredictions(true);
                     }
                   }}
-                  placeholder="Street address"
+                  placeholder={t("petitionSteps.step6.placeholderNoticeAddress")}
                   autoComplete="off"
                 />
 
@@ -277,7 +279,7 @@ const SingleRightToCureForm = ({
                       className="spinner-border spinner-border-sm text-muted"
                       role="status"
                     >
-                      <span className="visually-hidden">Loading...</span>
+                      <span className="visually-hidden">{t("common.loading")}</span>
                     </div>
                   </div>
                 )}
@@ -331,7 +333,7 @@ const SingleRightToCureForm = ({
 
             <div className="col-md-4">
               <label htmlFor={isMultipleMode ? `noticeAddressCity_${index}` : "noticeAddressCity"} className="form-label">
-                City *
+                {t("petitionSteps.step6.city")} *
               </label>
 
               <input
@@ -354,7 +356,7 @@ const SingleRightToCureForm = ({
 
             <div className="col-md-4">
               <label htmlFor={isMultipleMode ? `noticeAddressState_${index}` : "noticeAddressState"} className="form-label">
-                State *
+                {t("petitionSteps.step6.state")} *
               </label>
 
               <input
@@ -377,7 +379,7 @@ const SingleRightToCureForm = ({
 
             <div className="col-md-4">
               <label htmlFor={isMultipleMode ? `noticeAddressZip_${index}` : "noticeAddressZip"} className="form-label">
-                ZIP Code *
+                {t("petitionSteps.step6.zipCode")} *
               </label>
 
               <input
@@ -403,7 +405,7 @@ const SingleRightToCureForm = ({
         {noticeSent === false && (
           <div className="col-12">
             <label htmlFor={isMultipleMode ? `manualOverrideReason_${index}` : "manualOverrideReason"} className="form-label">
-              Acceleration Date *
+              {t("petitionSteps.step6.accelerationDate")} *
             </label>
 
             <input
@@ -430,7 +432,7 @@ const SingleRightToCureForm = ({
           <>
             <div className="col-md-6">
               <label className="form-label">
-                Did the borrower respond to the notice within 30 days? *
+                {t("petitionSteps.step6.borrowerRespondedWithin30Days")} *
               </label>
               {getFieldError("borrowerRespondedWithin30Days") && (
                 <div className="text-danger small mt-1">
@@ -451,7 +453,7 @@ const SingleRightToCureForm = ({
                     }}
                   />
                   <label className="form-check-label" htmlFor={isMultipleMode ? `borrowerRespondedWithin30DaysYes_${index}` : "borrowerRespondedWithin30DaysYes"} style={{ fontSize: '13px', fontWeight: '500', color: '#333' }}>
-                    Yes
+                    {t("petitionSteps.step3.yes")}
                   </label>
                 </div>
                 <div className="form-check">
@@ -468,7 +470,7 @@ const SingleRightToCureForm = ({
                     }}
                   />
                   <label className="form-check-label" htmlFor={isMultipleMode ? `borrowerRespondedWithin30DaysNo_${index}` : "borrowerRespondedWithin30DaysNo"} style={{ fontSize: '13px', fontWeight: '500', color: '#333' }}>
-                    No
+                    {t("petitionSteps.step3.no")}
                   </label>
                 </div>
               </div>
@@ -478,7 +480,7 @@ const SingleRightToCureForm = ({
               <>
                 <div className="col-md-6">
                   <label htmlFor={isMultipleMode ? `borrowerResponseDate_${index}` : "borrowerResponseDate"} className="form-label">
-                    Date on which the borrower responded *
+                    {t("petitionSteps.step6.borrowerResponseDate")} *
                   </label>
                   <input
                     type="date"
@@ -499,7 +501,7 @@ const SingleRightToCureForm = ({
 
                 <div className="col-md-6">
                   <label className="form-label">
-                    Did the borrower proceed with the right to cure? *
+                    {t("petitionSteps.step6.proceededWithRightToCure")} *
                   </label>
                   {getFieldError("proceededWithRightToCure") && (
                     <div className="text-danger small mt-1">
@@ -518,7 +520,7 @@ const SingleRightToCureForm = ({
                         onChange={(e) => updateRTCField(index, "proceededWithRightToCure", true)}
                       />
                       <label className="form-check-label" htmlFor={isMultipleMode ? `proceededWithRightToCureYes_${index}` : "proceededWithRightToCureYes"} style={{ fontSize: '13px', fontWeight: '500', color: '#333' }}>
-                        Yes
+                        {t("petitionSteps.step3.yes")}
                       </label>
                     </div>
                     <div className="form-check">
@@ -532,7 +534,7 @@ const SingleRightToCureForm = ({
                         onChange={(e) => updateRTCField(index, "proceededWithRightToCure", false)}
                       />
                       <label className="form-check-label" htmlFor={isMultipleMode ? `proceededWithRightToCureNo_${index}` : "proceededWithRightToCureNo"} style={{ fontSize: '13px', fontWeight: '500', color: '#333' }}>
-                        No
+                        {t("petitionSteps.step3.no")}
                       </label>
                     </div>
                   </div>
@@ -590,6 +592,8 @@ const Step6RightToCure = ({
     proceededWithRightToCure: formData.proceededWithRightToCure,
   };
 
+  const { t } = useTranslation();
+  
   // Helper to update rightToCures array or fallback to single-object format with real-time validation
   const updateRTCField = (index, field, value) => {
     // Real-time validation
@@ -604,7 +608,7 @@ const Step6RightToCure = ({
         
         if (!isNaN(noticeDate.getTime())) {
           if (noticeDate >= today) {
-            errors.noticeDate = "Notice Date must be in the past";
+            errors.noticeDate = t("petitionSteps.step6.validation.noticeDateMustBeInPast");
           }
         }
       }
@@ -618,7 +622,7 @@ const Step6RightToCure = ({
           
           if (!isNaN(noticeDateObj.getTime()) && !isNaN(cureExpirationDate.getTime())) {
             if (cureExpirationDate <= noticeDateObj) {
-              errors.cureExpirationDate = "Cure Expiration Date must be after Notice Date";
+              errors.cureExpirationDate = t("petitionSteps.step6.validation.cureExpirationDateMustBeAfterNoticeDate");
             }
           }
         }
@@ -632,7 +636,7 @@ const Step6RightToCure = ({
         
         if (!isNaN(accelerationDate.getTime())) {
           if (accelerationDate >= today) {
-            errors.manualOverrideReason = "Acceleration Date must be in the past";
+            errors.manualOverrideReason = t("petitionSteps.step6.validation.accelerationDateMustBeInPast");
           }
         }
       }
@@ -641,7 +645,7 @@ const Step6RightToCure = ({
       if (fieldName === "amountInDefault") {
         const amount = parseFloat(fieldValue) || 0;
         if (amount <= 0) {
-          errors.amountInDefault = "Amount in default must be greater than 0";
+          errors.amountInDefault = t("petitionSteps.step6.validation.amountInDefaultMustBeGreaterThanZero");
         }
       }
       
@@ -651,7 +655,7 @@ const Step6RightToCure = ({
           ? null 
           : parseInt(fieldValue, 10);
         if (days !== null && (isNaN(days) || days < 0)) {
-          errors.daysDelinquentAtNotice = "Days delinquent must be 0 or greater";
+          errors.daysDelinquentAtNotice = t("petitionSteps.step6.validation.daysDelinquentMustBeZeroOrGreater");
         }
       }
       
@@ -668,7 +672,7 @@ const Step6RightToCure = ({
             responseDate.setHours(0, 0, 0, 0);
             
             if (responseDate < noticeDateObj) {
-              errors.borrowerResponseDate = "Borrower Response Date must be on or after Notice Date";
+              errors.borrowerResponseDate = t("petitionSteps.step6.validation.borrowerResponseDateMustBeOnOrAfterNoticeDate");
             }
           }
         }
@@ -732,11 +736,11 @@ const Step6RightToCure = ({
           const errorKey = showMultiple ? `rightToCures.${index}.cureExpirationDate` : "cureExpirationDate";
           setFieldErrors((prev) => ({
             ...prev,
-            [errorKey]: "Cure Expiration Date must be after Notice Date",
+            [errorKey]: t("petitionSteps.step6.validation.cureExpirationDateMustBeAfterNoticeDate"),
           }));
         } else {
           const errorKey = showMultiple ? `rightToCures.${index}.cureExpirationDate` : "cureExpirationDate";
-          if (fieldErrors[errorKey] === "Cure Expiration Date must be after Notice Date") {
+          if (fieldErrors[errorKey] === t("petitionSteps.step6.validation.cureExpirationDateMustBeAfterNoticeDate")) {
             setFieldErrors((prev) => {
               const newErrors = { ...prev };
               delete newErrors[errorKey];
@@ -790,12 +794,11 @@ const Step6RightToCure = ({
   return (
     <div>
       <h2 className="theme-color font-med mb-1">
-        6. Right-to-Cure (§35A)
+        {t("petitionSteps.step6.title")}
       </h2>
 
       <p className="text-muted small mb-3">
-        Enter details proving the §35A notice was properly issued to the
-        borrower.
+        {t("petitionSteps.step6.description")}
       </p>
 
       {showMultiple ? (
@@ -831,7 +834,7 @@ const Step6RightToCure = ({
                 onClick={addRightToCure}
               >
                 <i className="fas fa-plus me-2"></i>
-                Add Another Right-to-Cure
+                {t("petitionSteps.step6.addAnotherRightToCure")}
               </button>
             </div>
           )}

@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import CustomDropdown from "../../shared/CustomDropdown"; 
 
 const Step8LoanAssignees = ({
@@ -21,12 +22,13 @@ const Step8LoanAssignees = ({
   setSelectedLoanAssigneePredictionIndex,
   loanAssigneeAddressValidationErrors,
 }) => {
+  const { t } = useTranslation();
    return (
           <div>
-            <h2 className="theme-color font-med mb-1">8. Loan Assignees</h2>
+            <h2 className="theme-color font-med mb-1">{t("petitionSteps.step8.title")}</h2>
 
             <p className="text-muted small mb-3">
-              List any prior holders or assignees of the loan.
+              {t("petitionSteps.step8.description")}
             </p>
 
             {commonDataError && (
@@ -41,7 +43,7 @@ const Step8LoanAssignees = ({
               <div key={index} className="p-3 border rounded bg-light mb-3">
                 <div className="d-flex justify-content-between align-items-center mb-3">
                   <h5 className="fw-semibold text-dark mb-0">
-                    Assignee {index + 1}
+                    {t("petitionSteps.step8.assignee")} {index + 1}
                   </h5>
 
                   {formData.loanAssignees.length > 1 && (
@@ -49,7 +51,7 @@ const Step8LoanAssignees = ({
                       type="button"
                       className="btn btn-outline-danger btn-sm"
                       onClick={() => removeLoanAssignee(index)}
-                      title="Remove this assignee"
+                      title={t("petitionSteps.step8.removeAssignee")}
                     >
                       <i className="fas fa-trash"></i>
                     </button>
@@ -58,7 +60,7 @@ const Step8LoanAssignees = ({
 
                 <div className="row g-3">
                   <div className="col-12">
-                    <label className="form-label">Assignee Name *</label>
+                    <label className="form-label">{t("petitionSteps.step8.assigneeName")} *</label>
 
                     <input
                       type="text"
@@ -75,7 +77,7 @@ const Step8LoanAssignees = ({
                           e.target.value
                         )
                       }
-                      placeholder="Enter assignee name"
+                      placeholder={t("petitionSteps.step8.placeholderAssigneeName")}
                     />
 
                     {fieldErrors[`loanAssignees.${index}.assigneeName`] && (
@@ -86,7 +88,7 @@ const Step8LoanAssignees = ({
                   </div>
 
                   <div className="col-md-6">
-                    <label className="form-label">Assignee Type *</label>
+                    <label className="form-label">{t("petitionSteps.step8.assigneeType")} *</label>
 
                     <CustomDropdown
                       name={`loanAssignees.${index}.assigneeTypeId`}
@@ -98,13 +100,13 @@ const Step8LoanAssignees = ({
                           e.target.value
                         )
                       }
-                      placeholder="Select Type"
+                      placeholder={t("petitionSteps.step8.selectType")}
                       disabled={commonDataLoading}
                       error={
                         !!fieldErrors[`loanAssignees.${index}.assigneeTypeId`]
                       }
                       options={[
-                        { value: "", label: "Select Type" },
+                        { value: "", label: t("petitionSteps.step8.selectType") },
                         ...getAssigneeTypes().map((type) => ({
                           value: type.id,
                           label: type.name,
@@ -121,13 +123,13 @@ const Step8LoanAssignees = ({
                     {commonDataLoading && (
                       <div className="form-text">
                         <i className="fas fa-spinner fa-spin me-1"></i>
-                        Loading assignee types...
+                        {t("petitionSteps.step8.loadingAssigneeTypes")}
                       </div>
                     )}
                   </div>
 
                   <div className="col-md-6">
-                    <label className="form-label">Assignee Role *</label>
+                    <label className="form-label">{t("petitionSteps.step8.assigneeRole")} *</label>
 
                     <CustomDropdown
                       name={`loanAssignees.${index}.assigneeRoleId`}
@@ -139,13 +141,13 @@ const Step8LoanAssignees = ({
                           e.target.value
                         )
                       }
-                      placeholder="Select Role"
+                      placeholder={t("petitionSteps.step8.selectRole")}
                       disabled={commonDataLoading}
                       error={
                         !!fieldErrors[`loanAssignees.${index}.assigneeRoleId`]
                       }
                       options={[
-                        { value: "", label: "Select Role" },
+                        { value: "", label: t("petitionSteps.step8.selectRole") },
                         ...getAssigneeRoles().map((role) => ({
                           value: role.id,
                           label: role.name,
@@ -162,14 +164,14 @@ const Step8LoanAssignees = ({
                     {commonDataLoading && (
                       <div className="form-text">
                         <i className="fas fa-spinner fa-spin me-1"></i>
-                        Loading assignee roles...
+                        {t("petitionSteps.step8.loadingAssigneeRoles")}
                       </div>
                     )}
                   </div>
 
                   <div className="col-12">
                     <label className="form-label">
-                      Street Address Line 1 *
+                      {t("petitionSteps.step8.streetAddressLine1")} *
                     </label>
 
                     <div className="position-relative">
@@ -210,7 +212,7 @@ const Step8LoanAssignees = ({
                             }));
                           }
                         }}
-                        placeholder="Enter street address"
+                        placeholder={t("petitionSteps.step8.placeholderStreetAddress")}
                         autoComplete="off"
                       />
 

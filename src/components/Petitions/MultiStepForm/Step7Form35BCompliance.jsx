@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 const Step7Form35BCompliance = ({
   formData,
@@ -6,40 +7,37 @@ const Step7Form35BCompliance = ({
   fieldErrors,
   isCertainMortgageLoanReadOnly = false,
 }) => {
+  const { t } = useTranslation();
   // Get the list of selected checkboxes for the message
   const getSelectedCheckboxesMessage = () => {
     const selected = [];
-    if (formData.variableRate) selected.push("Variable Rate");
-    if (formData.interestOnly) selected.push("Interest Only");
-    if (formData.negativeAmortization) selected.push("Negative Amortization");
+    if (formData.variableRate) selected.push(t("petitionSteps.step3.variableRate"));
+    if (formData.interestOnly) selected.push(t("petitionSteps.step3.interestOnly"));
+    if (formData.negativeAmortization) selected.push(t("petitionSteps.step3.negativeAmortization"));
     
     if (selected.length === 0) return "";
-    if (selected.length === 1) return `${selected[0]} is selected on loan detail step.`;
-    if (selected.length === 2) return `${selected[0]} and ${selected[1]} are selected on loan detail step.`;
-    return `${selected[0]}, ${selected[1]}, and ${selected[2]} are selected on loan detail step.`;
+    if (selected.length === 1) return `${selected[0]} ${t("petitionSteps.step7.isSelectedOnLoanDetailStep")}`;
+    if (selected.length === 2) return `${selected[0]} and ${selected[1]} ${t("petitionSteps.step7.areSelectedOnLoanDetailStep")}`;
+    return `${selected[0]}, ${selected[1]}, and ${selected[2]} ${t("petitionSteps.step7.areSelectedOnLoanDetailStep")}`;
   };
   return (
           <div>
             <h2 className="theme-color font-med mb-1">
-              7. Form 35B Compliance
+              {t("petitionSteps.step7.title")}
             </h2>
 
             <p className="text-muted small mb-3">
-              Determine if this loan qualifies as a "certain mortgage loan" and
-              upload the appropriate affidavit.
+              {t("petitionSteps.step7.description")}
             </p>
 
             <div className="alert alert-info small" role="alert">
-              <strong>Examples of "Certain Mortgage Loans"</strong> include
-              Interest-Only Mortgages, Payment-Option or Negative Amortization
-              Loans, High Loan-to-Value Mortgages (e.g., 90%+ with limited
-              documentation), Low-Doc / No-Doc Mortgages, and Subprime Loans.
+              <strong>{t("petitionSteps.step7.examplesTitle")}</strong> {t("petitionSteps.step7.examplesText")}
             </div>
 
             <div className="row g-3">
               <div className="col-12">
                 <label className="form-label fw-bold">
-                  Does this loan qualify as a "certain mortgage loan"? *
+                  {t("petitionSteps.step7.certainMortgageLoan")} *
                 </label>
 
                 <div className="d-flex gap-4">
@@ -65,7 +63,7 @@ const Step7Form35BCompliance = ({
                       htmlFor="certainMortgageLoanYes"
                       style={{ fontSize: '13px', fontWeight: '500', color: '#333' }}
                     >
-                      Yes
+                      {t("petitionSteps.step3.yes")}
                     </label>
                   </div>
 
@@ -91,14 +89,14 @@ const Step7Form35BCompliance = ({
                       htmlFor="certainMortgageLoanNo"
                       style={{ fontSize: '13px', fontWeight: '500', color: '#333' }}
                     >
-                      No
+                      {t("petitionSteps.step3.no")}
                     </label>
                   </div>
                 </div>
                 {isCertainMortgageLoanReadOnly && (
                   <div className="text-muted small mt-2">
                     <i className="fas fa-info-circle me-1"></i>
-                    This field is set to "Yes" because {getSelectedCheckboxesMessage()}
+                    {t("petitionSteps.step7.fieldSetToYes")} {getSelectedCheckboxesMessage()}
                   </div>
                 )}
 
