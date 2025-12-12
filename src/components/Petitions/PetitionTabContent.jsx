@@ -83,6 +83,8 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
   const { user } = useAuth();
   const [predictions, setPredictions] = useState([]);
   const [isLoadingPredictions, setIsLoadingPredictions] = useState(false);
+  const [showPredictions, setShowPredictions] = useState(false);
+  const [selectedPredictionIndex, setSelectedPredictionIndex] = useState(-1);
   const propertyAddressInputRef = useRef(null);
   const signatureSectionRef = useRef(null);
   const foreclosureSaleSectionRef = useRef(null);
@@ -116,6 +118,8 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
   const handlePropertyAddressInput = async (value) => {
     if (!value.trim()) {
       setPredictions([]);
+      setShowPredictions(false);
+      setIsLoadingPredictions(false);
       return;
     }
     if (window.autocompleteTimeout) clearTimeout(window.autocompleteTimeout);
@@ -129,9 +133,12 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
           place_id: s.placeId,
         }));
         setPredictions(formattedPredictions);
+        setShowPredictions(true);
+        setSelectedPredictionIndex(-1);
       } catch (error) {
         console.error("Error getting autocomplete suggestions:", error);
         setPredictions([]);
+        setShowPredictions(false);
       } finally {
         setIsLoadingPredictions(false);
       }
@@ -140,6 +147,8 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
 
   const handlePropertyAddressSelect = async (prediction) => {
     setPredictions([]);
+    setShowPredictions(false);
+    setSelectedPredictionIndex(-1);
     // Fill street immediately for snappy UX
     const street = prediction.description?.split(",")[0] || "";
     setFormData((prev) => ({ ...prev, propertyStreet1: street }));
@@ -174,6 +183,35 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
       console.error("Failed to geocode address:", error);
     }
     if (propertyAddressInputRef.current) propertyAddressInputRef.current.blur();
+  };
+
+  // Handle keyboard navigation for property address suggestions
+  const handlePropertyAddressKeyDown = (e) => {
+    if (!showPredictions || predictions.length === 0) return;
+
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        setSelectedPredictionIndex((prev) =>
+          prev < predictions.length - 1 ? prev + 1 : prev
+        );
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        setSelectedPredictionIndex((prev) => (prev > 0 ? prev - 1 : prev));
+        break;
+      case "Enter":
+        e.preventDefault();
+        if (selectedPredictionIndex >= 0) {
+          handlePropertyAddressSelect(predictions[selectedPredictionIndex]);
+        }
+        break;
+      case "Escape":
+        setShowPredictions(false);
+        setPredictions([]);
+        setSelectedPredictionIndex(-1);
+        break;
+    }
   };
 
   // Generic helper: geocode by placeId and update fields via setter
@@ -793,14 +831,30 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
   
   // Handle section edit toggle
   const handleSectionEditToggle = (sectionId) => {
-    if (isSectionEditing(sectionId)) {
+    console.log("handleSectionEditToggle called with sectionId:", sectionId);
+    console.log("Current editingSections state:", editingSections);
+    
+    if (!sectionId) {
+      console.warn("No sectionId provided to handleSectionEditToggle");
+      return;
+    }
+    
+    const currentlyEditing = isSectionEditing(sectionId);
+    console.log("Section is currently editing:", currentlyEditing);
+    
+    if (currentlyEditing) {
       // Cancel edit - reset form data for this section
+      console.log("Cancelling edit mode for section:", sectionId);
       if (initialFormData) {
         setFormData(initialFormData);
       }
       setFieldErrors({});
+    } else {
+      console.log("Entering edit mode for section:", sectionId);
     }
+    
     toggleSectionEditing(sectionId);
+    console.log("After toggle, new editingSections state:", { ...editingSections, [sectionId]: !currentlyEditing });
   };
 
   // Handle saving individual sections using their specific APIs
@@ -1671,18 +1725,35 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
+      // Close edit and notes dropdowns
       if (showEditDropdown && !event.target.closest('.edit-options-dropdown')) {
         setShowEditDropdown(false);
       }
       if (showNotesDropdown && !event.target.closest('.notes-options-dropdown')) {
         setShowNotesDropdown(false);
       }
+      
+      // Close address suggestion dropdowns when clicking outside
+      // Check if click is on any address input field or dropdown
+      const isPropertyAddressInput = propertyAddressInputRef.current && propertyAddressInputRef.current.contains(event.target);
+      const isAddressDropdown = event.target.closest('.address-suggestions-dropdown-tab');
+      const isAnyAddressInput = event.target.closest('input[name*="Street1"], input[name*="street1"], input[name*="mailingStreet1"], input[name*="noticeAddressStreet1"]');
+      
+      // If click is not on any address-related element, close all dropdowns
+      if (!isPropertyAddressInput && !isAddressDropdown && !isAnyAddressInput) {
+        // Close property address dropdown
+        setShowPredictions(false);
+        // Clear all address predictions to close dropdowns
+        setBorrowerPredictions({});
+        setAssigneePredictions({});
+        setNoticePredictions({});
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showEditDropdown, showNotesDropdown]);
+  }, [showEditDropdown, showNotesDropdown, showPredictions]);
 
   // Removed status check - now all petitions (draft and submitted) can be edited
 
@@ -2588,17 +2659,29 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
     const showEditButton = canEdit && sectionId && sectionId !== "signatures";
     const sectionEditing = sectionId ? isSectionEditing(sectionId) : false;
     
+    console.log("SectionHeader render:", { title, sectionId, canEdit, showEditButton, sectionEditing, isPublic, status: petition?.status, isDraft: isDraftPetition() });
+    
     return (
-      <div className="card-header">
+      <div className="card-header" style={{ position: "relative", zIndex: 1 }}>
         <div className="d-flex justify-content-between align-items-center">
           <h5 className="mb-0">{title}</h5>
           {showEditButton && (
-            <div className="section-header-actions">
+            <div className="section-header-actions" style={{ position: "relative", zIndex: 10 }}>
               {!sectionEditing ? (
                 <button
                   type="button"
                   className="btn btn-sm btn-light section-edit-btn"
-                  onClick={() => handleSectionEditToggle(sectionId)}
+                  style={{ position: "relative", zIndex: 11, pointerEvents: "auto", cursor: "pointer" }}
+                  onClick={(e) => {
+                    console.log("Edit button clicked for section:", sectionId);
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleSectionEditToggle(sectionId);
+                  }}
+                  onMouseDown={(e) => {
+                    console.log("Edit button mousedown for section:", sectionId);
+                    e.stopPropagation();
+                  }}
                   title={t("common.edit") || "Edit this section"}
                 >
                   <i className="fas fa-edit me-1"></i>
@@ -2609,7 +2692,11 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
                   <button
                     type="button"
                     className="btn btn-sm btn-success section-save-btn"
-                    onClick={async () => {
+                    style={{ position: "relative", zIndex: 11, pointerEvents: "auto", cursor: "pointer" }}
+                    onClick={async (e) => {
+                      console.log("Save button clicked for section:", sectionId);
+                      e.preventDefault();
+                      e.stopPropagation();
                       try {
                         setIsSavingDraft(true);
                         await handleSectionSave(sectionId);
@@ -2627,6 +2714,10 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
                         setIsSavingDraft(false);
                       }
                     }}
+                    onMouseDown={(e) => {
+                      console.log("Save button mousedown for section:", sectionId);
+                      e.stopPropagation();
+                    }}
                     title={t("common.save") || "Save changes"}
                     disabled={isSavingDraft}
                   >
@@ -2636,7 +2727,17 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
                   <button
                     type="button"
                     className="btn btn-sm btn-secondary section-cancel-btn"
-                    onClick={() => handleSectionEditToggle(sectionId)}
+                    style={{ position: "relative", zIndex: 11, pointerEvents: "auto", cursor: "pointer" }}
+                    onClick={(e) => {
+                      console.log("Cancel button clicked for section:", sectionId);
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleSectionEditToggle(sectionId);
+                    }}
+                    onMouseDown={(e) => {
+                      console.log("Cancel button mousedown for section:", sectionId);
+                      e.stopPropagation();
+                    }}
                     title={t("common.cancel") || "Cancel editing"}
                   >
                     <i className="fas fa-times me-1"></i>
@@ -3463,11 +3564,16 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
                   isLoaded={true}
                   propertyAddressInputRef={propertyAddressInputRef}
                   predictions={predictions}
+                  showPredictions={showPredictions}
+                  selectedPredictionIndex={selectedPredictionIndex}
+                  isLoadingPredictions={isLoadingPredictions}
                   fieldErrors={fieldErrors}
                   formData={formData}
                   handleInputChange={handleInputChange}
                   handlePropertyAddressInput={handlePropertyAddressInput}
                   handlePropertyAddressSelect={handlePropertyAddressSelect}
+                  handleKeyDown={handlePropertyAddressKeyDown}
+                  setShowPredictions={setShowPredictions}
                 />
               </div>
 
@@ -3499,6 +3605,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
                   handleBorrowerAddressInput={handleBorrowerAddressInput}
                   handleBorrowerAddressSelect={handleBorrowerAddressSelect}
                   borrowerPredictions={borrowerPredictions}
+                  isLoadingBorrowerPredictions={isLoadingBorrowerPredictions}
                   isLoaded={true}
                   addBorrower={addBorrower}
                 />

@@ -196,22 +196,31 @@ const StepLoanAssignees = ({
                                 );
                               }}
                             />
+                            {/* Address suggestions dropdown */}
                             {isEditing &&
                               isLoaded &&
                               (assigneePredictions[index] || []).length > 0 && (
-                                <div className="list-group mt-1 position-absolute w-100" style={{ zIndex: 1000, maxHeight: "200px", overflowY: "auto", backgroundColor: "white", boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}>
+                                <div
+                                  className="address-suggestions-dropdown-tab"
+                                  style={{
+                                    zIndex: 50,
+                                    maxHeight: "200px",
+                                    overflowY: "auto",
+                                  }}
+                                >
                                   {(assigneePredictions[index] || []).map(
-                                    (p) => (
-                                      <button
-                                        type="button"
-                                        key={p.place_id}
-                                        className="list-group-item list-group-item-action"
-                                        onClick={() =>
-                                          handleAssigneeAddressSelect(index, p)
+                                    (prediction, predIndex) => (
+                                      <div
+                                        key={prediction.place_id}
+                                        className="address-suggestion-item-tab"
+                                        onMouseDown={() =>
+                                          handleAssigneeAddressSelect(index, prediction)
                                         }
                                       >
-                                        {p.description}
-                                      </button>
+                                        <div className="fw-medium">
+                                          {prediction.description}
+                                        </div>
+                                      </div>
                                     )
                                   )}
                                 </div>

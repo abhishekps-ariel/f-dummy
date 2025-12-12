@@ -326,11 +326,10 @@ const Step4BorrowerDetails = ({
                       />
 
                       {/* Loading indicator */}
-
                       {isLoadingBorrowerPredictions[borrower.id] && (
                         <div className="position-absolute top-50 end-0 translate-middle-y me-3">
                           <div
-                            className="spinner-border spinner-border-sm text-primary"
+                            className="spinner-border spinner-border-sm text-muted"
                             role="status"
                           >
                             <span className="visually-hidden">Loading...</span>
@@ -338,59 +337,39 @@ const Step4BorrowerDetails = ({
                         </div>
                       )}
 
-                      {/* Predictions dropdown */}
-
+                      {/* Address suggestions dropdown */}
                       {showBorrowerPredictions[borrower.id] &&
                         borrowerPredictions[borrower.id] &&
                         borrowerPredictions[borrower.id].length > 0 && (
                           <div
-                            className="position-absolute w-100 bg-white border rounded shadow-lg"
-                            style={{ zIndex: 1000, top: "100%" }}
+                            className="position-absolute w-100 bg-white border border-top-0 rounded-bottom shadow-sm"
+                            style={{
+                              zIndex: 1050,
+                              maxHeight: "200px",
+                              overflowY: "auto",
+                            }}
                           >
                             {borrowerPredictions[borrower.id].map(
                               (prediction, index) => (
                                 <div
                                   key={prediction.place_id}
-                                  className="p-2 cursor-pointer hover-bg-light"
-                                  style={{
-                                    backgroundColor:
-                                      selectedBorrowerPredictionIndex[
-                                        borrower.id
-                                      ] === index
-                                        ? "#f8f9fa"
-                                        : "transparent",
-
-                                    cursor: "pointer",
-                                  }}
-                                  onClick={() =>
+                                  className={`px-3 py-2 cursor-pointer border-bottom ${
+                                    selectedBorrowerPredictionIndex[
+                                      borrower.id
+                                    ] === index
+                                      ? "bg-primary text-white"
+                                      : "hover-bg-light"
+                                  }`}
+                                  onMouseDown={() =>
                                     handleBorrowerPredictionClick(
                                       borrower.id,
                                       prediction
                                     )
                                   }
-                                  onMouseEnter={() =>
-                                    setSelectedBorrowerPredictionIndex(
-                                      (prev) => ({
-                                        ...prev,
-                                        [borrower.id]: index,
-                                      })
-                                    )
-                                  }
+                                  style={{ cursor: "pointer" }}
                                 >
-                                  <div className="d-flex align-items-center">
-                                    <i className="fas fa-map-marker-alt text-muted me-2"></i>
-
-                                    <div>
-                                      <div className="fw-medium">
-                                        {prediction.description?.split(",")[0] || prediction.description}
-                                      </div>
-
-                                      {prediction.description?.includes(",") && (
-                                        <div className="text-muted small">
-                                          {prediction.description.split(",").slice(1).join(",").trim()}
-                                        </div>
-                                      )}
-                                    </div>
+                                  <div className="fw-medium">
+                                    {prediction.description}
                                   </div>
                                 </div>
                               )

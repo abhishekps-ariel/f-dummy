@@ -274,7 +274,7 @@ const SingleRightToCureForm = ({
                 {!isMultipleMode && isLoadingNoticePredictions && (
                   <div className="position-absolute top-50 end-0 translate-middle-y me-3">
                     <div
-                      className="spinner-border spinner-border-sm text-primary"
+                      className="spinner-border spinner-border-sm text-muted"
                       role="status"
                     >
                       <span className="visually-hidden">Loading...</span>
@@ -282,45 +282,33 @@ const SingleRightToCureForm = ({
                   </div>
                 )}
 
+                {/* Address suggestions dropdown */}
                 {!isMultipleMode && showNoticePredictions &&
                   noticePredictions &&
                   noticePredictions.length > 0 && (
                     <div
-                      className="position-absolute w-100 bg-white border rounded shadow-lg"
-                      style={{ zIndex: 1000, top: "100%" }}
+                      className="position-absolute w-100 bg-white border border-top-0 rounded-bottom shadow-sm"
+                      style={{
+                        zIndex: 1050,
+                        maxHeight: "200px",
+                        overflowY: "auto",
+                      }}
                     >
                       {noticePredictions.map((prediction, predIndex) => (
                         <div
                           key={prediction.place_id}
-                          className="p-2 cursor-pointer hover-bg-light"
-                          style={{
-                            backgroundColor:
-                              selectedNoticePredictionIndex === predIndex
-                                ? "#f8f9fa"
-                                : "transparent",
-                            cursor: "pointer",
-                          }}
-                          onClick={() =>
+                          className={`px-3 py-2 cursor-pointer border-bottom ${
+                            selectedNoticePredictionIndex === predIndex
+                              ? "bg-primary text-white"
+                              : "hover-bg-light"
+                          }`}
+                          onMouseDown={() =>
                             handleNoticePredictionClick(prediction)
                           }
-                          onMouseEnter={() =>
-                            setSelectedNoticePredictionIndex(predIndex)
-                          }
+                          style={{ cursor: "pointer" }}
                         >
-                          <div className="d-flex align-items-center">
-                            <i className="fas fa-map-marker-alt text-muted me-2"></i>
-
-                            <div>
-                              <div className="fw-medium">
-                                {prediction.description?.split(",")[0] || prediction.description}
-                              </div>
-
-                              {prediction.description?.includes(",") && (
-                                <div className="text-muted small">
-                                  {prediction.description.split(",").slice(1).join(",").trim()}
-                                </div>
-                              )}
-                            </div>
+                          <div className="fw-medium">
+                            {prediction.description}
                           </div>
                         </div>
                       ))}

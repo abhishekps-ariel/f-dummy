@@ -2796,6 +2796,69 @@ input, textarea, select {
     margin-left: 4px;
 }
 
+/* Address Suggestions Dropdown for Petition Tab Content Sections */
+.address-suggestions-dropdown-tab {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    width: 100%;
+    background: white;
+    border: 1px solid #ced4da;
+    border-top: none;
+    border-radius: 0 0 0.375rem 0.375rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 50;
+    /* For Firefox */
+    scrollbar-width: thin;
+    scrollbar-color: #c1c1c1 #f1f1f1;
+}
+
+/* Custom scrollbar for address suggestions dropdown (Webkit browsers) */
+.address-suggestions-dropdown-tab::-webkit-scrollbar {
+    width: 8px;
+}
+
+.address-suggestions-dropdown-tab::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.address-suggestions-dropdown-tab::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+.address-suggestions-dropdown-tab::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+.address-suggestion-item-tab {
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    border-bottom: 1px solid #e9ecef;
+    transition: background-color 0.15s ease-in-out;
+}
+
+.address-suggestion-item-tab:last-child {
+    border-bottom: none;
+}
+
+.address-suggestion-item-tab:hover {
+    background-color: #f8f9fa;
+}
+
+.address-suggestion-item-tab.selected {
+    background-color: #0d6efd;
+    color: white;
+}
+
+.address-suggestion-item-tab.selected .fw-medium {
+    color: white;
+}
+
 /* Organization Details Styles */
 .organization-details {
     padding: 20px;

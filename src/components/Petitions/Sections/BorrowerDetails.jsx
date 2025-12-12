@@ -12,6 +12,7 @@ const BorrowerDetails = ({
   handleBorrowerAddressInput,
   handleBorrowerAddressSelect,
   borrowerPredictions,
+  isLoadingBorrowerPredictions,
   isLoaded,
   addBorrower,
 }) => {
@@ -268,26 +269,46 @@ const BorrowerDetails = ({
                                 );
                               }}
                             />
+                            {/* Loading indicator */}
+                            {isLoadingBorrowerPredictions && isLoadingBorrowerPredictions[borrower.id] && (
+                              <div className="position-absolute top-50 end-0 translate-middle-y me-3">
+                                <div
+                                  className="spinner-border spinner-border-sm text-muted"
+                                  role="status"
+                                >
+                                  <span className="visually-hidden">Loading...</span>
+                                </div>
+                              </div>
+                            )}
+                            {/* Address suggestions dropdown */}
                             {isEditing &&
                               isLoaded &&
                               (borrowerPredictions[borrower.id] || []).length >
                                 0 && (
-                                <div className="list-group mt-1 position-absolute w-100" style={{ zIndex: 1000, maxHeight: "200px", overflowY: "auto", backgroundColor: "white", boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}>
+                                <div
+                                  className="address-suggestions-dropdown-tab"
+                                  style={{
+                                    zIndex: 50,
+                                    maxHeight: "200px",
+                                    overflowY: "auto",
+                                  }}
+                                >
                                   {(borrowerPredictions[borrower.id] || []).map(
-                                    (p) => (
-                                      <button
-                                        type="button"
-                                        key={p.place_id}
-                                        className="list-group-item list-group-item-action"
-                                        onClick={() =>
+                                    (prediction, index) => (
+                                      <div
+                                        key={prediction.place_id}
+                                        className="address-suggestion-item-tab"
+                                        onMouseDown={() =>
                                           handleBorrowerAddressSelect(
                                             borrower.id,
-                                            p
+                                            prediction
                                           )
                                         }
                                       >
-                                        {p.description}
-                                      </button>
+                                        <div className="fw-medium">
+                                          {prediction.description}
+                                        </div>
+                                      </div>
                                     )
                                   )}
                                 </div>
