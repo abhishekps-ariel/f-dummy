@@ -16,7 +16,7 @@ const Messages = lazyWithRetry(() => import('../pages/Messages'));
 const FAQ = lazyWithRetry(() => import('../pages/FAQ'));
 const Training = lazyWithRetry(() => import('../pages/Training'));
 const Form35 = lazyWithRetry(() => import('../pages/Form35'));
-const Notifications = lazyWithRetry(() => import('../pages/Notifications'));
+const EmailLogs = lazyWithRetry(() => import('../pages/EmailLogs'));
 const Login = lazyWithRetry(() => import('../pages/Auth/Login'));
 const Register = lazyWithRetry(() => import('../pages/Auth/Register'));
 const ForgotPassword = lazyWithRetry(() => import('../pages/Auth/ForgotPassword'));
@@ -158,10 +158,10 @@ export const router = createBrowserRouter([
     errorElement: <RouteError />,
   },
   {
-    path: ROUTES.NOTIFICATIONS,
+    path: ROUTES.EMAIL_LOGS,
     element: (
       <Layout>
-        <Notifications />
+        <EmailLogs />
       </Layout>
     ),
     errorElement: <RouteError />,

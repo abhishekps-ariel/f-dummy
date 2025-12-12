@@ -19,7 +19,7 @@ export const createSignalRConnection = (userId) => {
 export const sendMessage = async (messageData) => {
   const response = await client.post(
     CHAT_ENDPOINTS.SEND_MESSAGE,
-    {
+    { 
       senderId: messageData.senderId,
       receiverId: messageData.receiverId,
       message: messageData.message,

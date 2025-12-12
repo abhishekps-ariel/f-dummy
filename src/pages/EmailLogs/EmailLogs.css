@@ -1,4 +1,4 @@
-/* Animation for expanding notification details */
+/* Animation for expanding email log details */
 @keyframes slideDown {
   from {
     opacity: 0;
@@ -17,11 +17,11 @@
 }
 
 /* Desktop table expansion animation */
-.notification-details-row {
+.email-log-details-row {
   animation: slideDown 0.3s ease-out;
 }
 
-.notification-details-content {
+.email-log-details-content {
   padding: 1.5rem 1.25rem;
   background-color: #f8f9fa;
   border-top: 2px solid #e9ecef;
@@ -30,8 +30,7 @@
 }
 
 /* Mobile card expansion animation */
-.notification-card-details {
+.email-log-card-details {
   animation: slideDown 0.3s ease-out;
   overflow: hidden;
 }
-

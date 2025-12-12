@@ -14,6 +14,8 @@ import { getAllOrganizations, searchOrganizations } from '../../services/organiz
 import { useDebounce } from '../../hooks/useDebounce';
 import form35BService from '../../services/form35BService';
 import YearPicker from '../../components/shared/YearPicker';
+import MunicipalityMultiSelect from '../../components/shared/MunicipalityMultiSelect';
+import '../../components/shared/MunicipalityMultiSelect.css';
 
 const Form35 = () => {
   const { user, logout } = useAuth();
@@ -319,7 +321,7 @@ const Form35 = () => {
     if (!formData.reportingPeriod) {
       newErrors.reportingPeriod = t("form35B.validation.reportingPeriodRequired");
     }
-    if (!formData.municipality.trim()) {
+    if (!formData.municipality || !formData.municipality.trim()) {
       newErrors.municipality = t("form35B.validation.municipalityRequired");
     }
     
@@ -444,8 +446,8 @@ const Form35 = () => {
             navigate(ROUTES.PETITIONS);
           } else if (section === 'form35') {
             navigate(ROUTES.FORM35);
-          } else if (section === 'notifications') {
-            navigate(ROUTES.NOTIFICATIONS);
+          } else if (section === 'emailLogs') {
+            navigate(ROUTES.EMAIL_LOGS);
           } else if (section === 'messages') {
             navigate(ROUTES.MESSAGES);
           } else if (section === 'faq') {
@@ -757,15 +759,15 @@ const Form35 = () => {
                       <label className="form-label fw-medium">
                         {t("form35B.municipality")} <span className="text-danger">*</span>
                       </label>
-                      <input
-                        type="text"
+                      <MunicipalityMultiSelect
                         name="municipality"
                         value={formData.municipality}
                         onChange={handleInputChange}
-                        className={`form-control ${errors.municipality ? 'is-invalid' : ''}`}
+                        placeholder={t("form35B.municipalityPlaceholder") || "Select municipalities..."}
+                        error={!!errors.municipality}
                       />
                       {errors.municipality && (
-                        <div className="invalid-feedback">{errors.municipality}</div>
+                        <div className="invalid-feedback d-block">{errors.municipality}</div>
                       )}
                     </div>
 

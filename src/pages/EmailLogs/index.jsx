@@ -10,19 +10,19 @@ import Sidebar from '../../components/shared/Sidebar';
 import Header from '../../components/shared/Header';
 import CustomDropdown from '../../components/shared/CustomDropdown';
 import '../../components/shared/CustomDropdown.css';
-import { getEmailTypesEnum, getEmailHistoryPaged } from '../../services/notificationService';
+import { getEmailTypesEnum, getEmailHistoryPaged } from '../../services/emailLogService';
 import { useDebounce } from '../../hooks/useDebounce';
 import { toast } from 'react-toastify';
-import './Notifications.css';
+import './EmailLogs.css';
 
-const Notifications = () => {
+const EmailLogs = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const [activeSection, setActiveSection] = useState('notifications');
+  const [activeSection, setActiveSection] = useState('emailLogs');
 
-  // State for notifications
-  const [notifications, setNotifications] = useState([]);
+  // State for email logs
+  const [emailLogs, setEmailLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
@@ -47,8 +47,8 @@ const Notifications = () => {
   // Debounced search term
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   
-  // Ref to store fetchNotifications function
-  const fetchNotificationsRef = useRef();
+  // Ref to store fetchEmailLogs function
+  const fetchEmailLogsRef = useRef();
 
   // Fetch email types for filter dropdown
   const fetchEmailTypes = useCallback(async () => {
@@ -58,7 +58,7 @@ const Notifications = () => {
       if (response.isSuccess && response.data) {
         // Transform API response to dropdown options
         const options = [
-          { value: '', label: t('notifications.allTypes') }
+          { value: '', label: t('emailLogs.allTypes') }
         ];
         
         response.data.forEach((item) => {
@@ -72,7 +72,7 @@ const Notifications = () => {
       }
     } catch (err) {
       console.error('Failed to fetch email types:', err);
-      toast.error(t('notifications.failedFetchEmailTypes'));
+      toast.error(t('emailLogs.failedFetchEmailTypes'));
     } finally {
       setLoadingEmailTypes(false);
     }
@@ -92,8 +92,8 @@ const Notifications = () => {
     setPagination((prev) => ({ ...prev, currentPage: 1 }));
   };
 
-  // Fetch notifications with pagination
-  const fetchNotifications = useCallback(async (page = 1) => {
+  // Fetch email logs with pagination
+  const fetchEmailLogs = useCallback(async (page = 1) => {
     if (!user?.id) {
       return;
     }
@@ -115,16 +115,16 @@ const Notifications = () => {
 
       if (response.isSuccess && response.data) {
         // Handle API response structure
-        // The API returns an array of notification objects directly in response.data
-        const notificationsData = Array.isArray(response.data) 
+        // The API returns an array of email log objects directly in response.data
+        const emailLogsData = Array.isArray(response.data) 
           ? response.data 
           : (response.data?.data || response.data?.items || []);
         
         // Get pagination info from response (might be at root level or nested)
-        const totalCount = response.totalCount || response.data?.totalCount || notificationsData.length;
+        const totalCount = response.totalCount || response.data?.totalCount || emailLogsData.length;
         const totalPages = response.totalPages || response.data?.totalPages || Math.ceil(totalCount / pagination.pageSize);
         
-        setNotifications(notificationsData);
+        setEmailLogs(emailLogsData);
         setPagination((prev) => ({
           ...prev,
           currentPage: page,
@@ -132,33 +132,33 @@ const Notifications = () => {
           totalCount: totalCount,
         }));
       } else {
-        setError(response.message || t('notifications.failedFetchNotifications'));
-        setNotifications([]);
+        setError(response.message || t('emailLogs.failedFetchEmailLogs'));
+        setEmailLogs([]);
       }
     } catch (err) {
-      console.error('Failed to fetch notifications:', err);
-      setError(err?.message || t('notifications.failedFetchNotifications'));
-      setNotifications([]);
-      toast.error(t('notifications.failedFetchNotifications'));
+      console.error('Failed to fetch email logs:', err);
+      setError(err?.message || t('emailLogs.failedFetchEmailLogs'));
+      setEmailLogs([]);
+      toast.error(t('emailLogs.failedFetchEmailLogs'));
     } finally {
       setLoading(false);
     }
   }, [user?.id, pagination.pageSize, debouncedSearchTerm, typeFilter, sortBy, sortDescending, t]);
 
-  // Store fetchNotifications in ref
+  // Store fetchEmailLogs in ref
   useEffect(() => {
-    fetchNotificationsRef.current = fetchNotifications;
-  }, [fetchNotifications]);
+    fetchEmailLogsRef.current = fetchEmailLogs;
+  }, [fetchEmailLogs]);
 
   // Initial load: fetch email types
   useEffect(() => {
     fetchEmailTypes();
   }, [fetchEmailTypes]);
 
-  // Fetch notifications when filters or sort change
+  // Fetch email logs when filters or sort change
   useEffect(() => {
     if (user?.id) {
-      fetchNotifications(1);
+      fetchEmailLogs(1);
     }
   }, [debouncedSearchTerm, typeFilter, sortBy, sortDescending, user?.id]);
 
@@ -261,8 +261,8 @@ const Notifications = () => {
 
   // Handle page change
   const handlePageChange = (page) => {
-    if (fetchNotificationsRef.current) {
-      fetchNotificationsRef.current(page);
+    if (fetchEmailLogsRef.current) {
+      fetchEmailLogsRef.current(page);
     }
   };
 
@@ -283,8 +283,8 @@ const Notifications = () => {
             navigate(ROUTES.FAQ);
           } else if (section === 'training') {
             navigate(ROUTES.TRAINING);
-          } else if (section === 'notifications') {
-            navigate(ROUTES.NOTIFICATIONS);
+          } else if (section === 'emailLogs') {
+            navigate(ROUTES.EMAIL_LOGS);
           }
         }}
         onLogout={handleLogout}
@@ -294,17 +294,17 @@ const Notifications = () => {
       <main className="dashboard-main-area container-fluid">
         <Header 
           user={user}
-          pageTitle={t("notifications.pageTitle")}
+          pageTitle={t("emailLogs.pageTitle")}
           onLogout={handleLogout}
         />
 
-        {/* Main Notifications Content */}
+        {/* Main Email Logs Content */}
         <div className="dashboard-content-section">
           <div className="shadow-custom bg-white org-search-box">
             <div className="p-4">
               <div className="mb-4">
-                <h2 className="h4 mb-3 fw-bold theme-color">{t("notifications.title")}</h2>
-                <p className="text-muted mb-4">{t("notifications.subtitle")}</p>
+                <h2 className="h4 mb-3 fw-bold theme-color">{t("emailLogs.title")}</h2>
+                <p className="text-muted mb-4">{t("emailLogs.subtitle")}</p>
               </div>
 
               {/* Search and Filter Controls */}
@@ -316,7 +316,7 @@ const Notifications = () => {
                       <input
                         type="text"
                         className="form-control"
-                        placeholder={t("notifications.searchPlaceholder")}
+                        placeholder={t("emailLogs.searchPlaceholder")}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         style={{ paddingLeft: '40px' }}
@@ -328,7 +328,7 @@ const Notifications = () => {
                       name="typeFilter"
                       value={typeFilter}
                       onChange={(e) => setTypeFilter(e.target.value)}
-                      placeholder={t("notifications.allTypes")}
+                      placeholder={t("emailLogs.allTypes")}
                       options={emailTypes}
                       disabled={loadingEmailTypes}
                     />
@@ -337,14 +337,14 @@ const Notifications = () => {
                     {loading && (
                       <div className="d-flex align-items-center text-muted">
                         <div className="spinner-border spinner-border-sm me-2" role="status">
-                          <span className="visually-hidden">{t("notifications.loading")}</span>
+                          <span className="visually-hidden">{t("emailLogs.loading")}</span>
                         </div>
-                        <small>{t("notifications.loading")}</small>
+                        <small>{t("emailLogs.loading")}</small>
                       </div>
                     )}
                     {!loading && pagination.totalCount > 0 && (
                       <small className="text-muted">
-                        {t("notifications.showingResults", {
+                        {t("emailLogs.showingResults", {
                           start: (pagination.currentPage - 1) * pagination.pageSize + 1,
                           end: Math.min(pagination.currentPage * pagination.pageSize, pagination.totalCount),
                           total: pagination.totalCount
@@ -386,7 +386,7 @@ const Notifications = () => {
                         className="sortable-header"
                         onClick={() => handleSort('subject')}
                       >
-                        {t("notifications.subject")}
+                        {t("emailLogs.subject")}
                         {sortBy === 'subject' && (
                           <i
                             className={`fas fa-sort-${
@@ -407,7 +407,7 @@ const Notifications = () => {
                         className="sortable-header"
                         onClick={() => handleSort('email')}
                       >
-                        {t("notifications.emailAddress")}
+                        {t("emailLogs.emailAddress")}
                         {sortBy === 'email' && (
                           <i
                             className={`fas fa-sort-${
@@ -438,7 +438,7 @@ const Notifications = () => {
                           setPagination((prev) => ({ ...prev, currentPage: 1 }));
                         }}
                       >
-                        {t("notifications.dateSent")}
+                        {t("emailLogs.dateSent")}
                         {(!sortBy || sortBy === '') && (
                           <i
                             className={`fas fa-sort-${
@@ -454,28 +454,28 @@ const Notifications = () => {
                       <tr>
                         <td colSpan="3" className="text-center py-5">
                           <div className="spinner-border text-primary" role="status">
-                            <span className="visually-hidden">{t("notifications.loading")}</span>
+                            <span className="visually-hidden">{t("emailLogs.loading")}</span>
                           </div>
-                          <p className="mt-2 text-muted">{t("notifications.loading")}</p>
+                          <p className="mt-2 text-muted">{t("emailLogs.loading")}</p>
                         </td>
                       </tr>
-                    ) : notifications.length > 0 ? (
-                      notifications.map((notification) => (
+                    ) : emailLogs.length > 0 ? (
+                      emailLogs.map((emailLog) => (
                         <tr 
-                          key={notification.id}
+                          key={emailLog.id}
                           className="petition-row"
                           style={{ cursor: 'default' }}
                         >
                           <td style={{ padding: '1rem 1.25rem', verticalAlign: 'middle', borderBottom: '1px solid #dee2e6' }}>
                             <span style={{ color: '#212529', fontSize: '0.95rem' }}>
-                              {formatSubjectWithPetitionNumber(notification.subject || '')}
+                              {formatSubjectWithPetitionNumber(emailLog.subject || '')}
                                 </span>
                             </td>
                           <td style={{ padding: '1rem 1.25rem', verticalAlign: 'middle', borderBottom: '1px solid #dee2e6', color: '#495057' }}>
-                            {notification.toEmail || ''}
+                            {emailLog.toEmail || ''}
                             </td>
                           <td style={{ padding: '1rem 1.25rem', verticalAlign: 'middle', borderBottom: '1px solid #dee2e6', color: '#495057', textAlign: 'center' }}>
-                            {formatDate(notification.sentTimeUtc)}
+                            {formatDate(emailLog.sentTimeUtc)}
                               </td>
                             </tr>
                       ))
@@ -483,7 +483,7 @@ const Notifications = () => {
                       <tr>
                         <td colSpan="3" className="text-center py-5">
                           <i className="fa-solid fa-bell-slash fa-3x text-muted mb-3"></i>
-                          <p className="text-muted mb-0">{t("notifications.noNotifications")}</p>
+                          <p className="text-muted mb-0">{t("emailLogs.noEmailLogs")}</p>
                         </td>
                       </tr>
                     )}
@@ -496,14 +496,14 @@ const Notifications = () => {
                 {loading ? (
                   <div className="text-center py-5">
                     <div className="spinner-border text-primary" role="status">
-                      <span className="visually-hidden">{t("notifications.loading")}</span>
+                      <span className="visually-hidden">{t("emailLogs.loading")}</span>
                     </div>
-                    <p className="mt-2 text-muted">{t("notifications.loading")}</p>
+                    <p className="mt-2 text-muted">{t("emailLogs.loading")}</p>
                   </div>
-                ) : notifications.length > 0 ? (
-                  notifications.map((notification) => (
+                ) : emailLogs.length > 0 ? (
+                  emailLogs.map((emailLog) => (
                     <div 
-                      key={notification.id} 
+                      key={emailLog.id} 
                       className="card mb-3"
                       style={{ 
                         border: '1px solid #dee2e6',
@@ -520,16 +520,16 @@ const Notifications = () => {
                                 lineHeight: '1.4'
                               }}
                             >
-                          {formatSubjectWithPetitionNumber(notification.subject || '')}
+                          {formatSubjectWithPetitionNumber(emailLog.subject || '')}
                             </h6>
                         <div style={{ marginTop: '0.75rem' }}>
                           <small className="text-muted d-block mb-2" style={{ fontSize: '0.875rem' }}>
                             <i className="fas fa-envelope me-2" style={{ width: '16px', color: '#6c757d' }}></i>
-                            {notification.toEmail || ''}
+                            {emailLog.toEmail || ''}
                           </small>
                           <small className="text-muted d-block" style={{ fontSize: '0.875rem' }}>
                             <i className="fas fa-clock me-2" style={{ width: '16px', color: '#6c757d' }}></i>
-                            {formatDate(notification.sentTimeUtc)}
+                            {formatDate(emailLog.sentTimeUtc)}
                           </small>
                         </div>
                       </div>
@@ -538,7 +538,7 @@ const Notifications = () => {
                 ) : (
                   <div className="text-center py-5">
                     <i className="fa-solid fa-bell-slash fa-3x text-muted mb-3"></i>
-                    <p className="text-muted">{t("notifications.noNotifications")}</p>
+                    <p className="text-muted">{t("emailLogs.noEmailLogs")}</p>
                   </div>
                 )}
               </div>
@@ -574,7 +574,7 @@ const Notifications = () => {
                         />
                       </svg>
                       <span className="pagination-btn-text d-none d-md-inline">
-                        {t("notifications.previous")}
+                        {t("emailLogs.previous")}
                       </span>
                     </button>
 
@@ -661,7 +661,7 @@ const Notifications = () => {
                       }
                     >
                       <span className="pagination-btn-text d-none d-md-inline">
-                        {t("notifications.next")}
+                        {t("emailLogs.next")}
                       </span>
                       <svg
                         width="16"
@@ -690,4 +690,4 @@ const Notifications = () => {
   );
 };
 
-export default Notifications;
+export default EmailLogs;

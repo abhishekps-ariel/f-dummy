@@ -15,7 +15,7 @@ export const getEmailTypesEnum = async () => {
 };
 
 /**
- * Get paginated email history/notifications
+ * Get paginated email history/email logs
  * @param {Object} params - Pagination and filter parameters
  * @param {number} params.pageNumber - Page number (1-based)
  * @param {number} params.pageSize - Number of items per page
@@ -78,4 +78,3 @@ export const getEmailHistoryPaged = async (params) => {
 
   return normalized;
 };
-

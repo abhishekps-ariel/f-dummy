@@ -44,8 +44,8 @@ const Training = () => {
             navigate(ROUTES.PETITIONS);
           } else if (section === 'form35') {
             navigate(ROUTES.FORM35);
-          } else if (section === 'notifications') {
-            navigate(ROUTES.NOTIFICATIONS);
+          } else if (section === 'emailLogs') {
+            navigate(ROUTES.EMAIL_LOGS);
           } else if (section === 'messages') {
             navigate(ROUTES.MESSAGES);
           } else if (section === 'faq') {

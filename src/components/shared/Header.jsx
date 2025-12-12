@@ -36,7 +36,7 @@ const Header = ({ user, pageTitle, showMobileMenu = true, onLogout }) => {
           <AccessibilityControls />
         </div>
 
-        {/* Notifications Dropdown */}
+        {/* Email Logs Dropdown */}
         {/* <NotificationDropdown /> */}
 
         {/* Language Dropdown - Show on all screens */}

@@ -162,7 +162,7 @@ const NotificationDropdown = () => {
             <div className="d-flex align-items-center">
               <i className="fa-solid fa-bell me-2" style={{ fontSize: '1rem' }}></i>
               <span style={{ fontWeight: '600', fontSize: '0.95rem' }}>
-                {t("notifications.title")}
+                {t("emailLogs.title")}
               </span>
             </div>
             {unreadCount > 0 && (
@@ -176,7 +176,7 @@ const NotificationDropdown = () => {
                   fontWeight: '600'
                 }}
               >
-                {unreadCount} {t("notifications.unread")}
+                {unreadCount} {t("emailLogs.unread")}
               </span>
             )}
           </div>
@@ -188,7 +188,7 @@ const NotificationDropdown = () => {
                 <li key={notification.id} style={{ margin: 0, padding: 0 }}>
                   <Link 
                     className="dropdown-item"
-                    to={ROUTES.NOTIFICATIONS}
+                    to={ROUTES.EMAIL_LOGS}
                     style={{ 
                       padding: '1rem 1.25rem',
                       backgroundColor: notification.unread ? '#f0f7ff' : '#ffffff',
@@ -273,7 +273,7 @@ const NotificationDropdown = () => {
             <li style={{ margin: 0, padding: 0 }}>
               <Link 
                 className="dropdown-item d-flex justify-content-center align-items-center fw-semibold" 
-                to={ROUTES.NOTIFICATIONS}
+                to={ROUTES.EMAIL_LOGS}
                 style={{ 
                   padding: '0.875rem 1.25rem',
                   backgroundColor: '#f8f9fa',
@@ -289,7 +289,7 @@ const NotificationDropdown = () => {
                   e.currentTarget.style.backgroundColor = '#f8f9fa';
                 }}
               >
-                <span>{t("notifications.viewAll")}</span>
+                <span>{t("emailLogs.viewAll")}</span>
                 <i className="fa-solid fa-arrow-right ms-2" style={{ fontSize: '0.75rem' }}></i>
               </Link>
             </li>
@@ -305,7 +305,7 @@ const NotificationDropdown = () => {
             >
               <i className="fa-solid fa-bell-slash mb-3" style={{ fontSize: '2rem', opacity: 0.5 }}></i>
               <p className="mb-0 small" style={{ color: '#6c757d' }}>
-                {t("notifications.noNotifications")}
+                {t("emailLogs.noEmailLogs")}
               </p>
             </div>
         </li>

@@ -82,10 +82,10 @@ const Sidebar = ({ activeSection, onSectionChange, onLogout }) => {
       route: ROUTES.MESSAGES,
     },
     {
-      key: "notifications",
-      label: t("sidebar.notifications"),
-      icon: "fa-bell",
-      route: ROUTES.NOTIFICATIONS,
+      key: "emailLogs",
+      label: t("sidebar.emailLogs"),
+      icon: "fa-list",
+      route: ROUTES.EMAIL_LOGS,
     },
     {
       key: "faq",
