@@ -42,3 +42,11 @@ export const get35BEntityTypes = async () => {
   return normalizeResponse(response, "35B entity types fetched successfully");
 };
 
+export const getAllMunicipalities = async () => {
+  const response = await client.get(COMMON_ENDPOINTS.GET_ALL_MUNICIPALITIES, {
+    headers: SERVICE_HEADERS.TEXT_PLAIN,
+  });
+
+  return normalizeResponse(response, "Municipalities fetched successfully");
+};
+

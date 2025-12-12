@@ -46,6 +46,7 @@ export const COMMON_ENDPOINTS = {
   GET_35B_REPORTING_PERIOD: "/Common/get-35b-reporting-period",
   GET_35B_ENTITY_TYPE: "/Common/get-35b-entitytype",
   GET_EMAIL_TYPES_ENUM: "/Common/email-types-enum",
+  GET_ALL_MUNICIPALITIES: "/Common/get-all-municipalities",
 };
 
 export const NOTIFICATION_ENDPOINTS = {
