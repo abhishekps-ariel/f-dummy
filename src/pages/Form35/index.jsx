@@ -47,7 +47,6 @@ const Form35 = () => {
   const [entityTypes, setEntityTypes] = useState([]);
   const [loadingEntityTypes, setLoadingEntityTypes] = useState(true);
   const [showAttestationModal, setShowAttestationModal] = useState(false);
-  const [isCalculatingData, setIsCalculatingData] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Organization selection state
@@ -97,79 +96,6 @@ const Form35 = () => {
     fetchEntityTypes();
   }, []);
 
-  // Auto-calculate Form 35B data when organization, reporting year, and reporting period are selected
-  useEffect(() => {
-    const calculateFormData = async () => {
-      // Check if all required fields are filled
-      if (
-        formData.companyOrganizationId &&
-        formData.reportingYear &&
-        formData.reportingYear.trim() !== '' &&
-        formData.reportingPeriod &&
-        formData.reportingPeriod.trim() !== ''
-      ) {
-        // Validate reporting year is a valid number
-        const year = parseInt(formData.reportingYear);
-        if (isNaN(year)) {
-          return; // Don't calculate if year is invalid
-        }
-
-        setIsCalculatingData(true);
-        try {
-          const calculationData = {
-            userId: user?.id || null,
-            organizationId: formData.companyOrganizationId,
-            reportingYear: year,
-            reportingPeriodId: formData.reportingPeriod,
-          };
-
-          const response = await form35BService.calculateForm35BData(calculationData);
-
-          if (response.isSuccess && response.data) {
-            // Map API response to form fields 5-13
-            setFormData((prev) => ({
-              ...prev,
-              borrowersSent35BNotice: response.data.noticeSentCount?.toString() || '0',
-              borrowersRespondedWithin30Days: response.data.respondedWithin30Days?.toString() || '0',
-              borrowersRequestedModification: response.data.requestedModification?.toString() || '0',
-              borrowersRequestedAlternativeToForeclosure: response.data.requestedAlternativeToForeclosure?.toString() || '0',
-              borrowersChoseNotToPursueModification: response.data.choseNotToPursueModificationButProceedRTC?.toString() || '0',
-              borrowersWaivedRightToCure: response.data.waivedRightToCure?.toString() || '0',
-              borrowersDidNotRespondWithin30Days: response.data.didNotRespondWithin30Days?.toString() || '0',
-              modificationRequestsFinalized: response.data.loanModFinalized?.toString() || '0',
-              modificationRequestsDenied: response.data.loanModDenied?.toString() || '0',
-            }));
-
-            // Clear errors for auto-populated fields
-            setErrors((prev) => {
-              const newErrors = { ...prev };
-              delete newErrors.borrowersSent35BNotice;
-              delete newErrors.borrowersRespondedWithin30Days;
-              delete newErrors.borrowersRequestedModification;
-              delete newErrors.borrowersRequestedAlternativeToForeclosure;
-              delete newErrors.borrowersChoseNotToPursueModification;
-              delete newErrors.borrowersWaivedRightToCure;
-              delete newErrors.borrowersDidNotRespondWithin30Days;
-              delete newErrors.modificationRequestsFinalized;
-              delete newErrors.modificationRequestsDenied;
-              return newErrors;
-            });
-          }
-        } catch {
-          // Error calculating Form 35B data - user can manually enter values
-        } finally {
-          setIsCalculatingData(false);
-        }
-      }
-    };
-
-    // Debounce the calculation to avoid too many API calls
-    const timeoutId = setTimeout(() => {
-      calculateFormData();
-    }, 500); // Wait 500ms after user stops changing values
-
-    return () => clearTimeout(timeoutId);
-  }, [formData.companyOrganizationId, formData.reportingYear, formData.reportingPeriod]);
 
   // Organization selection functions
   const loadAllOrganizations = async () => {
@@ -769,19 +695,6 @@ const Form35 = () => {
                       {errors.municipality && (
                         <div className="invalid-feedback d-block">{errors.municipality}</div>
                       )}
-                    </div>
-
-                    {/* Instruction note */}
-                    <div className="alert alert-info mb-4" role="alert">
-                      <small>
-                        {t("form35B.autoPopulatedNote")}
-                        {isCalculatingData && (
-                          <span className="ms-2">
-                            <i className="spinner-border spinner-border-sm me-1"></i>
-                            {t("form35B.calculating")}
-                          </span>
-                        )}
-                      </small>
                     </div>
 
                     {/* Question 5 */}
