@@ -827,6 +827,7 @@
     "noSignatureInformation": "No signature information available",
     "errorFetchingSignature": "Failed to load signature image",
     "certainMortgageLoan": "Certain Mortgage Loan",
+    "wasForm35BProvided": "Was a Form 35B provided?",
     "borrowerRespondedWithin30Days": "Borrower Responded Within 30 Days",
     "borrowerResponseDate": "Date on which the borrower responded",
     "proceededWithRightToCure": "Did the borrower proceed with the right to cure?",

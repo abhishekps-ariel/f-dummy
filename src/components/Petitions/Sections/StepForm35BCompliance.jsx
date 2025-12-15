@@ -52,6 +52,8 @@ const StepForm35BCompliance = ({
                         setFormData((prev) => ({
                           ...prev,
                           certainMortgageLoan: value,
+                          // Reset wasForm35BProvided if certainMortgageLoan is set to false
+                          wasForm35BProvided: value === true ? prev.wasForm35BProvided : null,
                         }));
                       }}
                       placeholder={t("petitionTabContent.select")}
@@ -77,6 +79,52 @@ const StepForm35BCompliance = ({
                   </div>
                 </div>
               </div>
+              {formData.certainMortgageLoan === true && (
+                <div className="row">
+                  <div className="col-12">
+                    <div className="form-group mb-3">
+                      <label className="form-label">
+                        {t("petitionTabContent.wasForm35BProvided")} *
+                      </label>
+                      <CustomDropdown
+                        name="wasForm35BProvided"
+                        value={
+                          formData.wasForm35BProvided === null
+                            ? ""
+                            : formData.wasForm35BProvided
+                            ? "true"
+                            : "false"
+                        }
+                        onChange={(e) => {
+                          const value =
+                            e.target.value === "true"
+                              ? true
+                              : e.target.value === "false"
+                              ? false
+                              : null;
+                          setFormData((prev) => ({
+                            ...prev,
+                            wasForm35BProvided: value,
+                          }));
+                        }}
+                        placeholder={t("petitionTabContent.select")}
+                        disabled={!isEditing}
+                        error={!!fieldErrors.wasForm35BProvided}
+                        options={[
+                          { value: "", label: t("petitionTabContent.select") },
+                          { value: "true", label: t("petitionTabContent.yes") },
+                          { value: "false", label: t("petitionTabContent.no") },
+                        ]}
+                      />
+                      {fieldErrors.wasForm35BProvided && (
+                        <div className="text-danger small mt-1">
+                          {fieldErrors.wasForm35BProvided}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
     </>

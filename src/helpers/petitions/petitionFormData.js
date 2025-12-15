@@ -85,6 +85,7 @@ export const defaultFormData = {
   manualOverrideReason: "",
   // Step 7: Form 35B Compliance
   certainMortgageLoan: null,
+  wasForm35BProvided: null,
   form35bComplianceAffidavitPdf: "",
   form35bNonApplicabilityAffidavitPdf: "",
   affiantName: "",
@@ -324,6 +325,7 @@ export const transformTakeOverPetitionData = (petitionData) => {
 
     // Form 35B Compliance
     certainMortgageLoan: details.affidavit?.certainMortgageLoan ?? null,
+    wasForm35BProvided: details.affidavit?.wasForm35BProvided ?? null,
     form35bComplianceAffidavitPdf: details.affidavit?.form35bComplianceAffidavitPdf || "",
     form35bNonApplicabilityAffidavitPdf: details.affidavit?.form35bNonApplicabilityAffidavitPdf || "",
     affiantName: details.affidavit?.affiantName || "",

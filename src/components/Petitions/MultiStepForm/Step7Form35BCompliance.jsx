@@ -53,6 +53,8 @@ const Step7Form35BCompliance = ({
                         setFormData((prev) => ({
                           ...prev,
                           certainMortgageLoan: true,
+                          // Keep wasForm35BProvided value when switching to true
+                          wasForm35BProvided: prev.wasForm35BProvided,
                         }))
                       }
                       disabled={isCertainMortgageLoanReadOnly}
@@ -79,6 +81,8 @@ const Step7Form35BCompliance = ({
                         setFormData((prev) => ({
                           ...prev,
                           certainMortgageLoan: false,
+                          // Reset wasForm35BProvided when certainMortgageLoan is false
+                          wasForm35BProvided: null,
                         }))
                       }
                       disabled={isCertainMortgageLoanReadOnly}
@@ -106,6 +110,73 @@ const Step7Form35BCompliance = ({
                   </div>
                 )}
               </div>
+
+              {/* Was a Form 35B provided? - Only show if certainMortgageLoan is true */}
+              {formData.certainMortgageLoan === true && (
+                <div className="col-12">
+                  <label className="form-label fw-bold">
+                    {t("petitionTabContent.wasForm35BProvided")} *
+                  </label>
+
+                  <div className="d-flex gap-4">
+                    <div className="form-check">
+                      <input
+                        className="form-check-input"
+                        type="radio"
+                        id="wasForm35BProvidedYes"
+                        name="wasForm35BProvided"
+                        value="yes"
+                        checked={formData.wasForm35BProvided === true}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            wasForm35BProvided: true,
+                          }))
+                        }
+                      />
+
+                      <label
+                        className="form-check-label fw-medium"
+                        htmlFor="wasForm35BProvidedYes"
+                        style={{ fontSize: '13px', fontWeight: '500', color: '#333' }}
+                      >
+                        {t("petitionSteps.step3.yes")}
+                      </label>
+                    </div>
+
+                    <div className="form-check">
+                      <input
+                        className="form-check-input"
+                        type="radio"
+                        id="wasForm35BProvidedNo"
+                        name="wasForm35BProvided"
+                        value="no"
+                        checked={formData.wasForm35BProvided === false}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            wasForm35BProvided: false,
+                          }))
+                        }
+                      />
+
+                      <label
+                        className="form-check-label fw-medium"
+                        htmlFor="wasForm35BProvidedNo"
+                        style={{ fontSize: '13px', fontWeight: '500', color: '#333' }}
+                      >
+                        {t("petitionSteps.step3.no")}
+                      </label>
+                    </div>
+                  </div>
+
+                  {fieldErrors.wasForm35BProvided && (
+                    <div className="text-danger small mt-1">
+                      {fieldErrors.wasForm35BProvided}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         );

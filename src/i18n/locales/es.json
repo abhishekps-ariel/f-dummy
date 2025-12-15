@@ -827,6 +827,7 @@
     "noSignatureInformation": "No hay información de firma disponible",
     "errorFetchingSignature": "Error al cargar la imagen de la firma",
     "certainMortgageLoan": "Cierto Préstamo Hipotecario",
+    "wasForm35BProvided": "¿Se proporcionó un Formulario 35B?",
     "borrowerRespondedWithin30Days": "El Prestatario Respondió Dentro de 30 Días",
     "borrowerResponseDate": "Fecha en que el prestatario respondió",
     "proceededWithRightToCure": "¿El prestatario procedió con el derecho a remediar?",

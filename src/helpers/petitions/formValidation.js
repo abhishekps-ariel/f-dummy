@@ -422,6 +422,17 @@ export const validateForm35BCompliance = (formData) => {
     hasErrors = true;
   }
 
+  // Validate wasForm35BProvided - required if certainMortgageLoan is true
+  if (formData.certainMortgageLoan === true) {
+    if (
+      formData.wasForm35BProvided === null ||
+      formData.wasForm35BProvided === undefined
+    ) {
+      errors.wasForm35BProvided = "Please select whether a Form 35B was provided";
+      hasErrors = true;
+    }
+  }
+
   return { hasErrors, errors };
 };
 

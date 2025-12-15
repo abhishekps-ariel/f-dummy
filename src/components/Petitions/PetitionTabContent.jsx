@@ -562,6 +562,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
 
       // Form 35B Compliance
       certainMortgageLoan: details.affidavit?.certainMortgageLoan || false,
+      wasForm35BProvided: details.affidavit?.wasForm35BProvided ?? null,
       form35bComplianceAffidavitPdf:
         details.affidavit?.form35bComplianceAffidavitPdf || "",
       form35bNonApplicabilityAffidavitPdf:
@@ -1201,6 +1202,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
         const affidavitData = {
           id: affidavitId,
           certainMortgageLoan: formData.certainMortgageLoan !== null && formData.certainMortgageLoan !== undefined ? formData.certainMortgageLoan : false,
+          wasForm35BProvided: formData.certainMortgageLoan === true && formData.wasForm35BProvided !== null && formData.wasForm35BProvided !== undefined ? formData.wasForm35BProvided : null,
           form35bComplianceAffidavitPdf: formData.form35bComplianceAffidavitPdf || "",
           form35bNonApplicabilityAffidavitPdf: formData.form35bNonApplicabilityAffidavitPdf || "",
           affiantName: formData.affiantName || "",
@@ -1231,6 +1233,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
         setFieldErrors(prev => {
           const newErrors = { ...prev };
           delete newErrors.certainMortgageLoan;
+          delete newErrors.wasForm35BProvided;
           return newErrors;
         });
         break;
@@ -3247,6 +3250,16 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
               : t("common.nA"),
           ],
         ];
+
+        // Add wasForm35BProvided only if certainMortgageLoan is true
+        if (petition.details.affidavit.certainMortgageLoan === true) {
+          affidavitData.push([
+            t("petitionTabContent.wasForm35BProvided"),
+            petition.details.affidavit.wasForm35BProvided !== null && petition.details.affidavit.wasForm35BProvided !== undefined
+              ? (petition.details.affidavit.wasForm35BProvided ? t("common.yes") : t("common.no"))
+              : t("common.nA"),
+          ]);
+        }
 
         // Add additional affidavit fields if they exist
         if (petition.details.affidavit.affiantName) {

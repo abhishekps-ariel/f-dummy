@@ -200,6 +200,7 @@ class PetitionApiService {
       petitionAffidavit: {
         id: affidavitData.id || null,
         certainMortgageLoan: affidavitData.certainMortgageLoan !== null && affidavitData.certainMortgageLoan !== undefined ? affidavitData.certainMortgageLoan : false,
+        wasForm35BProvided: affidavitData.certainMortgageLoan === true && affidavitData.wasForm35BProvided !== null && affidavitData.wasForm35BProvided !== undefined ? affidavitData.wasForm35BProvided : null,
         form35bComplianceAffidavitPdf: form35bComplianceAffidavitPdf,
         form35bNonApplicabilityAffidavitPdf: form35bNonApplicabilityAffidavitPdf,
         affiantName: affidavitData.affiantName || "",
@@ -546,6 +547,7 @@ class PetitionApiService {
       } : null,
       affidavit: {
         certainMortgageLoan: formData.certainMortgageLoan !== null && formData.certainMortgageLoan !== undefined ? formData.certainMortgageLoan : false,
+        wasForm35BProvided: formData.certainMortgageLoan === true && formData.wasForm35BProvided !== null && formData.wasForm35BProvided !== undefined ? formData.wasForm35BProvided : null,
         form35bComplianceAffidavitPdf: await fileToBase64(formData.form35bComplianceAffidavitPdf),
         form35bNonApplicabilityAffidavitPdf: await fileToBase64(formData.form35bNonApplicabilityAffidavitPdf),
         affiantName: formData.affiantName || "",

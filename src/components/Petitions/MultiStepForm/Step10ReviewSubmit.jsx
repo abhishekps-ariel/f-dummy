@@ -360,6 +360,14 @@ const Step10ReviewSubmit = ({
                       <strong>{t("petitionSteps.step10.filed")}</strong>{" "}
                       {formData.certainMortgageLoan ? t("petitionSteps.step3.yes") : t("petitionSteps.step3.no")}
                     </div>
+                    {formData.certainMortgageLoan === true && (
+                      <div className="col-12">
+                        <strong>{t("petitionTabContent.wasForm35BProvided")}</strong>{" "}
+                        {formData.wasForm35BProvided !== null && formData.wasForm35BProvided !== undefined
+                          ? (formData.wasForm35BProvided ? t("petitionSteps.step3.yes") : t("petitionSteps.step3.no"))
+                          : t("common.nA")}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
