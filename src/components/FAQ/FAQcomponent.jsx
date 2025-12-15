@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import faqService from "../../services/faqService";
 import { useTranslateObjectArray, useTranslateArray } from "../../hooks/useDynamicTranslation";
@@ -14,20 +14,15 @@ const FAQcomponent = () => {
   const [loadingQuestions, setLoadingQuestions] = useState(false);
   const [error, setError] = useState(null);
 
-  // Memoize fields array to prevent unnecessary re-renders
   const categoryFields = useMemo(() => ['name'], []);
-
-  // Translate categories (name field)
   const translatedCategories = useTranslateObjectArray(categories, categoryFields);
 
-  // Memoize question texts to prevent infinite loops
   const questionTexts = useMemo(() => {
     return questions.map(q => q.question);
   }, [questions]);
 
   const translatedQuestionTexts = useTranslateArray(questionTexts);
 
-  // Memoize all answers with index to prevent infinite loops
   const allAnswersWithIndex = useMemo(() => {
     const answers = [];
     questions.forEach((q, qIdx) => {
@@ -40,33 +35,36 @@ const FAQcomponent = () => {
     return answers;
   }, [questions]);
 
-  // Memoize answer texts to prevent infinite loops
   const answerTexts = useMemo(() => {
     return allAnswersWithIndex.map(a => a.answerText);
   }, [allAnswersWithIndex]);
 
   const translatedAnswerTexts = useTranslateArray(answerTexts);
 
-  // Memoize reconstructed questions with translated texts
+  const translateAnswer = useCallback((answer, aIndex, qIndex) => {
+    const answerIndex = allAnswersWithIndex.findIndex(
+      a => a._qIndex === qIndex && a._aIndex === aIndex
+    );
+    const translatedAnswerText = answerIndex >= 0 
+      ? translatedAnswerTexts[answerIndex] 
+      : answer.answerText;
+
+    return {
+      ...answer,
+      answerText: translatedAnswerText
+    };
+  }, [allAnswersWithIndex, translatedAnswerTexts]);
+
+  const translateAnswersForQuestion = useCallback((question, qIndex) => {
+    return (question.answers || []).map((answer, aIndex) => 
+      translateAnswer(answer, aIndex, qIndex)
+    );
+  }, [translateAnswer]);
+
   const translatedQuestions = useMemo(() => {
     return questions.map((question, qIndex) => {
       const translatedQuestionText = translatedQuestionTexts[qIndex] || question.question;
-      
-      // Reconstruct answers for this question
-      const translatedAnswers = (question.answers || []).map((answer, aIndex) => {
-        // Find the translated answer text for this specific answer
-        const answerIndex = allAnswersWithIndex.findIndex(
-          a => a._qIndex === qIndex && a._aIndex === aIndex
-        );
-        const translatedAnswerText = answerIndex >= 0 
-          ? translatedAnswerTexts[answerIndex] 
-          : answer.answerText;
-
-        return {
-          ...answer,
-          answerText: translatedAnswerText
-        };
-      });
+      const translatedAnswers = translateAnswersForQuestion(question, qIndex);
 
       return {
         ...question,
@@ -74,9 +72,8 @@ const FAQcomponent = () => {
         answers: translatedAnswers
       };
     });
-  }, [questions, translatedQuestionTexts, translatedAnswerTexts, allAnswersWithIndex]);
+  }, [questions, translatedQuestionTexts, translateAnswersForQuestion]);
 
-  // Fetch FAQ categories on component mount
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -86,7 +83,6 @@ const FAQcomponent = () => {
         
         if (response.success && response.data && response.data.length > 0) {
           setCategories(response.data);
-          // Auto-select first category
           setSelectedCategoryId(response.data[0].id);
         } else {
           setError("No FAQ found");
@@ -99,10 +95,8 @@ const FAQcomponent = () => {
     };
 
     fetchCategories();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [t]);
 
-  // Fetch questions when a category is selected
   useEffect(() => {
     const fetchQuestions = async () => {
       if (!selectedCategoryId) return;
@@ -114,7 +108,7 @@ const FAQcomponent = () => {
         
         if (response.success && response.data) {
           setQuestions(response.data);
-          setActiveQuestion(null); // Reset active question when category changes
+          setActiveQuestion(null);
         } else {
           setQuestions([]);
           setError(t("faq.errors.noQuestions") || "No questions available for this category");
@@ -128,8 +122,7 @@ const FAQcomponent = () => {
     };
 
     fetchQuestions();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCategoryId]);
+  }, [selectedCategoryId, t]);
 
   const handleCategoryClick = (categoryId) => {
     setSelectedCategoryId(categoryId);
@@ -140,16 +133,14 @@ const FAQcomponent = () => {
     setActiveQuestion(activeQuestion === index ? null : index);
   };
 
-  const selectedCategory = categories.find(cat => cat.id === selectedCategoryId);
-
   if (loading) {
     return (
       <div className="faq-container">
         <div className="text-center py-5">
-          <div className="spinner-border text-primary" role="status">
+          <div className="spinner-border text-primary">
             <span className="visually-hidden">Loading...</span>
           </div>
-          <p className="mt-3 text-muted">Loading</p>
+          <output className="mt-3 text-muted d-block">Loading</output>
         </div>
       </div>
     );
@@ -168,7 +159,6 @@ const FAQcomponent = () => {
 
   return (
     <div className="faq-container">
-      {/* Category Tabs */}
       <div className="faq-categories">
         {translatedCategories.map((category, index) => (
           <button
@@ -184,47 +174,60 @@ const FAQcomponent = () => {
         ))}
       </div>
 
-      {/* FAQ Section */}
       <div className="faq-section">
-        {loadingQuestions ? (
-          <div className="text-center py-5">
-            <div className="spinner-border text-primary" role="status">
-              <span className="visually-hidden">Loading...</span>
-            </div>
-            <p className="mt-3 text-muted">Loading</p>
-          </div>
-        ) : error && questions.length === 0 ? (
-          <div className="alert alert-warning" role="alert">
-            <i className="fas fa-info-circle me-2"></i>
-            {error}
-          </div>
-        ) : questions.length === 0 ? (
-          <div className="text-center py-5">
-            <i className="fa-solid fa-question-circle fa-3x text-muted mb-3"></i>
-            <p className="text-muted">{t("faq.noQNAFound") || "No QNA found for this category"}</p>
-          </div>
-        ) : (
-          translatedQuestions.map((questionItem, index) => (
+        {(() => {
+          if (loadingQuestions) {
+            return (
+              <div className="text-center py-5">
+                <div className="spinner-border text-primary">
+                  <span className="visually-hidden">Loading...</span>
+                </div>
+                <output className="mt-3 text-muted d-block">Loading</output>
+              </div>
+            );
+          }
+          
+          if (error && questions.length === 0) {
+            return (
+              <div className="alert alert-warning" role="alert">
+                <i className="fas fa-info-circle me-2"></i>
+                {error}
+              </div>
+            );
+          }
+          
+          if (questions.length === 0) {
+            return (
+              <div className="text-center py-5">
+                <i className="fa-solid fa-question-circle fa-3x text-muted mb-3"></i>
+                <p className="text-muted">{t("faq.noQNAFound") || "No QNA found for this category"}</p>
+              </div>
+            );
+          }
+          
+          return translatedQuestions.map((questionItem, index) => (
             <div
               key={questionItem.id || questions[index]?.id || index}
               className={`faq-item ${
                 activeQuestion === index ? "active" : ""
               }`}
             >
-              <div
+              <button
+                type="button"
                 className={`faq-question ${
                   activeQuestion === index ? "expanded" : ""
                 }`}
                 onClick={() => toggleQuestion(index)}
+                aria-expanded={activeQuestion === index}
+                aria-controls={`faq-answer-${index}`}
               >
                 {questionItem.question}
                 <span className="arrow">
                   {activeQuestion === index ? "▴" : "▾"}
                 </span>
-              </div>
+              </button>
 
-              {/* Answers */}
-              <div className="faq-answer">
+              <div className="faq-answer" id={`faq-answer-${index}`}>
                 {questionItem.answers && questionItem.answers.length > 0 ? (
                   questionItem.answers.map((answer, answerIndex) => (
                     <div key={answer.id || answerIndex} className="faq-answer-item">
@@ -238,8 +241,8 @@ const FAQcomponent = () => {
                 )}
               </div>
             </div>
-          ))
-        )}
+          ));
+        })()}
       </div>
     </div>
   );

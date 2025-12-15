@@ -5,51 +5,43 @@ import Config from '../config/index';
 import { isTokenExpired } from '../utils/tokenParser';
 import { TOKEN } from '../constants/appConstants';
 
-// Refresh token lock to prevent concurrent refresh calls
 let refreshTokenPromise = null;
 
-// Function to proactively refresh token with lock mechanism
 const refreshTokenIfNeeded = async () => {
   const { token, refreshToken: storedRefreshToken } = getAuthData();
   
-  // If token is still valid, return it immediately
   if (!isTokenExpired(token, TOKEN.EXPIRY_BUFFER)) {
     return token;
   }
   
-  // If no refresh token available, return current token
   if (!storedRefreshToken) {
     return token;
   }
   
-  // If a refresh is already in progress, wait for it
   if (refreshTokenPromise) {
     try {
       const newToken = await refreshTokenPromise;
       return newToken || token;
-    } catch {
-      // If refresh failed, return current token
+    } catch (error) {
+      console.error('Token refresh failed:', error);
       return token;
     }
   }
   
-  // Start a new refresh
   refreshTokenPromise = (async () => {
     try {
       const response = await refreshToken(storedRefreshToken);
       
-      if (response.isSuccess && response.data && response.data.token && response.data.refreshToken) {
-        // Update both access token and refresh token (both are always returned in the response)
+      if (response?.isSuccess && response?.data?.token && response?.data?.refreshToken) {
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('refreshToken', response.data.refreshToken);
         return response.data.token;
       }
       throw new Error('Refresh token failed');
     } catch (err) {
-      // Clear the promise on error so next request can retry
+      console.error('Token refresh error:', err);
       throw err;
     } finally {
-      // Clear the promise after completion (success or failure)
       refreshTokenPromise = null;
     }
   })();
@@ -58,6 +50,7 @@ const refreshTokenIfNeeded = async () => {
     const newToken = await refreshTokenPromise;
     return newToken || token;
   } catch (error) {
+    console.error('Token refresh promise error:', error);
     return token;
   }
 };
@@ -73,14 +66,12 @@ const client = axios.create({
 
 client.interceptors.request.use(
   async (config) => {
-    // Skip token refresh for auth endpoints to avoid infinite loops
     if (!config.url?.includes('/Auth/') && !config.url?.includes('/Account/')) {
       const token = await refreshTokenIfNeeded();
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
     } else {
-      // For auth endpoints, just use the current token
       const token = localStorage.getItem('token');
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
@@ -89,80 +80,87 @@ client.interceptors.request.use(
     return config;
   },
   (error) => {
-    return Promise.reject(error);
+    throw error;
   }
 );
 
+const handleTokenRefresh = async (storedRefreshToken) => {
+  if (refreshTokenPromise) {
+    try {
+      return await refreshTokenPromise;
+    } catch (refreshError) {
+      console.error('Token refresh promise error:', refreshError);
+      return null;
+    }
+  }
+
+  refreshTokenPromise = (async () => {
+    try {
+      const response = await refreshToken(storedRefreshToken);
+      
+      if (response?.isSuccess && response?.data?.token && response?.data?.refreshToken) {
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('refreshToken', response.data.refreshToken);
+        return response.data.token;
+      }
+      throw new Error('Refresh token failed');
+    } catch (error) {
+      console.error('Token refresh error:', error);
+      throw error;
+    } finally {
+      refreshTokenPromise = null;
+    }
+  })();
+
+  try {
+    return await refreshTokenPromise;
+  } catch (refreshError) {
+    console.error('Token refresh promise error:', refreshError);
+    return null;
+  }
+};
+
+const shouldSkipImpersonationRedirect = () => {
+  const currentPath = globalThis.location?.pathname || '';
+  return currentPath.startsWith('/request-impersonate-user');
+};
+
+const redirectToLogin = () => {
+  clearAuthData();
+  globalThis.location.href = '/login';
+};
+
 client.interceptors.response.use(
-  (response) => {
-    return response;
-  },
+  (response) => response,
   async (error) => {
     const originalRequest = error.config;
     
     if (error.response?.status === 401 && !originalRequest._retry) {
-      // Avoid redirecting away from impersonation handler while it's processing
-      const currentPath = window.location?.pathname || '';
-      if (currentPath.startsWith('/request-impersonate-user')) {
-        return Promise.reject(error);
+      if (shouldSkipImpersonationRedirect()) {
+        throw error;
       }
+      
       originalRequest._retry = true;
       
       try {
         const { refreshToken: storedRefreshToken } = getAuthData();
         
         if (storedRefreshToken) {
-          let newToken;
-          
-          // If a refresh is already in progress, wait for it
-          if (refreshTokenPromise) {
-            try {
-              newToken = await refreshTokenPromise;
-            } catch (refreshError) {
-              // Refresh failed, will handle below
-            }
-          } else {
-            // Start a new refresh
-            refreshTokenPromise = (async () => {
-              try {
-                const response = await refreshToken(storedRefreshToken);
-                
-                if (response.isSuccess && response.data && response.data.token && response.data.refreshToken) {
-                  // Update both access token and refresh token (both are always returned in the response)
-                  localStorage.setItem('token', response.data.token);
-                  localStorage.setItem('refreshToken', response.data.refreshToken);
-                  return response.data.token;
-                }
-                throw new Error('Refresh token failed');
-              } catch (error) {
-                throw error;
-              } finally {
-                refreshTokenPromise = null;
-              }
-            })();
-            
-            try {
-              newToken = await refreshTokenPromise;
-            } catch (refreshError) {
-              // Refresh failed, will handle below
-            }
-          }
+          const newToken = await handleTokenRefresh(storedRefreshToken);
           
           if (newToken) {
-            // Retry the original request with the new token
             originalRequest.headers.Authorization = `Bearer ${newToken}`;
             return client(originalRequest);
           }
         }
       } catch (refreshError) {
+        console.error('Token refresh failed:', refreshError);
       }
       
-      // If refresh fails, clear auth data and redirect to login
-      clearAuthData();
-      window.location.href = '/login';
+      redirectToLogin();
     }
     
-    return Promise.reject(error);
+    throw error;
   }
 );
 

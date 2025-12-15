@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import { useTranslation } from 'react-i18next';
 import { getUserRole } from '../../utils/storage';
 
@@ -18,7 +19,6 @@ const Form35BAttestationModal = ({
   });
   const [errors, setErrors] = useState({});
 
-  // Prefill data from user profile when modal opens
   useEffect(() => {
     if (isOpen && user) {
       setAttestationData({
@@ -37,7 +37,6 @@ const Form35BAttestationModal = ({
       ...prev,
       [name]: value
     }));
-    // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -58,13 +57,13 @@ const Form35BAttestationModal = ({
     if (!attestationData.submitterTitle.trim()) {
       newErrors.submitterTitle = t("form35B.attestation.validation.titleRequired");
     }
-    if (!attestationData.submitterEmail.trim()) {
-      newErrors.submitterEmail = t("form35B.attestation.validation.emailRequired");
-    } else {
+    if (attestationData.submitterEmail.trim()) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(attestationData.submitterEmail.trim())) {
         newErrors.submitterEmail = t("form35B.attestation.validation.emailInvalid");
       }
+    } else {
+      newErrors.submitterEmail = t("form35B.attestation.validation.emailRequired");
     }
 
     setErrors(newErrors);
@@ -77,23 +76,54 @@ const Form35BAttestationModal = ({
     }
   };
 
+  useEffect(() => {
+    const dialog = document.getElementById('form35b-attestation-dialog');
+    if (dialog) {
+      if (isOpen) {
+        dialog.showModal();
+      } else {
+        dialog.close();
+      }
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    const dialog = document.getElementById('form35b-attestation-dialog');
+    if (!dialog) return;
+
+    const handleClose = () => {
+      if (!isSubmitting) {
+        onClose();
+      }
+    };
+
+    dialog.addEventListener('close', handleClose);
+    dialog.addEventListener('cancel', (e) => {
+      e.preventDefault();
+      if (isSubmitting) {
+        return;
+      }
+      onClose();
+    });
+
+    return () => {
+      dialog.removeEventListener('close', handleClose);
+    };
+  }, [isOpen, isSubmitting, onClose]);
+
   if (!isOpen) return null;
 
   return (
-    <div
+    <dialog
+      id="form35b-attestation-dialog"
       className="modal fade show d-block"
-      style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1100 }}
-      tabIndex="-1"
-      onClick={(e) => {
-        if (e.target === e.currentTarget && !isSubmitting) {
-          // Don't close on backdrop click for attestation, and don't close during submission
-        }
-      }}
+      style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1100, border: 'none', padding: 0 }}
+      aria-labelledby="form35b-attestation-title"
     >
       <div className="modal-dialog modal-dialog-centered modal-lg">
         <div className="modal-content">
           <div className="modal-header">
-            <h5 className="modal-title fw-bold theme-color">
+            <h5 id="form35b-attestation-title" className="modal-title fw-bold theme-color">
               <i className="fas fa-signature me-2"></i>
               {t("form35B.attestation.title")}
             </h5>
@@ -109,11 +139,11 @@ const Form35BAttestationModal = ({
               {t("form35B.attestation.description")}
             </p>
 
-            <div className="p-4 border border-info bg-info-subtle rounded mb-4">
-              <h5 className="fw-bold font-base mb-3">
-                <i className="fas fa-user me-2"></i>
-                {t("form35B.attestation.submitterInformation")}
-              </h5>
+              <div className="p-4 border border-info bg-info-subtle rounded mb-4">
+                <h5 className="fw-bold font-base mb-3 text-dark">
+                  <i className="fas fa-user me-2"></i>
+                  {t("form35B.attestation.submitterInformation")}
+                </h5>
 
               <div className="row g-3">
                 <div className="col-md-6">
@@ -222,8 +252,8 @@ const Form35BAttestationModal = ({
             >
               {isSubmitting ? (
                 <>
-                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                  {t("form35B.attestation.submitting")}
+                  <span className="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+                  <output>{t("form35B.attestation.submitting")}</output>
                 </>
               ) : (
                 <>
@@ -235,8 +265,20 @@ const Form35BAttestationModal = ({
           </div>
         </div>
       </div>
-    </div>
+    </dialog>
   );
+};
+
+Form35BAttestationModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  onConfirm: PropTypes.func.isRequired,
+  user: PropTypes.shape({
+    firstName: PropTypes.string,
+    lastName: PropTypes.string,
+    email: PropTypes.string,
+  }),
+  isSubmitting: PropTypes.bool,
 };
 
 export default Form35BAttestationModal;

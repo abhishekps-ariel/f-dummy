@@ -5,12 +5,12 @@ export const AUTH_ENDPOINTS = {
   LOGIN: "/api/Auth/login",
   LOGOUT: "/api/Auth/logout",
   REFRESH_TOKEN: "/api/Auth/refresh-token",
-  REGISTER: "/api/Auth/register",
-  VERIFY_EMAIL: (token) => `/api/Auth/verify-email?token=${token}`,
-  RESEND_VERIFICATION: "/api/Auth/resend-verification",
-  FORGOT_PASSWORD: "/api/Account/forget-password",
-  CHECK_RESET_TOKEN: (userId) => `/api/Account/check-reset-token-expiry/${userId}`,
-  RESET_PASSWORD: "/api/Account/reset-password",
+  REGISTER: "/api/Registration/register",
+  VERIFY_EMAIL: (token) => `/api/Registration/verify-email?token=${token}`,
+  RESEND_VERIFICATION: "/api/Registration/resend-verification",
+  FORGOT_PASSWORD: "/api/Password/forgot-password",
+  CHECK_RESET_TOKEN: (userId) => `/api/Password/check-reset-token-expiry/${userId}`,
+  RESET_PASSWORD: "/api/Password/reset-password",
   UPDATE_USER: "/api/Account/update-user",
   GET_USER_BY_ID: (userId) => `/api/Account/get-user-by-id/${userId}`,
   UPLOAD_USER_SIGNATURE: "/api/Account/upload-user-signature",
@@ -19,9 +19,9 @@ export const AUTH_ENDPOINTS = {
   SEND_SIGNATURE_OTP: "/api/Account/send-signature-otp",
   VERIFY_SIGNATURE_OTP: "/api/Account/verify-signature-otp",
   // Impersonation
-  IMPERSONATE_BY_USER_ID: (userId) => `/api/Auth/impersonate/${userId}`,
-  EXIT_IMPERSONATION: "/api/Auth/exit-impersonation",
-  MANAGER_IMPERSONATE: (managerUserId, userId) => `/api/Auth/managers/${managerUserId}/impersonate/${userId}`,
+  IMPERSONATE_BY_USER_ID: (userId) => `/api/Impersonation/impersonate/${userId}`,
+  EXIT_IMPERSONATION: "/apiImpersonation/exit-impersonation",
+  MANAGER_IMPERSONATE: (managerUserId, userId) => `/api/Impersonation/managers/${managerUserId}/impersonate/${userId}`,
 };
 
 export const ORGANIZATION_ENDPOINTS = {
