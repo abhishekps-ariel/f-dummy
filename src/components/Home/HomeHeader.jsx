@@ -1,4 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
+import PropTypes from "prop-types";
 import { useTranslation } from "react-i18next";
 import logo from "../../assets/logo-index.png";
 import { ROUTES } from "../../constants/routerConstants";
@@ -15,6 +16,24 @@ function HomeHeader({
 }) {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const handleNavBarClick = (e) => {
+    if (globalThis.innerWidth >= 992) return;
+    const nav = document.getElementById("navbarNav");
+    if (!nav) return;
+    const isNavLink = e.target.closest(".nav-link");
+    const isToggler = e.target.closest(".navbar-toggler");
+    if (isNavLink || isToggler) return;
+    if (!nav.classList.contains("show")) {
+      const bsCollapse = new globalThis.bootstrap.Collapse(nav, { toggle: false });
+      bsCollapse.show();
+    }
+  };
+
+  const handleNavBarKeyDown = (e) => {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    e.preventDefault();
+    handleNavBarClick(e);
+  };
   
   return (
     <>
@@ -165,13 +184,19 @@ function HomeHeader({
 
       {/* Sticky Tabs (Featured links) - Hidden on public petition page */}
       {!hideNavigation && (
-        <div className="tabs-link-featured navbar navbar-expand-lg positive-sticky top-0">
+        <div
+          className="tabs-link-featured navbar navbar-expand-lg positive-sticky top-0"
+          role="button"
+          tabIndex={0}
+          onClick={handleNavBarClick}
+          onKeyDown={handleNavBarKeyDown}
+        >
         <div className="container">
           <div className="d-lg-none"></div>
           <div className="d-flex align-items-center me-auto d-lg-none">
-            <a className="font-base opacity-75" href="#" id="mobileAppName">
+            <span className="font-base opacity-75 fw-semibold" id="mobileAppName">
               {t("home.tableOfContents")}
-            </a>
+            </span>
             <span className="active-text d-none" id="activeLinkText">
               Featured
             </span>
@@ -196,7 +221,7 @@ function HomeHeader({
               {/* Links */}
               <a
                 className="nav-link"
-                href="#"
+                href="#featured"
                 onClick={(e) => {
                   e.preventDefault();
                   if (featureRef.current) {
@@ -205,10 +230,9 @@ function HomeHeader({
                       block: "start",
                     });
                   }
-                  // Close mobile menu
                   const nav = document.getElementById("navbarNav");
-                  if (nav && window.innerWidth < 991) {
-                    const bsCollapse = new window.bootstrap.Collapse(nav, {
+                  if (nav && globalThis.innerWidth < 991) {
+                    const bsCollapse = new globalThis.bootstrap.Collapse(nav, {
                       toggle: false,
                     });
                     bsCollapse.hide();
@@ -219,7 +243,7 @@ function HomeHeader({
               </a>
               <a
                 className="nav-link"
-                href="#"
+                href="#contact"
                 onClick={(e) => {
                   e.preventDefault();
                   if (contactRef.current) {
@@ -228,10 +252,9 @@ function HomeHeader({
                       block: "start",
                     });
                   }
-                  // Close mobile menu
                   const nav = document.getElementById("navbarNav");
-                  if (nav && window.innerWidth < 991) {
-                    const bsCollapse = new window.bootstrap.Collapse(nav, {
+                  if (nav && globalThis.innerWidth < 991) {
+                    const bsCollapse = new globalThis.bootstrap.Collapse(nav, {
                       toggle: false,
                     });
                     bsCollapse.hide();
@@ -242,7 +265,7 @@ function HomeHeader({
               </a>
               <a
                 className="nav-link"
-                href="#"
+                href="#whoWeServe"
                 onClick={(e) => {
                   e.preventDefault();
                   if (whoWeServeRef.current) {
@@ -251,10 +274,9 @@ function HomeHeader({
                       block: "start",
                     });
                   }
-                  // Close mobile menu
                   const nav = document.getElementById("navbarNav");
-                  if (nav && window.innerWidth < 991) {
-                    const bsCollapse = new window.bootstrap.Collapse(nav, {
+                  if (nav && globalThis.innerWidth < 991) {
+                    const bsCollapse = new globalThis.bootstrap.Collapse(nav, {
                       toggle: false,
                     });
                     bsCollapse.hide();
@@ -265,7 +287,7 @@ function HomeHeader({
               </a>
               <a
                 className="nav-link"
-                href="#"
+                href="#actions"
                 onClick={(e) => {
                   e.preventDefault();
                   if (actionsRef.current) {
@@ -274,10 +296,9 @@ function HomeHeader({
                       block: "start",
                     });
                   }
-                  // Close mobile menu
                   const nav = document.getElementById("navbarNav");
-                  if (nav && window.innerWidth < 991) {
-                    const bsCollapse = new window.bootstrap.Collapse(nav, {
+                  if (nav && globalThis.innerWidth < 991) {
+                    const bsCollapse = new globalThis.bootstrap.Collapse(nav, {
                       toggle: false,
                     });
                     bsCollapse.hide();
@@ -288,7 +309,7 @@ function HomeHeader({
               </a>
               <a
                 className="nav-link"
-                href="#"
+                href="#news"
                 onClick={(e) => {
                   e.preventDefault();
                   if (newsRef.current) {
@@ -297,10 +318,9 @@ function HomeHeader({
                       block: "start",
                     });
                   }
-                  // Close mobile menu
                   const nav = document.getElementById("navbarNav");
-                  if (nav && window.innerWidth < 991) {
-                    const bsCollapse = new window.bootstrap.Collapse(nav, {
+                  if (nav && globalThis.innerWidth < 991) {
+                    const bsCollapse = new globalThis.bootstrap.Collapse(nav, {
                       toggle: false,
                     });
                     bsCollapse.hide();
@@ -311,7 +331,7 @@ function HomeHeader({
               </a>
               <a
                 className="nav-link"
-                href="#"
+                href="#events"
                 onClick={(e) => {
                   e.preventDefault();
                   if (eventsRef.current) {
@@ -320,10 +340,9 @@ function HomeHeader({
                       block: "start",
                     });
                   }
-                  // Close mobile menu
                   const nav = document.getElementById("navbarNav");
-                  if (nav && window.innerWidth < 991) {
-                    const bsCollapse = new window.bootstrap.Collapse(nav, {
+                  if (nav && globalThis.innerWidth < 991) {
+                    const bsCollapse = new globalThis.bootstrap.Collapse(nav, {
                       toggle: false,
                     });
                     bsCollapse.hide();
@@ -340,5 +359,27 @@ function HomeHeader({
     </>
   );
 }
+
+HomeHeader.propTypes = {
+  featureRef: PropTypes.shape({
+    current: PropTypes.instanceOf(Element),
+  }),
+  contactRef: PropTypes.shape({
+    current: PropTypes.instanceOf(Element),
+  }),
+  whoWeServeRef: PropTypes.shape({
+    current: PropTypes.instanceOf(Element),
+  }),
+  actionsRef: PropTypes.shape({
+    current: PropTypes.instanceOf(Element),
+  }),
+  newsRef: PropTypes.shape({
+    current: PropTypes.instanceOf(Element),
+  }),
+  eventsRef: PropTypes.shape({
+    current: PropTypes.instanceOf(Element),
+  }),
+  hideNavigation: PropTypes.bool,
+};
 
 export default HomeHeader;

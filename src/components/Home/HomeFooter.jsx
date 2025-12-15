@@ -19,19 +19,19 @@ export default function HomeFooter() {
             <div className="col-12 col-md-10 ">
               <ul className="footer-links d-flex flex-column flex-md-row justify-content-start font-base-med fw-medium mb-4 list-unstyled gap-2 gap-md-4">
                 <li>
-                  <a href="#" className="text-dark text-decoration-none">
+                  <button type="button" className="btn btn-link text-dark text-decoration-none p-0 border-0 bg-transparent">
                     {t("homeFooter.allTopics")}
-                  </a>
+                  </button>
                 </li>
                 <li>
-                  <a href="#" className="text-dark text-decoration-none">
+                  <button type="button" className="btn btn-link text-dark text-decoration-none p-0 border-0 bg-transparent">
                     {t("homeFooter.sitePolicies")}
-                  </a>
+                  </button>
                 </li>
                 <li>
-                  <a href="#" className="text-dark text-decoration-none">
+                  <button type="button" className="btn btn-link text-dark text-decoration-none p-0 border-0 bg-transparent">
                     {t("homeFooter.publicRecordsRequests")}
-                  </a>
+                  </button>
                 </li>
               </ul>
 
@@ -42,12 +42,12 @@ export default function HomeFooter() {
               <p className="mb-0 font-sm text-gray-dark">
                 {t("homeFooter.serviceMark")}
                 <br></br>
-                <a href="#" className="text-decoration-underline">
+                <button type="button" className="btn btn-link text-decoration-underline p-0 border-0 bg-transparent">
                   {t("homeFooter.massGov")}
-                </a>
-                <a href="#" className="text-decoration-underline  ms-2">
+                </button>
+                <button type="button" className="btn btn-link text-decoration-underline ms-2 p-0 border-0 bg-transparent">
                   {t("homeFooter.privacyPolicy")}
-                </a>
+                </button>
               </p>
             </div>
           </div>
