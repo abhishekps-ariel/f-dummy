@@ -43,16 +43,13 @@ function Register() {
     hasSpecialChar: false,
   });
 
-  // Invite flow state
   const [inviteData, setInviteData] = useState(null);
   const [isInviteFlow, setIsInviteFlow] = useState(false);
   const [isLoadingInvite, setIsLoadingInvite] = useState(false);
   const [inviteError, setInviteError] = useState(null);
 
-  // Role selection state (Filer or Organisation Admin)
   const [selectedRole, setSelectedRole] = useState(null);
 
-  // Organization search state (for Organisation Admin registration)
   const [organizationSearchQuery, setOrganizationSearchQuery] = useState("");
   const [organizations, setOrganizations] = useState([]);
   const [selectedOrganization, setSelectedOrganization] = useState(null);
@@ -62,7 +59,6 @@ function Register() {
   const orgSearchRef = useRef(null);
   const debouncedOrgSearchQuery = useDebounce(organizationSearchQuery, 300);
 
-  // Handle invite parameters and role on component mount
   useEffect(() => {
     const joinRequestId = searchParams.get("joinRequestId");
     const isAdminInvite = searchParams.get("isAdminInvite") === "true";
@@ -72,22 +68,16 @@ function Register() {
       setIsInviteFlow(true);
       setIsLoadingInvite(true);
       setInviteError(null);
-
-      // Fetch invite data
       handleFetchInviteData(joinRequestId, isAdminInvite);
     } else {
-      // Not an invite flow
-      // Set role if provided in URL, otherwise default to "filer"
       if (role) {
         setSelectedRole(role === "orgAdmin" ? "orgAdmin" : "filer");
       } else {
-        // Default to "filer" when coming from login page or direct navigation
         setSelectedRole("filer");
       }
     }
   }, [searchParams]);
 
-  // Organization search effect
   useEffect(() => {
     const performOrgSearch = async () => {
       if (!hasSearched) return;
@@ -107,7 +97,6 @@ function Register() {
     performOrgSearch();
   }, [debouncedOrgSearchQuery, hasSearched]);
 
-  // Handle click outside to close dropdown
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -124,10 +113,6 @@ function Register() {
     };
   }, []);
 
-  // Helper functions are now imported from helpers/auth
-  // fetchInviteData from helpers/auth/inviteFlow
-  // checkPasswordGuidelines from helpers/auth/passwordValidation
-
   const handleFetchInviteData = async (joinRequestId, isAdminInvite) => {
     setIsLoadingInvite(true);
     setInviteError(null);
@@ -136,7 +121,6 @@ function Register() {
     
     if (result.success) {
       setInviteData(result.data);
-      // Pre-fill email field
       setFormData((prev) => ({
         ...prev,
         email: result.data.email,
@@ -156,13 +140,11 @@ function Register() {
   const validateForm = () => {
     const newErrors = {};
 
-    // Validate role selection (only for non-invite flows)
     if (!isInviteFlow && !selectedRole) {
       toast.error(t("errors.pleaseSelectRegistrationType"));
       return false;
     }
 
-    // Validate organization selection for Organisation Admin
     if (!isInviteFlow && selectedRole === "orgAdmin" && !selectedOrganization) {
       setErrors((prev) => ({ ...prev, organization: t("register.selectOrganizationError") }));
       return false;
@@ -234,7 +216,6 @@ function Register() {
       setErrors({ ...errors, [name]: "" });
     }
 
-    // Real-time email validation to block @gmail.com
     if (name === "email" && value.trim()) {
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
         setErrors({ ...errors, email: t("register.emailInvalid") });

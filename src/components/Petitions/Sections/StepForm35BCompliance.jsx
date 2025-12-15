@@ -10,7 +10,6 @@ const StepForm35BCompliance = ({
   fieldErrors,
   isCertainMortgageLoanReadOnly = false,
 }) => {
-  // Get the list of selected checkboxes for the message
   const getSelectedCheckboxesMessage = () => {
     const selected = [];
     if (formData.variableRate) selected.push("Variable Rate");

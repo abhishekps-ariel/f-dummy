@@ -2,7 +2,6 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { formatCurrencyDisplay } from "../../../utils/currencyUtils";
 
-// Component to render a single Right-to-Cure form
 const SingleRightToCureForm = ({
   rtc,
   index,
@@ -36,7 +35,6 @@ const SingleRightToCureForm = ({
   const borrowerResponseDate = rtc.borrowerResponseDate || "";
   const proceededWithRightToCure = rtc.proceededWithRightToCure;
 
-  // Get field errors for this specific index in multiple mode
   const getFieldError = (fieldName) => {
     if (isMultipleMode) {
       return fieldErrors[`rightToCures.${index}.${fieldName}`] || fieldErrors[fieldName];
@@ -568,14 +566,9 @@ const Step6RightToCure = ({
   removeRightToCure,
   updateRightToCure,
 }) => {
-  // Handle rightToCures array format (new) or single-object format (old) for backward compatibility
   const rightToCures = formData.rightToCures || [];
-  
-  // Determine if we should show multiple right-to-cures
-  // Only show multiple when taking over a petition that has more than one right-to-cure
   const showMultiple = isTakenOverPetition && rightToCures.length > 1;
   
-  // For single mode, use first right-to-cure or fallback to legacy fields
   const currentRTC = rightToCures.length > 0 ? rightToCures[0] : {
     noticeSent: formData.noticeSent,
     noticeDate: formData.noticeDate || "",
@@ -594,13 +587,10 @@ const Step6RightToCure = ({
 
   const { t } = useTranslation();
   
-  // Helper to update rightToCures array or fallback to single-object format with real-time validation
   const updateRTCField = (index, field, value) => {
-    // Real-time validation
     const validateField = (fieldName, fieldValue, currentRTCData) => {
       const errors = {};
       
-      // Validate notice date - must be in the past
       if (fieldName === "noticeDate" && fieldValue && fieldValue.trim()) {
         const noticeDate = new Date(fieldValue);
         const today = new Date();
@@ -613,7 +603,6 @@ const Step6RightToCure = ({
         }
       }
       
-      // Validate cure expiration date - must be after notice date
       if (fieldName === "cureExpirationDate" && fieldValue && fieldValue.trim()) {
         const noticeDate = currentRTCData.noticeDate || formData.noticeDate;
         if (noticeDate && noticeDate.trim()) {
@@ -628,7 +617,6 @@ const Step6RightToCure = ({
         }
       }
       
-      // Validate acceleration date (manualOverrideReason) - must be in the past
       if (fieldName === "manualOverrideReason" && fieldValue && fieldValue.trim()) {
         const accelerationDate = new Date(fieldValue);
         const today = new Date();
@@ -641,7 +629,6 @@ const Step6RightToCure = ({
         }
       }
       
-      // Validate amount in default - must be greater than 0
       if (fieldName === "amountInDefault") {
         const amount = parseFloat(fieldValue) || 0;
         if (amount <= 0) {
@@ -649,7 +636,6 @@ const Step6RightToCure = ({
         }
       }
       
-      // Validate days delinquent - must be 0 or greater
       if (fieldName === "daysDelinquentAtNotice") {
         const days = fieldValue === "" || fieldValue === null || fieldValue === undefined 
           ? null 
@@ -659,7 +645,6 @@ const Step6RightToCure = ({
         }
       }
       
-      // Validate borrower response date - must be on or after notice date
       if (fieldName === "borrowerResponseDate" && fieldValue && fieldValue.trim()) {
         const noticeDate = currentRTCData.noticeDate || formData.noticeDate;
         if (noticeDate && noticeDate.trim()) {

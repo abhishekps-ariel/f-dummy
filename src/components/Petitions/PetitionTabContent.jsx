@@ -101,18 +101,12 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
   const judgmentRef = useRef(null);
   const foreclosureSaleRef = useRef(null);
   const notesRef = useRef(null);
-  // Borrower address autocomplete
-  const [borrowerPredictions, setBorrowerPredictions] = useState({}); // { [borrowerId]: Prediction[] }
-  const [isLoadingBorrowerPredictions, setIsLoadingBorrowerPredictions] =
-    useState({}); // { [borrowerId]: boolean }
-  // Loan assignee address autocomplete
-  const [assigneePredictions, setAssigneePredictions] = useState({}); // { [index]: Prediction[] }
-  const [isLoadingAssigneePredictions, setIsLoadingAssigneePredictions] =
-    useState({}); // { [index]: boolean }
-  // Notice address autocomplete - per entry
-  const [noticePredictions, setNoticePredictions] = useState({}); // { [index]: Prediction[] }
-  const [isLoadingNoticePredictions, setIsLoadingNoticePredictions] =
-    useState({}); // { [index]: boolean }
+  const [borrowerPredictions, setBorrowerPredictions] = useState({});
+  const [isLoadingBorrowerPredictions, setIsLoadingBorrowerPredictions] = useState({});
+  const [assigneePredictions, setAssigneePredictions] = useState({});
+  const [isLoadingAssigneePredictions, setIsLoadingAssigneePredictions] = useState({});
+  const [noticePredictions, setNoticePredictions] = useState({});
+  const [isLoadingNoticePredictions, setIsLoadingNoticePredictions] = useState({});
 
 
   const handlePropertyAddressInput = async (value) => {
@@ -127,7 +121,6 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
       setIsLoadingPredictions(true);
       try {
         const suggestions = await googlePlacesService.autocomplete(value);
-        // Convert to format expected by UI (description, place_id)
         const formattedPredictions = suggestions.slice(0, 5).map(s => ({
           description: s.description,
           place_id: s.placeId,
@@ -149,10 +142,8 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
     setPredictions([]);
     setShowPredictions(false);
     setSelectedPredictionIndex(-1);
-    // Fill street immediately for snappy UX
     const street = prediction.description?.split(",")[0] || "";
     setFormData((prev) => ({ ...prev, propertyStreet1: street }));
-    // Geocode to populate city/state/zip/county
     const placeId = prediction.place_id || prediction.placeId;
     try {
       const placeDetails = await googlePlacesService.getPlaceDetails(placeId);
@@ -179,13 +170,11 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
         }));
       }
     } catch (error) {
-      // Error geocoding address - non-critical, continue with form data
       console.error("Failed to geocode address:", error);
     }
     if (propertyAddressInputRef.current) propertyAddressInputRef.current.blur();
   };
 
-  // Handle keyboard navigation for property address suggestions
   const handlePropertyAddressKeyDown = (e) => {
     if (!showPredictions || predictions.length === 0) return;
 

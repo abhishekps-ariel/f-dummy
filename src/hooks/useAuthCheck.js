@@ -41,7 +41,7 @@ export const useAuthCheck = () => {
           try {
             const response = await refreshToken(storedRefreshToken);
             
-            if (response.isSuccess && response.data && response.data.token && response.data.refreshToken) {
+           if (response?.isSuccess && response?.data?.token && response?.data?.refreshToken){
               // Update stored tokens (both are always returned in the response)
               localStorage.setItem('token', response.data.token);
               localStorage.setItem('refreshToken', response.data.refreshToken);
