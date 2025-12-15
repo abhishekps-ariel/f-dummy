@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import PropTypes from "prop-types";
 import { useTranslation } from "react-i18next";
 
 import { toast } from "react-toastify";
@@ -11,11 +12,9 @@ import { usePetitionCommonData } from "../../hooks/usePetitionCommonData";
 import { usePetitions } from "../../hooks/usePetitions";
 
 import { useAuth } from "../../context/AuthContext";
-import { getActiveOrganizationId, setActiveOrganizationId } from "../../utils/storage";
+import { getActiveOrganizationId, setActiveOrganizationId, getUserRole } from "../../utils/storage";
 
 import { usePetitionWizard } from "../../context/PetitionWizardContext";
-
-import { getUserRole } from "../../utils/storage";
 
 import { getUserById, getSignatureById } from "../../services/authService";
 
@@ -24,8 +23,6 @@ import { getFilingEntityTypes } from "../../services/commonService";
 import { getOrganizationById } from "../../services/organizationService";
 
 import PetitionStepper from "./PetitionStepper";
-
-import CustomDropdown from "../shared/CustomDropdown";
 
 import "../shared/CustomDropdown.css";
 import Step1OrganizationSelection from "./MultiStepForm/Step1OrganizationSelection";
@@ -39,7 +36,7 @@ import Step8LoanAssignees from "./MultiStepForm/Step8LoanAssignees";
 import Step9PetitionAttestation from "./MultiStepForm/Step9PetitionAttestation";
 import Step10ReviewSubmit from "./MultiStepForm/Step10ReviewSubmit";
 import TakeOverPetitionModal from "./TakeOverPetitionModal";
-import { formatCurrencyInput, parseCurrencyInput } from "../../utils/currencyUtils";
+import { parseCurrencyInput } from "../../utils/currencyUtils";
 import { defaultFormData, loadFormDataFromStorage, saveFormDataToStorage, clearFormDataFromStorage, transformTakeOverPetitionData } from "../../helpers/petitions/petitionFormData";
 import {
   validatePropertyDetails as validatePropertyDetailsHelper,
@@ -49,22 +46,7 @@ import {
   validateForm35BCompliance as validateForm35BComplianceHelper,
   validateFilingEntity as validateFilingEntityHelper,
   validateLoanAssignees as validateLoanAssigneesHelper,
-  validatePetitionAttestation as validatePetitionAttestationHelper,
 } from "../../helpers/petitions/formValidation";
-import {
-  extractAddressComponents,
-  isAddressInMassachusetts,
-  matchCity,
-  matchZip,
-  matchCounty,
-} from "../../helpers/petitions/addressValidation";
-import {
-  getFieldType,
-  processInputValue,
-  shouldAutoSetCertainMortgageLoan,
-  validateDateInPast,
-  validateInterestRate,
-} from "../../helpers/petitions/inputProcessing";
 
 const PetitionSteps = ({
   isOpen,
@@ -88,7 +70,6 @@ const PetitionSteps = ({
 
   const [currentStep, setCurrentStep] = useState(1);
   const [visitedSteps, setVisitedSteps] = useState(new Set([1]));
-  const lastProcessedStepsRef = useRef(new Set());
   const lastOrgStateRef = useRef(null);
   const lastStep2StateRef = useRef(null);
   const lastStep3StateRef = useRef(null);
@@ -106,9 +87,8 @@ const PetitionSteps = ({
   const [showAddressValidationDialog, setShowAddressValidationDialog] = useState(false);
   const [addressValidationMessage, setAddressValidationMessage] = useState("");
   const [addressValidationType, setAddressValidationType] = useState("");
-  const [addressValidationContext, setAddressValidationContext] = useState(null);
+  const [_addressValidationContext, setAddressValidationContext] = useState(null); // NOSONAR: setter is used, value intentionally unused // NOSONAR: setter is used, value intentionally unused 
   const [pendingStepChange, setPendingStepChange] = useState(null);
-  
   const [isFilingEntityAddressVerified, setIsFilingEntityAddressVerified] = useState(false);
   const [isNoticeAddressVerified, setIsNoticeAddressVerified] = useState(false);
   const [borrowerAddressesVerified, setBorrowerAddressesVerified] = useState({});
@@ -175,8 +155,8 @@ const PetitionSteps = ({
   
   const [showTakeOverModal, setShowTakeOverModal] = useState(false);
   const [duplicateInfo, setDuplicateInfo] = useState(null);
-  const [shouldTakeOver, setShouldTakeOver] = useState(false);
-  const [pendingAction, setPendingAction] = useState(null);
+  const [_shouldTakeOver, setShouldTakeOver] = useState(false); // NOSONAR: setter is used, value intentionally unused
+  const [_pendingAction, setPendingAction] = useState(null); // NOSONAR: setter is used, value intentionally unused
   const [isTakenOverPetition, setIsTakenOverPetition] = useState(false);
   const [takenOverPetitionId, setTakenOverPetitionId] = useState(null);
   const [takenOverPetitionNumber, setTakenOverPetitionNumber] = useState(null);
@@ -209,9 +189,7 @@ const PetitionSteps = ({
   } = useAuth();
 
   const isOrgAdmin = user?.isManager === true || 
-    (user?.roles && Array.isArray(user?.roles) && user.roles.some(
-      (role) => role === 'Organization Admin'
-    )) ||
+    (user?.roles && Array.isArray(user?.roles) && user.roles.includes('Organization Admin')) ||
     getUserRole(user) === 'Organization Admin';
 
   const storedActiveOrganizationId = getActiveOrganizationId();
@@ -223,8 +201,6 @@ const PetitionSteps = ({
     organizationFromContext?.id ||
     organizationFromAuth?.id ||
     null;
-
-  const [autocomplete, setAutocomplete] = useState(null);
 
   const [predictions, setPredictions] = useState([]);
 
@@ -242,9 +218,9 @@ const PetitionSteps = ({
 
   const [showCloseConfirmDialog, setShowCloseConfirmDialog] = useState(false);
 
-  const [borrowerAddressValidationErrors, setBorrowerAddressValidationErrors] = useState({});
-  const [noticeAddressValidationErrors, setNoticeAddressValidationErrors] = useState({});
-  const [loanAssigneeAddressValidationErrors, setLoanAssigneeAddressValidationErrors] = useState({});
+  const [borrowerAddressValidationErrors] = useState({});
+  const [noticeAddressValidationErrors] = useState({});
+  const [loanAssigneeAddressValidationErrors] = useState({});
 
   const [borrowerPredictions, setBorrowerPredictions] = useState({});
 
@@ -320,7 +296,8 @@ const PetitionSteps = ({
               signatureUrl: signatureUrl,
             }));
           }
-        } catch {
+        } catch (error) {
+          console.error("Error updating form data:", error);
         }
 
         const typesResponse = await getFilingEntityTypes();
@@ -329,6 +306,7 @@ const PetitionSteps = ({
           setFilingEntityTypes(typesResponse.data);
         }
       } catch (error) {
+        console.error("Failed to load user profile:", error);
         toast.error(t("errors.failedLoadUserProfile"));
       } finally {
         setProfileLoading(false);
@@ -336,75 +314,90 @@ const PetitionSteps = ({
     };
 
     loadUserProfileAndTypes();
-  }, [user?.id]);
+  }, [user?.id, t]);
+
+  const prepareSignerDataForDraft = useCallback((user, userProfile, parsedData) => {
+    const signerFirstName = user.firstName || "";
+    const signerMiddleInitial = user.middleName
+      ? user.middleName.charAt(0).toUpperCase()
+      : "";
+    const signerLastName = user.lastName || "";
+    const signerEmail = user.email || "";
+    const signerTitle = getUserRole(user) || "User";
+    const signerFullName = [
+      signerFirstName,
+      signerMiddleInitial,
+      signerLastName,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .replaceAll(/\s+/g, " ")
+      .trim();
+
+    return {
+      signerFirstName,
+      signerMiddleInitial,
+      signerLastName,
+      signerEmail,
+      signerTitle,
+      signatures: [
+        {
+          signerFullName,
+          signerTitle,
+          signerEmail,
+          esignConsent: parsedData.certification_check ?? false,
+          signatureDrawnOrTyped: userProfile?.signatureImageName || "",
+          signedAt: "",
+          signerIp: "",
+          otpCode: "",
+        },
+      ],
+    };
+  }, []);
+
+  const loadAndParseFormData = useCallback(() => {
+    const savedData = sessionStorage.getItem(STORAGE_KEYS.PETITION_FORM_DATA);
+    if (!savedData) return null;
+
+    try {
+      return JSON.parse(savedData);
+    } catch (error) {
+      console.error("Error loading form data:", error);
+      return null;
+    }
+  }, []);
 
   useEffect(() => {
-    if (isOpen) {
-      const savedData = sessionStorage.getItem(STORAGE_KEYS.PETITION_FORM_DATA);
-      const editingPetitionId = sessionStorage.getItem("editingPetitionId");
-      const isEditingDraft = !!editingPetitionId;
-      
-      if (savedData) {
-        try {
-          const parsedData = JSON.parse(savedData);
-          if (typeof resetWizard === "function") {
-            resetWizard();
-          }
-          
-          let updatedData = { ...defaultFormData, ...parsedData };
-          
-          if (isEditingDraft && user) {
-            const signerFirstName = user.firstName || "";
-            const signerMiddleInitial = user.middleName
-              ? user.middleName.charAt(0).toUpperCase()
-              : "";
-            const signerLastName = user.lastName || "";
-            const signerEmail = user.email || "";
-            const signerTitle = getUserRole(user) || "User";
-            const signerFullName = [
-              signerFirstName,
-              signerMiddleInitial,
-              signerLastName,
-            ]
-              .filter(Boolean)
-              .join(" ")
-              .replace(/\s+/g, " ")
-              .trim();
+    if (!isOpen) return;
 
-            updatedData.signerFirstName = signerFirstName;
-            updatedData.signerMiddleInitial = signerMiddleInitial;
-            updatedData.signerLastName = signerLastName;
-            updatedData.signerEmail = signerEmail;
-            updatedData.signerTitle = signerTitle;
-            
-            updatedData.signatures = [
-              {
-                signerFullName,
-                signerTitle,
-                signerEmail,
-                esignConsent: parsedData.certification_check ?? false,
-                signatureDrawnOrTyped: userProfile?.signatureImageName || "",
-                signedAt: "",
-                signerIp: "",
-                otpCode: "",
-              },
-            ];
-          }
-          
-          setFormData(updatedData);
-        } catch (error) {
-        }
-      } else {
-        if (typeof resetWizard === "function") {
-          resetWizard();
-        }
-      }
-    } else {
+    if (typeof resetWizard === "function") {
+      resetWizard();
+    }
+
+    const parsedData = loadAndParseFormData();
+    if (!parsedData) {
       if (typeof resetWizard === "function") {
         resetWizard();
       }
+      return;
     }
-  }, [isOpen, resetWizard, user, userProfile]);
+
+    let updatedData = { ...defaultFormData, ...parsedData };
+    
+    const editingPetitionId = sessionStorage.getItem("editingPetitionId");
+    const isEditingDraft = !!editingPetitionId;
+    
+    if (isEditingDraft && user) {
+      const signerData = prepareSignerDataForDraft(user, userProfile, parsedData);
+      updatedData = { ...updatedData, ...signerData };
+    }
+    
+    setFormData(updatedData);
+    
+    if (typeof resetWizard === "function") {
+      resetWizard();
+    }
+  }, [isOpen, resetWizard, user, userProfile, loadAndParseFormData, prepareSignerDataForDraft]);
 
   useEffect(() => {
     const loadOrganizationData = async () => {
@@ -440,6 +433,7 @@ const PetitionSteps = ({
           setOrganizationData(orgData);
         }
       } catch (error) {
+        console.error("Error loading organization details:", error);
         if (organization) {
           const addressParts = organization.address
             ? organization.address.split(", ")
@@ -488,12 +482,10 @@ const PetitionSteps = ({
       }
     };
 
-    if (isOrgAdmin && organizationId) {
-      loadOrganizationData();
-    } else if (!isOrgAdmin && selectedOrganizationId) {
+    if ((isOrgAdmin && organizationId) || (!isOrgAdmin && selectedOrganizationId)) {
       loadOrganizationData();
     }
-  }, [organizationId, selectedOrganizationId, isOrgAdmin]);
+  }, [organizationId, selectedOrganizationId, isOrgAdmin, organization]);
 
   useEffect(() => {
     if (isOpen && !formData?.id && !isOrgAdmin) {
@@ -613,6 +605,7 @@ const PetitionSteps = ({
           setOrganizationData(org);
         }
       } catch (error) {
+        console.error("Error loading organization details:", error);
         toast.error(t("errors.failedLoadOrganizationDetails"));
       } finally {
         setOrganizationLoading(false);
@@ -635,6 +628,17 @@ const PetitionSteps = ({
     }
   }, [user]);
 
+  const checkHasExistingFormData = (data) => {
+    return Object.values(data).some(
+      (value) =>
+        value !== "" &&
+        value !== 0 &&
+        value !== false &&
+        !Array.isArray(value) &&
+        value !== null
+    );
+  };
+
   useEffect(() => {
     const loadSavedDrafts = () => {
       try {
@@ -647,27 +651,18 @@ const PetitionSteps = ({
             (draft) => draft.step === currentStep
           );
 
-          if (currentStepDraft && currentStepDraft.formData) {
+          if (currentStepDraft?.formData) {
             setFormData((prev) => {
-              const hasData = Object.values(prev).some(
-                (value) =>
-                  value !== "" &&
-                  value !== 0 &&
-                  value !== false &&
-                  !Array.isArray(value) &&
-                  value !== null
-              );
-
-              if (!hasData) {
-                setHasSavedDraft(true);
-                return {
-                  ...prev,
-                  ...currentStepDraft.formData,
-                };
-              } else {
+              if (checkHasExistingFormData(prev)) {
                 setHasSavedDraft(false);
                 return prev;
               }
+              
+              setHasSavedDraft(true);
+              return {
+                ...prev,
+                ...currentStepDraft.formData,
+              };
             });
           } else {
             setHasSavedDraft(false);
@@ -676,6 +671,7 @@ const PetitionSteps = ({
           setHasSavedDraft(false);
         }
       } catch (error) {
+        console.error("Error checking saved draft:", error);
         setHasSavedDraft(false);
       }
     };
@@ -704,12 +700,12 @@ const PetitionSteps = ({
                   formData.propertyZip?.trim() && 
                   formData.propertyCounty?.trim());
       
-      case 3:
+      case 3: {
         const hasMinApplicable = formData.isMinApplicable === "yes" || formData.isMinApplicable === "no";
         const hasMinNumberIfRequired = formData.isMinApplicable !== "yes" || (formData.isMinApplicable === "yes" && formData.minNumber?.trim());
         const hasLoanModification = formData.borrowerRequestedLoanModification !== null && formData.borrowerRequestedLoanModification !== undefined;
         const hasLoanModificationFinalized = formData.borrowerRequestedLoanModification !== true || (formData.borrowerRequestedLoanModification === true && (formData.loanModificationRequestFinalized !== null && formData.loanModificationRequestFinalized !== undefined));
-        return !!(hasMinApplicable &&
+        const result = !!(hasMinApplicable &&
                   hasMinNumberIfRequired &&
                   formData.loanNumber?.trim() && 
                   formData.petitionLoanTypeId && 
@@ -730,6 +726,8 @@ const PetitionSteps = ({
                   formData.delinquencyDaysAtFiling >= 0 &&
                   hasLoanModification &&
                   hasLoanModificationFinalized);
+        return result;
+      }
       
       case 4:
         if (!formData.borrowers || !Array.isArray(formData.borrowers) || formData.borrowers.length === 0) {
@@ -821,6 +819,14 @@ const PetitionSteps = ({
     }
   }, [formData, userFilingEntityType, userProfile, isOrgAdmin, organizationId, selectedOrganizationId]);
 
+  const validateAddressFields = useCallback(() => validatePropertyDetailsHelper(formData), [formData]);
+  const validateLoanDetails = useCallback(() => validateLoanDetailsHelper(formData), [formData]);
+  const validateBorrowerDetails = useCallback(() => validateBorrowerDetailsHelper(formData), [formData]);
+  const validateRightToCureDetails = useCallback(() => validateRightToCureDetailsHelper(formData), [formData]);
+  const validateForm35BCompliance = useCallback(() => validateForm35BComplianceHelper(formData), [formData]);
+  const validateFilingEntity = useCallback(() => validateFilingEntityHelper(formData), [formData]);
+  const validateLoanAssignees = useCallback(() => validateLoanAssigneesHelper(formData), [formData]);
+
   useEffect(() => {
     if (!isOpen) {
       lastOrgStateRef.current = null;
@@ -854,7 +860,7 @@ const PetitionSteps = ({
             isStepComplete = !!selectedOrganizationId;
           }
           break;
-        case 2:
+        case 2: {
           const hasAllAddressFields = !!(formData?.propertyStreet1?.trim() && 
                                         formData?.propertyCity?.trim() && 
                                         formData?.propertyState?.trim() && 
@@ -862,11 +868,13 @@ const PetitionSteps = ({
                                         formData?.propertyCounty?.trim());
           isStepComplete = hasAllAddressFields;
           break;
-        case 3:
+        }
+        case 3: {
           const loanValidation = validateLoanDetails();
           isStepComplete = !loanValidation.hasErrors;
           break;
-        case 4:
+        }
+        case 4: {
           const borrowerValidation = validateBorrowerDetails();
           if (!borrowerValidation.hasErrors) {
             const hasBorrowerAddresses = formData?.borrowers?.some(borrower => borrower.mailingStreet1?.trim());
@@ -880,7 +888,8 @@ const PetitionSteps = ({
             }
           }
           break;
-        case 5:
+        }
+        case 5: {
           if (userFilingEntityType) {
             const filingEntityValidation = validateFilingEntity();
             if (!filingEntityValidation.hasErrors) {
@@ -892,7 +901,8 @@ const PetitionSteps = ({
             }
           }
           break;
-        case 6:
+        }
+        case 6: {
           const rightToCureValidation = validateRightToCureDetails();
           if (!rightToCureValidation.hasErrors) {
             if (formData?.noticeAddressStreet1?.trim()) {
@@ -902,11 +912,13 @@ const PetitionSteps = ({
             }
           }
           break;
-        case 7:
+        }
+        case 7: {
           const form35BValidation = validateForm35BCompliance();
           isStepComplete = !form35BValidation.hasErrors;
           break;
-        case 8:
+        }
+        case 8: {
           const loanAssigneesValidation = validateLoanAssignees();
           if (!loanAssigneesValidation.hasErrors) {
             const hasLoanAssigneeAddresses = formData?.loanAssignees?.some(assignee => assignee.street1?.trim());
@@ -920,6 +932,7 @@ const PetitionSteps = ({
             }
           }
           break;
+        }
         case 9:
           isStepComplete = !!(userProfile?.signatureUrl && formData?.certification_check);
           break;
@@ -1013,7 +1026,7 @@ const PetitionSteps = ({
     }
     
     previousStepRef.current = wizardCurrentStep;
-  }, [wizardCurrentStep, isAddressVerified, isFilingEntityAddressVerified, isNoticeAddressVerified, borrowerAddressesVerified, loanAssigneeAddressesVerified, formData, completedSteps, stepsWithErrors, totalSteps, markStepCompleted, markStepIncomplete, checkStepHasRequiredFields, clearStepError, wizardGoToStep, setCurrentStep, userFilingEntityType, userProfile]);
+  }, [wizardCurrentStep, isAddressVerified, isFilingEntityAddressVerified, isNoticeAddressVerified, borrowerAddressesVerified, loanAssigneeAddressesVerified, formData, completedSteps, stepsWithErrors, totalSteps, markStepCompleted, markStepIncomplete, checkStepHasRequiredFields, clearStepError, wizardGoToStep, setCurrentStep, userFilingEntityType, userProfile, isOpen, isOrgAdmin, organizationId, selectedOrganizationId, validateLoanDetails, validateBorrowerDetails, validateFilingEntity, validateRightToCureDetails, validateForm35BCompliance, validateLoanAssignees]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -1068,7 +1081,7 @@ const PetitionSteps = ({
     } else {
       markStepIncomplete(2);
     }
-  }, [formData, stepsWithErrors, markStepCompleted, markStepIncomplete, clearStepError, isOpen]);
+  }, [formData, stepsWithErrors, markStepCompleted, markStepIncomplete, clearStepError, isOpen, validateAddressFields, wizardCurrentStep]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -1093,7 +1106,7 @@ const PetitionSteps = ({
     } else {
       markStepIncomplete(5);
     }
-  }, [formData, userFilingEntityType, stepsWithErrors, markStepCompleted, markStepIncomplete, clearStepError, isOpen, wizardCurrentStep]);
+  }, [formData, userFilingEntityType, stepsWithErrors, markStepCompleted, markStepIncomplete, clearStepError, isOpen, wizardCurrentStep, validateFilingEntity]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -1119,7 +1132,7 @@ const PetitionSteps = ({
     } else {
       markStepIncomplete(4);
     }
-  }, [formData, stepsWithErrors, markStepCompleted, markStepIncomplete, clearStepError, isOpen, wizardCurrentStep]);
+  }, [formData, stepsWithErrors, markStepCompleted, markStepIncomplete, clearStepError, isOpen, wizardCurrentStep, validateBorrowerDetails]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -1144,7 +1157,7 @@ const PetitionSteps = ({
     } else {
       markStepIncomplete(8);
     }
-  }, [formData, stepsWithErrors, markStepCompleted, markStepIncomplete, clearStepError, isOpen, wizardCurrentStep]);
+  }, [formData, stepsWithErrors, markStepCompleted, markStepIncomplete, clearStepError, isOpen, wizardCurrentStep, validateLoanAssignees]);
 
   useEffect(() => {
     if (isAddressVerified && pendingStepChange && currentStep === 2) {
@@ -1239,7 +1252,7 @@ const PetitionSteps = ({
         ]
           .filter(Boolean)
           .join(" ")
-          .replace(/\s+/g, " ")
+          .replaceAll(/\s+/g, " ")
           .trim();
         return {
           signerFirstName,
@@ -1295,7 +1308,8 @@ const PetitionSteps = ({
       }
       
       previousStepRef.current = 1;
-    } catch {
+    } catch (error) {
+      console.error("Error clearing form and wizard state:", error);
     }
   };
 
@@ -1306,7 +1320,8 @@ const PetitionSteps = ({
   const handleDiscardAndClose = () => {
     try {
       clearFormAndWizardState();
-    } catch {
+    } catch (error) {
+      console.error("Error discarding and closing:", error);
     } finally {
       setShowCloseConfirmDialog(false);
       onClose();
@@ -1321,6 +1336,7 @@ const PetitionSteps = ({
       setShowCloseConfirmDialog(false);
       onClose();
     } catch (e) {
+      console.error("Error saving draft and closing:", e);
     }
   };
 
@@ -1332,11 +1348,11 @@ const PetitionSteps = ({
       return;
     }
 
-    if (window.autocompleteTimeout) {
-      clearTimeout(window.autocompleteTimeout);
+    if (globalThis.autocompleteTimeout) {
+      clearTimeout(globalThis.autocompleteTimeout);
     }
 
-    window.autocompleteTimeout = setTimeout(async () => {
+    globalThis.autocompleteTimeout = setTimeout(async () => {
       setIsLoadingPredictions(true);
 
       try {
@@ -1361,7 +1377,7 @@ const PetitionSteps = ({
   const selectPrediction = async (placeId) => {
     try {
       const placeDetails = await googlePlacesService.getPlaceDetails(placeId);
-      if (placeDetails && placeDetails.addressComponents) {
+      if (placeDetails?.addressComponents) {
         const addressComponents = placeDetails.addressComponents;
 
         let streetNumber = "";
@@ -1369,8 +1385,6 @@ const PetitionSteps = ({
         let route = "";
 
         let city = "";
-
-        let state = "";
 
         let zipCode = "";
 
@@ -1385,8 +1399,6 @@ const PetitionSteps = ({
             route = component.longName;
           } else if (types.includes("locality")) {
             city = component.longName;
-          } else if (types.includes("administrative_area_level_1")) {
-            state = component.shortName;
           } else if (types.includes("postal_code")) {
             zipCode = component.longName;
           } else if (types.includes("administrative_area_level_2")) {
@@ -1579,7 +1591,7 @@ const PetitionSteps = ({
     const placeId = prediction.place_id || prediction.placeId;
     try {
       const placeDetails = await googlePlacesService.getPlaceDetails(placeId);
-      if (placeDetails && placeDetails.addressComponents) {
+      if (placeDetails?.addressComponents) {
         const addressComponents = placeDetails.addressComponents;
 
         let streetNumber = "";
@@ -1634,7 +1646,7 @@ const PetitionSteps = ({
     const placeId = prediction.place_id || prediction.placeId;
     try {
       const placeDetails = await googlePlacesService.getPlaceDetails(placeId);
-      if (placeDetails && placeDetails.addressComponents) {
+      if (placeDetails?.addressComponents) {
         const addressComponents = placeDetails.addressComponents;
 
         let streetNumber = "";
@@ -1727,7 +1739,7 @@ const PetitionSteps = ({
     const placeId = prediction.place_id || prediction.placeId;
     try {
       const placeDetails = await googlePlacesService.getPlaceDetails(placeId);
-      if (placeDetails && placeDetails.addressComponents) {
+      if (placeDetails?.addressComponents) {
         const addressComponents = placeDetails.addressComponents;
 
         let streetNumber = "";
@@ -1781,7 +1793,7 @@ const PetitionSteps = ({
     }
   };
 
-  const validateAddressWithGeocoding = async () => {
+  const validateAddressWithGeocoding = useCallback(async () => {
     if (!formData.propertyStreet1.trim()) {
       return { isValid: false, error: "Street address is required" };
     }
@@ -1801,42 +1813,21 @@ const PetitionSteps = ({
       
       setIsValidatingAddress(false);
 
-      if (geocodeResult && geocodeResult.addressComponents) {
+      if (geocodeResult?.addressComponents) {
         const addressComponents = geocodeResult.addressComponents;
 
-        let foundCity = false;
         let foundState = false;
-        let foundZip = false;
         let county = "";
         let actualState = "";
 
         addressComponents.forEach((component) => {
           const types = component.types;
 
-          if (
-            types.includes("locality") ||
-            types.includes("administrative_area_level_2")
-          ) {
-            if (
-              component.longName
-                .toLowerCase()
-                .includes(formData.propertyCity.toLowerCase())
-            ) {
-              foundCity = true;
-            }
-          }
-
           if (types.includes("administrative_area_level_1")) {
             actualState = component.shortName;
 
             if (component.shortName === "MA") {
               foundState = true;
-            }
-          }
-
-          if (types.includes("postal_code")) {
-            if (component.longName === formData.propertyZip) {
-              foundZip = true;
             }
           }
 
@@ -1856,14 +1847,9 @@ const PetitionSteps = ({
         let cityMatch = false;
         let zipMatch = false;
         let countyMatch = false;
-        let geocodedCity = "";
 
         addressComponents.forEach((component) => {
           const types = component.types;
-
-          if (types.includes("locality")) {
-            geocodedCity = component.longName.toLowerCase();
-          }
 
           if (
             types.includes("locality") ||
@@ -1951,16 +1937,15 @@ const PetitionSteps = ({
             return { isValid: false, error: t("errors.invalidAddress") };
           }
         } catch (error) {
+          console.error("Error validating address:", error);
           setIsValidatingAddress(false);
           setIsAddressVerified(false);
           setAddressValidationError("Error validating address. Please try again.");
           return { isValid: false, error: "Error validating address" };
         }
-      };
+  }, [formData, setIsValidatingAddress, setAddressValidationError, setIsAddressVerified, setFormData, t]);
 
-  const validateAddressFields = () => validatePropertyDetailsHelper(formData);
-
-  const validatePropertyDetailsStep = async () => {
+  const validatePropertyDetailsStep = useCallback(async () => {
     const validation = validateAddressFields();
 
     if (validation.hasErrors) {
@@ -1984,16 +1969,16 @@ const PetitionSteps = ({
     }
 
     return { isValid: true, errors: {} };
-  };
+  }, [validateAddressFields, validateAddressWithGeocoding, addressValidationError, setFieldErrors]);
 
-  const validateAddressWithGeocodingGeneric = async (addressData) => {
+  const validateAddressWithGeocodingGeneric = useCallback(async (addressData) => {
     const { street1, street2, city, state, zip } = addressData;
     
     if (!street1?.trim()) {
       return { isValid: false, error: "Street address is required" };
     }
 
-    if (!city || !city.trim()) {
+    if (!city?.trim()) {
       return { isValid: false, error: "City is required for address validation" };
     }
 
@@ -2001,7 +1986,7 @@ const PetitionSteps = ({
       return { isValid: false, error: "City name must be at least 3 characters long" };
     }
 
-    if (!zip || !zip.trim()) {
+    if (!zip?.trim()) {
       return { isValid: false, error: "ZIP code is required for address validation" };
     }
 
@@ -2015,22 +2000,14 @@ const PetitionSteps = ({
       const geocodeResult = await googlePlacesService.geocode(fullAddress);
       setIsValidatingAddress(false);
 
-      if (geocodeResult && geocodeResult.addressComponents) {
+      if (geocodeResult?.addressComponents) {
         const addressComponents = geocodeResult.addressComponents;
 
-            let foundCity = false;
             let foundState = false;
-            let foundZip = false;
             let actualState = "";
 
             addressComponents.forEach((component) => {
               const types = component.types;
-
-              if (types.includes("locality") || types.includes("administrative_area_level_2")) {
-                if (city && component.longName.toLowerCase().includes(city.toLowerCase())) {
-                  foundCity = true;
-                }
-              }
 
               if (types.includes("administrative_area_level_1")) {
                 actualState = component.shortName;
@@ -2039,11 +2016,6 @@ const PetitionSteps = ({
                 }
               }
 
-              if (types.includes("postal_code")) {
-                if (zip && component.longName === zip) {
-                  foundZip = true;
-                }
-              }
             });
 
             if (actualState && actualState !== "MA") {
@@ -2082,7 +2054,7 @@ const PetitionSteps = ({
               }
 
               if (types.includes("postal_code")) {
-                if (zip && zip.trim() && component.longName === zip.trim()) {
+                if (zip?.trim() && component.longName === zip.trim()) {
                   zipMatch = true;
                 }
               }
@@ -2112,13 +2084,14 @@ const PetitionSteps = ({
             return { isValid: false, error: "Invalid address" };
           }
         } catch (error) {
+          console.error("Error validating address:", error);
           setIsValidatingAddress(false);
           setAddressValidationError("Error validating address. Please try again.");
           return { isValid: false, error: "Error validating address" };
         }
-      };
+  }, [setIsValidatingAddress, setAddressValidationError, t]);
 
-  const validateFilingEntityAddressStep = async () => {
+  const validateFilingEntityAddressStep = useCallback(async () => {
     if (!formData.filingEntityStreet1?.trim()) {
       return { isValid: true, errors: {} };
     }
@@ -2133,9 +2106,9 @@ const PetitionSteps = ({
 
     const addressValidation = await validateAddressWithGeocodingGeneric(addressData);
     return addressValidation;
-  };
+  }, [formData, validateAddressWithGeocodingGeneric]);
 
-  const validateNoticeAddressStep = async () => {
+  const validateNoticeAddressStep = useCallback(async () => {
     const rightToCures = formData.rightToCures || [];
     const currentRTC = rightToCures.length > 0 ? rightToCures[0] : null;
     
@@ -2158,9 +2131,9 @@ const PetitionSteps = ({
 
     const addressValidation = await validateAddressWithGeocodingGeneric(addressData);
     return addressValidation;
-  };
+  }, [formData, validateAddressWithGeocodingGeneric]);
 
-  const validateBorrowerAddressesStep = async () => {
+  const validateBorrowerAddressesStep = useCallback(async () => {
     if (!formData.borrowers || formData.borrowers.length === 0) {
       return { isValid: true, errors: {} };
     }
@@ -2189,9 +2162,9 @@ const PetitionSteps = ({
     }
 
     return { isValid: true, errors: {} };
-  };
+  }, [formData, validateAddressWithGeocodingGeneric]);
 
-  const validateLoanAssigneeAddressesStep = async () => {
+  const validateLoanAssigneeAddressesStep = useCallback(async () => {
     if (!formData.loanAssignees || formData.loanAssignees.length === 0) {
       return { isValid: true, errors: {} };
     }
@@ -2223,7 +2196,7 @@ const PetitionSteps = ({
     }
 
     return { isValid: true, errors: {} };
-  };
+  }, [formData, validateAddressWithGeocodingGeneric]);
 
   useEffect(() => {
     if (!shouldValidateAddress || !pendingStepChange) return;
@@ -2382,9 +2355,8 @@ const PetitionSteps = ({
           setShowAddressValidationDialog(true);
         }
       });
-      return;
     }
-  }, [shouldValidateAddress, currentStep, addressValidationType, formData, isAddressVerified, isFilingEntityAddressVerified, isNoticeAddressVerified, borrowerAddressesVerified, loanAssigneeAddressesVerified, pendingStepChange, stepsWithErrors, completedSteps, markStepCompleted, wizardGoToStep, setCurrentStep, clearStepError]);
+  }, [shouldValidateAddress, currentStep, addressValidationType, formData, isAddressVerified, isFilingEntityAddressVerified, isNoticeAddressVerified, borrowerAddressesVerified, loanAssigneeAddressesVerified, pendingStepChange, stepsWithErrors, completedSteps, markStepCompleted, wizardGoToStep, setCurrentStep, clearStepError, addressValidationError, userFilingEntityType, validateBorrowerAddressesStep, validateBorrowerDetails, validateFilingEntity, validateRightToCureDetails, validateLoanAssignees, validateFilingEntityAddressStep, validateNoticeAddressStep, validateLoanAssigneeAddressesStep, validatePropertyDetailsStep]);
 
   const autoDetectAddressComponents = async (streetAddress, zipCode) => {
     if (!streetAddress.trim() || !zipCode.trim()) {
@@ -2395,7 +2367,7 @@ const PetitionSteps = ({
       const fullAddress = `${streetAddress}, MA ${zipCode}`;
 
       const geocodeResult = await googlePlacesService.geocode(fullAddress);
-      if (geocodeResult && geocodeResult.addressComponents) {
+      if (geocodeResult?.addressComponents) {
         const addressComponents = geocodeResult.addressComponents;
 
             let detectedCity = "";
@@ -2454,23 +2426,22 @@ const PetitionSteps = ({
     }
 
     if (name === "minNumber" || name === "loanNumber") {
-      processedValue = (processedValue || "").replace(/\D+/g, "");
+      processedValue = (processedValue || "").replaceAll(/\D+/g, "");
     }
 
     if (type === "number" && integerFields.includes(name) && value !== "") {
-      const intValue = parseInt(value, 10);
-      processedValue = isNaN(intValue) ? "" : intValue.toString();
+      const intValue = Number.parseInt(value, 10);
+      processedValue = Number.isNaN(intValue) ? "" : intValue.toString();
     }
 
     setFormData((prev) => {
       const newFormData = {
       ...prev,
-      [name]:
-        type === "checkbox"
-          ? checked
-          : type === "file"
-          ? files[0]
-          : processedValue,
+      [name]: (() => {
+        if (type === "checkbox") return checked;
+        if (type === "file") return files[0];
+        return processedValue;
+      })(),
       };
 
       if (name === "variableRate" || name === "interestOnly" || name === "negativeAmortization") {
@@ -2501,7 +2472,7 @@ const PetitionSteps = ({
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       
-      if (!isNaN(originationDate.getTime())) {
+      if (!Number.isNaN(originationDate.getTime())) {
         if (originationDate >= today) {
           setFieldErrors((prev) => ({
             ...prev,
@@ -2524,7 +2495,7 @@ const PetitionSteps = ({
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       
-      if (!isNaN(noticeDate.getTime())) {
+      if (!Number.isNaN(noticeDate.getTime())) {
         if (noticeDate >= today) {
           setFieldErrors((prev) => ({
             ...prev,
@@ -2543,7 +2514,7 @@ const PetitionSteps = ({
     }
 
     if (name === "interestRatePercent" && value !== "" && value !== null && value !== undefined) {
-      const interestRate = parseFloat(value) || 0;
+      const interestRate = Number.parseFloat(value) || 0;
       
       if (interestRate < 0 || interestRate > 100) {
         setFieldErrors((prev) => ({
@@ -2569,7 +2540,7 @@ const PetitionSteps = ({
       const noticeDate = new Date(currentNoticeDate);
       const cureExpirationDate = new Date(value);
       
-      if (!isNaN(noticeDate.getTime()) && !isNaN(cureExpirationDate.getTime())) {
+      if (!Number.isNaN(noticeDate.getTime()) && !Number.isNaN(cureExpirationDate.getTime())) {
         if (cureExpirationDate <= noticeDate) {
           setFieldErrors((prev) => ({
             ...prev,
@@ -2597,7 +2568,7 @@ const PetitionSteps = ({
       const noticeDate = new Date(value);
       const cureExpirationDate = new Date(currentCureExpirationDate);
       
-      if (!isNaN(noticeDate.getTime()) && !isNaN(cureExpirationDate.getTime())) {
+      if (!Number.isNaN(noticeDate.getTime()) && !Number.isNaN(cureExpirationDate.getTime())) {
         if (cureExpirationDate <= noticeDate) {
           setFieldErrors((prev) => ({
             ...prev,
@@ -2625,7 +2596,7 @@ const PetitionSteps = ({
       const noticeDate = new Date(currentNoticeDate);
       const responseDate = new Date(value);
       
-      if (!isNaN(noticeDate.getTime()) && !isNaN(responseDate.getTime())) {
+      if (!Number.isNaN(noticeDate.getTime()) && !Number.isNaN(responseDate.getTime())) {
         noticeDate.setHours(0, 0, 0, 0);
         responseDate.setHours(0, 0, 0, 0);
         
@@ -2650,7 +2621,7 @@ const PetitionSteps = ({
       const noticeDate = new Date(value);
       const responseDate = new Date(currentBorrowerResponseDate);
       
-      if (!isNaN(noticeDate.getTime()) && !isNaN(responseDate.getTime())) {
+      if (!Number.isNaN(noticeDate.getTime()) && !Number.isNaN(responseDate.getTime())) {
         noticeDate.setHours(0, 0, 0, 0);
         responseDate.setHours(0, 0, 0, 0);
         
@@ -2676,7 +2647,7 @@ const PetitionSteps = ({
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       
-      if (!isNaN(accelerationDate.getTime())) {
+      if (!Number.isNaN(accelerationDate.getTime())) {
         if (accelerationDate >= today) {
           setFieldErrors((prev) => ({
             ...prev,
@@ -2699,7 +2670,7 @@ const PetitionSteps = ({
       : formData.noticeSent;
     
     if (name === "amountInDefault" && currentNoticeSent === true && value !== "" && value !== null && value !== undefined) {
-      const amount = parseFloat(value) || 0;
+      const amount = Number.parseFloat(value) || 0;
       
       if (amount <= 0) {
         setFieldErrors((prev) => ({
@@ -2767,27 +2738,13 @@ const PetitionSteps = ({
       const zipCode =
         name === "propertyZip" ? value : currentFormData.propertyZip;
 
-      if (window.autoDetectTimeout) {
-        clearTimeout(window.autoDetectTimeout);
+      if (globalThis.autoDetectTimeout) {
+        clearTimeout(globalThis.autoDetectTimeout);
       }
 
-      window.autoDetectTimeout = setTimeout(() => {
+      globalThis.autoDetectTimeout = setTimeout(() => {
         autoDetectAddressComponents(streetAddress, zipCode);
       }, 1000);
-    }
-  };
-
-  const handleRemoveFile = (fileFieldName) => {
-    setFormData((prev) => ({
-      ...prev,
-      [fileFieldName]: null,
-    }));
-
-    if (fieldErrors[fileFieldName]) {
-      setFieldErrors((prev) => ({
-        ...prev,
-        [fileFieldName]: "",
-      }));
     }
   };
 
@@ -2988,10 +2945,6 @@ const PetitionSteps = ({
     }
   };
 
-  const validateLoanDetails = () => validateLoanDetailsHelper(formData);
-  const validateBorrowerDetails = () => validateBorrowerDetailsHelper(formData);
-  const validateRightToCureDetails = () => validateRightToCureDetailsHelper(formData);
-  const validateForm35BCompliance = () => validateForm35BComplianceHelper(formData);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -3013,7 +2966,7 @@ const PetitionSteps = ({
     } else {
       markStepIncomplete(3);
     }
-  }, [formData, stepsWithErrors, markStepCompleted, markStepIncomplete, clearStepError, isOpen]);
+  }, [formData, stepsWithErrors, markStepCompleted, markStepIncomplete, clearStepError, isOpen, validateLoanDetails, wizardCurrentStep]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -3039,7 +2992,7 @@ const PetitionSteps = ({
     } else {
       markStepIncomplete(6);
     }
-  }, [formData, stepsWithErrors, markStepCompleted, markStepIncomplete, clearStepError, isOpen, wizardCurrentStep]);
+  }, [formData, stepsWithErrors, markStepCompleted, markStepIncomplete, clearStepError, isOpen, wizardCurrentStep, validateRightToCureDetails]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -3061,343 +3014,7 @@ const PetitionSteps = ({
     } else {
       markStepIncomplete(7);
     }
-  }, [formData, stepsWithErrors, markStepCompleted, markStepIncomplete, clearStepError, isOpen, wizardCurrentStep]);
-
-  const validateFilingEntity = () => validateFilingEntityHelper(formData);
-  const validateLoanAssignees = () => validateLoanAssigneesHelper(formData);
-
-  const validateBorrowerAddressWithGeocoding = async (borrowerId) => {
-    const borrower = formData.borrowers.find((b) => b.id === borrowerId);
-
-    if (
-      !borrower ||
-      !borrower.mailingStreet1 ||
-      !borrower.mailingCity ||
-      !borrower.mailingState ||
-      !borrower.mailingZip
-    ) {
-      return { isValid: false, error: "Incomplete address information" };
-    }
-
-    try {
-      const address = `${borrower.mailingStreet1}, ${borrower.mailingCity}, ${borrower.mailingState} ${borrower.mailingZip}`;
-
-      const geocodeResult = await googlePlacesService.geocode(address);
-      if (geocodeResult && geocodeResult.addressComponents) {
-        const addressComponents = geocodeResult.addressComponents;
-
-          let foundCity = false;
-
-          let foundState = false;
-
-          let foundZip = false;
-
-          let actualState = "";
-
-          addressComponents.forEach((component) => {
-            const types = component.types;
-
-            if (
-              types.includes("locality") ||
-              types.includes("administrative_area_level_2")
-            ) {
-              if (
-                component.longName
-                  .toLowerCase()
-                  .includes(borrower.mailingCity.toLowerCase())
-              ) {
-                foundCity = true;
-              }
-            }
-
-            if (types.includes("administrative_area_level_1")) {
-              actualState = component.shortName;
-
-              if (component.shortName === "MA") {
-                foundState = true;
-              }
-            }
-
-            if (types.includes("postal_code")) {
-              if (component.longName === borrower.mailingZip) {
-                foundZip = true;
-              }
-            }
-          });
-
-          if (actualState && actualState !== "MA") {
-            setBorrowerAddressValidationErrors((prev) => ({
-              ...prev,
-
-              [`borrower_${borrowerId}_mailingAddress`]: `This address is in ${actualState}, but this system only accepts Massachusetts addresses.`,
-            }));
-
-            return { isValid: false, error: "Address is not in Massachusetts" };
-          }
-
-          if (!foundCity || !foundState || !foundZip) {
-            const errorMessage =
-              "Address validation failed. Please ensure the address is complete and accurate.";
-
-            setBorrowerAddressValidationErrors((prev) => ({
-              ...prev,
-
-              [`borrower_${borrowerId}_mailingAddress`]: errorMessage,
-            }));
-
-            return { isValid: false, error: errorMessage };
-          }
-
-          setBorrowerAddressValidationErrors((prev) => {
-            const newErrors = { ...prev };
-
-            delete newErrors[`borrower_${borrowerId}_mailingAddress`];
-
-            return newErrors;
-          });
-
-          return { isValid: true };
-        } else {
-          const errorMessage = "Invalid address. Please enter a valid address.";
-
-          setBorrowerAddressValidationErrors((prev) => ({
-            ...prev,
-
-            [`borrower_${borrowerId}_mailingAddress`]: errorMessage,
-          }));
-
-          return { isValid: false, error: errorMessage };
-        }
-      } catch (error) {
-        const errorMessage = "Error validating address. Please try again.";
-        setBorrowerAddressValidationErrors((prev) => ({
-          ...prev,
-          [`borrower_${borrowerId}_mailingAddress`]: errorMessage,
-        }));
-        return { isValid: false, error: errorMessage };
-      }
-    };
-
-  const validateNoticeAddressWithGeocoding = async () => {
-    if (
-      !formData.noticeAddressStreet1 ||
-      !formData.noticeAddressCity ||
-      !formData.noticeAddressState ||
-      !formData.noticeAddressZip
-    ) {
-      return { isValid: false, error: "Incomplete address information" };
-    }
-
-    try {
-      const address = `${formData.noticeAddressStreet1}, ${formData.noticeAddressCity}, ${formData.noticeAddressState} ${formData.noticeAddressZip}`;
-
-      const geocodeResult = await googlePlacesService.geocode(address);
-      if (geocodeResult && geocodeResult.addressComponents) {
-        const addressComponents = geocodeResult.addressComponents;
-
-          let foundCity = false;
-
-          let foundState = false;
-
-          let foundZip = false;
-
-          let actualState = "";
-
-          addressComponents.forEach((component) => {
-            const types = component.types;
-
-            if (
-              types.includes("locality") ||
-              types.includes("administrative_area_level_2")
-            ) {
-              if (
-                component.longName
-                  .toLowerCase()
-                  .includes(formData.noticeAddressCity.toLowerCase())
-              ) {
-                foundCity = true;
-              }
-            }
-
-            if (types.includes("administrative_area_level_1")) {
-              actualState = component.shortName;
-
-              if (component.shortName === "MA") {
-                foundState = true;
-              }
-            }
-
-            if (types.includes("postal_code")) {
-              if (component.longName === formData.noticeAddressZip) {
-                foundZip = true;
-              }
-            }
-          });
-
-          if (actualState && actualState !== "MA") {
-            setNoticeAddressValidationErrors((prev) => ({
-              ...prev,
-
-              noticeAddress: `This address is in ${actualState}, but this system only accepts Massachusetts addresses.`,
-            }));
-
-            return { isValid: false, error: "Address is not in Massachusetts" };
-          }
-
-          if (!foundCity || !foundState || !foundZip) {
-            const errorMessage =
-              "Address validation failed. Please ensure the address is complete and accurate.";
-
-            setNoticeAddressValidationErrors((prev) => ({
-              ...prev,
-
-              noticeAddress: errorMessage,
-            }));
-
-            return { isValid: false, error: errorMessage };
-          }
-
-          setNoticeAddressValidationErrors((prev) => {
-            const newErrors = { ...prev };
-
-            delete newErrors.noticeAddress;
-
-            return newErrors;
-          });
-
-          return { isValid: true };
-        } else {
-          const errorMessage = "Invalid address. Please enter a valid address.";
-
-          setNoticeAddressValidationErrors((prev) => ({
-            ...prev,
-
-            noticeAddress: errorMessage,
-          }));
-
-          return { isValid: false, error: errorMessage };
-        }
-      } catch (error) {
-        const errorMessage = "Error validating address. Please try again.";
-        setNoticeAddressValidationErrors((prev) => ({
-          ...prev,
-          noticeAddress: errorMessage,
-        }));
-        return { isValid: false, error: errorMessage };
-      }
-    };
-
-  const validateLoanAssigneeAddressWithGeocoding = async (assigneeIndex) => {
-    const assignee = formData.loanAssignees[assigneeIndex];
-
-    if (
-      !assignee ||
-      !assignee.street1 ||
-      !assignee.city ||
-      !assignee.addressState ||
-      !assignee.zip
-    ) {
-      return { isValid: false, error: "Incomplete address information" };
-    }
-
-    try {
-      const address = `${assignee.street1}, ${assignee.city}, ${assignee.addressState} ${assignee.zip}`;
-
-      const geocodeResult = await googlePlacesService.geocode(address);
-      if (geocodeResult && geocodeResult.addressComponents) {
-        const addressComponents = geocodeResult.addressComponents;
-
-          let foundCity = false;
-
-          let foundState = false;
-
-          let foundZip = false;
-
-          let actualState = "";
-
-          addressComponents.forEach((component) => {
-            const types = component.types;
-
-            if (
-              types.includes("locality") ||
-              types.includes("administrative_area_level_2")
-            ) {
-              if (
-                component.longName
-                  .toLowerCase()
-                  .includes(assignee.city.toLowerCase())
-              ) {
-                foundCity = true;
-              }
-            }
-
-            if (types.includes("administrative_area_level_1")) {
-              actualState = component.shortName;
-
-              if (component.shortName === "MA") {
-                foundState = true;
-              }
-            }
-
-            if (types.includes("postal_code")) {
-              if (component.longName === assignee.zip) {
-                foundZip = true;
-              }
-            }
-          });
-
-          if (actualState && actualState !== "MA") {
-            setLoanAssigneeAddressValidationErrors((prev) => ({
-              ...prev,
-
-              [`assignee_${assigneeIndex}_address`]: `This address is in ${actualState}, but this system only accepts Massachusetts addresses.`,
-            }));
-
-            return { isValid: false, error: "Address is not in Massachusetts" };
-          }
-
-          if (!foundCity || !foundState || !foundZip) {
-            const errorMessage =
-              "Address validation failed. Please ensure the address is complete and accurate.";
-
-            setLoanAssigneeAddressValidationErrors((prev) => ({
-              ...prev,
-
-              [`assignee_${assigneeIndex}_address`]: errorMessage,
-            }));
-
-            return { isValid: false, error: errorMessage };
-          }
-
-          setLoanAssigneeAddressValidationErrors((prev) => {
-            const newErrors = { ...prev };
-
-            delete newErrors[`assignee_${assigneeIndex}_address`];
-
-            return newErrors;
-          });
-
-          return { isValid: true };
-        } else {
-          const errorMessage = "Invalid address. Please enter a valid address.";
-
-          setLoanAssigneeAddressValidationErrors((prev) => ({
-            ...prev,
-
-            [`assignee_${assigneeIndex}_address`]: errorMessage,
-          }));
-
-          return { isValid: false, error: errorMessage };
-        }
-      } catch (error) {
-        const errorMessage = "Error validating address. Please try again.";
-        setLoanAssigneeAddressValidationErrors((prev) => ({
-          ...prev,
-          [`assignee_${assigneeIndex}_address`]: errorMessage,
-        }));
-        return { isValid: false, error: errorMessage };
-      }
-    };
+  }, [formData, stepsWithErrors, markStepCompleted, markStepIncomplete, clearStepError, isOpen, wizardCurrentStep, validateForm35BCompliance]);
 
   const autoSaveCurrentStep = async () => {
     try {
@@ -3425,7 +3042,8 @@ const PetitionSteps = ({
       sessionStorage.setItem(STORAGE_KEYS.PETITION_DRAFTS, JSON.stringify(existingDrafts));
 
       setHasSavedDraft(true);
-    } catch {
+    } catch (error) {
+      console.error("Error saving draft:", error);
     }
   };
 
@@ -3447,7 +3065,7 @@ const PetitionSteps = ({
 
       const signerFirstName = isEditingDraft ? (user?.firstName || "") : (formData.signerFirstName || "");
       const signerMiddleInitial = isEditingDraft 
-        ? (user?.middleName ? user.middleName.charAt(0).toUpperCase() : "")
+        ? (user?.middleName?.charAt(0).toUpperCase() || "")
         : (formData.signerMiddleInitial || "");
       const signerLastName = isEditingDraft ? (user?.lastName || "") : (formData.signerLastName || "");
       const signerEmail = isEditingDraft ? (user?.email || "") : (formData.signerEmail || "");
@@ -3459,7 +3077,7 @@ const PetitionSteps = ({
       ]
         .filter(Boolean)
         .join(" ")
-        .replace(/\s+/g, " ")
+        .replaceAll(/\s+/g, " ")
         .trim();
 
       const existingSignature = formData.signatures && formData.signatures.length > 0 
@@ -3478,7 +3096,9 @@ const PetitionSteps = ({
             signatureDrawnOrTyped: isEditingDraft 
               ? (userProfile?.signatureImageName || "") 
               : (existingSignature?.signatureDrawnOrTyped || userProfile?.signatureImageName || ""),
-            signedAt: isEditingDraft ? "" : (existingSignature?.signedAt || (existingSignature ? "" : new Date().toISOString())),
+            signedAt: isEditingDraft 
+              ? "" 
+              : (existingSignature?.signedAt || new Date().toISOString()),
             signerIp: "",
             otpCode: "",
           },
@@ -3734,7 +3354,7 @@ const PetitionSteps = ({
               isStepComplete = !!selectedOrganizationId;
             }
             break;
-          case 2:
+          case 2: {
             const addressValidation = validateAddressFields();
             const hasAllAddressFields = !!(formData?.propertyStreet1?.trim() && 
                                           formData?.propertyCity?.trim() && 
@@ -3743,11 +3363,13 @@ const PetitionSteps = ({
                                           formData?.propertyCounty?.trim());
             isStepComplete = !addressValidation.hasErrors && hasAllAddressFields;
             break;
-          case 3:
+          }
+          case 3: {
             const loanValidation = validateLoanDetails();
             isStepComplete = !loanValidation.hasErrors;
             break;
-          case 4:
+          }
+          case 4: {
             const borrowerValidation = validateBorrowerDetails();
             if (!borrowerValidation.hasErrors) {
               const hasBorrowerAddresses = formData?.borrowers?.some(borrower => borrower.mailingStreet1?.trim());
@@ -3761,7 +3383,8 @@ const PetitionSteps = ({
               }
             }
             break;
-          case 5:
+          }
+          case 5: {
             if (userFilingEntityType) {
               const filingEntityValidation = validateFilingEntity();
               if (!filingEntityValidation.hasErrors) {
@@ -3773,7 +3396,8 @@ const PetitionSteps = ({
               }
             }
             break;
-          case 6:
+          }
+          case 6: {
             const rightToCureValidation = validateRightToCureDetails();
             if (!rightToCureValidation.hasErrors) {
               if (formData?.noticeAddressStreet1?.trim()) {
@@ -3783,11 +3407,13 @@ const PetitionSteps = ({
               }
             }
             break;
-          case 7:
+          }
+          case 7: {
             const form35BValidation = validateForm35BCompliance();
             isStepComplete = !form35BValidation.hasErrors;
             break;
-          case 8:
+          }
+          case 8: {
             const loanAssigneesValidation = validateLoanAssignees();
             if (!loanAssigneesValidation.hasErrors) {
               const hasLoanAssigneeAddresses = formData?.loanAssignees?.some(assignee => assignee.street1?.trim());
@@ -3801,6 +3427,7 @@ const PetitionSteps = ({
               }
             }
             break;
+          }
           case 9:
             isStepComplete = !!(userProfile?.signatureUrl && formData?.certification_check);
             break;
@@ -3846,6 +3473,75 @@ const PetitionSteps = ({
     window.scrollTo(0, 0);
   };
 
+  const handlePropertyValidation = () => {
+    setIsAddressVerified(true);
+    clearStepError(2);
+    const addressValidation = validateAddressFields();
+    return !addressValidation.hasErrors;
+  };
+
+  const handleFilingEntityValidation = () => {
+    setIsFilingEntityAddressVerified(true);
+    clearStepError(5);
+    if (userFilingEntityType) {
+      const filingEntityValidation = validateFilingEntity();
+      return !filingEntityValidation.hasErrors;
+    }
+    return false;
+  };
+
+  const handleNoticeValidation = () => {
+    setIsNoticeAddressVerified(true);
+    clearStepError(5);
+    const rightToCureValidation = validateRightToCureDetails();
+    return !rightToCureValidation.hasErrors;
+  };
+
+  const handleBorrowerValidation = () => {
+    const verified = {};
+    formData.borrowers.forEach((borrower) => {
+      if (borrower.mailingStreet1?.trim()) {
+        verified[borrower.id] = true;
+      }
+    });
+    setBorrowerAddressesVerified(prev => ({ ...prev, ...verified }));
+    clearStepError(4);
+    const borrowerValidation = validateBorrowerDetails();
+    return !borrowerValidation.hasErrors;
+  };
+
+  const handleLoanAssigneeValidation = () => {
+    const verified = {};
+    formData.loanAssignees.forEach((assignee, index) => {
+      if (assignee.street1?.trim()) {
+        verified[index] = true;
+      }
+    });
+    setLoanAssigneeAddressesVerified(prev => ({ ...prev, ...verified }));
+    clearStepError(8);
+    const loanAssigneesValidation = validateLoanAssignees();
+    return !loanAssigneesValidation.hasErrors;
+  };
+
+  const getStepCompletionStatus = (validationType) => {
+    if (validationType === "property" && currentStep === 2) {
+      return handlePropertyValidation();
+    }
+    if (validationType === "filingEntity" && currentStep === 5) {
+      return handleFilingEntityValidation();
+    }
+    if (validationType === "notice" && currentStep === 6) {
+      return handleNoticeValidation();
+    }
+    if (validationType === "borrower" && currentStep === 4) {
+      return handleBorrowerValidation();
+    }
+    if (validationType === "loanAssignee" && currentStep === 8) {
+      return handleLoanAssigneeValidation();
+    }
+    return checkStepHasRequiredFields(currentStep);
+  };
+
   const handleAddressValidationProceed = async () => {
     const validationType = addressValidationType;
     
@@ -3860,52 +3556,7 @@ const PetitionSteps = ({
     if (newStep >= 1 && newStep <= totalSteps) {
       await autoSaveCurrentStep();
 
-      let isStepComplete = false;
-      
-      if (validationType === "property" && currentStep === 2) {
-        setIsAddressVerified(true);
-        clearStepError(2);
-        const addressValidation = validateAddressFields();
-        isStepComplete = !addressValidation.hasErrors;
-      } else if (validationType === "filingEntity" && currentStep === 5) {
-        setIsFilingEntityAddressVerified(true);
-        clearStepError(5);
-        if (userFilingEntityType) {
-          const filingEntityValidation = validateFilingEntity();
-          if (!filingEntityValidation.hasErrors) {
-            isStepComplete = true;
-          }
-        }
-      } else if (validationType === "notice" && currentStep === 6) {
-        setIsNoticeAddressVerified(true);
-        clearStepError(5);
-        const rightToCureValidation = validateRightToCureDetails();
-        isStepComplete = !rightToCureValidation.hasErrors;
-      } else if (validationType === "borrower" && currentStep === 4) {
-        const verified = {};
-        formData.borrowers.forEach((borrower) => {
-          if (borrower.mailingStreet1?.trim()) {
-            verified[borrower.id] = true;
-          }
-        });
-        setBorrowerAddressesVerified(prev => ({ ...prev, ...verified }));
-        clearStepError(4);
-        const borrowerValidation = validateBorrowerDetails();
-        isStepComplete = !borrowerValidation.hasErrors;
-      } else if (validationType === "loanAssignee" && currentStep === 8) {
-        const verified = {};
-        formData.loanAssignees.forEach((assignee, index) => {
-          if (assignee.street1?.trim()) {
-            verified[index] = true;
-          }
-        });
-        setLoanAssigneeAddressesVerified(prev => ({ ...prev, ...verified }));
-        clearStepError(8);
-        const loanAssigneesValidation = validateLoanAssignees();
-        isStepComplete = !loanAssigneesValidation.hasErrors;
-      } else {
-        isStepComplete = checkStepHasRequiredFields(currentStep);
-      }
+      const isStepComplete = getStepCompletionStatus(validationType);
 
       if (isStepComplete) {
         if (!completedSteps.has(currentStep)) {
@@ -3920,75 +3571,6 @@ const PetitionSteps = ({
       setCurrentStep(newStep);
       previousStepRef.current = newStep;
       window.scrollTo(0, 0);
-    }
-  };
-
-  const isStepComplete = (stepNumber) => {
-    switch (stepNumber) {
-      case 1:
-        if (isOrgAdmin) {
-          return !!(organizationId || selectedOrganizationId);
-        }
-        return !!selectedOrganizationId;
-      
-      case 2:
-        const addressValidation = validateAddressFields();
-        return !addressValidation.hasErrors && isAddressVerified;
-      
-      case 3:
-        const loanValidation = validateLoanDetails();
-        return !loanValidation.hasErrors;
-      
-      case 4:
-        const borrowerValidation = validateBorrowerDetails();
-        if (borrowerValidation.hasErrors) return false;
-        const hasBorrowerAddresses = formData?.borrowers?.some(borrower => borrower.mailingStreet1?.trim());
-        if (hasBorrowerAddresses) {
-          const allBorrowerAddressesVerified = formData.borrowers
-            .filter(borrower => borrower.mailingStreet1?.trim())
-            .every(borrower => borrowerAddressesVerified[borrower.id] === true);
-          return allBorrowerAddressesVerified;
-        }
-        return true;
-      
-      case 5:
-        if (!userFilingEntityType) return false;
-        const filingEntityValidation = validateFilingEntity();
-        if (filingEntityValidation.hasErrors) return false;
-        if (formData?.filingEntityStreet1?.trim()) {
-          return isFilingEntityAddressVerified;
-        }
-        return true;
-      
-      case 6:
-        const rightToCureValidation = validateRightToCureDetails();
-        if (rightToCureValidation.hasErrors) return false;
-        if (formData?.noticeAddressStreet1?.trim()) {
-          return isNoticeAddressVerified;
-        }
-        return true;
-      
-      case 7:
-        const form35BValidation = validateForm35BCompliance();
-        return !form35BValidation.hasErrors;
-      
-      case 8:
-        const loanAssigneesValidation = validateLoanAssignees();
-        if (loanAssigneesValidation.hasErrors) return false;
-        const hasLoanAssigneeAddresses = formData?.loanAssignees?.some(assignee => assignee.street1?.trim());
-        if (hasLoanAssigneeAddresses) {
-          const allLoanAssigneeAddressesVerified = formData.loanAssignees
-            .filter(assignee => assignee.street1?.trim())
-            .every(assignee => loanAssigneeAddressesVerified[assignee.id] === true);
-          return allLoanAssigneeAddressesVerified;
-        }
-        return true;
-      
-      case 9:
-        return userProfile?.signatureImageName && formData?.certification_check;
-      
-      default:
-        return false;
     }
   };
 
@@ -4037,7 +3619,7 @@ const PetitionSteps = ({
     if (!visitedSteps.has(5)) {
       stepsWithValidationErrors.add(5);
       allFieldErrors.filingEntityStep = "Please visit the Filing Entity step at least once";
-    } else if (!userFilingEntityType) {
+    } else if (userFilingEntityType === null || userFilingEntityType === undefined) {
       stepsWithValidationErrors.add(5);
       allFieldErrors.filingEntityType = "Filing Entity Type is required";
     } else {
@@ -4086,6 +3668,52 @@ const PetitionSteps = ({
     };
   };
 
+  const prepareSignerData = (isEditingDraft) => {
+    const signerFirstName = isEditingDraft ? (user?.firstName || "") : (formData.signerFirstName || "");
+    const signerMiddleInitial = isEditingDraft 
+      ? (user?.middleName?.charAt(0).toUpperCase() || "")
+      : (formData.signerMiddleInitial || "");
+    const signerLastName = isEditingDraft ? (user?.lastName || "") : (formData.signerLastName || "");
+    const signerEmail = isEditingDraft ? (user?.email || "") : (formData.signerEmail || "");
+    const signerTitle = isEditingDraft ? (getUserRole(user) || "User") : (formData.signerTitle || getUserRole(user) || "User");
+    const signerFullName = [
+      signerFirstName,
+      signerMiddleInitial,
+      signerLastName,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .replaceAll(/\s+/g, " ")
+      .trim();
+
+    return { signerFirstName, signerMiddleInitial, signerLastName, signerEmail, signerTitle, signerFullName };
+  };
+
+  const preparePetitionData = (isEditingDraft, signerData) => {
+    const existingSignature = formData.signatures && formData.signatures.length > 0 
+      ? formData.signatures[0] 
+      : null;
+
+    return {
+      ...formData,
+      isAllStepsCompleted: true,
+      signatures: [
+        {
+          signerFullName: signerData.signerFullName,
+          signerTitle: signerData.signerTitle,
+          signerEmail: signerData.signerEmail,
+          esignConsent: formData.certification_check || false,
+          signatureDrawnOrTyped: isEditingDraft 
+            ? (userProfile?.signatureImageName || "") 
+            : (existingSignature?.signatureDrawnOrTyped || userProfile?.signatureImageName || ""),
+          signedAt: new Date().toISOString(),
+          signerIp: "",
+          otpCode: "",
+        },
+      ],
+    };
+  };
+
   const handleSubmit = async (e, isIntentional = false) => {
     e.preventDefault();
 
@@ -4097,7 +3725,7 @@ const PetitionSteps = ({
       const finalOrganizationId = selectedOrganizationId || formData.organizationId || organizationId;
       if (!finalOrganizationId) {
         toast.error("Please select an organization before submitting the petition.");
-      return;
+        return;
       }
     }
 
@@ -4120,45 +3748,8 @@ const PetitionSteps = ({
       const editingPetitionId = sessionStorage.getItem("editingPetitionId");
       const isEditingDraft = !!editingPetitionId;
 
-      const signerFirstName = isEditingDraft ? (user?.firstName || "") : (formData.signerFirstName || "");
-      const signerMiddleInitial = isEditingDraft 
-        ? (user?.middleName ? user.middleName.charAt(0).toUpperCase() : "")
-        : (formData.signerMiddleInitial || "");
-      const signerLastName = isEditingDraft ? (user?.lastName || "") : (formData.signerLastName || "");
-      const signerEmail = isEditingDraft ? (user?.email || "") : (formData.signerEmail || "");
-      const signerTitle = isEditingDraft ? (getUserRole(user) || "User") : (formData.signerTitle || getUserRole(user) || "User");
-      const signerFullName = [
-        signerFirstName,
-        signerMiddleInitial,
-        signerLastName,
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .replace(/\s+/g, " ")
-        .trim();
-
-      const existingSignature = formData.signatures && formData.signatures.length > 0 
-        ? formData.signatures[0] 
-        : null;
-
-      const petitionData = {
-        ...formData,
-        isAllStepsCompleted: true,
-        signatures: [
-          {
-            signerFullName: signerFullName,
-            signerTitle: signerTitle,
-            signerEmail: signerEmail,
-            esignConsent: formData.certification_check || false,
-            signatureDrawnOrTyped: isEditingDraft 
-              ? (userProfile?.signatureImageName || "") 
-              : (existingSignature?.signatureDrawnOrTyped || userProfile?.signatureImageName || ""),
-            signedAt: new Date().toISOString(),
-            signerIp: "",
-            otpCode: "",
-          },
-        ],
-      };
+      const signerData = prepareSignerData(isEditingDraft);
+      const petitionData = preparePetitionData(isEditingDraft, signerData);
 
       const finalOrganizationId = selectedOrganizationId || formData.organizationId || organizationId;
       
@@ -4197,10 +3788,7 @@ const PetitionSteps = ({
 
   const renderStep = () => {
     switch (currentStep) {
-      case 1:
-        const orgAdminOrgData = isOrgAdmin && !organizationData 
-          ? (organizationFromAuth || organizationFromContext)
-          : organizationData;
+      case 1: {
         return (
           <Step1OrganizationSelection
             selectedOrganizationId={selectedOrganizationId || organizationId}
@@ -4213,6 +3801,7 @@ const PetitionSteps = ({
             fieldErrors={fieldErrors}
           />
         );
+      }
 
       case 2:
         return (
@@ -4413,7 +4002,7 @@ const PetitionSteps = ({
       ]
         .filter(Boolean)
         .join(" ")
-        .replace(/\s+/g, " ")
+        .replaceAll(/\s+/g, " ")
         .trim();
 
       const finalFormData = {
@@ -4442,7 +4031,7 @@ const PetitionSteps = ({
       if (finalFormData.borrowers && finalFormData.borrowers.length > 0) {
         const verifiedAddresses = {};
         finalFormData.borrowers.forEach((borrower) => {
-          if (borrower.mailingStreet1 && borrower.mailingStreet1.trim()) {
+          if (borrower.mailingStreet1?.trim()) {
             verifiedAddresses[borrower.id] = true;
           }
         });
@@ -4461,7 +4050,7 @@ const PetitionSteps = ({
       setPendingAction(null);
       setShouldTakeOver(false);
       
-      if (!isOrgAdmin) {
+      if (isOrgAdmin === false) {
         setSelectedOrganizationId(null);
         setOrganizationData(null);
         setActiveOrganizationId(null);
@@ -4475,10 +4064,8 @@ const PetitionSteps = ({
         finalFormData.filingContactName = "";
         finalFormData.filingContactEmail = "";
         finalFormData.filingContactPhone = "";
-      } else {
-        if (organizationId) {
-          finalFormData.organizationId = organizationId;
-        }
+      } else if (organizationId) {
+        finalFormData.organizationId = organizationId;
       }
       setFormData(finalFormData);
       
@@ -4510,11 +4097,12 @@ const PetitionSteps = ({
         }
       }
       
-      const successMessage = isOrgAdmin 
-        ? "Petition data loaded. Please review all steps before submitting."
-        : (selectedOrganizationId 
-            ? "Petition data loaded. Please review all steps before submitting."
-            : "Petition data loaded. Please select an organization and review all steps before submitting.");
+      const successMessage = (() => {
+        if (isOrgAdmin || selectedOrganizationId) {
+          return "Petition data loaded. Please review all steps before submitting.";
+        }
+        return "Petition data loaded. Please select an organization and review all steps before submitting.";
+      })();
       toast.success(successMessage);
       
       wizardGoToStep(1);
@@ -4608,7 +4196,7 @@ const PetitionSteps = ({
                   className="dashboard-btn-create"
                   onClick={handleAddressValidationProceed}
                 >
-                  <i className="fas fa-arrow-right me-2"></i>
+                <i className="fas fa-arrow-right me-2" />{" "}
                   Proceed Anyway
                 </button>
               </div>
@@ -4776,11 +4364,10 @@ const PetitionSteps = ({
                       >
                         {isSaving ? (
                           <>
-                            <span
+                            <output
                               className="spinner-border spinner-border-sm me-2"
-                              role="status"
                               aria-hidden="true"
-                            ></span>
+                            />
                             {t("petitionWizard.saving")}
                           </>
                         ) : (
@@ -4791,48 +4378,55 @@ const PetitionSteps = ({
 
                     {/* Next Step, Review, or Submit Button */}
 
-                    {currentStep < 9 ? (
-                      <button
-                        type="button"
-                        className="dashboard-btn-create"
-                        onClick={() => nextStep(1)}
-                      >
-                        {t("petitionWizard.nextStep")}
-                      </button>
-                    ) : currentStep === 9 ? (
-                      <button
-                        type="button"
-                        className="dashboard-btn-create"
-                        onClick={() => nextStep(1)}
-                      >
-                        {t("petitionWizard.reviewPetition")}
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        className="dashboard-btn-create"
-                        onClick={async () => {
-                          await handleSubmit(
-                            { preventDefault: () => {} },
-                            true
-                          );
-                        }}
-                        disabled={petitionLoading}
+                    {(() => {
+                      if (currentStep < 9) {
+                        return (
+                          <button
+                            type="button"
+                            className="dashboard-btn-create"
+                            onClick={() => nextStep(1)}
+                          >
+                            {t("petitionWizard.nextStep")}
+                          </button>
+                        );
+                      }
+                      if (currentStep === 9) {
+                        return (
+                          <button
+                            type="button"
+                            className="dashboard-btn-create"
+                            onClick={() => nextStep(1)}
+                          >
+                            {t("petitionWizard.reviewPetition")}
+                          </button>
+                        );
+                      }
+                      return (
+                        <button
+                          type="button"
+                          className="dashboard-btn-create"
+                          onClick={async () => {
+                            await handleSubmit(
+                              { preventDefault: () => {} },
+                              true
+                            );
+                          }}
+                          disabled={petitionLoading}
                       >
                         {petitionLoading ? (
                           <>
-                            <span
+                            <output
                               className="spinner-border spinner-border-sm me-2"
-                              role="status"
                               aria-hidden="true"
-                            ></span>
+                            />
                             {t("petitionWizard.submitting")}
                           </>
                         ) : (
                           t("petitionWizard.submitPetition")
                         )}
                       </button>
-                    )}
+                      );
+                    })()}
                   </div>
                 </div>
               </div>
@@ -4842,6 +4436,13 @@ const PetitionSteps = ({
       </div>
     </React.Fragment>
   );
+};
+
+PetitionSteps.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  organization: PropTypes.object,
+  onPetitionSubmitted: PropTypes.func,
 };
 
 export default PetitionSteps;
