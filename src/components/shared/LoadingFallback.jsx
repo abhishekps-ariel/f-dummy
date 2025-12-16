@@ -16,10 +16,6 @@ const LoadingFallback = memo(({ message = 'Loading page...' }) => {
   );
 });
 
-LoadingFallback.propTypes = {
-  message: PropTypes.string,
-};
-
 LoadingFallback.displayName = 'LoadingFallback';
 
 export default LoadingFallback;

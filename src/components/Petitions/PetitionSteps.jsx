@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import PropTypes from "prop-types";
 import { useTranslation } from "react-i18next";
 
 import { toast } from "react-toastify";
@@ -4436,13 +4435,6 @@ const PetitionSteps = ({
       </div>
     </React.Fragment>
   );
-};
-
-PetitionSteps.propTypes = {
-  isOpen: PropTypes.bool.isRequired,
-  onClose: PropTypes.func.isRequired,
-  organization: PropTypes.object,
-  onPetitionSubmitted: PropTypes.func,
 };
 
 export default PetitionSteps;

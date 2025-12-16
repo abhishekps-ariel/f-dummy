@@ -1,5 +1,4 @@
 import { Link, useNavigate } from "react-router-dom";
-import PropTypes from "prop-types";
 import { useTranslation } from "react-i18next";
 import logo from "../../assets/logo-index.png";
 import { ROUTES } from "../../constants/routerConstants";
@@ -16,25 +15,6 @@ function HomeHeader({
 }) {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const handleNavBarClick = (e) => {
-    if (globalThis.innerWidth >= 992) return;
-    const nav = document.getElementById("navbarNav");
-    if (!nav) return;
-    const isNavLink = e.target.closest(".nav-link");
-    const isToggler = e.target.closest(".navbar-toggler");
-    if (isNavLink || isToggler) return;
-    if (!nav.classList.contains("show")) {
-      const bsCollapse = new globalThis.bootstrap.Collapse(nav, { toggle: false });
-      bsCollapse.show();
-    }
-  };
-
-  const handleNavBarKeyDown = (e) => {
-    if (e.key !== "Enter" && e.key !== " ") return;
-    e.preventDefault();
-    handleNavBarClick(e);
-  };
-  
   return (
     <>
       {/* Official Banner */}
@@ -186,10 +166,6 @@ function HomeHeader({
       {!hideNavigation && (
         <div
           className="tabs-link-featured navbar navbar-expand-lg positive-sticky top-0"
-          role="button"
-          tabIndex={0}
-          onClick={handleNavBarClick}
-          onKeyDown={handleNavBarKeyDown}
         >
         <div className="container">
           <div className="d-lg-none"></div>
@@ -359,27 +335,5 @@ function HomeHeader({
     </>
   );
 }
-
-HomeHeader.propTypes = {
-  featureRef: PropTypes.shape({
-    current: PropTypes.instanceOf(Element),
-  }),
-  contactRef: PropTypes.shape({
-    current: PropTypes.instanceOf(Element),
-  }),
-  whoWeServeRef: PropTypes.shape({
-    current: PropTypes.instanceOf(Element),
-  }),
-  actionsRef: PropTypes.shape({
-    current: PropTypes.instanceOf(Element),
-  }),
-  newsRef: PropTypes.shape({
-    current: PropTypes.instanceOf(Element),
-  }),
-  eventsRef: PropTypes.shape({
-    current: PropTypes.instanceOf(Element),
-  }),
-  hideNavigation: PropTypes.bool,
-};
 
 export default HomeHeader;

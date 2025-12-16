@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import PropTypes from 'prop-types';
 import { getAllMunicipalities } from '../../services/commonService';
 
 const MunicipalityMultiSelect = ({
@@ -227,16 +226,6 @@ const MunicipalityMultiSelect = ({
       )}
     </div>
   );
-};
-
-MunicipalityMultiSelect.propTypes = {
-  value: PropTypes.string,
-  onChange: PropTypes.func.isRequired,
-  name: PropTypes.string,
-  placeholder: PropTypes.string,
-  disabled: PropTypes.bool,
-  error: PropTypes.bool,
-  className: PropTypes.string,
 };
 
 export default MunicipalityMultiSelect;

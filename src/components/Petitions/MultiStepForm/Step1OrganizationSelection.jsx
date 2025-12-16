@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from "react";
-import PropTypes from "prop-types";
 import { useTranslation } from "react-i18next";
 import { getAllOrganizations, searchOrganizations } from "../../../services/organizationService";
 import { useDebounce } from "../../../hooks/useDebounce";
@@ -383,19 +382,6 @@ const Step1OrganizationSelection = ({
       )}
     </div>
   );
-};
-
-Step1OrganizationSelection.propTypes = {
-  selectedOrganizationId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-  selectedOrganizationData: PropTypes.object,
-  onSelect: PropTypes.func,
-  isOrgAdmin: PropTypes.bool,
-  organizationId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-  organizationData: PropTypes.object,
-  organizationLoading: PropTypes.bool,
-  fieldErrors: PropTypes.shape({
-    organizationId: PropTypes.string,
-  }),
 };
 
 export default Step1OrganizationSelection;

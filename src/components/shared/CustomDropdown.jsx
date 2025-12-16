@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
 import { createPortal } from 'react-dom';
-import PropTypes from 'prop-types';
 
 const CustomDropdown = memo(({
   value,
@@ -145,25 +144,6 @@ const CustomDropdown = memo(({
     </>
   );
 });
-
-CustomDropdown.propTypes = {
-  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-  onChange: PropTypes.func.isRequired,
-  options: PropTypes.arrayOf(
-    PropTypes.shape({
-      value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-      label: PropTypes.string.isRequired,
-      disabled: PropTypes.bool,
-    })
-  ),
-  placeholder: PropTypes.string,
-  disabled: PropTypes.bool,
-  className: PropTypes.string,
-  error: PropTypes.bool,
-  id: PropTypes.string,
-  name: PropTypes.string,
-  maxMenuHeight: PropTypes.number,
-};
 
 CustomDropdown.displayName = 'CustomDropdown';
 

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import PropTypes from 'prop-types';
 import { useTranslation } from 'react-i18next';
 import { getUserRole } from '../../utils/storage';
 
@@ -267,18 +266,6 @@ const Form35BAttestationModal = ({
       </div>
     </dialog>
   );
-};
-
-Form35BAttestationModal.propTypes = {
-  isOpen: PropTypes.bool.isRequired,
-  onClose: PropTypes.func.isRequired,
-  onConfirm: PropTypes.func.isRequired,
-  user: PropTypes.shape({
-    firstName: PropTypes.string,
-    lastName: PropTypes.string,
-    email: PropTypes.string,
-  }),
-  isSubmitting: PropTypes.bool,
 };
 
 export default Form35BAttestationModal;

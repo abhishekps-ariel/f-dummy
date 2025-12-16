@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
 import { createPortal } from 'react-dom';
-import PropTypes from 'prop-types';
 
 const YearPicker = memo(({
   value,
@@ -247,19 +246,6 @@ const YearPicker = memo(({
     </>
   );
 });
-
-YearPicker.propTypes = {
-  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-  onChange: PropTypes.func.isRequired,
-  placeholder: PropTypes.string,
-  disabled: PropTypes.bool,
-  className: PropTypes.string,
-  error: PropTypes.bool,
-  id: PropTypes.string,
-  name: PropTypes.string,
-  minYear: PropTypes.number,
-  maxYear: PropTypes.number,
-};
 
 YearPicker.displayName = 'YearPicker';
 
