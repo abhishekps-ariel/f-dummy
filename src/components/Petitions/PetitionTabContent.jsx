@@ -532,6 +532,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
               ? formatDateForInput(details.foreclosureSale.saleDate)
               : "",
             soldToId: details.foreclosureSale.soldToId || "",
+            saleAmount: details.foreclosureSale.saleAmount ?? 0,
             vestingEntityName: details.foreclosureSale.vestingEntityName || "",
             reoEntityName: details.foreclosureSale.reoEntityName || "",
             reoContactFirstName:
@@ -548,6 +549,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
         ? {
             saleDate: "",
             soldToId: "",
+            saleAmount: 0,
             vestingEntityName: "",
             reoEntityName: "",
             reoContactFirstName: "",
@@ -704,7 +706,11 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
                          typeof foreclosureSale.reoEmergencyPhone === 'string' &&
                          foreclosureSale.reoEmergencyPhone.trim() !== '');
     
-    return hasSaleDate || hasSoldTo || hasVesting || hasReoEntity || hasReoContact || hasReoPhone;
+    const hasSaleAmount = foreclosureSale.saleAmount !== null && 
+                          foreclosureSale.saleAmount !== undefined && 
+                          foreclosureSale.saleAmount !== 0;
+    
+    return hasSaleDate || hasSoldTo || hasSaleAmount || hasVesting || hasReoEntity || hasReoContact || hasReoPhone;
   };
 
   // Section definitions for sidebar - only show sections that are actually displayed
@@ -1664,6 +1670,11 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
                 : new Date(foreclosureSale.saleDate + 'T00:00:00').toISOString())
             : null,
           soldToId: foreclosureSale.soldToId && foreclosureSale.soldToId.trim() !== '' ? foreclosureSale.soldToId : null,
+          saleAmount: foreclosureSale.saleAmount !== null && foreclosureSale.saleAmount !== undefined 
+            ? (typeof foreclosureSale.saleAmount === 'number' 
+                ? foreclosureSale.saleAmount 
+                : parseFloat(foreclosureSale.saleAmount)) || 0
+            : 0,
           vestingEntityName: foreclosureSale.vestingEntityName || "",
           reoEntityName: foreclosureSale.reoEntityName || "",
           reoContactFirstName: foreclosureSale.reoContactFirstName || "",
@@ -2599,6 +2610,11 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
         id: foreclosureId,
         saleDate: foreclosureSale.saleDate || "",
         soldToId: foreclosureSale.soldToId || "",
+        saleAmount: foreclosureSale.saleAmount !== null && foreclosureSale.saleAmount !== undefined 
+          ? (typeof foreclosureSale.saleAmount === 'number' 
+              ? foreclosureSale.saleAmount 
+              : parseFloat(foreclosureSale.saleAmount)) || 0
+          : 0,
         vestingEntityName: foreclosureSale.vestingEntityName || "",
         reoEntityName: foreclosureSale.reoEntityName || "",
         reoContactFirstName: foreclosureSale.reoContactFirstName || "",
@@ -3153,6 +3169,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
            foreclosureSale.saleDate !== '' && typeof foreclosureSale.saleDate === 'string' && foreclosureSale.saleDate.trim() !== '') ||
           (foreclosureSale.soldToId !== null && foreclosureSale.soldToId !== undefined && 
            foreclosureSale.soldToId !== '' && ((typeof foreclosureSale.soldToId === 'string' && foreclosureSale.soldToId.trim() !== '') || (typeof foreclosureSale.soldToId !== 'string'))) ||
+          (foreclosureSale.saleAmount !== null && foreclosureSale.saleAmount !== undefined && foreclosureSale.saleAmount !== 0) ||
           (foreclosureSale.requestedAlternativeToForeclosure !== null && foreclosureSale.requestedAlternativeToForeclosure !== undefined) ||
           (foreclosureSale.foreclosureAlternativeOption !== null && foreclosureSale.foreclosureAlternativeOption !== undefined && 
            foreclosureSale.foreclosureAlternativeOption !== '' && foreclosureSale.foreclosureAlternativeOption !== 0) ||
@@ -3194,6 +3211,7 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
           const foreclosureSaleData = [
             [t("petitionTabContent.saleDate"), formatDate(foreclosureSale.saleDate) || t("common.nA")],
             [t("petitionTabContent.soldTo"), soldToName],
+            [t("petitionTabContent.saleAmount"), formatCurrency(foreclosureSale.saleAmount) || t("common.nA")],
             [
               t("petitionTabContent.requestedAlternativeToForeclosure"),
               foreclosureSale.requestedAlternativeToForeclosure !== null && foreclosureSale.requestedAlternativeToForeclosure !== undefined

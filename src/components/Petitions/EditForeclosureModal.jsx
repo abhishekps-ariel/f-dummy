@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import CustomDropdown from "../shared/CustomDropdown";
 import { toast } from "react-toastify";
+import { formatCurrencyInput, parseCurrencyInput } from "../../utils/currencyUtils";
 
 const EditForeclosureModal = ({
   isOpen,
@@ -18,6 +19,7 @@ const EditForeclosureModal = ({
   const [foreclosureData, setForeclosureData] = useState({
     saleDate: formData?.foreclosureSale?.saleDate || "",
     soldToId: formData?.foreclosureSale?.soldToId || "",
+    saleAmount: formData?.foreclosureSale?.saleAmount ?? 0,
     vestingEntityName: formData?.foreclosureSale?.vestingEntityName || "",
     reoEntityName: formData?.foreclosureSale?.reoEntityName || "",
     reoContactFirstName: formData?.foreclosureSale?.reoContactFirstName || "",
@@ -35,6 +37,7 @@ const EditForeclosureModal = ({
       setForeclosureData({
         saleDate: formData.foreclosureSale.saleDate || "",
         soldToId: formData.foreclosureSale.soldToId || "",
+        saleAmount: formData.foreclosureSale.saleAmount ?? 0,
         vestingEntityName: formData.foreclosureSale.vestingEntityName || "",
         reoEntityName: formData.foreclosureSale.reoEntityName || "",
         reoContactFirstName: formData.foreclosureSale.reoContactFirstName || "",
@@ -61,9 +64,20 @@ const EditForeclosureModal = ({
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    let processedValue = value;
+    
+    // Handle currency input for saleAmount - convert to number
+    if (name === "saleAmount") {
+      const parsedString = parseCurrencyInput(value);
+      // Convert to number, default to 0 if empty or invalid
+      processedValue = parsedString && parsedString !== "" 
+        ? (parseFloat(parsedString) || 0)
+        : 0;
+    }
+    
     setForeclosureData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: processedValue,
     }));
     // Clear error for this field
     if (fieldErrors[name]) {
@@ -137,12 +151,18 @@ const EditForeclosureModal = ({
       // Get foreclosure ID from petition details (null if new)
       const foreclosureId = petition?.details?.foreclosureSale?.id || null;
       
+      // saleAmount is always stored as a number in foreclosureData
+      const saleAmountValue = foreclosureData.saleAmount !== null && foreclosureData.saleAmount !== undefined
+        ? (typeof foreclosureData.saleAmount === 'number' ? foreclosureData.saleAmount : parseFloat(foreclosureData.saleAmount) || 0)
+        : 0;
+      
       // Update formData with foreclosure data
       const updatedFormData = {
         ...formData,
         foreclosureSale: {
           id: foreclosureId,
           ...foreclosureData,
+          saleAmount: saleAmountValue,
         },
       };
       setFormData(updatedFormData);
@@ -165,6 +185,7 @@ const EditForeclosureModal = ({
       setForeclosureData({
         saleDate: formData.foreclosureSale.saleDate || "",
         soldToId: formData.foreclosureSale.soldToId || "",
+        saleAmount: formData.foreclosureSale.saleAmount ?? 0,
         vestingEntityName: formData.foreclosureSale.vestingEntityName || "",
         reoEntityName: formData.foreclosureSale.reoEntityName || "",
         reoContactFirstName: formData.foreclosureSale.reoContactFirstName || "",
@@ -241,6 +262,26 @@ const EditForeclosureModal = ({
                 {fieldErrors.soldToId && (
                   <div className="text-danger small mt-1">
                     {fieldErrors.soldToId}
+                  </div>
+                )}
+              </div>
+
+              <div className="col-md-6">
+                <label htmlFor="saleAmount" className="form-label">
+                  {t("modals.editForeclosure.saleAmount")}
+                </label>
+                <input
+                  type="text"
+                  id="saleAmount"
+                  name="saleAmount"
+                  className={`form-control ${fieldErrors.saleAmount ? "is-invalid" : ""}`}
+                  value={formatCurrencyInput(foreclosureData.saleAmount)}
+                  onChange={handleInputChange}
+                  placeholder={t("modals.editForeclosure.placeholder.saleAmount")}
+                />
+                {fieldErrors.saleAmount && (
+                  <div className="text-danger small mt-1">
+                    {fieldErrors.saleAmount}
                   </div>
                 )}
               </div>

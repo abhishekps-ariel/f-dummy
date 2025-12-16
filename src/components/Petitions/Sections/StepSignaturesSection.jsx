@@ -19,14 +19,13 @@ const StepSignaturesSection = ({
   const [signatureImages, setSignatureImages] = useState({});
   const [loadingSignatures, setLoadingSignatures] = useState({});
 
-  // Fetch signature base64 when displaying (not editing)
+  // Fetch signature base64 
   useEffect(() => {
     if (!isEditing) {
       const signatures = petition.details?.signatures || [];
       signatures.forEach((signature, index) => {
         const signatureValue = signature.signatureDrawnOrTyped;
         if (signatureValue && signatureValue.trim() !== "") {
-          // Check if it's already a data URL (base64 image)
           if (signatureValue.startsWith('data:image/')) {
             setSignatureImages(prev => ({
               ...prev,
@@ -58,7 +57,6 @@ const StepSignaturesSection = ({
     }
   }, [isEditing, petition.details?.signatures, t]);
 
-  // Helper function to handle esign consent change
   const handleEsignConsentChange = (index, checked) => {
     setFormData((prev) => ({
       ...prev,
@@ -68,7 +66,7 @@ const StepSignaturesSection = ({
           : sig
       ),
     }));
-    // Clear error when user checks the box
+    
     if (checked && fieldErrors.esignConsent) {
       setFieldErrors((prev) => {
         const newErrors = { ...prev };

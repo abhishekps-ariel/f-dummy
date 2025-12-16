@@ -2,6 +2,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import CustomDropdown from "../../shared/CustomDropdown";
 import { formatDateForInput } from "../../../utils/dateUtils";
+import { formatCurrencyDisplay, formatCurrencyInput, parseCurrencyInput } from "../../../utils/currencyUtils";
 
 const ForeclosureSaleDisplaySection = ({
   SectionHeader,
@@ -37,6 +38,7 @@ const ForeclosureSaleDisplaySection = ({
 
     const hasSaleDate = hasStringValue(foreclosureSale.saleDate);
     const hasSoldToId = hasStringValue(foreclosureSale.soldToId) || hasNonStringValue(foreclosureSale.soldToId);
+    const hasSaleAmount = foreclosureSale.saleAmount !== null && foreclosureSale.saleAmount !== undefined && foreclosureSale.saleAmount !== 0;
     const hasVestingEntity = hasStringValue(foreclosureSale.vestingEntityName);
     const hasReoEntity = hasStringValue(foreclosureSale.reoEntityName);
     const hasReoContactFirst = hasStringValue(foreclosureSale.reoContactFirstName);
@@ -44,7 +46,7 @@ const ForeclosureSaleDisplaySection = ({
     const hasReoBusinessPhone = hasStringValue(foreclosureSale.reoBusinessPhone);
     const hasReoEmergencyPhone = hasStringValue(foreclosureSale.reoEmergencyPhone);
     
-    return hasSaleDate || hasSoldToId || hasVestingEntity || hasReoEntity || 
+    return hasSaleDate || hasSoldToId || hasSaleAmount || hasVestingEntity || hasReoEntity || 
            hasReoContactFirst || hasReoContactLast || hasReoBusinessPhone || hasReoEmergencyPhone;
   };
 
@@ -107,7 +109,13 @@ const ForeclosureSaleDisplaySection = ({
   );
 
   const handleFieldChange = (fieldName) => (e) => {
-    const value = e.target?.value === undefined ? e.target : e.target.value;
+    let value = e.target?.value === undefined ? e.target : e.target.value;
+    
+    // Handle currency input for saleAmount
+    if (fieldName === "saleAmount") {
+      value = parseCurrencyInput(value);
+    }
+    
     handleInputChange({
       target: {
         name: 'foreclosureSale',
@@ -237,6 +245,42 @@ const ForeclosureSaleDisplaySection = ({
             type="text"
             className="form-control"
             value={getBuyerTypeName()}
+            readOnly
+          />
+        )}
+      </div>
+    );
+  };
+
+  // Render sale amount field
+  const renderSaleAmountField = () => {
+    const saleAmountValue = foreclosureSale.saleAmount ?? 0;
+    const displayValue = saleAmountValue === 0 ? "" : formatCurrencyInput(saleAmountValue);
+    const error = fieldErrors?.saleAmount;
+    
+    return (
+      <div className="form-group mb-3">
+        <label className="form-label">{t("petitionTabContent.saleAmount")}</label>
+        {isEditing ? (
+          <>
+            <input
+              type="text"
+              className={`form-control ${error ? "is-invalid" : ""}`}
+              value={displayValue}
+              onChange={handleFieldChange('saleAmount')}
+              placeholder={t("petitionTabContent.placeholder.saleAmount")}
+            />
+            {error && (
+              <div className="text-danger small mt-1">
+                {error}
+              </div>
+            )}
+          </>
+        ) : (
+          <input
+            type="text"
+            className="form-control"
+            value={saleAmountValue === 0 ? "N/A" : formatCurrencyDisplay(saleAmountValue)}
             readOnly
           />
         )}
@@ -377,6 +421,9 @@ const ForeclosureSaleDisplaySection = ({
           </div>
           <div className="col-md-6">
             {renderSoldToField()}
+          </div>
+          <div className="col-md-6">
+            {renderSaleAmountField()}
           </div>
           <div className="col-md-6">
             {renderTextField('vestingEntityName', 'petitionTabContent.vestingEntityName', 'modals.editForeclosure.placeholder.vestingEntityName', isMortgageeInvestor && isEditing, true)}

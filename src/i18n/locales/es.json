@@ -798,7 +798,11 @@
     "saleDate": "Fecha de Venta",
     "soldTo": "Vendido A",
     "soldToQuestion": "¿Vendido A?",
+    "saleAmount": "Monto de Venta",
     "ifMortgageeInvestor": "(Si es Acreedor Hipotecario/Inversor)",
+    "placeholder": {
+      "saleAmount": "Ingrese el monto de venta"
+    },
     "requestedAlternativeToForeclosure": "¿El prestatario solicitó una alternativa a la ejecución hipotecaria?",
     "foreclosureAlternativeOption": "Opciones Alternativas",
     "selectAlternativeOption": "Seleccionar Opción Alternativa",
@@ -1268,6 +1272,7 @@
       "addTitle": "Agregar Ejecución Hipotecaria",
       "saleDate": "Fecha de Venta",
       "soldTo": "¿Vendido A?",
+      "saleAmount": "Monto de Venta",
       "vestingEntityName": "Nombre de Entidad de Titularidad",
       "reoEntityName": "Nombre de Entidad REO",
       "reoContactFirstName": "Primer Nombre de Contacto REO",
@@ -1288,6 +1293,7 @@
         "foreclosureAlternativeOptionRequired": "La opción alternativa es requerida"
       },
       "placeholder": {
+        "saleAmount": "Ingrese el monto de venta",
         "vestingEntityName": "Ingrese el nombre de la entidad de titularidad",
         "reoEntityName": "Ingrese el nombre de la entidad REO",
         "reoContactFirstName": "Ingrese el primer nombre del contacto REO",

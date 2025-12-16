@@ -798,7 +798,11 @@
     "saleDate": "Sale Date",
     "soldTo": "Sold To",
     "soldToQuestion": "Sold To?",
+    "saleAmount": "Sale Amount",
     "ifMortgageeInvestor": "(If Mortgagee/Investor)",
+    "placeholder": {
+      "saleAmount": "Enter sale amount"
+    },
     "requestedAlternativeToForeclosure": "Did the borrower request an alternative to foreclosure?",
     "foreclosureAlternativeOption": "Alternative Options",
     "selectAlternativeOption": "Select Alternative Option",
@@ -1268,6 +1272,7 @@
       "addTitle": "Add Foreclosure",
       "saleDate": "Sale Date",
       "soldTo": "Sold To?",
+      "saleAmount": "Sale Amount",
       "vestingEntityName": "Vesting Entity Name",
       "reoEntityName": "REO Entity Name",
       "reoContactFirstName": "REO Contact First Name",
@@ -1288,6 +1293,7 @@
         "foreclosureAlternativeOptionRequired": "Alternative option is required"
       },
       "placeholder": {
+        "saleAmount": "Enter sale amount",
         "vestingEntityName": "Enter vesting entity name",
         "reoEntityName": "Enter REO entity name",
         "reoContactFirstName": "Enter REO contact first name",

@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import CustomDropdown from "../../shared/CustomDropdown";
 
 const StepLoanAssignees = ({
-    SectionHeader,
+  SectionHeader,
   isEditing,
   formData,
   fieldErrors,

@@ -276,6 +276,11 @@ class PetitionApiService {
         id: foreclosureData.id || null,
         saleDate: safeDateConversion(foreclosureData.saleDate),
         soldToId: foreclosureData.soldToId && foreclosureData.soldToId.trim() !== '' ? foreclosureData.soldToId : null,
+        saleAmount: foreclosureData.saleAmount !== null && foreclosureData.saleAmount !== undefined 
+          ? (typeof foreclosureData.saleAmount === 'number' 
+              ? foreclosureData.saleAmount 
+              : parseFloat(foreclosureData.saleAmount)) || 0
+          : 0,
         vestingEntityName: foreclosureData.vestingEntityName || "",
         reoEntityName: foreclosureData.reoEntityName || "",
         reoContactFirstName: foreclosureData.reoContactFirstName || "",
@@ -512,6 +517,11 @@ class PetitionApiService {
         return hasNoticeSent && formData.foreclosureSale ? {
         saleDate: safeDateConversion(formData.foreclosureSale.saleDate),
         soldToId: formData.foreclosureSale.soldToId && formData.foreclosureSale.soldToId.trim() !== '' ? formData.foreclosureSale.soldToId : null,
+        saleAmount: formData.foreclosureSale.saleAmount !== null && formData.foreclosureSale.saleAmount !== undefined 
+          ? (typeof formData.foreclosureSale.saleAmount === 'number' 
+              ? formData.foreclosureSale.saleAmount 
+              : parseFloat(formData.foreclosureSale.saleAmount)) || 0
+          : 0,
         vestingEntityName: formData.foreclosureSale.vestingEntityName || null,
         reoEntityName: formData.foreclosureSale.reoEntityName || null,
         reoContactFirstName: formData.foreclosureSale.reoContactFirstName || null,
