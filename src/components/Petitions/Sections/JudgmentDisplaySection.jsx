@@ -1,7 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import CustomDropdown from "../../shared/CustomDropdown";
-import { formatCurrencyDisplay, parseCurrencyInput } from "../../../utils/currencyUtils";
 import { formatDateForInput } from "../../../utils/dateUtils";
 
 const JudgmentDisplaySection = ({
@@ -14,35 +13,35 @@ const JudgmentDisplaySection = ({
   getJudgmentTypes,
   findOptionByValue,
   formatDate,
-  formatCurrency,
 }) => {
   const { t } = useTranslation();
-  
-  // Check if judgment data exists and has meaningful content
+
+  const hasStringValue = (value) => {
+    if (value === null || value === undefined || value === '') {
+      return false;
+    }
+    return typeof value === 'string' && value.trim() !== '';
+  };
+
+  const hasNonStringValue = (value) => {
+    if (value === null || value === undefined) {
+      return false;
+    }
+    return typeof value !== 'string';
+  };
+
+  const hasNumberValue = (value) => {
+    return value !== null && value !== undefined && value !== 0 && value !== '';
+  };
+
   const hasJudgmentData = () => {
     const judgment = formData?.judgment;
     if (!judgment) return false;
     
-    // Check if at least one field has a meaningful value
-    const hasDate = judgment.judgmentDate !== null && 
-                    judgment.judgmentDate !== undefined &&
-                    ((typeof judgment.judgmentDate === 'string' && judgment.judgmentDate.trim() !== '') ||
-                     (typeof judgment.judgmentDate !== 'string'));
-    
-    const hasType = judgment.judgmentType !== null && 
-                    judgment.judgmentType !== undefined && 
-                    judgment.judgmentType !== 0 &&
-                    judgment.judgmentType !== '';
-    
-    const hasCourtInfo = judgment.courtInformation !== null &&
-                         judgment.courtInformation !== undefined &&
-                         typeof judgment.courtInformation === 'string' && 
-                         judgment.courtInformation.trim() !== '';
-    
-    const hasDocket = judgment.docketNumbers !== null &&
-                      judgment.docketNumbers !== undefined &&
-                      typeof judgment.docketNumbers === 'string' && 
-                      judgment.docketNumbers.trim() !== '';
+    const hasDate = hasStringValue(judgment.judgmentDate) || hasNonStringValue(judgment.judgmentDate);
+    const hasType = hasNumberValue(judgment.judgmentType);
+    const hasCourtInfo = hasStringValue(judgment.courtInformation);
+    const hasDocket = hasStringValue(judgment.docketNumbers);
     
     return hasDate || hasType || hasCourtInfo || hasDocket;
   };
@@ -52,8 +51,7 @@ const JudgmentDisplaySection = ({
   }
 
   const judgment = formData.judgment || {};
-  
-  // Get judgment type name
+
   const getJudgmentTypeName = () => {
     if (judgment.judgmentType === null || judgment.judgmentType === undefined) {
       return "N/A";
@@ -67,7 +65,6 @@ const JudgmentDisplaySection = ({
       : "N/A";
   };
 
-  // Format judgment date for display
   const formatJudgmentDate = () => {
     if (!judgment.judgmentDate) return "N/A";
     if (isEditing && typeof judgment.judgmentDate === 'string' && judgment.judgmentDate.includes('T')) {
@@ -90,7 +87,6 @@ const JudgmentDisplaySection = ({
     }
   };
 
-  // Get judgment types from API
   const judgmentTypesFromApi = getJudgmentTypes ? getJudgmentTypes() : [];
   const judgmentTypes = judgmentTypesFromApi
     .filter((jt) => (jt.value !== null && jt.value !== undefined) || (jt.id !== null && jt.id !== undefined))
@@ -99,7 +95,6 @@ const JudgmentDisplaySection = ({
       label: jt.description || jt.name || '',
     }));
 
-  // Handle judgment date change
   const handleDateChange = (e) => {
     handleInputChange({
       target: {
@@ -112,7 +107,6 @@ const JudgmentDisplaySection = ({
     });
   };
 
-  // Handle judgment type change
   const handleTypeChange = (e) => {
     handleDropdownChange({
       target: {
@@ -125,7 +119,6 @@ const JudgmentDisplaySection = ({
     });
   };
 
-  // Handle other field changes
   const handleFieldChange = (fieldName) => (e) => {
     handleInputChange({
       target: {
@@ -138,124 +131,136 @@ const JudgmentDisplaySection = ({
     });
   };
 
+  const renderJudgmentDateField = () => {
+    const dateValue = formatJudgmentDate();
+    const displayValue = dateValue === "N/A" ? "" : dateValue;
+    
+    return (
+      <div className="form-group mb-3">
+        <label className="form-label">{t("petitionTabContent.judgmentDate")} {isEditing && "*"}</label>
+        {isEditing ? (
+          <>
+            <input
+              type="date"
+              className={`form-control ${fieldErrors?.judgmentDate ? "is-invalid" : ""}`}
+              value={displayValue}
+              onChange={handleDateChange}
+            />
+            {fieldErrors?.judgmentDate && (
+              <div className="text-danger small mt-1">
+                {fieldErrors.judgmentDate}
+              </div>
+            )}
+          </>
+        ) : (
+          <input
+            type="text"
+            className="form-control"
+            value={dateValue}
+            readOnly
+          />
+        )}
+      </div>
+    );
+  };
+
+  const renderJudgmentTypeField = () => {
+    const typeValue = judgment.judgmentType !== null && judgment.judgmentType !== undefined 
+      ? String(judgment.judgmentType) 
+      : "";
+    
+    return (
+      <div className="form-group mb-3">
+        <label className="form-label">{t("petitionTabContent.judgmentType")} {isEditing && "*"}</label>
+        {isEditing ? (
+          <>
+            <CustomDropdown
+              id="judgmentType"
+              name="judgmentType"
+              value={typeValue}
+              onChange={handleTypeChange}
+              placeholder={t("common.select")}
+              error={!!fieldErrors?.judgmentType}
+              options={judgmentTypes}
+              maxMenuHeight={180}
+            />
+            {fieldErrors?.judgmentType && (
+              <div className="text-danger small mt-1">
+                {fieldErrors.judgmentType}
+              </div>
+            )}
+          </>
+        ) : (
+          <input
+            type="text"
+            className="form-control"
+            value={getJudgmentTypeName()}
+            readOnly
+          />
+        )}
+      </div>
+    );
+  };
+
+  // Render text field (for docket number and court information)
+  const renderTextField = (fieldName, labelKey, isTextarea = false) => {
+    const value = judgment[fieldName] || "";
+    const error = fieldErrors?.[fieldName];
+    
+    return (
+      <div className="form-group mb-3">
+        <label className="form-label">{t(labelKey)} {isEditing && "*"}</label>
+        {isEditing ? (
+          <>
+            {isTextarea ? (
+              <textarea
+                className={`form-control ${error ? "is-invalid" : ""}`}
+                value={value}
+                onChange={handleFieldChange(fieldName)}
+                rows="3"
+              />
+            ) : (
+              <input
+                type="text"
+                className={`form-control ${error ? "is-invalid" : ""}`}
+                value={value}
+                onChange={handleFieldChange(fieldName)}
+              />
+            )}
+            {error && (
+              <div className="text-danger small mt-1">
+                {error}
+              </div>
+            )}
+          </>
+        ) : (
+          <input
+            type="text"
+            className="form-control"
+            value={value || "N/A"}
+            readOnly
+          />
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className={`card mb-4 ${isEditing ? "editing" : ""}`}>
-      <SectionHeader title={t("petitionTabContent.judgment")} />
+      {SectionHeader && <SectionHeader title={t("petitionTabContent.judgment")} />}
       <div className="card-body">
         <div className="row">
           <div className="col-md-6">
-            <div className="form-group mb-3">
-              <label className="form-label">{t("petitionTabContent.judgmentDate")} {isEditing && "*"}</label>
-              {isEditing ? (
-                <>
-                  <input
-                    type="date"
-                    className={`form-control ${fieldErrors?.judgmentDate ? "is-invalid" : ""}`}
-                    value={formatJudgmentDate() === "N/A" ? "" : formatJudgmentDate()}
-                    onChange={handleDateChange}
-                  />
-                  {fieldErrors?.judgmentDate && (
-                    <div className="text-danger small mt-1">
-                      {fieldErrors.judgmentDate}
-                    </div>
-                  )}
-                </>
-              ) : (
-                <input
-                  type="text"
-                  className="form-control"
-                  value={formatJudgmentDate()}
-                  readOnly
-                />
-              )}
-            </div>
+            {renderJudgmentDateField()}
           </div>
           <div className="col-md-6">
-            <div className="form-group mb-3">
-              <label className="form-label">{t("petitionTabContent.judgmentType")} {isEditing && "*"}</label>
-              {isEditing ? (
-                <>
-                  <CustomDropdown
-                    id="judgmentType"
-                    name="judgmentType"
-                    value={judgment.judgmentType !== null && judgment.judgmentType !== undefined 
-                      ? String(judgment.judgmentType) 
-                      : ""}
-                    onChange={handleTypeChange}
-                    placeholder={t("common.select")}
-                    error={!!fieldErrors?.judgmentType}
-                    options={judgmentTypes}
-                    maxMenuHeight={180}
-                  />
-                  {fieldErrors?.judgmentType && (
-                    <div className="text-danger small mt-1">
-                      {fieldErrors.judgmentType}
-                    </div>
-                  )}
-                </>
-              ) : (
-                <input
-                  type="text"
-                  className="form-control"
-                  value={getJudgmentTypeName()}
-                  readOnly
-                />
-              )}
-            </div>
+            {renderJudgmentTypeField()}
           </div>
           <div className="col-md-6">
-            <div className="form-group mb-3">
-              <label className="form-label">{t("petitionTabContent.docketNumber")} {isEditing && "*"}</label>
-              {isEditing ? (
-                <>
-                  <input
-                    type="text"
-                    className={`form-control ${fieldErrors?.docketNumbers ? "is-invalid" : ""}`}
-                    value={judgment.docketNumbers || ""}
-                    onChange={handleFieldChange('docketNumbers')}
-                  />
-                  {fieldErrors?.docketNumbers && (
-                    <div className="text-danger small mt-1">
-                      {fieldErrors.docketNumbers}
-                    </div>
-                  )}
-                </>
-              ) : (
-                <input
-                  type="text"
-                  className="form-control"
-                  value={judgment.docketNumbers || "N/A"}
-                  readOnly
-                />
-              )}
-            </div>
+            {renderTextField('docketNumbers', 'petitionTabContent.docketNumber')}
           </div>
           <div className="col-12">
-            <div className="form-group mb-3">
-              <label className="form-label">{t("petitionTabContent.courtInformation")} {isEditing && "*"}</label>
-              {isEditing ? (
-                <>
-                  <textarea
-                    className={`form-control ${fieldErrors?.courtInformation ? "is-invalid" : ""}`}
-                    value={judgment.courtInformation || ""}
-                    onChange={handleFieldChange('courtInformation')}
-                    rows="3"
-                  />
-                  {fieldErrors?.courtInformation && (
-                    <div className="text-danger small mt-1">
-                      {fieldErrors.courtInformation}
-                    </div>
-                  )}
-                </>
-              ) : (
-                <input
-                  type="text"
-                  className="form-control"
-                  value={judgment.courtInformation || "N/A"}
-                  readOnly
-                />
-              )}
-            </div>
+            {renderTextField('courtInformation', 'petitionTabContent.courtInformation', true)}
           </div>
         </div>
       </div>

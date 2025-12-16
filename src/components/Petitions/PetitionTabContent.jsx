@@ -14,7 +14,6 @@ import LoanDetails from "./Sections/LoanDetails";
 import BorrowerDetails from "./Sections/BorrowerDetails";
 import StepFilingEntity from "./Sections/FilingEntity";
 import StepRightToCure from "./Sections/StepRightToCure";
-import ForeclosureSaleSection from "./Sections/ForeclosureSaleSection";
 import StepForm35BCompliance from "./Sections/StepForm35BCompliance";
 import StepLoanAssignees from "./Sections/StepLoanAssignees";
 import StepSignaturesSection from "./Sections/StepSignaturesSection";
@@ -3552,7 +3551,6 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
                   <NotesDisplaySection
                     formData={formData}
                     onClose={() => setShowNotesSection(false)}
-                    onEditNote={null}
                   />
                 </div>
               )}
@@ -3705,7 +3703,6 @@ const PetitionTabContent = ({ petition, onPetitionUpdated, isPublic = false }) =
                     getJudgmentTypes={getJudgmentTypes}
                     findOptionByValue={findOptionByValue}
                     formatDate={formatDate}
-                    formatCurrency={formatCurrency}
                     onSave={() => handleSectionSave("judgment")}
                     onCancel={() => toggleSectionEditing("judgment")}
                   />

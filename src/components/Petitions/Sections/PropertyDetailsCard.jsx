@@ -3,14 +3,13 @@ import { useTranslation } from "react-i18next";
 
 
 const PropertyDetailsCard = ({
-    SectionHeader,
+  SectionHeader,
   isEditing,
   isLoaded,
   propertyAddressInputRef,
   predictions,
   showPredictions,
   selectedPredictionIndex,
-  isLoadingPredictions,
   fieldErrors,
   formData,
   handleInputChange,
@@ -22,7 +21,7 @@ const PropertyDetailsCard = ({
   const { t } = useTranslation();
   return (
     <div className={`card mb-4 ${isEditing ? "editing" : ""}`}>
-            <SectionHeader title={t("petitionTabContent.propertyDetails")} />
+            {SectionHeader && <SectionHeader title={t("petitionTabContent.propertyDetails")} />}
             <div className="card-body">
               <div className="row">
                 <div className="col-md-6">
@@ -64,21 +63,29 @@ const PropertyDetailsCard = ({
                         }}
                       >
                         {predictions.map((prediction, index) => (
-                          <div
+                          <button
                             key={prediction.place_id}
-                            className={`address-suggestion-item-tab ${
+                            type="button"
+                            className={`address-suggestion-item-tab w-100 text-start ${
                               index === selectedPredictionIndex
                                 ? "selected"
                                 : ""
                             }`}
-                            onMouseDown={() =>
+                            onClick={() =>
                               handlePropertyAddressSelect(prediction)
                             }
+                            style={{
+                              border: "none",
+                              background: "transparent",
+                              fontFamily: "inherit",
+                              fontSize: "inherit",
+                              color: "inherit",
+                            }}
                           >
                             <div className="fw-medium">
                               {prediction.description}
                             </div>
-                          </div>
+                          </button>
                         ))}
                       </div>
                     )}

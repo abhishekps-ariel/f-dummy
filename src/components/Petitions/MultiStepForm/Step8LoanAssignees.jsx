@@ -61,7 +61,7 @@ const Step8LoanAssignees = ({
             )}
 
             {formData.loanAssignees.map((assignee, index) => (
-              <div key={assignee.id || `assignee_${index}_${assignee.assigneeName || 'new'}`} className="p-3 border rounded bg-light mb-3">
+              <div key={assignee.id || index} className="p-3 border rounded bg-light mb-3">
                 <div className="d-flex justify-content-between align-items-center mb-3">
                   <h5 className="fw-semibold text-dark mb-0">
                     {t("petitionSteps.step8.assignee")} {index + 1}

@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import CustomDropdown from "../../shared/CustomDropdown";
 
 const StepForm35BCompliance = ({
-    SectionHeader,
+  SectionHeader,
   isEditing,
   formData,
   setFormData,
@@ -15,17 +15,30 @@ const StepForm35BCompliance = ({
     if (formData.variableRate) selected.push("Variable Rate");
     if (formData.interestOnly) selected.push("Interest Only");
     if (formData.negativeAmortization) selected.push("Negative Amortization");
-    
     if (selected.length === 0) return "";
     if (selected.length === 1) return `${selected[0]} is selected on loan detail step.`;
     if (selected.length === 2) return `${selected[0]} and ${selected[1]} are selected on loan detail step.`;
     return `${selected[0]}, ${selected[1]}, and ${selected[2]} are selected on loan detail step.`;
   };
   const { t } = useTranslation();
+  
+  // Helper function to convert boolean/null to string value
+  const getBooleanValue = (value) => {
+    if (value === null) return "";
+    if (value === true) return "true";
+    return "false";
+  };
+  
+  // Helper function to convert string value to boolean/null
+  const parseBooleanValue = (stringValue) => {
+    if (stringValue === "true") return true;
+    if (stringValue === "false") return false;
+    return null;
+  };
+  
   return (
-    <>
       <div className={`card mb-4 ${isEditing ? "editing" : ""}`}>
-            <SectionHeader title={t("petitionTabContent.form35BCompliance")} />
+            {SectionHeader && <SectionHeader title={t("petitionTabContent.form35BCompliance")} />}
             <div className="card-body">
               <div className="row">
                 <div className="col-12">
@@ -35,20 +48,9 @@ const StepForm35BCompliance = ({
                     </label>
                     <CustomDropdown
                       name="certainMortgageLoan"
-                      value={
-                        formData.certainMortgageLoan === null
-                          ? ""
-                          : formData.certainMortgageLoan
-                          ? "true"
-                          : "false"
-                      }
+                      value={getBooleanValue(formData.certainMortgageLoan)}
                       onChange={(e) => {
-                        const value =
-                          e.target.value === "true"
-                            ? true
-                            : e.target.value === "false"
-                            ? false
-                            : null;
+                        const value = parseBooleanValue(e.target.value);
                         setFormData((prev) => ({
                           ...prev,
                           certainMortgageLoan: value,
@@ -88,20 +90,9 @@ const StepForm35BCompliance = ({
                       </label>
                       <CustomDropdown
                         name="wasForm35BProvided"
-                        value={
-                          formData.wasForm35BProvided === null
-                            ? ""
-                            : formData.wasForm35BProvided
-                            ? "true"
-                            : "false"
-                        }
+                        value={getBooleanValue(formData.wasForm35BProvided)}
                         onChange={(e) => {
-                          const value =
-                            e.target.value === "true"
-                              ? true
-                              : e.target.value === "false"
-                              ? false
-                              : null;
+                          const value = parseBooleanValue(e.target.value);
                           setFormData((prev) => ({
                             ...prev,
                             wasForm35BProvided: value,
@@ -127,7 +118,6 @@ const StepForm35BCompliance = ({
               )}
             </div>
           </div>
-    </>
   );
 };
 

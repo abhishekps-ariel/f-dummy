@@ -2834,6 +2834,7 @@ const PetitionSteps = ({
         ...prev.loanAssignees,
 
         {
+          id: Date.now(),
           assigneeName: "",
 
           assigneeTypeId: "",

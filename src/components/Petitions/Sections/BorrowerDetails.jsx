@@ -12,15 +12,13 @@ const BorrowerDetails = ({
   handleBorrowerAddressInput,
   handleBorrowerAddressSelect,
   borrowerPredictions,
-  isLoadingBorrowerPredictions,
   isLoaded,
   addBorrower,
 }) => {
   const { t } = useTranslation();
   return (
-    <>
       <div className={`card mb-4 ${isEditing ? "editing" : ""}`}>
-            <SectionHeader title={t("petitionTabContent.borrowerDetails")} />
+            {SectionHeader && <SectionHeader title={t("petitionTabContent.borrowerDetails")} />}
             <div className="card-body">
               {formData.borrowers && formData.borrowers.length > 0 ? (
                 <>
@@ -283,21 +281,30 @@ const BorrowerDetails = ({
                                   }}
                                 >
                                   {(borrowerPredictions[borrower.id] || []).map(
-                                    (prediction, index) => (
-                                      <div
+                                    (prediction) => (
+                                      <button
                                         key={prediction.place_id}
-                                        className="address-suggestion-item-tab"
-                                        onMouseDown={() =>
+                                        type="button"
+                                        className="address-suggestion-item-tab w-100 text-start"
+                                        onClick={() =>
                                           handleBorrowerAddressSelect(
                                             borrower.id,
                                             prediction
                                           )
                                         }
+                                        style={{
+                                          border: "none",
+                                          background: "transparent",
+                                          fontFamily: "inherit",
+                                          fontSize: "inherit",
+                                          color: "inherit",
+                                          padding: "inherit",
+                                        }}
                                       >
                                         <div className="fw-medium">
                                           {prediction.description}
                                         </div>
-                                      </div>
+                                      </button>
                                     )
                                   )}
                                 </div>
@@ -442,7 +449,6 @@ const BorrowerDetails = ({
               )}
             </div>
           </div>
-    </>
   );
 };
 

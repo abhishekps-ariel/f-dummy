@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 
 
 const StepFilingEntity = ({
-    SectionHeader,
+  SectionHeader,
   isEditing,
   formData,
   fieldErrors,
@@ -11,9 +11,8 @@ const StepFilingEntity = ({
 }) => {
   const { t } = useTranslation();
   return (
-    <>
       <div className={`card mb-4 ${isEditing ? "editing" : ""}`}>
-            <SectionHeader title={t("petitionTabContent.filingEntity")} />
+            {SectionHeader && <SectionHeader title={t("petitionTabContent.filingEntity")} />}
             <div className="card-body">
               <div className="row">
                 <div className="col-12">
@@ -233,7 +232,6 @@ const StepFilingEntity = ({
               </div>
             </div>
           </div>
-    </>
   );
 };
 

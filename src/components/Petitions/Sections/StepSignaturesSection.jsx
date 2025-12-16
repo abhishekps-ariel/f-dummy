@@ -5,7 +5,7 @@ import { getBase64ByS3Key } from "../../../services/authService";
 
 
 const StepSignaturesSection = ({
-    SectionHeader,
+  SectionHeader,
   signatureSectionRef,
   isEditing,
   fieldErrors,
@@ -35,8 +35,9 @@ const StepSignaturesSection = ({
           } else {
             // It's an S3 key, fetch the base64
             setLoadingSignatures(prev => ({ ...prev, [index]: true }));
-            getBase64ByS3Key(signatureValue)
-              .then(response => {
+            const fetchSignature = async () => {
+              try {
+                const response = await getBase64ByS3Key(signatureValue);
                 if (response.isSuccess && response.data?.signatureBase64) {
                   const dataUrl = `data:image/png;base64,${response.data.signatureBase64}`;
                   setSignatureImages(prev => ({
@@ -44,28 +45,47 @@ const StepSignaturesSection = ({
                     [index]: dataUrl
                   }));
                 }
-              })
-              .catch(error => {
+              } catch {
                 toast.error(t("petitionTabContent.errorFetchingSignature") || "Failed to load signature image");
-              })
-              .finally(() => {
+              } finally {
                 setLoadingSignatures(prev => ({ ...prev, [index]: false }));
-              });
+              }
+            };
+            fetchSignature();
           }
         }
       });
     }
-  }, [isEditing, petition.details?.signatures]);
+  }, [isEditing, petition.details?.signatures, t]);
+
+  // Helper function to handle esign consent change
+  const handleEsignConsentChange = (index, checked) => {
+    setFormData((prev) => ({
+      ...prev,
+      signatures: prev.signatures.map((sig, idx) =>
+        idx === index
+          ? { ...sig, esignConsent: checked }
+          : sig
+      ),
+    }));
+    // Clear error when user checks the box
+    if (checked && fieldErrors.esignConsent) {
+      setFieldErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors.esignConsent;
+        return newErrors;
+      });
+    }
+  };
 
   return (
-    <>
       <div 
             ref={signatureSectionRef}
             className={`card mb-4 ${isEditing ? "editing" : ""} ${
               fieldErrors.esignConsent ? "border-danger" : ""
             }`}
           >
-            <SectionHeader title={t("petitionTabContent.signatures")} />
+            {SectionHeader && <SectionHeader title={t("petitionTabContent.signatures")} />}
             <div className="card-body">
               {(() => {
                 // Use formData.signatures when editing, otherwise use petition.details.signatures
@@ -75,7 +95,7 @@ const StepSignaturesSection = ({
                 
                 return signatures.length > 0 ? (
                   signatures.map((signature, index) => (
-                  <div key={index} className="border rounded p-3 mb-3">
+                  <div key={signature.id || `signature_${index}_${signature.signerFullName || 'new'}`} className="border rounded p-3 mb-3">
                     <h6 className="mb-3 fw-semibold">{t("petitionTabContent.signature")}</h6>
                     <div className="row">
                       <div className="col-md-6">
@@ -126,24 +146,7 @@ const StepSignaturesSection = ({
                                   type="checkbox"
                                   id={`esignConsent_${index}`}
                                   checked={signature.esignConsent || false}
-                                  onChange={(e) => {
-                                    setFormData((prev) => ({
-                                      ...prev,
-                                      signatures: prev.signatures.map((sig, idx) =>
-                                        idx === index
-                                          ? { ...sig, esignConsent: e.target.checked }
-                                          : sig
-                                      ),
-                                    }));
-                                    // Clear error when user checks the box
-                                    if (e.target.checked && fieldErrors.esignConsent) {
-                                      setFieldErrors((prev) => {
-                                        const newErrors = { ...prev };
-                                        delete newErrors.esignConsent;
-                                        return newErrors;
-                                      });
-                                    }
-                                  }}
+                                  onChange={(e) => handleEsignConsentChange(index, e.target.checked)}
                                 />
                                 <label
                                   className="form-check-label"
@@ -188,10 +191,10 @@ const StepSignaturesSection = ({
                             <div className="signature-preview-container p-3 border rounded bg-light">
                               {loadingSignatures[index] ? (
                                 <div className="text-center py-2">
-                                  <div className="spinner-border spinner-border-sm text-primary" role="status">
+                                  <div className="spinner-border spinner-border-sm text-primary" aria-hidden="true">
                                     <span className="visually-hidden">Loading signature...</span>
                                   </div>
-                                  <p className="mt-1 text-muted small">{t("petitionTabContent.loadingSignature")}</p>
+                                  <output className="mt-1 text-muted small d-block">{t("petitionTabContent.loadingSignature")}</output>
                                 </div>
                               ) : (
                                 <img
@@ -221,7 +224,6 @@ const StepSignaturesSection = ({
               })()}
             </div>
           </div>
-    </>
   );
 };
 

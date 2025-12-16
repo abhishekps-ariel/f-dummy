@@ -1,7 +1,5 @@
-/**
- * Application-wide constants
- * Centralizes magic numbers and strings for better maintainability
- */
+//Application-wide constants
+
 
 export const PAGINATION = {
   DEFAULT_PAGE_SIZE: 10,

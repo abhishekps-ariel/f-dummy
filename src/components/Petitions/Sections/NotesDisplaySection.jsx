@@ -2,13 +2,13 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { formatDateTime } from "../../../utils/dateUtils";
 
-const NotesDisplaySection = ({ formData, onClose, onEditNote }) => {
+const NotesDisplaySection = ({ formData, onClose }) => {
   const { t } = useTranslation();
-  // Get notes from formData, sorted by most recent first
+
   const notes = (formData?.notes || []).sort((a, b) => {
     const dateA = new Date(a.createdAt || a.createdDate || 0);
     const dateB = new Date(b.createdAt || b.createdDate || 0);
-    return dateB - dateA; // Most recent first
+    return dateB - dateA; 
   });
 
   return (
@@ -34,8 +34,7 @@ const NotesDisplaySection = ({ formData, onClose, onEditNote }) => {
         {notes.length === 0 ? (
           <div className="text-muted text-center py-4 px-3">
             <div>
-              <i className="fas fa-sticky-note me-2"></i>
-              No notes yet.
+              <i className="fas fa-sticky-note me-2"></i>No notes yet.
             </div>
           </div>
         ) : (
@@ -69,26 +68,6 @@ const NotesDisplaySection = ({ formData, onClose, onEditNote }) => {
                       {note.noteText || note.content}
                     </div>
                   </div>
-                  {/* Edit note functionality commented out - only allowing adding notes for now */}
-                  {/* {onEditNote && note.id && (
-                    <button
-                      type="button"
-                      className="btn btn-link p-0 ms-2 border-0"
-                      onClick={() => onEditNote(note)}
-                      title="Edit Note"
-                      style={{ 
-                        padding: "0.125rem",
-                        minWidth: "auto",
-                        fontSize: "0.8rem",
-                        color: "#6c757d",
-                        textDecoration: "none",
-                        background: "transparent",
-                        lineHeight: "1"
-                      }}
-                    >
-                      <i className="fas fa-edit"></i>
-                    </button>
-                  )} */}
                 </div>
               </div>
             ))}

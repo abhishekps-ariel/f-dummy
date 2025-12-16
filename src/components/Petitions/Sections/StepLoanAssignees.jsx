@@ -20,14 +20,13 @@ const StepLoanAssignees = ({
 }) => {
   const { t } = useTranslation();
   return (
-    <>
       <div className={`card mb-4 ${isEditing ? "editing" : ""}`}>
-            <SectionHeader title={t("petitionTabContent.loanAssignees")} />
+            {SectionHeader && <SectionHeader title={t("petitionTabContent.loanAssignees")} />}
             <div className="card-body">
               {formData.loanAssignees && formData.loanAssignees.length > 0 ? (
                 <>
                   {formData.loanAssignees.map((assignee, index) => (
-                    <div key={index} className="border rounded p-3 mb-3">
+                    <div key={assignee.id || `assignee_${index}_${assignee.assigneeName || 'new'}`} className="border rounded p-3 mb-3">
                       <div className="d-flex justify-content-between align-items-center mb-3">
                         <h6 className="mb-0 fw-semibold">
                           {t("petitionTabContent.assignee")} {index + 1}
@@ -209,18 +208,26 @@ const StepLoanAssignees = ({
                                   }}
                                 >
                                   {(assigneePredictions[index] || []).map(
-                                    (prediction, predIndex) => (
-                                      <div
+                                    (prediction) => (
+                                      <button
                                         key={prediction.place_id}
-                                        className="address-suggestion-item-tab"
-                                        onMouseDown={() =>
+                                        type="button"
+                                        className="address-suggestion-item-tab w-100 text-start"
+                                        onClick={() =>
                                           handleAssigneeAddressSelect(index, prediction)
                                         }
+                                        style={{
+                                          border: "none",
+                                          background: "transparent",
+                                          fontFamily: "inherit",
+                                          fontSize: "inherit",
+                                          color: "inherit",
+                                        }}
                                       >
                                         <div className="fw-medium">
                                           {prediction.description}
                                         </div>
-                                      </div>
+                                      </button>
                                     )
                                   )}
                                 </div>
@@ -396,7 +403,6 @@ const StepLoanAssignees = ({
               )}
             </div>
           </div>
-    </>
   );
 };
 
