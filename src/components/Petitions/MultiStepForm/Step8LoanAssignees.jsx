@@ -19,10 +19,31 @@ const Step8LoanAssignees = ({
   loanAssigneePredictions,
   setShowLoanAssigneePredictions,
   selectedLoanAssigneePredictionIndex,
-  setSelectedLoanAssigneePredictionIndex,
   loanAssigneeAddressValidationErrors,
 }) => {
   const { t } = useTranslation();
+
+  // Helper function to hide predictions for a specific index
+  const hidePredictionsForIndex = (idx) => {
+    setShowLoanAssigneePredictions((prev) => ({
+      ...prev,
+      [idx]: false,
+    }));
+  };
+
+  // Helper function to show predictions for a specific index
+  const showPredictionsForIndex = (idx) => {
+    if (
+      loanAssigneePredictions[idx] &&
+      loanAssigneePredictions[idx].length > 0
+    ) {
+      setShowLoanAssigneePredictions((prev) => ({
+        ...prev,
+        [idx]: true,
+      }));
+    }
+  };
+
    return (
           <div>
             <h2 className="theme-color font-med mb-1">{t("petitionSteps.step8.title")}</h2>
@@ -40,7 +61,7 @@ const Step8LoanAssignees = ({
             )}
 
             {formData.loanAssignees.map((assignee, index) => (
-              <div key={index} className="p-3 border rounded bg-light mb-3">
+              <div key={assignee.id || `assignee_${index}_${assignee.assigneeName || 'new'}`} className="p-3 border rounded bg-light mb-3">
                 <div className="d-flex justify-content-between align-items-center mb-3">
                   <h5 className="fw-semibold text-dark mb-0">
                     {t("petitionSteps.step8.assignee")} {index + 1}
@@ -192,25 +213,10 @@ const Step8LoanAssignees = ({
                           handleLoanAssigneeAddressInput(index, e.target.value);
                         }}
                         onBlur={() => {
-                          setTimeout(
-                            () =>
-                              setShowLoanAssigneePredictions((prev) => ({
-                                ...prev,
-                                [index]: false,
-                              })),
-                            300
-                          );
+                          setTimeout(() => hidePredictionsForIndex(index), 300);
                         }}
                         onFocus={() => {
-                          if (
-                            loanAssigneePredictions[index] &&
-                            loanAssigneePredictions[index].length > 0
-                          ) {
-                            setShowLoanAssigneePredictions((prev) => ({
-                              ...prev,
-                              [index]: true,
-                            }));
-                          }
+                          showPredictionsForIndex(index);
                         }}
                         placeholder={t("petitionSteps.step8.placeholderStreetAddress")}
                         autoComplete="off"
@@ -221,10 +227,13 @@ const Step8LoanAssignees = ({
                         <div className="position-absolute top-50 end-0 translate-middle-y me-3">
                           <div
                             className="spinner-border spinner-border-sm text-muted"
-                            role="status"
+                            aria-hidden="true"
                           >
                             <span className="visually-hidden">Loading...</span>
                           </div>
+                          <output className="visually-hidden">
+                            {t("common.loading")}
+                          </output>
                         </div>
                       )}
 
@@ -242,27 +251,35 @@ const Step8LoanAssignees = ({
                           >
                             {loanAssigneePredictions[index].map(
                               (prediction, predIndex) => (
-                                <div
+                                <button
                                   key={prediction.place_id}
-                                  className={`px-3 py-2 cursor-pointer border-bottom ${
+                                  type="button"
+                                  className={`px-3 py-2 border-bottom w-100 text-start ${
                                     selectedLoanAssigneePredictionIndex[
                                       index
                                     ] === predIndex
                                       ? "bg-primary text-white"
                                       : "hover-bg-light"
                                   }`}
-                                  onMouseDown={() =>
+                                  onClick={() =>
                                     handleLoanAssigneePredictionClick(
                                       index,
                                       prediction
                                     )
                                   }
-                                  style={{ cursor: "pointer" }}
+                                  style={{
+                                    border: "none",
+                                    background: "transparent",
+                                    fontFamily: "inherit",
+                                    fontSize: "inherit",
+                                    color: "inherit",
+                                    cursor: "pointer",
+                                  }}
                                 >
                                   <div className="fw-medium">
                                     {prediction.description}
                                   </div>
-                                </div>
+                                </button>
                               )
                             )}
                           </div>
@@ -289,12 +306,13 @@ const Step8LoanAssignees = ({
                   </div>
 
                   <div className="col-12">
-                    <label className="form-label">
+                    <label htmlFor={`street2_${index}`} className="form-label">
                       Street Address Line 2 (Optional)
                     </label>
 
                     <input
                       type="text"
+                      id={`street2_${index}`}
                       className="form-control"
                       value={assignee.street2}
                       onChange={(e) =>
@@ -305,10 +323,11 @@ const Step8LoanAssignees = ({
                   </div>
 
                   <div className="col-md-4">
-                    <label className="form-label">City *</label>
+                    <label htmlFor={`city_${index}`} className="form-label">City *</label>
 
                     <input
                       type="text"
+                      id={`city_${index}`}
                       className={`form-control ${
                         fieldErrors[`loanAssignees.${index}.city`]
                           ? "is-invalid"
@@ -329,10 +348,11 @@ const Step8LoanAssignees = ({
                   </div>
 
                   <div className="col-md-4">
-                    <label className="form-label">State *</label>
+                    <label htmlFor={`addressState_${index}`} className="form-label">State *</label>
 
                     <input
                       type="text"
+                      id={`addressState_${index}`}
                       className={`form-control ${
                         fieldErrors[`loanAssignees.${index}.addressState`]
                           ? "is-invalid"
@@ -357,10 +377,11 @@ const Step8LoanAssignees = ({
                   </div>
 
                   <div className="col-md-4">
-                    <label className="form-label">ZIP Code *</label>
+                    <label htmlFor={`zip_${index}`} className="form-label">ZIP Code *</label>
 
                     <input
                       type="text"
+                      id={`zip_${index}`}
                       className={`form-control ${
                         fieldErrors[`loanAssignees.${index}.zip`]
                           ? "is-invalid"
@@ -381,12 +402,13 @@ const Step8LoanAssignees = ({
                   </div>
 
                   <div className="col-md-6">
-                    <label className="form-label">
+                    <label htmlFor={`licenseNumber_${index}`} className="form-label">
                       License Number (Optional)
                     </label>
 
                     <input
                       type="text"
+                      id={`licenseNumber_${index}`}
                       className="form-control"
                       value={assignee.licenseNumber}
                       onChange={(e) =>
@@ -401,12 +423,13 @@ const Step8LoanAssignees = ({
                   </div>
 
                   <div className="col-md-6">
-                    <label className="form-label">
+                    <label htmlFor={`licenseState_${index}`} className="form-label">
                       License State (Optional)
                     </label>
 
                     <input
                       type="text"
+                      id={`licenseState_${index}`}
                       className="form-control"
                       value={assignee.licenseState}
                       onChange={(e) =>
@@ -429,7 +452,7 @@ const Step8LoanAssignees = ({
                 className="dashboard-btn-create"
                 onClick={addLoanAssignee}
               >
-                <i className="fas fa-plus me-2"></i>
+                <i className="fas fa-plus me-2"></i>{" "}
                 Add Another Assignee
               </button>
             </div>

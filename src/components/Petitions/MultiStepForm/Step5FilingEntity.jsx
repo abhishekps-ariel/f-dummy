@@ -26,11 +26,11 @@ const Step5FilingEntity = ({
               <div className="alert alert-info d-flex align-items-center mb-3">
                 <div
                   className="spinner-border spinner-border-sm me-2"
-                  role="status"
+                  aria-hidden="true"
                 >
                   <span className="visually-hidden">{t("common.loading")}</span>
                 </div>
-
+                <output className="visually-hidden">{t("common.loading")}</output>
                 <span>{t("petitionSteps.step5.loadingOrganization")}</span>
               </div>
             )}
@@ -71,26 +71,33 @@ const Step5FilingEntity = ({
                   {t("petitionSteps.step5.filingEntityRole")}
                 </label>
 
-                {profileLoading ? (
-                  <div className="form-control form-control-lg bg-light">
-                    <span className="text-muted">{t("common.loading")}</span>
-                  </div>
-                ) : userFilingEntityType ? (
-                  <div className="form-control form-control-lg bg-light">
-                    <span className="text-success">
-                      {filingEntityTypes.find(
-                        (type) => type.id === userFilingEntityType
-                      )?.name || t("petitionSteps.step5.unknownType")}
-                    </span>
-                  </div>
-                ) : (
-                  <div className="form-control form-control-lg bg-light">
-                    <span className="text-muted">
-                      <i className="fa fa-exclamation-triangle me-2"></i>
-                      {t("petitionSteps.step5.setFilingEntityType")}
-                    </span>
-                  </div>
-                )}
+                {(() => {
+                  if (profileLoading) {
+                    return (
+                      <div className="form-control form-control-lg bg-light">
+                        <span className="text-muted">{t("common.loading")}</span>
+                      </div>
+                    );
+                  }
+                  if (userFilingEntityType) {
+                    const entityTypeName = filingEntityTypes.find(
+                      (type) => type.id === userFilingEntityType
+                    )?.name || t("petitionSteps.step5.unknownType");
+                    return (
+                      <div className="form-control form-control-lg bg-light">
+                        <span className="text-success">{entityTypeName}</span>
+                      </div>
+                    );
+                  }
+                  return (
+                    <div className="form-control form-control-lg bg-light">
+                      <span className="text-muted">
+                        <i className="fa fa-exclamation-triangle me-2"></i>
+                        {t("petitionSteps.step5.setFilingEntityType")}
+                      </span>
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Address Fields */}

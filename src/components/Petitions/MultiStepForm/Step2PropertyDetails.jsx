@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 
 const Step1PropertyDetails = ({
   isAddressVerified,
-  isLoaded,
   autocompleteRef,
   fieldErrors,
   formData,
@@ -70,10 +69,11 @@ const Step1PropertyDetails = ({
                     <div className="position-absolute top-50 end-0 translate-middle-y me-3">
                       <div
                         className="spinner-border spinner-border-sm text-muted"
-                        role="status"
+                        aria-hidden="true"
                       >
                         <span className="visually-hidden">{t("common.loading")}</span>
                       </div>
+                      <output className="visually-hidden">{t("common.loading")}</output>
                     </div>
                   )}
 
@@ -88,22 +88,31 @@ const Step1PropertyDetails = ({
                       }}
                     >
                       {predictions.map((prediction, index) => (
-                        <div
+                        <button
                           key={prediction.place_id}
-                          className={`px-3 py-2 cursor-pointer border-bottom ${
+                          type="button"
+                          className={`px-3 py-2 text-start w-100 ${
                             index === selectedPredictionIndex
                               ? "bg-primary text-white"
                               : "hover-bg-light"
                           }`}
-                          onMouseDown={() =>
+                          onClick={() =>
                             selectPrediction(prediction.place_id)
                           }
-                          style={{ cursor: "pointer" }}
+                          style={{
+                            border: "none",
+                            borderBottom: "1px solid #dee2e6",
+                            background: index === selectedPredictionIndex ? "var(--bs-primary)" : "transparent",
+                            cursor: "pointer",
+                            fontFamily: "inherit",
+                            fontSize: "inherit",
+                            color: index === selectedPredictionIndex ? "white" : "inherit",
+                          }}
                         >
                           <div className="fw-medium">
                             {prediction.description}
                           </div>
-                        </div>
+                        </button>
                       ))}
                     </div>
                   )}

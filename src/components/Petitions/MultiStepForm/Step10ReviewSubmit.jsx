@@ -363,9 +363,12 @@ const Step10ReviewSubmit = ({
                     {formData.certainMortgageLoan === true && (
                       <div className="col-12">
                         <strong>{t("petitionTabContent.wasForm35BProvided")}</strong>{" "}
-                        {formData.wasForm35BProvided !== null && formData.wasForm35BProvided !== undefined
-                          ? (formData.wasForm35BProvided ? t("petitionSteps.step3.yes") : t("petitionSteps.step3.no"))
-                          : t("common.nA")}
+                        {(() => {
+                          if (formData.wasForm35BProvided === null || formData.wasForm35BProvided === undefined) {
+                            return t("common.nA");
+                          }
+                          return formData.wasForm35BProvided ? t("petitionSteps.step3.yes") : t("petitionSteps.step3.no");
+                        })()}
                       </div>
                     )}
                   </div>
@@ -392,7 +395,7 @@ const Step10ReviewSubmit = ({
                   {formData.loanAssignees &&
                   formData.loanAssignees.length > 0 ? (
                     formData.loanAssignees.map((assignee, index) => (
-                      <div key={index} className="row g-3 mb-3">
+                      <div key={assignee.id || `assignee_${index}_${assignee.assigneeName || 'new'}`} className="row g-3 mb-3">
                         <div className="col-12">
                           <strong>{t("petitionSteps.step8.assignee")} {index + 1}:</strong>
                         </div>

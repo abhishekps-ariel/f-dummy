@@ -514,7 +514,7 @@ const Step3LoanDetails = ({
                       id="borrowerRequestedLoanModificationYes"
                       value="yes"
                       checked={formData.borrowerRequestedLoanModification === true}
-                      onChange={(e) =>
+                      onChange={() =>
                         handleInputChange({
                           target: {
                             name: "borrowerRequestedLoanModification",
@@ -535,7 +535,7 @@ const Step3LoanDetails = ({
                       id="borrowerRequestedLoanModificationNo"
                       value="no"
                       checked={formData.borrowerRequestedLoanModification === false}
-                      onChange={(e) =>
+                      onChange={() =>
                         handleInputChange({
                           target: {
                             name: "borrowerRequestedLoanModification",
@@ -570,7 +570,7 @@ const Step3LoanDetails = ({
                         id="loanModificationRequestFinalizedYes"
                         value="yes"
                         checked={formData.loanModificationRequestFinalized === true}
-                        onChange={(e) =>
+                        onChange={() =>
                           handleInputChange({
                             target: {
                               name: "loanModificationRequestFinalized",
@@ -591,7 +591,7 @@ const Step3LoanDetails = ({
                         id="loanModificationRequestFinalizedNo"
                         value="no"
                         checked={formData.loanModificationRequestFinalized === false}
-                        onChange={(e) =>
+                        onChange={() =>
                           handleInputChange({
                             target: {
                               name: "loanModificationRequestFinalized",

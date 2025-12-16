@@ -49,7 +49,7 @@ const Step7Form35BCompliance = ({
                       name="certainMortgageLoan"
                       value="yes"
                       checked={formData.certainMortgageLoan === true}
-                      onChange={(e) =>
+                      onChange={() =>
                         setFormData((prev) => ({
                           ...prev,
                           certainMortgageLoan: true,
@@ -77,7 +77,7 @@ const Step7Form35BCompliance = ({
                       name="certainMortgageLoan"
                       value="no"
                       checked={formData.certainMortgageLoan === false}
-                      onChange={(e) =>
+                      onChange={() =>
                         setFormData((prev) => ({
                           ...prev,
                           certainMortgageLoan: false,
@@ -127,7 +127,7 @@ const Step7Form35BCompliance = ({
                         name="wasForm35BProvided"
                         value="yes"
                         checked={formData.wasForm35BProvided === true}
-                        onChange={(e) =>
+                        onChange={() =>
                           setFormData((prev) => ({
                             ...prev,
                             wasForm35BProvided: true,
@@ -152,7 +152,7 @@ const Step7Form35BCompliance = ({
                         name="wasForm35BProvided"
                         value="no"
                         checked={formData.wasForm35BProvided === false}
-                        onChange={(e) =>
+                        onChange={() =>
                           setFormData((prev) => ({
                             ...prev,
                             wasForm35BProvided: false,

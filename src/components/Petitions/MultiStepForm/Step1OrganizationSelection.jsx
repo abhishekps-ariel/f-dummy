@@ -21,7 +21,6 @@ const Step1OrganizationSelection = ({
   const searchRef = useRef(null);
   const debouncedSearchQuery = useDebounce(searchTerm, 300);
 
-  // Load all organizations function
   const loadAllOrganizations = async () => {
     setIsLoading(true);
     try {

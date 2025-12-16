@@ -186,7 +186,26 @@ const Step9PetitionAttestation = ({
 
             {/* Digital Signature Requirement */}
 
-            {!userProfile?.signatureImageName ? (
+            {userProfile?.signatureImageName ? (
+              <div className="p-4 border border-success bg-success-subtle rounded mb-4">
+                <div className="d-flex align-items-center">
+                  <i
+                    className="fas fa-check-circle text-success me-3"
+                    style={{ fontSize: "24px" }}
+                  ></i>
+
+                  <div className="flex-grow-1">
+                    <h5 className="fw-bold text-success mb-2">
+                      {t("petitionSteps.step9.digitalSignatureAvailable")}
+                    </h5>
+
+                    <p className="mb-0">
+                      {t("petitionSteps.step9.digitalSignatureReady")}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : (
               <div className="p-4 border border-danger bg-danger-subtle rounded mb-4">
                 <div className="d-flex align-items-center">
                   <i
@@ -215,25 +234,6 @@ const Step9PetitionAttestation = ({
                       <i className="fas fa-user me-2"></i>
                       {t("petitionSteps.step9.goToProfileToUpload")}
                     </button>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="p-4 border border-success bg-success-subtle rounded mb-4">
-                <div className="d-flex align-items-center">
-                  <i
-                    className="fas fa-check-circle text-success me-3"
-                    style={{ fontSize: "24px" }}
-                  ></i>
-
-                  <div className="flex-grow-1">
-                    <h5 className="fw-bold text-success mb-2">
-                      {t("petitionSteps.step9.digitalSignatureAvailable")}
-                    </h5>
-
-                    <p className="mb-0">
-                      {t("petitionSteps.step9.digitalSignatureReady")}
-                    </p>
                   </div>
                 </div>
               </div>
