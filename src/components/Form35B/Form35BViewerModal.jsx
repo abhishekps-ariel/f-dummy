@@ -34,7 +34,7 @@ const Form35BViewerModal = ({ isOpen, onClose, formData, reportingPeriods = [] }
               aria-label={t("common.close")}
             ></button>
           </div>
-          <div className="modal-body" style={{ maxHeight: "70vh", overflowY: "auto" }}>
+          <div className="modal-body form35b-viewer-modal-body" style={{ maxHeight: "70vh", overflowY: "auto" }}>
             <div className="row g-3">
               {/* Basic Information */}
               <div className="col-12">
