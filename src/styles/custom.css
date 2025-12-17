@@ -1073,18 +1073,33 @@ select.form-control {
     margin-top: 0;
 }
 
-/* Reduce top and side margins for Form 35B page specifically - targets row structure unique to Form 35B table view */
+/* Reduce top and side margins for Form 35B page specifically - targets row structure unique to Form 35B */
 .dashboard-content-section > .row:first-child {
     margin-left: -12px;
     margin-right: -12px;
+    margin-bottom: 0;
 }
 
+/* Form 35B table view - card with shadow-custom */
 .dashboard-content-section > .row:first-child > .col-12:first-child > .card.shadow-custom.bg-white {
     margin-top: -10px;
     margin-left: -12px;
     margin-right: -12px;
     border-left: none;
     border-right: none;
+    border-radius: 0;
+}
+
+/* Form 35B form view - combined card with shadow-custom */
+.dashboard-content-section > .row:first-child > .col-12:first-child > .card.shadow-custom:not(.bg-white) {
+    margin-top: -10px;
+    margin-bottom: 0 !important;
+    margin-left: -12px;
+    margin-right: -12px;
+    border-left: none;
+    border-right: none;
+    border-top: none;
+    border-bottom: none;
     border-radius: 0;
 }
 

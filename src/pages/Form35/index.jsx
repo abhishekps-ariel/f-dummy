@@ -1097,9 +1097,9 @@ const Form35 = () => {
           <div className="dashboard-content-section">
               <div className="row">
                 <div className="col-12">
-              {/* Header Card */}
-              <div className="card mb-4">
-                <div className="card-body">
+              {/* Combined Header and Form Card */}
+              <div className="card shadow-custom">
+                <div className="card-body p-4">
                   {isOrgAdmin && showFormView && (
                     <div className="d-flex justify-content-between align-items-center mb-3">
                       <button
@@ -1139,7 +1139,7 @@ const Form35 = () => {
                   </h2>
                   <hr className="my-3" />
                   
-                  <div className="mb-0">
+                  <div className="p-4 border border-info bg-info-subtle rounded mb-4">
                     <p className="mb-2">
                       {t("form35B.intro1")} <strong>January-June 2022</strong>.
                     </p>
@@ -1150,12 +1150,7 @@ const Form35 = () => {
                       {t("form35B.intro9")} <a href="mailto:35Breporting@mass.gov" className="theme-color"><strong>35Breporting@mass.gov</strong></a>.
                     </p>
                   </div>
-                </div>
-              </div>
 
-              {/* Form Card */}
-              <div className="card shadow-custom">
-                <div className="card-body p-4">
                   <form onSubmit={handleSubmit}>
                     <div className="mb-3">
                       <p className="text-muted small mb-2">
