@@ -28,6 +28,22 @@ class Form35BService {
 
     return normalizeResponse(response, "Form 35B submitted successfully");
   }
+
+  // Get paged Form 35B submissions
+  async getForm35BPaged(paginationParams) {
+    const response = await axiosInstance.post(
+      FORM35B_ENDPOINTS.PAGED,
+      paginationParams,
+      {
+        headers: {
+          'Accept': 'text/plain',
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    return response.data;
+  }
 }
 
 export default new Form35BService();

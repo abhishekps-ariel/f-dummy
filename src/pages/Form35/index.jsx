@@ -1,27 +1,85 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../context/AuthContext';
 import { logout as logoutApi } from '../../services/authService';
-import { clearAuthData, getAuthData } from '../../utils/storage';
+import { clearAuthData, getAuthData, getActiveOrganizationId, getUserRole, getImpersonationState } from '../../utils/storage';
 import { ROUTES } from '../../constants/routerConstants';
+import { PAGINATION } from '../../constants/appConstants';
 import Sidebar from '../../components/shared/Sidebar';
 import Header from '../../components/shared/Header';
 import { get35BReportingPeriods, get35BEntityTypes } from '../../services/commonService';
 import Form35BAttestationModal from '../../components/Form35B/Form35BAttestationModal';
+import Form35BViewerModal from '../../components/Form35B/Form35BViewerModal';
 import { getAllOrganizations, searchOrganizations } from '../../services/organizationService';
 import { useDebounce } from '../../hooks/useDebounce';
+import { usePetitions } from '../../hooks/usePetitions';
 import form35BService from '../../services/form35BService';
 import YearPicker from '../../components/shared/YearPicker';
 import MunicipalityMultiSelect from '../../components/shared/MunicipalityMultiSelect';
+import CustomDropdown from '../../components/shared/CustomDropdown';
+import '../../components/shared/CustomDropdown.css';
+import { formatDate } from '../../utils/dateUtils';
 import '../../components/shared/MunicipalityMultiSelect.css';
 
 const Form35 = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, organization: organizationFromAuth } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [activeSection, setActiveSection] = useState('form35');
+  const { organization } = usePetitions();
+
+  // Helper function to check if user is org admin
+  const isOrgAdminUser = (userData) => {
+    if (!userData) return false;
+    if (userData.isManager === true) return true;
+    if (userData.roles && Array.isArray(userData.roles)) {
+      return userData.roles.some(
+        (role) => role === 'Organization Admin'
+      );
+    }
+    const userRole = getUserRole(userData);
+    return userRole === 'Organization Admin';
+  };
+
+  // Check if impersonating - when impersonating, always use userId (treat as filer)
+  const impersonationState = getImpersonationState();
+  const isImpersonating = impersonationState.isImpersonating;
+  
+  // Determine if user is org admin or filer
+  // When impersonating, always treat as filer (use userId) regardless of role
+  const isOrgAdmin = isImpersonating ? false : isOrgAdminUser(user);
+
+  // Get organization ID from user object (stored in browser storage) or organization context (for org admins)
+  const storedActiveOrganizationId = getActiveOrganizationId();
+  const organizationId =
+    storedActiveOrganizationId ||
+    user?.organizationId ||
+    organization?.id ||
+    organizationFromAuth?.id ||
+    null;
+
+  // Table view state (for org admins)
+  const [submissions, setSubmissions] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState("SubmissionDate");
+  const [sortOrder, setSortOrder] = useState("desc");
+  const [filterReportingYear, setFilterReportingYear] = useState(null); // null by default
+  const [filterReportingPeriodId, setFilterReportingPeriodId] = useState(null); // null by default
+  const [tableReportingPeriods, setTableReportingPeriods] = useState([]); // For filter dropdown
+  const [loadingTableReportingPeriods, setLoadingTableReportingPeriods] = useState(false);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalCount: 0,
+    pageSize: PAGINATION.DEFAULT_PAGE_SIZE,
+  });
+  const [selectedSubmission, setSelectedSubmission] = useState(null);
+  const [showViewerModal, setShowViewerModal] = useState(false);
+  const [showFormView, setShowFormView] = useState(false); // For org admins to switch to form view
+  const fetchSubmissionsRef = useRef();
   
   const [formData, setFormData] = useState({
     companyName: '',
@@ -349,6 +407,16 @@ const Form35 = () => {
         });
         setErrors({});
         setSelectedOrganization(null);
+        
+        // If org admin, refresh the table and switch back to table view
+        if (isOrgAdmin) {
+          setShowFormView(false);
+          if (fetchSubmissionsRef.current) {
+            setTimeout(() => {
+              fetchSubmissionsRef.current(1);
+            }, 500);
+          }
+        }
       } else {
         toast.error(response.msg || t("form35B.failedSubmit"));
       }
@@ -360,6 +428,645 @@ const Form35 = () => {
     }
   };
 
+  // Fetch reporting periods for table filters (for org admins)
+  useEffect(() => {
+    if (isOrgAdmin) {
+      const fetchTableReportingPeriods = async () => {
+        try {
+          setLoadingTableReportingPeriods(true);
+          const response = await get35BReportingPeriods();
+          if (response.isSuccess && response.data) {
+            setTableReportingPeriods(response.data);
+          }
+        } catch {
+          // Error fetching reporting periods - non-critical
+        } finally {
+          setLoadingTableReportingPeriods(false);
+        }
+      };
+
+      fetchTableReportingPeriods();
+    }
+  }, [isOrgAdmin]);
+
+  // Fetch Form 35B submissions (for org admins)
+  const fetchSubmissions = useCallback(async (page = 1) => {
+    if (isOrgAdmin && !organizationId) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const paginationParams = {
+        organizationId: organizationId,
+        reportingYear: filterReportingYear ? parseInt(filterReportingYear) : null, // null by default, not 0
+        reportingPeriodId: filterReportingPeriodId || null, // null by default
+        pageNumber: page, // Send 1-based page number (default is 1)
+        pageSize: PAGINATION.DEFAULT_PAGE_SIZE,
+        searchText: searchQuery.trim() || "",
+        sortColumn: sortBy,
+        sortDirection: sortOrder,
+      };
+
+      const response = await form35BService.getForm35BPaged(paginationParams);
+
+      if (response.success) {
+        setSubmissions(response.data || []);
+        const totalRecords = response.totalRecords ?? 0;
+        const pageSize = PAGINATION.DEFAULT_PAGE_SIZE;
+        const calculatedTotalPages = totalRecords > 0 ? Math.ceil(totalRecords / pageSize) : 1;
+        
+        setPagination((prev) => ({
+          ...prev,
+          currentPage: page,
+          totalPages: calculatedTotalPages,
+          totalCount: totalRecords,
+        }));
+      } else {
+        toast.error(response.message || t("form35B.table.failedFetch"));
+        setSubmissions([]);
+      }
+    } catch (err) {
+      toast.error(err?.message || t("form35B.table.failedFetch"));
+      setSubmissions([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [isOrgAdmin, organizationId, searchQuery, sortBy, sortOrder, filterReportingYear, filterReportingPeriodId, t]);
+
+  // Keep ref updated with latest fetchSubmissions function
+  useEffect(() => {
+    fetchSubmissionsRef.current = fetchSubmissions;
+  }, [fetchSubmissions]);
+
+  // Load initial data when component mounts (for org admins)
+  useEffect(() => {
+    if (isOrgAdmin && organizationId) {
+      if (fetchSubmissionsRef.current) {
+        fetchSubmissionsRef.current(1);
+      }
+    }
+  }, [isOrgAdmin, organizationId]);
+
+  // Handle filter changes with debouncing (search query only)
+  useEffect(() => {
+    if (isOrgAdmin && organizationId) {
+      const timeoutId = setTimeout(() => {
+        setPagination((prev) => ({ ...prev, currentPage: 1 }));
+        if (fetchSubmissionsRef.current) {
+          fetchSubmissionsRef.current(1);
+        }
+      }, 500); // 500ms debounce
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [searchQuery, isOrgAdmin, organizationId]);
+
+  // Handle year and reporting period filter changes (immediate)
+  useEffect(() => {
+    if (isOrgAdmin && organizationId) {
+      setPagination((prev) => ({ ...prev, currentPage: 1 }));
+      if (fetchSubmissionsRef.current) {
+        fetchSubmissionsRef.current(1);
+      }
+    }
+  }, [filterReportingYear, filterReportingPeriodId, isOrgAdmin, organizationId]);
+
+  // Handle sorting changes
+  useEffect(() => {
+    if (isOrgAdmin && organizationId) {
+      setPagination((prev) => ({ ...prev, currentPage: 1 }));
+      if (fetchSubmissionsRef.current) {
+        fetchSubmissionsRef.current(1);
+      }
+    }
+  }, [sortBy, sortOrder, isOrgAdmin, organizationId]);
+
+
+  const handleSort = useCallback((field) => {
+    if (sortBy === field) {
+      // Toggle sort order if same field
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      // Set new field and default to ascending
+      setSortBy(field);
+      setSortOrder("asc");
+    }
+  }, [sortBy, sortOrder]);
+
+  const handleViewSubmission = useCallback((submission) => {
+    setSelectedSubmission(submission);
+    setShowViewerModal(true);
+  }, []);
+
+  // Helper function to get reporting period name by ID
+  const getReportingPeriodName = useCallback((reportingPeriodId) => {
+    if (!reportingPeriodId || !tableReportingPeriods.length) {
+      return null;
+    }
+    const period = tableReportingPeriods.find(p => p.id === reportingPeriodId);
+    return period ? period.name : null;
+  }, [tableReportingPeriods]);
+
+  const handleRefresh = useCallback(() => {
+    setSearchQuery("");
+    setFilterReportingYear(null);
+    setFilterReportingPeriodId(null);
+    setSortBy("SubmissionDate");
+    setSortOrder("desc");
+    setPagination((prev) => ({ ...prev, currentPage: 1 }));
+    if (fetchSubmissionsRef.current) {
+      fetchSubmissionsRef.current(1);
+    }
+  }, []);
+
+
+  // Render table view for org admins, form view for regular users
+  const renderTableView = () => (
+    <div className="dashboard-content-section">
+      <div className="row">
+        <div className="col-12">
+          <div className="card shadow-custom bg-white">
+            {/* Header Section */}
+            <div className="card-body">
+              <div className="d-flex justify-content-between align-items-center mb-4">
+                <h2 className="font-med mb-0">{t("form35B.table.title")}</h2>
+                <div className="d-flex gap-3">
+                  <button
+                    className="dashboard-btn-create"
+                    onClick={() => {
+                      setShowFormView(true);
+                    }}
+                  >
+                    <i className="fa-solid fa-plus me-1"></i> {t("form35B.table.newSubmission")}
+                  </button>
+                  <button
+                    className="dashboard-btn-refresh"
+                    onClick={handleRefresh}
+                    title={t("form35B.table.refresh")}
+                  >
+                    <i className="fa-solid fa-sync-alt"></i>
+                  </button>
+                </div>
+              </div>
+
+              {/* Search and Filter Controls */}
+              <div className="row mb-4 g-3">
+                <div className="col-12 col-lg-4">
+                  <div className="input-group">
+                    <span className="input-group-text bg-white border-end-0">
+                      <i className="fas fa-search"></i>
+                    </span>
+                    <input
+                      type="text"
+                      className="form-control border-start-0 shadow-none"
+                      placeholder={t("form35B.table.searchPlaceholder")}
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="col-12 col-lg-4">
+                  <YearPicker
+                    name="filterReportingYear"
+                    value={filterReportingYear || ""}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setFilterReportingYear(value && value.trim() !== "" ? value : null);
+                    }}
+                    placeholder={t("form35B.table.filterYear")}
+                    minYear={2020}
+                  />
+                </div>
+                <div className="col-12 col-lg-4">
+                  <CustomDropdown
+                    name="filterReportingPeriod"
+                    value={filterReportingPeriodId || ""}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setFilterReportingPeriodId(value && value !== "" ? value : null);
+                    }}
+                    placeholder={t("form35B.table.filterReportingPeriod")}
+                    disabled={loadingTableReportingPeriods}
+                    options={[
+                      { value: "", label: t("form35B.table.allReportingPeriods") },
+                      ...tableReportingPeriods.map((period) => ({
+                        value: period.id,
+                        label: period.name,
+                      })),
+                    ]}
+                  />
+                </div>
+              </div>
+
+              {/* Results Summary */}
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                  <span className="text-muted small">
+                    {(() => {
+                      const startIndex =
+                        (pagination.currentPage - 1) * pagination.pageSize + 1;
+                      const endIndex = Math.min(
+                        pagination.currentPage * pagination.pageSize,
+                        pagination.totalCount
+                      );
+                      return t("form35B.table.showingResults", { startIndex, endIndex, totalCount: pagination.totalCount });
+                    })()}
+                    {loading && <span className="ms-2">({t("form35B.table.loading")})</span>}
+                  </span>
+                </div>
+              </div>
+
+              {/* Desktop Table View */}
+              <div className="d-none d-lg-block table-responsive">
+                <table 
+                  className="table w-100 mb-0" 
+                  style={{ 
+                    borderCollapse: 'separate', 
+                    borderSpacing: 0,
+                    border: '1px solid #dee2e6',
+                    borderRadius: '8px',
+                    overflow: 'hidden'
+                  }}
+                >
+                  <thead>
+                    <tr>
+                      <th 
+                        style={{ 
+                          width: '30%', 
+                          padding: '1rem 1.25rem', 
+                          fontWeight: '600', 
+                          color: '#212529',
+                          borderBottom: '2px solid #dee2e6',
+                          backgroundColor: '#f8f9fa',
+                          cursor: 'pointer',
+                          userSelect: 'none'
+                        }}
+                        className="sortable-header"
+                        onClick={() => handleSort("FullName")}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <span>{t("form35B.table.submitterName")}</span>
+                          <span style={{ marginLeft: '0.5rem', display: 'flex', flexDirection: 'column', fontSize: '0.7rem', lineHeight: '1' }}>
+                            {sortBy === "FullName" ? (
+                              <i className={`fas fa-sort-${sortOrder === "asc" ? "up" : "down"}`} style={{ color: '#212529' }}></i>
+                            ) : (
+                              <>
+                                <i className="fas fa-sort-up" style={{ color: '#adb5bd', opacity: 0.5, marginBottom: '-2px' }}></i>
+                                <i className="fas fa-sort-down" style={{ color: '#adb5bd', opacity: 0.5 }}></i>
+                              </>
+                            )}
+                          </span>
+                        </div>
+                      </th>
+                      <th 
+                        style={{ 
+                          width: '15%', 
+                          padding: '1rem 1.25rem', 
+                          fontWeight: '600', 
+                          color: '#212529',
+                          borderBottom: '2px solid #dee2e6',
+                          backgroundColor: '#f8f9fa',
+                          cursor: 'pointer',
+                          userSelect: 'none'
+                        }}
+                        className="sortable-header"
+                        onClick={() => handleSort("ReportingYear")}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <span>{t("form35B.table.reportingYear")}</span>
+                          <span style={{ marginLeft: '0.5rem', display: 'flex', flexDirection: 'column', fontSize: '0.7rem', lineHeight: '1' }}>
+                            {sortBy === "ReportingYear" ? (
+                              <i className={`fas fa-sort-${sortOrder === "asc" ? "up" : "down"}`} style={{ color: '#212529' }}></i>
+                            ) : (
+                              <>
+                                <i className="fas fa-sort-up" style={{ color: '#adb5bd', opacity: 0.5, marginBottom: '-2px' }}></i>
+                                <i className="fas fa-sort-down" style={{ color: '#adb5bd', opacity: 0.5 }}></i>
+                              </>
+                            )}
+                          </span>
+                        </div>
+                      </th>
+                      <th 
+                        style={{ 
+                          width: '20%', 
+                          padding: '1rem 1.25rem', 
+                          fontWeight: '600', 
+                          color: '#212529',
+                          borderBottom: '2px solid #dee2e6',
+                          backgroundColor: '#f8f9fa',
+                          cursor: 'pointer',
+                          userSelect: 'none'
+                        }}
+                        className="sortable-header"
+                        onClick={() => handleSort("ReportingPeriod")}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <span>{t("form35B.table.reportingPeriod")}</span>
+                          <span style={{ marginLeft: '0.5rem', display: 'flex', flexDirection: 'column', fontSize: '0.7rem', lineHeight: '1' }}>
+                            {sortBy === "ReportingPeriod" ? (
+                              <i className={`fas fa-sort-${sortOrder === "asc" ? "up" : "down"}`} style={{ color: '#212529' }}></i>
+                            ) : (
+                              <>
+                                <i className="fas fa-sort-up" style={{ color: '#adb5bd', opacity: 0.5, marginBottom: '-2px' }}></i>
+                                <i className="fas fa-sort-down" style={{ color: '#adb5bd', opacity: 0.5 }}></i>
+                              </>
+                            )}
+                          </span>
+                        </div>
+                      </th>
+                      <th 
+                        style={{ 
+                          width: '20%', 
+                          padding: '1rem 1.25rem', 
+                          fontWeight: '600', 
+                          color: '#212529',
+                          borderBottom: '2px solid #dee2e6',
+                          backgroundColor: '#f8f9fa',
+                          textAlign: 'center',
+                          cursor: 'pointer',
+                          userSelect: 'none'
+                        }}
+                        className="sortable-header"
+                        onClick={() => handleSort("SubmissionDate")}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                          <span>{t("form35B.table.submissionDate")}</span>
+                          <span style={{ display: 'flex', flexDirection: 'column', fontSize: '0.7rem', lineHeight: '1' }}>
+                            {sortBy === "SubmissionDate" ? (
+                              <i className={`fas fa-sort-${sortOrder === "asc" ? "up" : "down"}`} style={{ color: '#212529' }}></i>
+                            ) : (
+                              <>
+                                <i className="fas fa-sort-up" style={{ color: '#adb5bd', opacity: 0.5, marginBottom: '-2px' }}></i>
+                                <i className="fas fa-sort-down" style={{ color: '#adb5bd', opacity: 0.5 }}></i>
+                              </>
+                            )}
+                          </span>
+                        </div>
+                      </th>
+                      <th 
+                        style={{ 
+                          width: '50px', 
+                          padding: '1rem 0.5rem', 
+                          borderBottom: '2px solid #dee2e6',
+                          backgroundColor: '#f8f9fa',
+                          textAlign: 'center'
+                        }}
+                      >
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {loading ? (
+                      <tr>
+                        <td colSpan="5" className="text-center py-5">
+                          <div className="spinner-border text-primary" role="status">
+                            <span className="visually-hidden">{t("form35B.table.loading")}</span>
+                          </div>
+                          <p className="mt-2 text-muted">{t("form35B.table.loadingSubmissions")}</p>
+                        </td>
+                      </tr>
+                    ) : submissions.length > 0 ? (
+                      submissions.map((submission) => {
+                        const fullName = submission.submitterFirstName && submission.submitterLastName
+                          ? `${submission.submitterFirstName} ${submission.submitterLastName}`
+                          : t("common.nA");
+                        return (
+                          <tr 
+                            key={submission.id}
+                            className="petition-row"
+                            style={{ cursor: 'default' }}
+                          >
+                            <td style={{ padding: '1rem 1.25rem', verticalAlign: 'middle', borderBottom: '1px solid #dee2e6' }}>
+                              <span style={{ color: '#212529', fontSize: '0.95rem' }}>
+                                {fullName}
+                              </span>
+                            </td>
+                            <td style={{ padding: '1rem 1.25rem', verticalAlign: 'middle', borderBottom: '1px solid #dee2e6', color: '#495057' }}>
+                              {submission.reportingYear || t("common.nA")}
+                            </td>
+                            <td style={{ padding: '1rem 1.25rem', verticalAlign: 'middle', borderBottom: '1px solid #dee2e6', color: '#495057' }}>
+                              {getReportingPeriodName(submission.reportingPeriodId) || submission.reportingPeriodName || t("common.nA")}
+                            </td>
+                            <td style={{ padding: '1rem 1.25rem', verticalAlign: 'middle', borderBottom: '1px solid #dee2e6', color: '#495057', textAlign: 'center' }}>
+                              {submission.createdDate ? formatDate(submission.createdDate) : t("common.nA")}
+                            </td>
+                            <td style={{ padding: '1rem 0.5rem', verticalAlign: 'middle', borderBottom: '1px solid #dee2e6', textAlign: 'center', width: '50px' }} onClick={(e) => e.stopPropagation()}>
+                              <button
+                                className="btn btn-sm border-0"
+                                type="button"
+                                style={{
+                                  background: "transparent",
+                                  color: "#6c757d",
+                                  padding: '0.25rem 0.5rem',
+                                }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleViewSubmission(submission);
+                                }}
+                                title={t("form35B.table.view")}
+                              >
+                                <i className="fas fa-eye"></i>
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    ) : (
+                      <tr>
+                        <td colSpan="5" className="text-center py-5">
+                          <i className="fa-solid fa-search fa-3x text-muted mb-3"></i>
+                          <p className="text-muted mb-0">{t("form35B.table.noSubmissionsFound")}</p>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Card View */}
+              <div className="d-lg-none">
+                {loading ? (
+                  <div className="text-center py-5">
+                    <div className="spinner-border text-primary" role="status">
+                      <span className="visually-hidden">{t("form35B.table.loading")}</span>
+                    </div>
+                    <p className="mt-2 text-muted">{t("form35B.table.loadingSubmissions")}</p>
+                  </div>
+                ) : submissions.length > 0 ? (
+                  submissions.map((submission) => {
+                    const fullName = submission.submitterFirstName && submission.submitterLastName
+                      ? `${submission.submitterFirstName} ${submission.submitterLastName}`
+                      : t("common.nA");
+                    return (
+                      <div 
+                        key={submission.id} 
+                        className="card mb-3"
+                        style={{ 
+                          border: '1px solid #dee2e6',
+                          borderRadius: '8px',
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                        }}
+                      >
+                        <div className="card-body" style={{ padding: '1rem' }}>
+                          <h6 
+                            className="mb-3 fw-semibold"
+                            style={{ 
+                              color: '#212529',
+                              fontSize: '0.95rem',
+                              lineHeight: '1.4'
+                            }}
+                          >
+                            {fullName}
+                          </h6>
+                          <div style={{ marginTop: '0.75rem' }}>
+                            <small className="text-muted d-block mb-2" style={{ fontSize: '0.875rem' }}>
+                              <i className="fas fa-calendar me-2" style={{ width: '16px', color: '#6c757d' }}></i>
+                              {t("form35B.table.reportingYear")}: {submission.reportingYear || t("common.nA")}
+                            </small>
+                            <small className="text-muted d-block mb-2" style={{ fontSize: '0.875rem' }}>
+                              <i className="fas fa-calendar-alt me-2" style={{ width: '16px', color: '#6c757d' }}></i>
+                              {t("form35B.table.reportingPeriod")}: {getReportingPeriodName(submission.reportingPeriodId) || submission.reportingPeriodName || t("common.nA")}
+                            </small>
+                            <small className="text-muted d-block mb-2" style={{ fontSize: '0.875rem' }}>
+                              <i className="fas fa-clock me-2" style={{ width: '16px', color: '#6c757d' }}></i>
+                              {submission.createdDate ? formatDate(submission.createdDate) : t("common.nA")}
+                            </small>
+                            <div className="mt-3">
+                              <button
+                                className="btn btn-sm btn-outline-primary"
+                                onClick={() => handleViewSubmission(submission)}
+                              >
+                                {t("form35B.table.view")}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="text-center py-5">
+                    <i className="fa-solid fa-search fa-3x text-muted mb-3"></i>
+                    <p className="text-muted">{t("form35B.table.noSubmissionsFound")}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Pagination */}
+              {!loading && pagination.totalPages > 1 && (
+                <div className="d-flex justify-content-center mt-4">
+                  <div className="pagination-minimal">
+                    <button
+                      className={`pagination-btn ${pagination.currentPage === 1 ? "disabled" : ""}`}
+                      onClick={() => {
+                        if (pagination.currentPage > 1) {
+                          if (fetchSubmissionsRef.current) {
+                            fetchSubmissionsRef.current(pagination.currentPage - 1);
+                          }
+                        }
+                      }}
+                      disabled={pagination.currentPage === 1}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      <span className="pagination-btn-text d-none d-md-inline">{t("form35B.table.previous")}</span>
+                    </button>
+
+                    <div className="pagination-pages">
+                      {(() => {
+                        const currentPage = pagination.currentPage;
+                        const totalPages = pagination.totalPages;
+                        const maxVisiblePages = 5;
+                        
+                        if (totalPages <= maxVisiblePages) {
+                          return Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                            <button
+                              key={page}
+                              className={`pagination-page ${page === currentPage ? "active" : ""}`}
+                              onClick={() => {
+                                if (fetchSubmissionsRef.current) {
+                                  fetchSubmissionsRef.current(page);
+                                }
+                              }}
+                            >
+                              {page}
+                            </button>
+                          ));
+                        }
+                        
+                        const pages = [];
+                        if (currentPage <= 3) {
+                          for (let i = 1; i <= 4; i++) {
+                            pages.push(i);
+                          }
+                          pages.push('ellipsis-end');
+                          pages.push(totalPages);
+                        } else if (currentPage >= totalPages - 2) {
+                          pages.push(1);
+                          pages.push('ellipsis-start');
+                          for (let i = totalPages - 3; i <= totalPages; i++) {
+                            pages.push(i);
+                          }
+                        } else {
+                          pages.push(1);
+                          pages.push('ellipsis-start');
+                          for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+                            pages.push(i);
+                          }
+                          pages.push('ellipsis-end');
+                          pages.push(totalPages);
+                        }
+                        
+                        return pages.map((page, index) => {
+                          if (page === 'ellipsis-start' || page === 'ellipsis-end') {
+                            return (
+                              <span key={`ellipsis-${index}`} className="pagination-ellipsis">...</span>
+                            );
+                          }
+                          return (
+                            <button
+                              key={page}
+                              className={`pagination-page ${page === currentPage ? "active" : ""}`}
+                              onClick={() => {
+                                if (fetchSubmissionsRef.current) {
+                                  fetchSubmissionsRef.current(page);
+                                }
+                              }}
+                            >
+                              {page}
+                            </button>
+                          );
+                        });
+                      })()}
+                    </div>
+
+                    <button
+                      className={`pagination-btn ${pagination.currentPage >= pagination.totalPages ? "disabled" : ""}`}
+                      onClick={() => {
+                        if (pagination.currentPage < pagination.totalPages) {
+                          if (fetchSubmissionsRef.current) {
+                            fetchSubmissionsRef.current(pagination.currentPage + 1);
+                          }
+                        }
+                      }}
+                      disabled={pagination.currentPage >= pagination.totalPages}
+                    >
+                      <span className="pagination-btn-text d-none d-md-inline">{t("form35B.table.next")}</span>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="dashboard-wrapper">
@@ -393,13 +1100,48 @@ const Form35 = () => {
           onLogout={handleLogout}
         />
 
-        {/* Main Form 35B Content */}
-        <div className="dashboard-content-section">
+        {/* Conditionally render table view for org admins or form view for regular users */}
+        {isOrgAdmin && !showFormView ? renderTableView() : (
+          /* Main Form 35B Content */
+          <div className="dashboard-content-section">
               <div className="row">
                 <div className="col-12">
               {/* Header Card */}
               <div className="card mb-4">
                 <div className="card-body">
+                  {isOrgAdmin && showFormView && (
+                    <div className="d-flex justify-content-between align-items-center mb-3">
+                      <button
+                        className="btn btn-sm"
+                        onClick={() => setShowFormView(false)}
+                        style={{
+                          background: '#f8f9fa',
+                          color: '#495057',
+                          border: '1px solid #dee2e6',
+                          borderRadius: '8px',
+                          padding: '8px 16px',
+                          fontSize: '0.875rem',
+                          fontWeight: '500',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = '#e9ecef';
+                          e.currentTarget.style.borderColor = '#adb5bd';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = '#f8f9fa';
+                          e.currentTarget.style.borderColor = '#dee2e6';
+                        }}
+                      >
+                        <i className="fas fa-arrow-left"></i>
+                        {t("form35B.table.backToList")}
+                      </button>
+                    </div>
+                  )}
                   <h1 className="h4 mb-2 fw-bold theme-color">{t("form35B.pageTitle")}</h1>
                   <h2 className="h6 text-muted mb-3">
                     {t("form35B.subtitle")}
@@ -862,9 +1604,11 @@ const Form35 = () => {
             </div>
           </div>
         </div>
+        )}
       </main>
 
       {/* Attestation Modal */}
+      {(!isOrgAdmin || showFormView) && (
         <Form35BAttestationModal
           isOpen={showAttestationModal}
           onClose={() => !isSubmitting && setShowAttestationModal(false)}
@@ -872,6 +1616,20 @@ const Form35 = () => {
           user={user}
           isSubmitting={isSubmitting}
         />
+      )}
+
+      {/* Form 35B Viewer Modal */}
+      {isOrgAdmin && (
+        <Form35BViewerModal
+          isOpen={showViewerModal}
+          onClose={() => {
+            setShowViewerModal(false);
+            setSelectedSubmission(null);
+          }}
+          formData={selectedSubmission}
+          reportingPeriods={tableReportingPeriods}
+        />
+      )}
     </div>
   );
 };

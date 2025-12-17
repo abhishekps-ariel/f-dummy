@@ -671,26 +671,6 @@ const ViewAllPetitions = ({ onBack }) => {
                       ]}
                     />
                   </div>
-                  <div className="col-12 col-lg-4 col-xl-3">
-                    <CustomDropdown
-                      name="sortBy"
-                      value={`${sortBy}-${sortOrder}`}
-                      onChange={(e) => {
-                        const [field, order] = e.target.value.split("-");
-                        setSortBy(field);
-                        setSortOrder(order);
-                      }}
-                      placeholder={t("viewAllPetitions.sortBy")}
-                      options={[
-                        { value: "filingDate-desc", label: t("viewAllPetitions.filingDateNewestFirst") },
-                        { value: "filingDate-asc", label: t("viewAllPetitions.filingDateOldestFirst") },
-                        { value: "lastUpdated-desc", label: t("viewAllPetitions.lastUpdatedMostRecent") },
-                        { value: "lastUpdated-asc", label: t("viewAllPetitions.lastUpdatedLeastRecent") },
-                        { value: "petitionNumber-asc", label: t("viewAllPetitions.petitionNumberAZ") },
-                        { value: "petitionNumber-desc", label: t("viewAllPetitions.petitionNumberZA") },
-                      ]}
-                    />
-                  </div>
                 </div>
 
                 {/* Custom Date Range */}
@@ -777,77 +757,127 @@ const ViewAllPetitions = ({ onBack }) => {
                     <thead className="table-light">
                       <tr>
                         <th
-                          style={{ width: "20%", minWidth: "160px" }}
+                          style={{ 
+                            width: "20%", 
+                            minWidth: "160px",
+                            cursor: 'pointer',
+                            userSelect: 'none'
+                          }}
                           className="sortable-header"
                           onClick={() => handleSort("id")}
                         >
-                          {t("viewAllPetitions.petitionNumber")}
-                          {sortBy === "id" && (
-                            <i
-                              className={`fas fa-sort-${
-                                sortOrder === "asc" ? "up" : "down"
-                              } ms-1`}
-                            ></i>
-                          )}
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <span>{t("viewAllPetitions.petitionNumber")}</span>
+                            <span style={{ marginLeft: '0.5rem', display: 'flex', flexDirection: 'column', fontSize: '0.7rem', lineHeight: '1' }}>
+                              {sortBy === "id" ? (
+                                <i className={`fas fa-sort-${sortOrder === "asc" ? "up" : "down"}`} style={{ color: '#212529' }}></i>
+                              ) : (
+                                <>
+                                  <i className="fas fa-sort-up" style={{ color: '#adb5bd', opacity: 0.5, marginBottom: '-2px' }}></i>
+                                  <i className="fas fa-sort-down" style={{ color: '#adb5bd', opacity: 0.5 }}></i>
+                                </>
+                              )}
+                            </span>
+                          </div>
                         </th>
                         <th style={{ width: "25%", minWidth: "200px" }}>
                           {t("viewAllPetitions.propertyAddress")}
                         </th>
                         <th
-                          style={{ width: "16%", minWidth: "110px" }}
+                          style={{ 
+                            width: "16%", 
+                            minWidth: "110px",
+                            cursor: 'pointer',
+                            userSelect: 'none'
+                          }}
                           className="sortable-header"
                           onClick={() => handleSort("borrower")}
                         >
-                          {t("viewAllPetitions.borrower")}
-                          {sortBy === "borrower" && (
-                            <i
-                              className={`fas fa-sort-${
-                                sortOrder === "asc" ? "up" : "down"
-                              } ms-1`}
-                            ></i>
-                          )}
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <span>{t("viewAllPetitions.borrower")}</span>
+                            <span style={{ marginLeft: '0.5rem', display: 'flex', flexDirection: 'column', fontSize: '0.7rem', lineHeight: '1' }}>
+                              {sortBy === "borrower" ? (
+                                <i className={`fas fa-sort-${sortOrder === "asc" ? "up" : "down"}`} style={{ color: '#212529' }}></i>
+                              ) : (
+                                <>
+                                  <i className="fas fa-sort-up" style={{ color: '#adb5bd', opacity: 0.5, marginBottom: '-2px' }}></i>
+                                  <i className="fas fa-sort-down" style={{ color: '#adb5bd', opacity: 0.5 }}></i>
+                                </>
+                              )}
+                            </span>
+                          </div>
                         </th>
                         <th
-                          style={{ width: "15%", minWidth: "180px" }}
+                          style={{ 
+                            width: "15%", 
+                            minWidth: "180px",
+                            cursor: 'pointer',
+                            userSelect: 'none'
+                          }}
                           className="sortable-header"
                           onClick={() => handleSort("status")}
                         >
-                          {t("viewAllPetitions.status")}
-                          {sortBy === "status" && (
-                            <i
-                              className={`fas fa-sort-${
-                                sortOrder === "asc" ? "up" : "down"
-                              } ms-1`}
-                            ></i>
-                          )}
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <span>{t("viewAllPetitions.status")}</span>
+                            <span style={{ marginLeft: '0.5rem', display: 'flex', flexDirection: 'column', fontSize: '0.7rem', lineHeight: '1' }}>
+                              {sortBy === "status" ? (
+                                <i className={`fas fa-sort-${sortOrder === "asc" ? "up" : "down"}`} style={{ color: '#212529' }}></i>
+                              ) : (
+                                <>
+                                  <i className="fas fa-sort-up" style={{ color: '#adb5bd', opacity: 0.5, marginBottom: '-2px' }}></i>
+                                  <i className="fas fa-sort-down" style={{ color: '#adb5bd', opacity: 0.5 }}></i>
+                                </>
+                              )}
+                            </span>
+                          </div>
                         </th>
                         <th
-                          style={{ width: "13%", minWidth: "110px" }}
+                          style={{ 
+                            width: "13%", 
+                            minWidth: "110px",
+                            cursor: 'pointer',
+                            userSelect: 'none'
+                          }}
                           className="sortable-header"
                           onClick={() => handleSort("filingDate")}
                         >
-                          {t("viewAllPetitions.filingDate")}
-                          {sortBy === "filingDate" && (
-                            <i
-                              className={`fas fa-sort-${
-                                sortOrder === "asc" ? "up" : "down"
-                              } ms-1`}
-                            ></i>
-                          )}
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <span>{t("viewAllPetitions.filingDate")}</span>
+                            <span style={{ marginLeft: '0.5rem', display: 'flex', flexDirection: 'column', fontSize: '0.7rem', lineHeight: '1' }}>
+                              {sortBy === "filingDate" ? (
+                                <i className={`fas fa-sort-${sortOrder === "asc" ? "up" : "down"}`} style={{ color: '#212529' }}></i>
+                              ) : (
+                                <>
+                                  <i className="fas fa-sort-up" style={{ color: '#adb5bd', opacity: 0.5, marginBottom: '-2px' }}></i>
+                                  <i className="fas fa-sort-down" style={{ color: '#adb5bd', opacity: 0.5 }}></i>
+                                </>
+                              )}
+                            </span>
+                          </div>
                         </th>
                         <th
-                          style={{ width: "13%", minWidth: "120px" }}
+                          style={{ 
+                            width: "13%", 
+                            minWidth: "120px",
+                            cursor: 'pointer',
+                            userSelect: 'none'
+                          }}
                           className="sortable-header"
                           onClick={() => handleSort("lastUpdated")}
                         >
-                          {t("viewAllPetitions.lastUpdated")}
-                          {sortBy === "lastUpdated" && (
-                            <i
-                              className={`fas fa-sort-${
-                                sortOrder === "asc" ? "up" : "down"
-                              } ms-1`}
-                            ></i>
-                          )}
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <span>{t("viewAllPetitions.lastUpdated")}</span>
+                            <span style={{ marginLeft: '0.5rem', display: 'flex', flexDirection: 'column', fontSize: '0.7rem', lineHeight: '1' }}>
+                              {sortBy === "lastUpdated" ? (
+                                <i className={`fas fa-sort-${sortOrder === "asc" ? "up" : "down"}`} style={{ color: '#212529' }}></i>
+                              ) : (
+                                <>
+                                  <i className="fas fa-sort-up" style={{ color: '#adb5bd', opacity: 0.5, marginBottom: '-2px' }}></i>
+                                  <i className="fas fa-sort-down" style={{ color: '#adb5bd', opacity: 0.5 }}></i>
+                                </>
+                              )}
+                            </span>
+                          </div>
                         </th>
                         <th style={{ width: "40px" }}></th>
                       </tr>

@@ -3972,6 +3972,12 @@ body.high-contrast .text-size-dropdown-item.selected {
     background-color: #fff;
 }
 
+.year-picker-input::placeholder {
+    color: #212529;
+    font-weight: 500;
+    opacity: 1;
+}
+
 .year-picker-input:focus {
     border-color: #80bdff;
     outline: 0;

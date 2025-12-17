@@ -90,6 +90,7 @@ export const CHAT_ENDPOINTS = {
 export const FORM35B_ENDPOINTS = {
   CALCULATE: "/api/Report35B/35b/calculate",
   ADD_UPDATE: "/api/Report35B/add-update",
+  PAGED: "/api/Report35B/paged",
 };
 
 export const GOOGLE_ENDPOINTS = {

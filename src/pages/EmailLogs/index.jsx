@@ -381,19 +381,26 @@ const EmailLogs = () => {
                         fontWeight: '600', 
                           color: '#212529',
                           borderBottom: '2px solid #dee2e6',
-                        backgroundColor: '#f8f9fa'
+                        backgroundColor: '#f8f9fa',
+                        cursor: 'pointer',
+                        userSelect: 'none'
                         }}
                         className="sortable-header"
                         onClick={() => handleSort('subject')}
                       >
-                        {t("emailLogs.subject")}
-                        {sortBy === 'subject' && (
-                          <i
-                            className={`fas fa-sort-${
-                              sortDescending ? 'down' : 'up'
-                            } ms-1`}
-                          ></i>
-                        )}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <span>{t("emailLogs.subject")}</span>
+                          <span style={{ marginLeft: '0.5rem', display: 'flex', flexDirection: 'column', fontSize: '0.7rem', lineHeight: '1' }}>
+                            {sortBy === 'subject' ? (
+                              <i className={`fas fa-sort-${sortDescending ? 'down' : 'up'}`} style={{ color: '#212529' }}></i>
+                            ) : (
+                              <>
+                                <i className="fas fa-sort-up" style={{ color: '#adb5bd', opacity: 0.5, marginBottom: '-2px' }}></i>
+                                <i className="fas fa-sort-down" style={{ color: '#adb5bd', opacity: 0.5 }}></i>
+                              </>
+                            )}
+                          </span>
+                        </div>
                       </th>
                       <th 
                         style={{ 
@@ -402,19 +409,26 @@ const EmailLogs = () => {
                         fontWeight: '600', 
                           color: '#212529',
                           borderBottom: '2px solid #dee2e6',
-                        backgroundColor: '#f8f9fa'
+                        backgroundColor: '#f8f9fa',
+                        cursor: 'pointer',
+                        userSelect: 'none'
                         }}
                         className="sortable-header"
                         onClick={() => handleSort('email')}
                       >
-                        {t("emailLogs.emailAddress")}
-                        {sortBy === 'email' && (
-                          <i
-                            className={`fas fa-sort-${
-                              sortDescending ? 'down' : 'up'
-                            } ms-1`}
-                          ></i>
-                        )}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <span>{t("emailLogs.emailAddress")}</span>
+                          <span style={{ marginLeft: '0.5rem', display: 'flex', flexDirection: 'column', fontSize: '0.7rem', lineHeight: '1' }}>
+                            {sortBy === 'email' ? (
+                              <i className={`fas fa-sort-${sortDescending ? 'down' : 'up'}`} style={{ color: '#212529' }}></i>
+                            ) : (
+                              <>
+                                <i className="fas fa-sort-up" style={{ color: '#adb5bd', opacity: 0.5, marginBottom: '-2px' }}></i>
+                                <i className="fas fa-sort-down" style={{ color: '#adb5bd', opacity: 0.5 }}></i>
+                              </>
+                            )}
+                          </span>
+                        </div>
                       </th>
                       <th 
                         style={{ 
@@ -424,7 +438,9 @@ const EmailLogs = () => {
                           color: '#212529',
                           borderBottom: '2px solid #dee2e6',
                           backgroundColor: '#f8f9fa',
-                          textAlign: 'center'
+                          textAlign: 'center',
+                          cursor: 'pointer',
+                          userSelect: 'none'
                         }}
                         className="sortable-header"
                         onClick={() => {
@@ -438,14 +454,19 @@ const EmailLogs = () => {
                           setPagination((prev) => ({ ...prev, currentPage: 1 }));
                         }}
                       >
-                        {t("emailLogs.dateSent")}
-                        {(!sortBy || sortBy === '') && (
-                          <i
-                            className={`fas fa-sort-${
-                              sortDescending ? 'down' : 'up'
-                            } ms-1`}
-                          ></i>
-                        )}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                          <span>{t("emailLogs.dateSent")}</span>
+                          <span style={{ display: 'flex', flexDirection: 'column', fontSize: '0.7rem', lineHeight: '1' }}>
+                            {(!sortBy || sortBy === '') ? (
+                              <i className={`fas fa-sort-${sortDescending ? 'down' : 'up'}`} style={{ color: '#212529' }}></i>
+                            ) : (
+                              <>
+                                <i className="fas fa-sort-up" style={{ color: '#adb5bd', opacity: 0.5, marginBottom: '-2px' }}></i>
+                                <i className="fas fa-sort-down" style={{ color: '#adb5bd', opacity: 0.5 }}></i>
+                              </>
+                            )}
+                          </span>
+                        </div>
                       </th>
                     </tr>
                   </thead>
