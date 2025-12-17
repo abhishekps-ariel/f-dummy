@@ -684,26 +684,10 @@ const Form35 = () => {
                       <th
                         style={{ 
                           width: "25%",
-                          minWidth: "140px",
-                          cursor: 'pointer',
-                          userSelect: 'none'
+                          minWidth: "140px"
                         }}
-                        className="sortable-header"
-                        onClick={() => handleSort("FullName")}
                       >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <span>{t("form35B.table.submitterName")}</span>
-                          <span style={{ display: 'flex', flexDirection: 'column', fontSize: '0.7rem', lineHeight: '1' }}>
-                            {sortBy === "FullName" ? (
-                              <i className={`fas fa-sort-${sortOrder === "asc" ? "up" : "down"}`} style={{ color: '#212529' }}></i>
-                            ) : (
-                              <>
-                                <i className="fas fa-sort-up" style={{ color: '#adb5bd', opacity: 0.5, marginBottom: '-2px' }}></i>
-                                <i className="fas fa-sort-down" style={{ color: '#adb5bd', opacity: 0.5 }}></i>
-                              </>
-                            )}
-                          </span>
-                        </div>
+                        {t("form35B.table.submitterName")}
                       </th>
                       <th
                         style={{ 

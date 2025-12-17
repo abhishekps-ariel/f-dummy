@@ -251,20 +251,20 @@ function Dashboard() {
             ) : (
             <div className="shadow-custom bg-white org-search-box">
               <h2 className="h4 mb-3 fw-bold theme-color">{t("dashboard.title")}</h2>
-              <div className="row mb-5">
-                <div className="col-md-4 mb-3">
+              <div className="row g-3 mb-3">
+                <div className="col-md-4">
                   <div className="stat-card stat-card-metric h-100">
                     <h4 className="stat-count">{petitionCounts.totalRecords}</h4>
                     <p className="stat-title">{t("dashboard.totalPetitions")}</p>
                   </div>
                 </div>
-                <div className="col-md-4 mb-3">
+                <div className="col-md-4">
                   <div className="stat-card stat-card-metric h-100">
                     <h4 className="stat-count">{petitionCounts.totalSubmittedCount}</h4>
                     <p className="stat-title">{t("dashboard.totalSubmittedPetitions")}</p>
                   </div>
                 </div>
-                <div className="col-md-4 mb-3">
+                <div className="col-md-4">
                   <div className="stat-card stat-card-metric h-100">
                     <h4 className="stat-count">{petitionCounts.totalClosedCount}</h4>
                     <p className="stat-title">{t("dashboard.totalClosedPetitions")}</p>
@@ -274,9 +274,9 @@ function Dashboard() {
               
 
               {/* New Information Cards */}
-              <div className="row mb-4">
+              <div className="row g-3 mb-4">
                 {/* Form 35B Compliance Card */}
-                <div className="col-md-4 mb-3">
+                <div className="col-md-4">
                   <div className="stat-card h-100">
                     <h5 className="stat-count mb-3" style={{ fontSize: '1.2rem' }}>{t("dashboard.form35BCompliance")}</h5>
                     <div className="d-flex flex-column justify-content-between h-100" style={{ minHeight: '150px' }}>
@@ -340,7 +340,7 @@ function Dashboard() {
                 </div>
 
                 {/* User Details Card */}
-                <div className="col-md-4 mb-3">
+                <div className="col-md-4">
                   <div className="stat-card h-100">
                     <h5 className="stat-count mb-3" style={{ fontSize: '1.2rem' }}>{t("dashboard.userDetails")}</h5>
                     <div className="user-info">
@@ -368,7 +368,7 @@ function Dashboard() {
                 </div>
 
                 {/* Action Alerts Card */}
-                <div className="col-md-4 mb-3">
+                <div className="col-md-4">
                   <div className="stat-card h-100">
                     <h5 className="stat-count mb-3" style={{ fontSize: '1.2rem' }}>{t("dashboard.actionAlerts")}</h5>
                     <div className="d-flex align-items-center justify-content-center h-100">
@@ -403,7 +403,7 @@ function Dashboard() {
                           className="petition-row"
                         >
                           <td>
-                            <span className="petition-number">
+                            <span className="fw-medium" style={{ color: "#015080" }}>
                               {petition.petitionNumber}
                             </span>
                           </td>

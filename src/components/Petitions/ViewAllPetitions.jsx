@@ -621,7 +621,7 @@ const ViewAllPetitions = ({ onBack }) => {
                 </div>
                 {/* Search and Filter Controls */}
                 <div className="row mb-4 g-3 petitions-filters-row">
-                  <div className="col-12 col-lg-4 col-xl-5 petitions-search-column">
+                  <div className="col-12 col-md-5 petitions-search-column">
                     <div className="input-group">
                       <span className="input-group-text bg-white border-end-0">
                         <i className="fas fa-search"></i>
@@ -635,7 +635,7 @@ const ViewAllPetitions = ({ onBack }) => {
                       />
                     </div>
                   </div>
-                  <div className="col-12 col-sm-6 col-lg-3 col-xl-3">
+                  <div className="col-12 col-md-4">
                     <CustomDropdown
                       name="statusFilter"
                       value={statusFilter}
@@ -654,7 +654,7 @@ const ViewAllPetitions = ({ onBack }) => {
                       ]}
                     />
                   </div>
-                  <div className="col-12 col-sm-6 col-lg-2 col-xl-2">
+                  <div className="col-12 col-md-3">
                     <CustomDropdown
                       name="dateFilter"
                       value={dateFilter}
@@ -790,26 +790,10 @@ const ViewAllPetitions = ({ onBack }) => {
                           style={{ 
                             width: "15%", 
                             minWidth: "180px",
-                            cursor: 'pointer',
-                            userSelect: 'none',
                             textAlign: 'center'
                           }}
-                          className="sortable-header"
-                          onClick={() => handleSort("status")}
                         >
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-                            <span>{t("viewAllPetitions.status")}</span>
-                            <span style={{ display: 'flex', flexDirection: 'column', fontSize: '0.7rem', lineHeight: '1' }}>
-                              {sortBy === "status" ? (
-                                <i className={`fas fa-sort-${sortOrder === "asc" ? "up" : "down"}`} style={{ color: '#212529' }}></i>
-                              ) : (
-                                <>
-                                  <i className="fas fa-sort-up" style={{ color: '#adb5bd', opacity: 0.5, marginBottom: '-2px' }}></i>
-                                  <i className="fas fa-sort-down" style={{ color: '#adb5bd', opacity: 0.5 }}></i>
-                                </>
-                              )}
-                            </span>
-                          </div>
+                          {t("viewAllPetitions.status")}
                         </th>
                         <th
                           style={{ 
