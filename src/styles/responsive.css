@@ -374,7 +374,10 @@
 .dashboard-main-area {
     margin-left: 0;
     width: 100%;
-    padding: 60px 24px 24px;
+    padding-top: 72px;
+    padding-left: 0;
+    padding-right: 0;
+    padding-bottom: 0;
 }
 
 .dashboard-header {

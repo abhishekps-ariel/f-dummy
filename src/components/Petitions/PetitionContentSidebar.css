@@ -1,8 +1,8 @@
 /* Petition Content Sidebar Styles */
 .petition-content-sidebar {
   position: sticky;
-  /* Position sidebar closer to header - reduced gap */
-  top: calc(var(--app-header-height, 72px) + 8px + 100px);
+  /* Position sidebar below the petition header card - adjusted for new layout */
+  top: 90px;
   width: 250px;
   min-width: 250px;
   background: #ffffff;

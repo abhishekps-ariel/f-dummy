@@ -995,11 +995,27 @@ select.form-control {
     height: 100vh;
     overflow-y: auto;
     overflow-x: hidden;
-    padding:80px 24px 24px;
+    padding-top: 72px;
+    padding-left: 0;
+    padding-right: 0;
+    padding-bottom: 0;
     transition: margin-left 0.3s ease, width 0.3s ease;
     /* Firefox scrollbar */
     scrollbar-width: thin;
     scrollbar-color: #c1c1c1 #f1f1f1;
+}
+
+/* Reduce gap between header and content for specific pages (Dashboard, Form35B, EmailLogs, FAQ, Training) */
+/* Target pages that use org-search-box or shadow-custom as first child in dashboard-content-section */
+.dashboard-main-area:not(.messages-main-area) .dashboard-content-section > .org-search-box:first-child,
+.dashboard-main-area:not(.messages-main-area) .dashboard-content-section > .shadow-custom:first-child {
+    margin-top: -2px;
+}
+
+/* Remove Bootstrap container-fluid padding in dashboard-main-area */
+.dashboard-main-area.container-fluid {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
 }
 
 /* Custom scrollbar for dashboard main area (Webkit browsers) */
@@ -1054,7 +1070,22 @@ select.form-control {
 }
 
 .dashboard-content-section {
-    margin-top: 25px;
+    margin-top: 0;
+}
+
+/* Reduce top and side margins for Form 35B page specifically - targets row structure unique to Form 35B table view */
+.dashboard-content-section > .row:first-child {
+    margin-left: -12px;
+    margin-right: -12px;
+}
+
+.dashboard-content-section > .row:first-child > .col-12:first-child > .card.shadow-custom.bg-white {
+    margin-top: -10px;
+    margin-left: -12px;
+    margin-right: -12px;
+    border-left: none;
+    border-right: none;
+    border-radius: 0;
 }
 
 /* Phone Input Styling */
@@ -1450,9 +1481,17 @@ select.form-control {
 /* Organization Search Box Styles */
 .org-search-box {
     background: #fff;
-    border-radius: 8px;
+    border-radius: 0;
     padding: 24px;
     border: 1px solid #e8e8e8;
+    border-left: none;
+    border-right: none;
+    box-shadow: none;
+}
+
+/* Remove shadow from shadow-custom when used in dashboard-content-section (except messages page) */
+.dashboard-content-section:not(.messages-page-content) > .shadow-custom {
+    box-shadow: none !important;
 }
 
 form.search-form {
@@ -1788,7 +1827,10 @@ input, textarea, select {
     .dashboard-main-area {
         margin-left: 0;
         width: 100%;
-        padding: 60px 24px 24px;
+        padding-top: 60px;
+        padding-left: 0;
+        padding-right: 0;
+        padding-bottom: 0;
     }
     
     .dashboard-header {

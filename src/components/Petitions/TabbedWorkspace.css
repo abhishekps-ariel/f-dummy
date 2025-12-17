@@ -109,7 +109,7 @@
 
 /* Petition Tab Content Styles */
 .petition-tab-content {
-  padding: 20px;
+  /* padding: 20px; */
 }
 
 .petition-content-scrollable {
@@ -129,10 +129,10 @@
 /* Sticky Header Section */
 .petition-header-sticky {
   position: sticky;
-  top: calc(var(--app-header-height, 72px) + 8px);
+  top: 0;
   z-index: 100;
-  background: transparent;
-  padding-top: 0;
+  padding-top: 8px;
+  padding-bottom: 8px;
   margin-top: 0;
   margin-bottom: 12px !important;
 }
