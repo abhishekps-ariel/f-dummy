@@ -812,14 +812,15 @@ const ViewAllPetitions = ({ onBack }) => {
                             width: "15%", 
                             minWidth: "180px",
                             cursor: 'pointer',
-                            userSelect: 'none'
+                            userSelect: 'none',
+                            textAlign: 'center'
                           }}
                           className="sortable-header"
                           onClick={() => handleSort("status")}
                         >
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
                             <span>{t("viewAllPetitions.status")}</span>
-                            <span style={{ marginLeft: '0.5rem', display: 'flex', flexDirection: 'column', fontSize: '0.7rem', lineHeight: '1' }}>
+                            <span style={{ display: 'flex', flexDirection: 'column', fontSize: '0.7rem', lineHeight: '1' }}>
                               {sortBy === "status" ? (
                                 <i className={`fas fa-sort-${sortOrder === "asc" ? "up" : "down"}`} style={{ color: '#212529' }}></i>
                               ) : (
@@ -836,14 +837,15 @@ const ViewAllPetitions = ({ onBack }) => {
                             width: "13%", 
                             minWidth: "110px",
                             cursor: 'pointer',
-                            userSelect: 'none'
+                            userSelect: 'none',
+                            textAlign: 'center'
                           }}
                           className="sortable-header"
                           onClick={() => handleSort("filingDate")}
                         >
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
                             <span>{t("viewAllPetitions.filingDate")}</span>
-                            <span style={{ marginLeft: '0.5rem', display: 'flex', flexDirection: 'column', fontSize: '0.7rem', lineHeight: '1' }}>
+                            <span style={{ display: 'flex', flexDirection: 'column', fontSize: '0.7rem', lineHeight: '1' }}>
                               {sortBy === "filingDate" ? (
                                 <i className={`fas fa-sort-${sortOrder === "asc" ? "up" : "down"}`} style={{ color: '#212529' }}></i>
                               ) : (
@@ -860,14 +862,15 @@ const ViewAllPetitions = ({ onBack }) => {
                             width: "13%", 
                             minWidth: "120px",
                             cursor: 'pointer',
-                            userSelect: 'none'
+                            userSelect: 'none',
+                            textAlign: 'center'
                           }}
                           className="sortable-header"
                           onClick={() => handleSort("lastUpdated")}
                         >
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
                             <span>{t("viewAllPetitions.lastUpdated")}</span>
-                            <span style={{ marginLeft: '0.5rem', display: 'flex', flexDirection: 'column', fontSize: '0.7rem', lineHeight: '1' }}>
+                            <span style={{ display: 'flex', flexDirection: 'column', fontSize: '0.7rem', lineHeight: '1' }}>
                               {sortBy === "lastUpdated" ? (
                                 <i className={`fas fa-sort-${sortOrder === "asc" ? "up" : "down"}`} style={{ color: '#212529' }}></i>
                               ) : (
@@ -914,7 +917,7 @@ const ViewAllPetitions = ({ onBack }) => {
                             </td>
                             <td>{petition.propertyAddress}</td>
                             <td>{petition.borrower}</td>
-                            <td>
+                            <td style={{ textAlign: 'center' }}>
                               <span
                                 className={getStatusBadgeClass(
                                   petition.status,
@@ -928,8 +931,8 @@ const ViewAllPetitions = ({ onBack }) => {
                                   : petition.status}
                               </span>
                             </td>
-                            <td>{petition.filingDate}</td>
-                            <td className="text-muted">
+                            <td style={{ textAlign: 'center' }}>{petition.filingDate}</td>
+                            <td className="text-muted" style={{ textAlign: 'center' }}>
                               {petition.lastUpdated}
                             </td>
                             <td onClick={(e) => e.stopPropagation()}>

@@ -693,7 +693,7 @@ const Form35 = () => {
                     <tr>
                       <th 
                         style={{ 
-                          width: '30%', 
+                          width: '32%', 
                           padding: '1rem 1.25rem', 
                           fontWeight: '600', 
                           color: '#212529',
@@ -721,7 +721,7 @@ const Form35 = () => {
                       </th>
                       <th 
                         style={{ 
-                          width: '15%', 
+                          width: '16%', 
                           padding: '1rem 1.25rem', 
                           fontWeight: '600', 
                           color: '#212529',
@@ -749,7 +749,7 @@ const Form35 = () => {
                       </th>
                       <th 
                         style={{ 
-                          width: '20%', 
+                          width: '24%', 
                           padding: '1rem 1.25rem', 
                           fontWeight: '600', 
                           color: '#212529',
@@ -777,8 +777,8 @@ const Form35 = () => {
                       </th>
                       <th 
                         style={{ 
-                          width: '20%', 
-                          padding: '1rem 1.25rem', 
+                          width: '24%', 
+                          padding: '1rem 1rem 1rem 0.75rem', 
                           fontWeight: '600', 
                           color: '#212529',
                           borderBottom: '2px solid #dee2e6',
@@ -806,13 +806,16 @@ const Form35 = () => {
                       </th>
                       <th 
                         style={{ 
-                          width: '50px', 
-                          padding: '1rem 0.5rem', 
+                          width: '60px', 
+                          padding: '1rem 1rem 1rem 0.25rem', 
                           borderBottom: '2px solid #dee2e6',
                           backgroundColor: '#f8f9fa',
-                          textAlign: 'center'
+                          textAlign: 'center',
+                          fontWeight: '600',
+                          color: '#212529'
                         }}
                       >
+                        {t("form35B.table.actions")}
                       </th>
                     </tr>
                   </thead>
@@ -848,10 +851,10 @@ const Form35 = () => {
                             <td style={{ padding: '1rem 1.25rem', verticalAlign: 'middle', borderBottom: '1px solid #dee2e6', color: '#495057' }}>
                               {getReportingPeriodName(submission.reportingPeriodId) || submission.reportingPeriodName || t("common.nA")}
                             </td>
-                            <td style={{ padding: '1rem 1.25rem', verticalAlign: 'middle', borderBottom: '1px solid #dee2e6', color: '#495057', textAlign: 'center' }}>
+                            <td style={{ padding: '1rem 1rem 1rem 0.75rem', verticalAlign: 'middle', borderBottom: '1px solid #dee2e6', color: '#495057', textAlign: 'center' }}>
                               {submission.createdDate ? formatDate(submission.createdDate) : t("common.nA")}
                             </td>
-                            <td style={{ padding: '1rem 0.5rem', verticalAlign: 'middle', borderBottom: '1px solid #dee2e6', textAlign: 'center', width: '50px' }} onClick={(e) => e.stopPropagation()}>
+                            <td style={{ padding: '1rem 1rem 1rem 0.25rem', verticalAlign: 'middle', borderBottom: '1px solid #dee2e6', textAlign: 'center', width: '60px' }} onClick={(e) => e.stopPropagation()}>
                               <button
                                 className="btn btn-sm border-0"
                                 type="button"
