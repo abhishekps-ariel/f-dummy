@@ -635,7 +635,7 @@ const ViewAllPetitions = ({ onBack }) => {
                       />
                     </div>
                   </div>
-                  <div className="col-12 col-sm-6 col-lg-2 col-xl-2">
+                  <div className="col-12 col-sm-6 col-lg-3 col-xl-3">
                     <CustomDropdown
                       name="statusFilter"
                       value={statusFilter}
@@ -766,9 +766,9 @@ const ViewAllPetitions = ({ onBack }) => {
                           className="sortable-header"
                           onClick={() => handleSort("id")}
                         >
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                             <span>{t("viewAllPetitions.petitionNumber")}</span>
-                            <span style={{ marginLeft: '0.5rem', display: 'flex', flexDirection: 'column', fontSize: '0.7rem', lineHeight: '1' }}>
+                            <span style={{ display: 'flex', flexDirection: 'column', fontSize: '0.7rem', lineHeight: '1' }}>
                               {sortBy === "id" ? (
                                 <i className={`fas fa-sort-${sortOrder === "asc" ? "up" : "down"}`} style={{ color: '#212529' }}></i>
                               ) : (
@@ -783,29 +783,8 @@ const ViewAllPetitions = ({ onBack }) => {
                         <th style={{ width: "25%", minWidth: "200px" }}>
                           {t("viewAllPetitions.propertyAddress")}
                         </th>
-                        <th
-                          style={{ 
-                            width: "16%", 
-                            minWidth: "110px",
-                            cursor: 'pointer',
-                            userSelect: 'none'
-                          }}
-                          className="sortable-header"
-                          onClick={() => handleSort("borrower")}
-                        >
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <span>{t("viewAllPetitions.borrower")}</span>
-                            <span style={{ marginLeft: '0.5rem', display: 'flex', flexDirection: 'column', fontSize: '0.7rem', lineHeight: '1' }}>
-                              {sortBy === "borrower" ? (
-                                <i className={`fas fa-sort-${sortOrder === "asc" ? "up" : "down"}`} style={{ color: '#212529' }}></i>
-                              ) : (
-                                <>
-                                  <i className="fas fa-sort-up" style={{ color: '#adb5bd', opacity: 0.5, marginBottom: '-2px' }}></i>
-                                  <i className="fas fa-sort-down" style={{ color: '#adb5bd', opacity: 0.5 }}></i>
-                                </>
-                              )}
-                            </span>
-                          </div>
+                        <th style={{ width: "16%", minWidth: "110px" }}>
+                          {t("viewAllPetitions.borrower")}
                         </th>
                         <th
                           style={{ 
