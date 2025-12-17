@@ -354,7 +354,8 @@
     "goBack": "Volver"
   },
   "tabs": {
-    "closeTab": "Cerrar pestaña"
+    "closeTab": "Cerrar pestaña",
+    "allPetitions": "Todas las Peticiones"
   },
   "petitionsPage": {
     "title": "Peticiones"

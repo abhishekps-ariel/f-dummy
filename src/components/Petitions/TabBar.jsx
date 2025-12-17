@@ -17,7 +17,7 @@ const TabBar = () => {
           >
             <div className="tab-content">
               <span className="tab-title">
-                {tab.title}
+                {tab.id === 'all-petitions' ? t("tabs.allPetitions") : tab.title}
                 {loadingTabs.has(tab.id) && (
                   <span className="tab-loading-spinner">
                     <i className="fas fa-spinner fa-spin"></i>

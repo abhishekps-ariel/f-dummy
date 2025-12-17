@@ -98,6 +98,7 @@ text-decoration: underline;
 }
 .font-med {
 	font-size: var(--text-med);
+    font-weight: 700;
 }
 .font-base-med {
 	font-size: var(--text-base-med);

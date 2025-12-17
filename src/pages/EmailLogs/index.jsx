@@ -364,33 +364,23 @@ const EmailLogs = () => {
               )}
 
               {/* Desktop Table View */}
-              <div className="d-none d-lg-block table-responsive">
-                <table className="table table-hover w-100 dashboard-petition-table" style={{ 
-                  borderCollapse: 'separate', 
-                  borderSpacing: '0',
-                  border: '1px solid #dee2e6',
-                  borderRadius: '8px',
-                  overflow: 'hidden'
-                }}>
+              <div className="d-none d-lg-block table-responsive petition-table-container">
+                <table className="table table-hover w-100 mb-0">
                   <thead className="table-light">
                     <tr>
-                      <th 
+                      <th
                         style={{ 
-                        width: '50%', 
-                        padding: '1rem 1.25rem', 
-                        fontWeight: '600', 
-                          color: '#212529',
-                          borderBottom: '2px solid #dee2e6',
-                        backgroundColor: '#f8f9fa',
-                        cursor: 'pointer',
-                        userSelect: 'none'
+                          width: "50%",
+                          minWidth: "200px",
+                          cursor: 'pointer',
+                          userSelect: 'none'
                         }}
                         className="sortable-header"
                         onClick={() => handleSort('subject')}
                       >
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                           <span>{t("emailLogs.subject")}</span>
-                          <span style={{ marginLeft: '0.5rem', display: 'flex', flexDirection: 'column', fontSize: '0.7rem', lineHeight: '1' }}>
+                          <span style={{ display: 'flex', flexDirection: 'column', fontSize: '0.7rem', lineHeight: '1' }}>
                             {sortBy === 'subject' ? (
                               <i className={`fas fa-sort-${sortDescending ? 'down' : 'up'}`} style={{ color: '#212529' }}></i>
                             ) : (
@@ -402,23 +392,19 @@ const EmailLogs = () => {
                           </span>
                         </div>
                       </th>
-                      <th 
+                      <th
                         style={{ 
-                        width: '30%', 
-                        padding: '1rem 1.25rem', 
-                        fontWeight: '600', 
-                          color: '#212529',
-                          borderBottom: '2px solid #dee2e6',
-                        backgroundColor: '#f8f9fa',
-                        cursor: 'pointer',
-                        userSelect: 'none'
+                          width: "30%",
+                          minWidth: "150px",
+                          cursor: 'pointer',
+                          userSelect: 'none'
                         }}
                         className="sortable-header"
                         onClick={() => handleSort('email')}
                       >
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                           <span>{t("emailLogs.emailAddress")}</span>
-                          <span style={{ marginLeft: '0.5rem', display: 'flex', flexDirection: 'column', fontSize: '0.7rem', lineHeight: '1' }}>
+                          <span style={{ display: 'flex', flexDirection: 'column', fontSize: '0.7rem', lineHeight: '1' }}>
                             {sortBy === 'email' ? (
                               <i className={`fas fa-sort-${sortDescending ? 'down' : 'up'}`} style={{ color: '#212529' }}></i>
                             ) : (
@@ -430,17 +416,13 @@ const EmailLogs = () => {
                           </span>
                         </div>
                       </th>
-                      <th 
+                      <th
                         style={{ 
-                          width: '20%', 
-                          padding: '1rem 1.25rem', 
-                          fontWeight: '600', 
-                          color: '#212529',
-                          borderBottom: '2px solid #dee2e6',
-                          backgroundColor: '#f8f9fa',
-                          textAlign: 'center',
+                          width: "20%",
+                          minWidth: "120px",
                           cursor: 'pointer',
-                          userSelect: 'none'
+                          userSelect: 'none',
+                          textAlign: 'center'
                         }}
                         className="sortable-header"
                         onClick={() => {
@@ -473,11 +455,18 @@ const EmailLogs = () => {
                   <tbody>
                     {loading ? (
                       <tr>
-                        <td colSpan="3" className="text-center py-5">
-                          <div className="spinner-border text-primary" role="status">
-                            <span className="visually-hidden">{t("emailLogs.loading")}</span>
+                        <td colSpan="3" className="text-center py-4">
+                          <div
+                            className="spinner-border text-primary"
+                            role="status"
+                          >
+                            <span className="visually-hidden">
+                              {t("emailLogs.loading")}
+                            </span>
                           </div>
-                          <p className="mt-2 text-muted">{t("emailLogs.loading")}</p>
+                          <p className="mt-2 text-muted">
+                            {t("emailLogs.loading")}
+                          </p>
                         </td>
                       </tr>
                     ) : emailLogs.length > 0 ? (
@@ -487,24 +476,27 @@ const EmailLogs = () => {
                           className="petition-row"
                           style={{ cursor: 'default' }}
                         >
-                          <td style={{ padding: '1rem 1.25rem', verticalAlign: 'middle', borderBottom: '1px solid #dee2e6' }}>
-                            <span style={{ color: '#212529', fontSize: '0.95rem' }}>
+                          <td>
+                            <span className="fw-medium" style={{ color: "#015080" }}>
                               {formatSubjectWithPetitionNumber(emailLog.subject || '')}
-                                </span>
-                            </td>
-                          <td style={{ padding: '1rem 1.25rem', verticalAlign: 'middle', borderBottom: '1px solid #dee2e6', color: '#495057' }}>
-                            {emailLog.toEmail || ''}
-                            </td>
-                          <td style={{ padding: '1rem 1.25rem', verticalAlign: 'middle', borderBottom: '1px solid #dee2e6', color: '#495057', textAlign: 'center' }}>
+                            </span>
+                          </td>
+                          <td>{emailLog.toEmail || ''}</td>
+                          <td className="text-muted" style={{ textAlign: 'center' }}>
                             {formatDate(emailLog.sentTimeUtc)}
-                              </td>
-                            </tr>
+                          </td>
+                        </tr>
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="3" className="text-center py-5">
-                          <i className="fa-solid fa-bell-slash fa-3x text-muted mb-3"></i>
-                          <p className="text-muted mb-0">{t("emailLogs.noEmailLogs")}</p>
+                        <td colSpan="3" className="text-center py-4">
+                          <i
+                            className="fa-solid fa-search text-muted mb-2"
+                            style={{ fontSize: "2rem" }}
+                          ></i>
+                          <p className="text-muted mb-0">
+                            {t("emailLogs.noEmailLogs")}
+                          </p>
                         </td>
                       </tr>
                     )}

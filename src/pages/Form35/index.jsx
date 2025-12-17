@@ -678,36 +678,23 @@ const Form35 = () => {
               </div>
 
               {/* Desktop Table View */}
-              <div className="d-none d-lg-block table-responsive">
-                <table 
-                  className="table w-100 mb-0" 
-                  style={{ 
-                    borderCollapse: 'separate', 
-                    borderSpacing: 0,
-                    border: '1px solid #dee2e6',
-                    borderRadius: '8px',
-                    overflow: 'hidden'
-                  }}
-                >
-                  <thead>
+              <div className="d-none d-lg-block table-responsive petition-table-container">
+                <table className="table table-hover w-100 mb-0">
+                  <thead className="table-light">
                     <tr>
-                      <th 
+                      <th
                         style={{ 
-                          width: '32%', 
-                          padding: '1rem 1.25rem', 
-                          fontWeight: '600', 
-                          color: '#212529',
-                          borderBottom: '2px solid #dee2e6',
-                          backgroundColor: '#f8f9fa',
+                          width: "25%",
+                          minWidth: "140px",
                           cursor: 'pointer',
                           userSelect: 'none'
                         }}
                         className="sortable-header"
                         onClick={() => handleSort("FullName")}
                       >
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                           <span>{t("form35B.table.submitterName")}</span>
-                          <span style={{ marginLeft: '0.5rem', display: 'flex', flexDirection: 'column', fontSize: '0.7rem', lineHeight: '1' }}>
+                          <span style={{ display: 'flex', flexDirection: 'column', fontSize: '0.7rem', lineHeight: '1' }}>
                             {sortBy === "FullName" ? (
                               <i className={`fas fa-sort-${sortOrder === "asc" ? "up" : "down"}`} style={{ color: '#212529' }}></i>
                             ) : (
@@ -719,23 +706,20 @@ const Form35 = () => {
                           </span>
                         </div>
                       </th>
-                      <th 
+                      <th
                         style={{ 
-                          width: '16%', 
-                          padding: '1rem 1.25rem', 
-                          fontWeight: '600', 
-                          color: '#212529',
-                          borderBottom: '2px solid #dee2e6',
-                          backgroundColor: '#f8f9fa',
+                          width: "22%",
+                          minWidth: "100px",
                           cursor: 'pointer',
-                          userSelect: 'none'
+                          userSelect: 'none',
+                          textAlign: 'center'
                         }}
                         className="sortable-header"
                         onClick={() => handleSort("ReportingYear")}
                       >
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
                           <span>{t("form35B.table.reportingYear")}</span>
-                          <span style={{ marginLeft: '0.5rem', display: 'flex', flexDirection: 'column', fontSize: '0.7rem', lineHeight: '1' }}>
+                          <span style={{ display: 'flex', flexDirection: 'column', fontSize: '0.7rem', lineHeight: '1' }}>
                             {sortBy === "ReportingYear" ? (
                               <i className={`fas fa-sort-${sortOrder === "asc" ? "up" : "down"}`} style={{ color: '#212529' }}></i>
                             ) : (
@@ -747,23 +731,20 @@ const Form35 = () => {
                           </span>
                         </div>
                       </th>
-                      <th 
+                      <th
                         style={{ 
-                          width: '24%', 
-                          padding: '1rem 1.25rem', 
-                          fontWeight: '600', 
-                          color: '#212529',
-                          borderBottom: '2px solid #dee2e6',
-                          backgroundColor: '#f8f9fa',
+                          width: "24%",
+                          minWidth: "130px",
                           cursor: 'pointer',
-                          userSelect: 'none'
+                          userSelect: 'none',
+                          textAlign: 'center'
                         }}
                         className="sortable-header"
                         onClick={() => handleSort("ReportingPeriod")}
                       >
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
                           <span>{t("form35B.table.reportingPeriod")}</span>
-                          <span style={{ marginLeft: '0.5rem', display: 'flex', flexDirection: 'column', fontSize: '0.7rem', lineHeight: '1' }}>
+                          <span style={{ display: 'flex', flexDirection: 'column', fontSize: '0.7rem', lineHeight: '1' }}>
                             {sortBy === "ReportingPeriod" ? (
                               <i className={`fas fa-sort-${sortOrder === "asc" ? "up" : "down"}`} style={{ color: '#212529' }}></i>
                             ) : (
@@ -775,17 +756,13 @@ const Form35 = () => {
                           </span>
                         </div>
                       </th>
-                      <th 
+                      <th
                         style={{ 
-                          width: '24%', 
-                          padding: '1rem 1rem 1rem 0.75rem', 
-                          fontWeight: '600', 
-                          color: '#212529',
-                          borderBottom: '2px solid #dee2e6',
-                          backgroundColor: '#f8f9fa',
-                          textAlign: 'center',
+                          width: "23%",
+                          minWidth: "130px",
                           cursor: 'pointer',
-                          userSelect: 'none'
+                          userSelect: 'none',
+                          textAlign: 'center'
                         }}
                         className="sortable-header"
                         onClick={() => handleSort("SubmissionDate")}
@@ -804,29 +781,25 @@ const Form35 = () => {
                           </span>
                         </div>
                       </th>
-                      <th 
-                        style={{ 
-                          width: '60px', 
-                          padding: '1rem 1rem 1rem 0.25rem', 
-                          borderBottom: '2px solid #dee2e6',
-                          backgroundColor: '#f8f9fa',
-                          textAlign: 'center',
-                          fontWeight: '600',
-                          color: '#212529'
-                        }}
-                      >
-                        {t("form35B.table.actions")}
+                      <th style={{ width: "45px" }}>
                       </th>
                     </tr>
                   </thead>
                   <tbody>
                     {loading ? (
                       <tr>
-                        <td colSpan="5" className="text-center py-5">
-                          <div className="spinner-border text-primary" role="status">
-                            <span className="visually-hidden">{t("form35B.table.loading")}</span>
+                        <td colSpan="5" className="text-center py-4">
+                          <div
+                            className="spinner-border text-primary"
+                            role="status"
+                          >
+                            <span className="visually-hidden">
+                              {t("form35B.table.loading")}
+                            </span>
                           </div>
-                          <p className="mt-2 text-muted">{t("form35B.table.loadingSubmissions")}</p>
+                          <p className="mt-2 text-muted">
+                            {t("form35B.table.loadingSubmissions")}
+                          </p>
                         </td>
                       </tr>
                     ) : submissions.length > 0 ? (
@@ -840,28 +813,23 @@ const Form35 = () => {
                             className="petition-row"
                             style={{ cursor: 'default' }}
                           >
-                            <td style={{ padding: '1rem 1.25rem', verticalAlign: 'middle', borderBottom: '1px solid #dee2e6' }}>
-                              <span style={{ color: '#212529', fontSize: '0.95rem' }}>
+                            <td>
+                              <span className="fw-medium" style={{ color: "#015080" }}>
                                 {fullName}
                               </span>
                             </td>
-                            <td style={{ padding: '1rem 1.25rem', verticalAlign: 'middle', borderBottom: '1px solid #dee2e6', color: '#495057' }}>
-                              {submission.reportingYear || t("common.nA")}
-                            </td>
-                            <td style={{ padding: '1rem 1.25rem', verticalAlign: 'middle', borderBottom: '1px solid #dee2e6', color: '#495057' }}>
-                              {getReportingPeriodName(submission.reportingPeriodId) || submission.reportingPeriodName || t("common.nA")}
-                            </td>
-                            <td style={{ padding: '1rem 1rem 1rem 0.75rem', verticalAlign: 'middle', borderBottom: '1px solid #dee2e6', color: '#495057', textAlign: 'center' }}>
+                            <td style={{ textAlign: 'center' }}>{submission.reportingYear || t("common.nA")}</td>
+                            <td style={{ textAlign: 'center' }}>{getReportingPeriodName(submission.reportingPeriodId) || submission.reportingPeriodName || t("common.nA")}</td>
+                            <td className="text-muted" style={{ textAlign: 'center' }}>
                               {submission.createdDate ? formatDate(submission.createdDate) : t("common.nA")}
                             </td>
-                            <td style={{ padding: '1rem 1rem 1rem 0.25rem', verticalAlign: 'middle', borderBottom: '1px solid #dee2e6', textAlign: 'center', width: '60px' }} onClick={(e) => e.stopPropagation()}>
+                            <td style={{ textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
                               <button
                                 className="btn btn-sm border-0"
                                 type="button"
                                 style={{
                                   background: "transparent",
                                   color: "#6c757d",
-                                  padding: '0.25rem 0.5rem',
                                 }}
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -877,9 +845,14 @@ const Form35 = () => {
                       })
                     ) : (
                       <tr>
-                        <td colSpan="5" className="text-center py-5">
-                          <i className="fa-solid fa-search fa-3x text-muted mb-3"></i>
-                          <p className="text-muted mb-0">{t("form35B.table.noSubmissionsFound")}</p>
+                        <td colSpan="5" className="text-center py-4">
+                          <i
+                            className="fa-solid fa-search text-muted mb-2"
+                            style={{ fontSize: "2rem" }}
+                          ></i>
+                          <p className="text-muted mb-0">
+                            {t("form35B.table.noSubmissionsFound")}
+                          </p>
                         </td>
                       </tr>
                     )}

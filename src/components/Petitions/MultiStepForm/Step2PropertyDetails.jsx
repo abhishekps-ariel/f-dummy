@@ -1,7 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 
-const Step1PropertyDetails = ({
+const Step2PropertyDetails = ({
   isAddressVerified,
   autocompleteRef,
   fieldErrors,
@@ -274,4 +274,4 @@ const Step1PropertyDetails = ({
         );
 };
 
-export default Step1PropertyDetails;
+export default Step2PropertyDetails;

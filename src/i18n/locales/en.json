@@ -354,7 +354,8 @@
     "goBack": "Go Back"
   },
   "tabs": {
-    "closeTab": "Close tab"
+    "closeTab": "Close tab",
+    "allPetitions": "All Petitions"
   },
   "petitionsPage": {
     "title": "Petitions"
@@ -924,7 +925,7 @@
       "noOrganizationsFound": "No organizations found."
     },
     "step2": {
-      "title": "1. Property Details",
+      "title": "2. Property Details",
       "description": "Enter the full address and location details of the property subject to foreclosure.",
       "streetAddress": "Street Address Line 1",
       "verified": "Verified",
