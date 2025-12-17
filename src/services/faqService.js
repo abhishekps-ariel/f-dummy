@@ -4,18 +4,24 @@ import { SERVICE_HEADERS } from '../utils/serviceUtils';
 
 class FAQService {
   // Get FAQ categories
-  async getFAQCategories() {
-    const response = await axiosInstance.get(COMMON_ENDPOINTS.GET_FAQ_CATEGORIES, {
-      headers: SERVICE_HEADERS.TEXT_PLAIN,
-    });
+  async getFAQCategories(languageCode = 'en') {
+    const response = await axiosInstance.get(
+      `${COMMON_ENDPOINTS.GET_FAQ_CATEGORIES}?languageCode=${languageCode}`,
+      {
+        headers: SERVICE_HEADERS.TEXT_PLAIN,
+      }
+    );
     return response.data;
   }
 
   // Get questions by category ID
-  async getQuestionsByCategory(categoryId) {
+  async getQuestionsByCategory(categoryId, languageCode = 'en') {
     const response = await axiosInstance.post(
       FAQ_ENDPOINTS.GET_QUESTIONS_BY_CATEGORY,
-      { categoryId },
+      { 
+        categoryId,
+        languageCode
+      },
       {
         headers: SERVICE_HEADERS.JSON,
       }
