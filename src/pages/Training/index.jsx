@@ -66,21 +66,19 @@ const Training = () => {
         {/* Main Training Content */}
         <div className="dashboard-content-section">
           <div className="shadow-custom bg-white org-search-box">
-            <div className="p-4">
-              <h2 className="h4 mb-3 fw-bold theme-color">{t("training.trainingCenter")}</h2>
-              <p className="text-muted mb-4">{t("training.description")}</p>
-              
-              {/* Placeholder content */}
-              <div className="row">
-                <div className="col-12">
-                  <div className="card">
-                    <div className="card-body text-center py-5">
-                      <i className="fa-solid fa-graduation-cap fa-3x text-muted mb-3"></i>
-                      <h5 className="card-title">{t("training.trainingResources")}</h5>
-                      <p className="card-text text-muted">
-                        {t("training.placeholderText")}
-                      </p>
-                    </div>
+            <h2 className="h4 mb-3 fw-bold theme-color">{t("training.trainingCenter")}</h2>
+            <p className="text-muted mb-4">{t("training.description")}</p>
+            
+            {/* Placeholder content */}
+            <div className="row">
+              <div className="col-12">
+                <div className="card">
+                  <div className="card-body text-center py-5">
+                    <i className="fa-solid fa-graduation-cap fa-3x text-muted mb-3"></i>
+                    <h5 className="card-title">{t("training.trainingResources")}</h5>
+                    <p className="card-text text-muted">
+                      {t("training.placeholderText")}
+                    </p>
                   </div>
                 </div>
               </div>

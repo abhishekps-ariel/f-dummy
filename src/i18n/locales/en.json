@@ -1358,6 +1358,7 @@
     },
     "table": {
       "title": "Form 35B Submissions",
+      "subtitle": "View all submitted Form 35B reports for your organization",
       "newSubmission": "Form 35B Reporting",
       "refresh": "Refresh",
       "searchPlaceholder": "Search submissions...",

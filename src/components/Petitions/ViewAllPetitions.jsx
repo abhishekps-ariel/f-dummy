@@ -464,7 +464,7 @@ const ViewAllPetitions = ({ onBack }) => {
                 <div className="petitions-header-section mb-4">
                   {/* Desktop Layout */}
                   <div className="d-none d-md-flex align-items-center justify-content-between">
-                    <h2 className="font-med mb-0">{t("viewAllPetitions.title")}</h2>
+                    <h2 className="h4 mb-3 fw-bold theme-color">{t("viewAllPetitions.title")}</h2>
 
                     <div className="d-flex gap-3 align-items-center">
                       {/* Create New Petition Button */}
@@ -544,7 +544,7 @@ const ViewAllPetitions = ({ onBack }) => {
                   {/* Mobile Layout */}
                   <div className="d-md-none">
                     <div className="mb-3">
-                      <h2 className="font-med mb-0">{t("viewAllPetitions.title")}</h2>
+                      <h2 className="h4 mb-3 fw-bold theme-color">{t("viewAllPetitions.title")}</h2>
                     </div>
 
                     <div className="row g-2">

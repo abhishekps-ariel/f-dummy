@@ -250,7 +250,7 @@ function Dashboard() {
               </div>
             ) : (
             <div className="shadow-custom bg-white org-search-box">
-              <h2 className="font-med mb-4">{t("dashboard.title")}</h2>
+              <h2 className="h4 mb-3 fw-bold theme-color">{t("dashboard.title")}</h2>
               <div className="row mb-5">
                 <div className="col-md-4 mb-3">
                   <div className="stat-card stat-card-metric h-100">

@@ -63,11 +63,9 @@ const FAQ = () => {
         {/* Main FAQ Content */}
         <div className="dashboard-content-section">
           <div className="shadow-custom bg-white org-search-box">
-            <div className="p-4">
-              <h2 className="h4 mb-3 fw-bold theme-color">{t("faq.title")}</h2>
-              <p className="text-muted mb-4">{t("faq.subtitle")}</p>
-              <FAQcomponent />
-            </div>
+            <h2 className="h4 mb-3 fw-bold theme-color">{t("faq.title")}</h2>
+            <p className="text-muted mb-4">{t("faq.subtitle")}</p>
+            <FAQcomponent />
           </div>
         </div>
       </main>

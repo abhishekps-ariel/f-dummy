@@ -301,7 +301,6 @@ const EmailLogs = () => {
         {/* Main Email Logs Content */}
         <div className="dashboard-content-section">
           <div className="shadow-custom bg-white org-search-box">
-            <div className="p-4">
               <div className="mb-4">
                 <h2 className="h4 mb-3 fw-bold theme-color">{t("emailLogs.title")}</h2>
                 <p className="text-muted mb-4">{t("emailLogs.subtitle")}</p>
@@ -697,7 +696,6 @@ const EmailLogs = () => {
               )}
             </div>
           </div>
-        </div>
       </main>
     </div>
   );

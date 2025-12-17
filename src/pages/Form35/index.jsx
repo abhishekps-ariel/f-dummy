@@ -584,14 +584,11 @@ const Form35 = () => {
   // Render table view for org admins, form view for regular users
   const renderTableView = () => (
     <div className="dashboard-content-section">
-      <div className="row">
-        <div className="col-12">
-          <div className="card shadow-custom bg-white">
-            {/* Header Section */}
-            <div className="card-body">
-              <div className="d-flex justify-content-between align-items-center mb-4">
-                <h2 className="font-med mb-0">{t("form35B.table.title")}</h2>
-                <div className="d-flex gap-3">
+      <div className="shadow-custom bg-white org-search-box">
+              <div className="mb-4">
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <h2 className="h4 mb-0 fw-bold theme-color">{t("form35B.table.title")}</h2>
+                  <div className="d-flex gap-3">
                   <button
                     className="dashboard-btn-create"
                     onClick={() => {
@@ -607,7 +604,9 @@ const Form35 = () => {
                   >
                     <i className="fa-solid fa-sync-alt"></i>
                   </button>
+                  </div>
                 </div>
+                <p className="text-muted mb-0">{t("form35B.table.subtitle")}</p>
               </div>
 
               {/* Search and Filter Controls */}
@@ -1052,9 +1051,6 @@ const Form35 = () => {
                   </div>
                 </div>
               )}
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
@@ -1095,11 +1091,8 @@ const Form35 = () => {
         {isOrgAdmin && !showFormView ? renderTableView() : (
           /* Main Form 35B Content */
           <div className="dashboard-content-section">
-              <div className="row">
-                <div className="col-12">
               {/* Combined Header and Form Card */}
-              <div className="card shadow-custom">
-                <div className="card-body p-4">
+              <div className="shadow-custom bg-white org-search-box">
                   {isOrgAdmin && showFormView && (
                     <div className="d-flex justify-content-between align-items-center mb-3">
                       <button
@@ -1585,10 +1578,7 @@ const Form35 = () => {
                       </button>
                   </div>
                   </form>
-                </div>
               </div>
-            </div>
-          </div>
         </div>
         )}
       </main>

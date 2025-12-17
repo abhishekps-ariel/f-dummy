@@ -1358,6 +1358,7 @@
     },
     "table": {
       "title": "Envíos del Formulario 35B",
+      "subtitle": "Vea todos los informes del Formulario 35B enviados para su organización",
       "newSubmission": "Informe del Formulario 35B",
       "refresh": "Actualizar",
       "searchPlaceholder": "Buscar envíos...",
