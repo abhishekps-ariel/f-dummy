@@ -612,7 +612,7 @@ const Form35 = () => {
 
               {/* Search and Filter Controls */}
               <div className="row mb-4 g-3">
-                <div className="col-12 col-lg-4">
+                <div className="col-12 col-lg-5">
                   <div className="input-group">
                     <span className="input-group-text bg-white border-end-0">
                       <i className="fas fa-search"></i>
@@ -638,7 +638,7 @@ const Form35 = () => {
                     minYear={2020}
                   />
                 </div>
-                <div className="col-12 col-lg-4">
+                <div className="col-12 col-lg-3">
                   <CustomDropdown
                     name="filterReportingPeriod"
                     value={filterReportingPeriodId || ""}
@@ -819,7 +819,22 @@ const Form35 = () => {
                               </span>
                             </td>
                             <td style={{ textAlign: 'center' }}>{submission.reportingYear || t("common.nA")}</td>
-                            <td style={{ textAlign: 'center' }}>{getReportingPeriodName(submission.reportingPeriodId) || submission.reportingPeriodName || t("common.nA")}</td>
+                            <td style={{ textAlign: 'center' }}>
+                              <span
+                                style={{
+                                  display: 'inline-block',
+                                  padding: '0.375rem 0.75rem',
+                                  borderRadius: '6px',
+                                  backgroundColor: '#E0F2FE',
+                                  color: '#0369A1',
+                                  fontSize: '0.875rem',
+                                  fontWeight: '500',
+                                  whiteSpace: 'nowrap'
+                                }}
+                              >
+                                {getReportingPeriodName(submission.reportingPeriodId) || submission.reportingPeriodName || t("common.nA")}
+                              </span>
+                            </td>
                             <td className="text-muted" style={{ textAlign: 'center' }}>
                               {submission.createdDate ? formatDate(submission.createdDate) : t("common.nA")}
                             </td>
