@@ -1005,11 +1005,22 @@ select.form-control {
     scrollbar-color: #c1c1c1 #f1f1f1;
 }
 
-/* Reduce gap between header and content for specific pages (Dashboard, Form35B, EmailLogs, FAQ, Training) */
-/* Target pages that use org-search-box or shadow-custom as first child in dashboard-content-section */
-.dashboard-main-area:not(.messages-main-area) .dashboard-content-section > .org-search-box:first-child,
-.dashboard-main-area:not(.messages-main-area) .dashboard-content-section > .shadow-custom:first-child {
-    margin-top: -2px;
+/* ============================================
+   CENTRALIZED MARGIN-TOP SYSTEM
+   Mobile responsive fix - consistent margin-top for all dashboard pages
+   ============================================ */
+
+/* Desktop: Standard -2px margin-top for all dashboard pages */
+.dashboard-main-area:not(.messages-main-area) .dashboard-content-section > .shadow-custom.bg-white.org-search-box {
+    margin-top: -2px !important;
+}
+
+/* Mobile: Same -2px margin-top for all pages (FAQ now matches Email Logs and Training Centre) */
+@media (max-width: 767.98px) {
+    /* All pages: -2px margin-top (Dashboard, Form35, EmailLogs, FAQ, Training, Petitions) */
+    .dashboard-main-area:not(.messages-main-area) .dashboard-content-section > .shadow-custom.bg-white.org-search-box {
+        margin-top: -2px !important;
+    }
 }
 
 /* Remove Bootstrap container-fluid padding in dashboard-main-area */
